@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+    images: { domains: ['flowbite.com'], },
+}
 
 module.exports = nextConfig
