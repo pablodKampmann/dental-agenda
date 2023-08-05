@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { db, auth } from "./../firebase";
 import { get, ref } from "firebase/database";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from 'next/navigation'
 
 export default function NotSing() {
+    const router = useRouter();
     const [user, setUser] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
@@ -21,7 +23,10 @@ export default function NotSing() {
                 }
             });
             if (email !== "") {
-                await signInWithEmailAndPassword(auth, email, password)
+                const user = await signInWithEmailAndPassword(auth, email, password)
+                if (user) {
+                    router.push('/')
+                }
             }
         }
     }

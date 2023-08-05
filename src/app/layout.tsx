@@ -26,9 +26,7 @@ export default function RootLayout({
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {  
-        router.push('/');
-      } else {
+      if (!user) {
         router.push("/notSign");
       }
     });

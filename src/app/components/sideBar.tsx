@@ -1,13 +1,19 @@
 'use client'
 
 import Image from "next/image";
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { ModalSett } from './modalSett'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export function SideBar() {
     const router = useRouter();
+    const pathname = usePathname();
+    const [selectedPage, setSelectedPage] = useState("");
     const [openModal, setOpenModal] = useState(false);
+
+    useEffect(() => {
+        setSelectedPage(pathname);
+    }, [pathname]);
 
     function OpenModal() {
         if (openModal === false) {
@@ -19,6 +25,10 @@ export function SideBar() {
 
     function CloseModal() {
         setOpenModal(false);
+    }
+
+    function HandleGoPatients() {
+        router.push('/patients')
     }
 
     return (
@@ -61,30 +71,13 @@ export function SideBar() {
                                         <span className="sr-only">Open user menu</span>
                                         <Image
                                             className="rounded-full"
-                                            width={26}
-                                            height={26}
+                                            width={30}
+                                            height={30}
                                             src="/SettIcon.png"
                                             alt="user photo"
                                             onClick={OpenModal}
                                         />
                                     </button>
-                                </div>
-
-                                <div className="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow dark:bg-gray-700 dark:divide-gray-600" id="dropdown-user">
-                                    <ul className="py-1" role="none">
-                                        <li>
-                                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Calendario</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Earnings</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</a>
-                                        </li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -96,17 +89,45 @@ export function SideBar() {
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
-                            <button type="button" onClick={() => router.push('/calendar')} className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                            <button type="button" onClick={() => router.push('/calendar')} className="flex text-left items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full">
                                 <Image src="/CalendarIcon.png" width={28} height={28} className="text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" alt="Calendar" />
                                 <span className="ml-3">Calendario</span>
                             </button>
                         </li>
-                        <li>
-                            <button type="button" onClick={() => router.push('/patients')} className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                                <Image src="/PatientsIcon.png" width={28} height={28} className="text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" alt="Patients" />
-                                <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
-                            </button>
-                        </li>
+                        {pathname === '/patients' ? (
+                            <li>
+                                <button
+                                    type="button"
+                                    onClick={HandleGoPatients}
+                                    className="flex text-left items-center p-2 text-blue-500 text-lg font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+                                >
+                                    <Image
+                                        src="/PatientsIcon.png"
+                                        width={28}
+                                        height={28}
+                                        alt="Patients"
+                                    />
+                                    <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
+                                </button>
+                            </li>
+                        ) : (
+                            <li>
+                                <button
+                                    type="button"
+                                    onClick={HandleGoPatients}
+                                    className="flex text-left items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+                                >
+                                    <Image
+                                        src="/PatientsIcon.png"
+                                        width={28}
+                                        height={28}
+                                        alt="Patients"
+                                    />
+                                    <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
+                                </button>
+                            </li>
+                        )}
+
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                 <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
