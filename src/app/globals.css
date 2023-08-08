@@ -20,8 +20,12 @@ body {
   color: rgb(var(--foreground-rgb)); 
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
 
-
-
+.patient-list-container {
+  overflow: hidden;
+}
 
 

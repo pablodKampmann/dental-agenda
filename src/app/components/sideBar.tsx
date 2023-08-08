@@ -99,10 +99,10 @@ export function SideBar() {
                                 <button
                                     type="button"
                                     onClick={HandleGoPatients}
-                                    className="flex text-left items-center p-2 text-blue-500 text-lg font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+                                    className="flex text-left items-center p-2 text-blue-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
                                 >
                                     <Image
-                                        src="/PatientsIcon.png"
+                                        src="/patientsIconSelected.png"
                                         width={28}
                                         height={28}
                                         alt="Patients"

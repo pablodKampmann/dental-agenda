@@ -7,6 +7,7 @@ import { SuccessPatientAlert } from "./../components/successPatientAlert";
 import { ref, onValue } from "firebase/database";
 import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
+import { SeePatient } from "./../components/seePatient";
 
 export default function Page() {
     const [page, setPage] = useState(1);
@@ -87,6 +88,7 @@ export default function Page() {
     return (
         <div className="p-4 sm:ml-64">
             <div>
+                <SeePatient></SeePatient>
                 {openModalCreatePatient && (
                     <div>
                         <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
@@ -145,7 +147,7 @@ export default function Page() {
                             {listPatients ? (
                                 <tbody className="text-white">
                                     {listPatients.map((patient, index) => (
-                                        <tr key={index} onClick={() =>  HandleClickRow(patient)} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white">
+                                        <tr key={index} onClick={() =>  HandleClickRow(patient)} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
                                             <td className="px-5 py-3 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     {patient.gender === 'male' ? (
