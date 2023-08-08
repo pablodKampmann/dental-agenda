@@ -8,6 +8,7 @@ import { ref, onValue } from "firebase/database";
 import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
 import { SeePatient } from "./../components/seePatient";
+import { SearchPatient } from "./../components/searchPatient";
 
 export default function Page() {
     const [page, setPage] = useState(1);
@@ -17,6 +18,7 @@ export default function Page() {
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [executeSuccessPatientAlert, setExecuteSuccessPatientAlert] = useState(false);
     const [listPatients, setListPatients] = useState<null | any[]>(null);
+    const [searchContent, setSearchContent] = useState('');
 
     useEffect(() => {
         if (page === 1) {
@@ -25,10 +27,6 @@ export default function Page() {
             setDisableBack(false);
         }
     }, [page]);
-
-    const HandleSelectChange = (event: any) => {
-        setSelectedField(event.target.value);
-    };
 
     const showSuccessAlert = () => {
         setExecuteSuccessPatientAlert(true);
@@ -72,8 +70,24 @@ export default function Page() {
     }
 
     useEffect(() => {
+        setSearchContent('');
+    }, [selectedField]);
+
+    useEffect(() => {
+        async function Search() {
+            const patientsFilter = await SearchPatient(selectedField, searchContent)
+            setListPatients(patientsFilter)            
+        }
+        if (searchContent.length > 0) {
+            Search();
+        }
+    }, [searchContent])
+
+    useEffect(() => {
         async function Get() {
             const patients = await GetPatients(page);
+            console.log("hola");
+            
             setListPatients(patients);
         }
 
@@ -82,13 +96,16 @@ export default function Page() {
             Get();
         });
 
+        if (searchContent === '') {
+            Get();
+        }
+
         return () => unsubscribe();
-    }, [page]);
+    }, [page, searchContent]);
 
     return (
         <div className="p-4 sm:ml-64">
             <div>
-                <SeePatient></SeePatient>
                 {openModalCreatePatient && (
                     <div>
                         <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
@@ -114,12 +131,24 @@ export default function Page() {
                             type="text"
                             placeholder="Busca un paciente                    Por:"
                             className="pl-10 w-full md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-500 text-white text-lg"
+                            name='search'
+                            value={searchContent}
+                            onChange={(e) => {
+                                const inputValue = e.target.value;
+                                if (selectedField === 'dni') {
+                                    const numericValue = inputValue.replace(/[^0-9]/g, '');
+                                    setSearchContent(numericValue);
+                                } else {
+                                    setSearchContent(inputValue);
+                                }
+                            }}
                         />
                         <select
                             id="pricingType"
                             name="pricingType"
                             className="w-40 h-10 border-2 border-blue-800 bg-gray-500 focus:outline-none focus:border-blue-500 text-white text-lg rounded-r-lg px-2 md:px-3 py-0 md:py-1 tracking-wider"
-                            onChange={HandleSelectChange}
+                            value={selectedField}
+                            onChange={(e) => setSelectedField(e.target.value)}
                         >
                             <option value="name">Nombre</option>
                             <option value="dni">Dni</option>
@@ -147,7 +176,7 @@ export default function Page() {
                             {listPatients ? (
                                 <tbody className="text-white">
                                     {listPatients.map((patient, index) => (
-                                        <tr key={index} onClick={() =>  HandleClickRow(patient)} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
+                                        <tr key={index} onClick={() => HandleClickRow(patient)} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
                                             <td className="px-5 py-3 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     {patient.gender === 'male' ? (
