@@ -76,32 +76,33 @@ export default function Page() {
     useEffect(() => {
         async function Search() {
             const patientsFilter = await SearchPatient(selectedField, searchContent)
-            setListPatients(patientsFilter)            
+            setListPatients(patientsFilter)
         }
         if (searchContent.length > 0) {
             Search();
+        }
+        async function Get() {
+            const patients = await GetPatients(page);
+            setListPatients(patients);
+        }
+        if (searchContent === "") {
+            Get();
         }
     }, [searchContent])
 
     useEffect(() => {
         async function Get() {
             const patients = await GetPatients(page);
-            console.log("hola");
-            
             setListPatients(patients);
         }
 
         const patientsRef = ref(db, "patients");
         const unsubscribe = onValue(patientsRef, async () => {
             Get();
-        });
-
-        if (searchContent === '') {
-            Get();
-        }
+        })
 
         return () => unsubscribe();
-    }, [page, searchContent]);
+    }, [page]);
 
     return (
         <div className="p-4 sm:ml-64">
