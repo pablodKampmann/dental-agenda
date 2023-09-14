@@ -7,8 +7,8 @@ import { SuccessPatientAlert } from "./../components/successPatientAlert";
 import { ref, onValue } from "firebase/database";
 import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
-import { SeePatient } from "./../components/seePatient";
 import { SearchPatient } from "./../components/searchPatient";
+import { SyncLoader } from "react-spinners";
 
 export default function Page() {
     const [page, setPage] = useState(1);
@@ -17,8 +17,12 @@ export default function Page() {
     const [selectedField, setSelectedField] = useState('name');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [executeSuccessPatientAlert, setExecuteSuccessPatientAlert] = useState(false);
+    const [totalPatients, setTotalPatients] = useState(0);
     const [listPatients, setListPatients] = useState<null | any[]>(null);
     const [searchContent, setSearchContent] = useState('');
+    const [nextPageLoad, setNextPageLoad] = useState(false);
+    const [backPageLoad, setBackPageLoad] = useState(false);
+    //  const [nextPageLoad, set] = useState(false);
 
     useEffect(() => {
         if (page === 1) {
@@ -60,13 +64,15 @@ export default function Page() {
     }
 
     function HandleBackPage() {
+        setBackPageLoad(true);
         if (page !== 1) {
             setPage(page - 1)
         }
     }
 
     function HandleNextPage() {
-        setPage(page + 1)
+        setNextPageLoad(true);
+        setPage(page + 1);
     }
 
     useEffect(() => {
@@ -82,8 +88,8 @@ export default function Page() {
             Search();
         }
         async function Get() {
-            const patients = await GetPatients(page);
-            setListPatients(patients);
+            const data = await GetPatients(page);
+            setListPatients(data.patients);
         }
         if (searchContent === "") {
             Get();
@@ -92,8 +98,11 @@ export default function Page() {
 
     useEffect(() => {
         async function Get() {
-            const patients = await GetPatients(page);
-            setListPatients(patients);
+            const data = await GetPatients(page);
+            setListPatients(data.patients);
+            setTotalPatients(data.patientsSize);
+            setNextPageLoad(false);
+            setBackPageLoad(false);
         }
 
         const patientsRef = ref(db, "patients");
@@ -161,7 +170,7 @@ export default function Page() {
                 </div>
             </div>
             <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-1">
-                <div className="overflow-y-hidden rounded-lg">
+                <div className="overflow-y-hidden rounded-lg border border-blue-900">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
@@ -243,15 +252,34 @@ export default function Page() {
                             ) : null}
                         </table>
                     </div>
-                    <div className="flex flex-col items-center border-t bg-gray-500 px-5 py-5 sm:flex-row sm:justify-between">
-                        <span className="text-xs text-white sm:text-sm"> Mostrando X de X </span>
+                    <div className="flex flex-col items-center border-t bg-gray-500 px-5 py-3 sm:flex-row sm:justify-between">
+                        <span className="text-xs text-white sm:text-sm">
+                            Mostrando X de {totalPatients}
+                        </span>
+                        <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center">
+                            <span className="transform translate-y-[-0.5rem]">
+                                {page}
+                            </span>
+                        </div>
                         <div className="mt-2 inline-flex sm:mt-0">
                             {disableBack ? (
-                                <button disabled onClick={HandleBackPage} className="mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold transition duration-150">Anterior</button>
+                                <button disabled className="mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold transition duration-150">Anterior</button>
                             ) : (
-                                <button onClick={HandleBackPage} className="mr-2 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold transition duration-150">Anterior</button>
+                                <button onClick={HandleBackPage} disabled={backPageLoad} className="mr-2 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold transition duration-150">
+                                    {backPageLoad ? (
+                                        <SyncLoader size={8} color="white" />
+                                    ) : (
+                                        "Anterior"
+                                    )}
+                                </button>
                             )}
-                            <button onClick={HandleNextPage} className="h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold transition duration-150">Siguiente</button>
+                            <button onClick={HandleNextPage} disabled={nextPageLoad} className="h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold transition duration-150">
+                                {nextPageLoad ? (
+                                    <SyncLoader size={8} color="white" />
+                                ) : (
+                                    "Siguiente"
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
