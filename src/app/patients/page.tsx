@@ -117,7 +117,7 @@ export default function Patients() {
             const b = page * 6;
             setMaxPage(totalPags);
             setShowMin(a);
-            if (b > totalPatients) {
+            if (b > totalPatients && page > 5) {
                 setShowMax(totalPatients);
             } else {
                 setShowMax(b);
@@ -159,7 +159,7 @@ export default function Patients() {
                         <input
                             type="text"
                             placeholder="Busca un paciente                    Por:"
-                            className="pl-10 w-full md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-500 text-white text-lg"
+                            className="pl-10 w-full md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
                             name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -172,16 +172,18 @@ export default function Patients() {
                                 }
                             }}
                         />
+                        
                         <select
                             id="pricingType"
                             name="pricingType"
-                            className="w-40 h-10 border-2 border-blue-800 bg-gray-500 focus:outline-none focus:border-blue-500 text-white text-lg rounded-r-lg px-2 md:px-3 py-0 md:py-1 tracking-wider"
+                            className="w-40 h-10 border-2 border-blue-800 bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg px-2 md:px-3 py-0 md:py-1 tracking-wider"
                             value={selectedField}
                             onChange={(e) => setSelectedField(e.target.value)}
                         >
                             <option value="name">Nombre</option>
                             <option value="dni">Dni</option>
                         </select>
+
                     </div>
                     <button onClick={OpenModalCreatePatient} type="button" className="ml-auto h-10 bg-blue-900 hover:bg-blue-800 text-white text-lg font-semibold py-2 px-4 md:px-12 border-b-4 border-blue-700 hover:border-blue-500 rounded-lg flex items-center">
                         <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
@@ -274,8 +276,8 @@ export default function Patients() {
                     <span className="text-xs text-white sm:text-sm">
                         Mostrando {showMin}-{showMax} de {totalPatients}
                     </span>
-                    <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center ">
-                        <span className="transform translate-y-[-0.5rem]">
+                    <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center border-2 border-blue-600 ">
+                        <span className="transform translate-y-[-0.5rem] ">
                             {page}
                         </span>
                     </div>
