@@ -9,7 +9,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-const inter = Inter({ subsets: ['latin'] })
+const font = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Dental Agenda'
@@ -37,7 +37,7 @@ export default function RootLayout({
   if (pathname === '/notSign') {
     return (
       <html lang="en">
-        <body className={`bg-gray-800 ${inter.className}`}>
+        <body className={`bg-gray-800 ${font.className}`}>
           <div>
             {children}
           </div>
@@ -47,7 +47,7 @@ export default function RootLayout({
   } else {
     return (
       <html lang="en">
-        <body className={`bg-gray-700 ${inter.className}`}>
+        <body className={`bg-gray-700 ${font.className}`}>
           <div>
             <SideBar></SideBar>
             {children}

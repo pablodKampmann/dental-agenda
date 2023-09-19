@@ -9,6 +9,7 @@ import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
 import { SearchPatient } from "./../components/searchPatient";
 import { SyncLoader } from "react-spinners";
+import { MdPersonSearch } from 'react-icons/md';
 
 export default function Patients() {
     const [page, setPage] = useState(1);
@@ -17,7 +18,7 @@ export default function Patients() {
     const [disableNext, setDisableNext] = useState(false);
     const [showMin, setShowMin] = useState(Number);
     const [showMax, setShowMax] = useState(Number);
-    const [selectedField, setSelectedField] = useState('name');
+    const [selectedField, setSelectedField] = useState('dni');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [executeSuccessPatientAlert, setExecuteSuccessPatientAlert] = useState(false);
     const [totalPatients, setTotalPatients] = useState(0);
@@ -158,8 +159,8 @@ export default function Patients() {
                         />
                         <input
                             type="text"
-                            placeholder="Busca un paciente                    Por:"
-                            className="pl-10 w-full md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
+                            placeholder="Busca un paciente                 Por:"
+                            className="pl-10 w-80 md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
                             name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -172,18 +173,8 @@ export default function Patients() {
                                 }
                             }}
                         />
-                        
-                        <select
-                            id="pricingType"
-                            name="pricingType"
-                            className="w-40 h-10 border-2 border-blue-800 bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg px-2 md:px-3 py-0 md:py-1 tracking-wider"
-                            value={selectedField}
-                            onChange={(e) => setSelectedField(e.target.value)}
-                        >
-                            <option value="name">Nombre</option>
-                            <option value="dni">Dni</option>
-                        </select>
-
+                        <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-blue-700' : 'bg-gray-500'} w-24 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg`}>DNI</button>
+                        <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-blue-700' : 'bg-gray-500'} w-28    h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg`}>Nombre</button>
                     </div>
                     <button onClick={OpenModalCreatePatient} type="button" className="ml-auto h-10 bg-blue-900 hover:bg-blue-800 text-white text-lg font-semibold py-2 px-4 md:px-12 border-b-4 border-blue-700 hover:border-blue-500 rounded-lg flex items-center">
                         <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
@@ -272,16 +263,30 @@ export default function Patients() {
                         ) : null}
                     </table>
                 </div>
-                <div className="flex flex-col items-center border-t bg-gray-500 px-5 py-3 sm:flex-row sm:justify-between">
-                    <span className="text-xs text-white sm:text-sm">
-                        Mostrando {showMin}-{showMax} de {totalPatients}
-                    </span>
-                    <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center border-2 border-blue-600 ">
-                        <span className="transform translate-y-[-0.5rem] ">
-                            {page}
+                <div className="justify-between flex items-center border-t bg-gray-500 px-5 py-3">
+                    {searchContent ? (
+                        <span className="text-md text-white sm:text-sm mr-20">
+                            Filtrando Pacientes...
                         </span>
+                    ) : (
+                        <span className="text-xs text-white sm:text-sm">
+                            Mostrando {showMin}-{showMax} de {totalPatients}
+                        </span>
+                    )}
+
+                    <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center border-2 border-blue-600 ">
+                        {searchContent ? (
+                            <span className="transform translate-y-[-0.5rem] ">
+                                <MdPersonSearch className="text-white" size={25} />
+                            </span>
+                        ) : (
+                            <span className="transform translate-y-[-0.5rem]">
+                                {page}
+                            </span>
+                        )}
+
                     </div>
-                    <div className="mt-2 inline-flex sm:mt-0">
+                    <div>
                         {disableBack ? (
                             <button disabled className="mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                         ) : (
@@ -307,6 +312,6 @@ export default function Patients() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
