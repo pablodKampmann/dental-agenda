@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter, usePathname } from 'next/navigation'
 import { ModalSett } from './modalSett'
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link'
 
 export function SideBar() {
     const router = useRouter();
@@ -27,10 +28,6 @@ export function SideBar() {
         setOpenModal(false);
     }
 
-    function HandleGoPatients() {
-        router.push('/patients')
-    }
-
     return (
         <div>
             <div>
@@ -43,7 +40,7 @@ export function SideBar() {
                     </div>
                 )}
             </div>
-            <nav className="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <nav className="fixed top-0 z-50 w-full border-b border-gray-200 bg-gray-800 border-gray-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center justify-start">
@@ -63,8 +60,7 @@ export function SideBar() {
                                 <div>
                                     <button
                                         type="button"
-                                        className={`flex text-sm bg-gray-800 rounded-full ${openModal ? 'focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600' : ''
-                                            }`}
+                                        className={`flex text-sm bg-gray-800 rounded-full ${openModal ? 'focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600' : '' }`}
                                         aria-expanded="false"
                                         data-dropdown-toggle="dropdown-user"
                                     >
@@ -97,7 +93,6 @@ export function SideBar() {
                             <li>
                                 <button
                                     type="button"
-                                    onClick={HandleGoPatients}
                                     className="flex text-left items-center p-2 text-blue-500 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
                                 >
                                     <Image
@@ -111,19 +106,20 @@ export function SideBar() {
                             </li>
                         ) : (
                             <li>
-                                <button
-                                    type="button"
-                                    onClick={HandleGoPatients}
-                                    className="flex text-left items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
-                                >
-                                    <Image
-                                        src="/PatientsIcon.png"
-                                        width={28}
-                                        height={28}
-                                        alt="Patients"
-                                    />
-                                    <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
-                                </button>
+                                <Link href="/patients" prefetch={true}>
+                                    <button
+                                        type="button"
+                                        className="flex text-left items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+                                    >
+                                        <Image
+                                            src="/PatientsIcon.png"
+                                            width={28}
+                                            height={28}
+                                            alt="Patients"
+                                        />
+                                        <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
+                                    </button>
+                                </Link>
                             </li>
                         )}
 

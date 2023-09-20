@@ -1,5 +1,6 @@
 'use client'
 
+import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { ModalCreatePatient } from './../components/modalCreatePatient'
@@ -12,6 +13,8 @@ import { SyncLoader } from "react-spinners";
 import { MdPersonSearch } from 'react-icons/md';
 
 export default function Patients() {
+    const searchParams = useSearchParams()!
+    const router = useRouter()
     const [page, setPage] = useState(1);
     const [maxPage, setMaxPage] = useState(Number);
     const [disableBack, setDisableBack] = useState(false);
@@ -35,6 +38,7 @@ export default function Patients() {
     }
 
     function HandleClickRow(patient: any) {
+        //cacaca
         console.log(patient.name);
     }
 
@@ -133,6 +137,13 @@ export default function Patients() {
         return () => unsubscribe();
     }, [page]);
 
+    function handleGoPatient(patient: any) {
+        const params = new URLSearchParams(searchParams.toString());
+        const patientDataJSON = JSON.stringify(patient); 
+        params.set('patientData', patientDataJSON);
+        router.push(`/patients/${patient.dni}?${params}`);
+    }
+
     return (
         <div className="p-4 sm:ml-64">
             <div>
@@ -197,7 +208,9 @@ export default function Patients() {
                         {listPatients ? (
                             <tbody className="text-white">
                                 {listPatients.map((patient, index) => (
-                                    <tr key={index} onClick={() => HandleClickRow(patient)} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
+                                    <tr onClick={() => handleGoPatient(patient)}
+
+                                        key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
                                         <td className="px-5 py-3 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 {patient.gender === 'male' ? (
