@@ -49,7 +49,6 @@ export default function RootLayout({
       <html lang="en">
         <body className={`bg-gray-700 ${font.className}`}>
           <div>
-            <SideBar></SideBar>
             {children}
           </div>
         </body>

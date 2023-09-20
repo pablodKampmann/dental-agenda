@@ -11,6 +11,7 @@ import { GetPatients } from "./../components/getPatients";
 import { SearchPatient } from "./../components/searchPatient";
 import { SyncLoader } from "react-spinners";
 import { MdPersonSearch } from 'react-icons/md';
+import { TbUserSearch } from 'react-icons/tb';
 
 export default function Patients() {
     const searchParams = useSearchParams()!
@@ -137,15 +138,15 @@ export default function Patients() {
         return () => unsubscribe();
     }, [page]);
 
-    function handleGoPatient(patient: any) {
+    function handleGoPatient(patientId: any) {
         const params = new URLSearchParams(searchParams.toString());
-        const patientDataJSON = JSON.stringify(patient); 
-        params.set('patientData', patientDataJSON);
-        router.push(`/patients/${patient.dni}?${params}`);
+        const patientDataJSON = JSON.stringify(patientId);
+        params.set('patientId', patientDataJSON);
+        router.push(`/patients/${patientId}?${params}`);
     }
 
     return (
-        <div className="p-4 sm:ml-64">
+        <div className="p-4 sm:ml-64 ">
             <div>
                 {openModalCreatePatient && (
                     <div>
@@ -161,17 +162,15 @@ export default function Patients() {
             <div className="p-4 rounded-md mt-14">
                 <div className="flex flex-col md:flex-row gap-3 items-center">
                     <div className="flex rounded-full relative">
-                        <Image
-                            src="/lupaWhite.png"
-                            height={22}
-                            width={22}
-                            alt="Lupa"
-                            className="absolute left-3 top-2"
+                        <TbUserSearch
+                            className="absolute mt-2 ml-2 "
+                            size={24}
+
                         />
                         <input
                             type="text"
-                            placeholder="Busca un paciente                 Por:"
-                            className="pl-10 w-80 md:w-100 h-10 rounded-l-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
+                            placeholder="Busca un paciente                              Por:"
+                            className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
                             name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -184,17 +183,26 @@ export default function Patients() {
                                 }
                             }}
                         />
-                        <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-blue-700' : 'bg-gray-500'} w-24 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg`}>DNI</button>
-                        <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-blue-700' : 'bg-gray-500'} w-28    h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg`}>Nombre</button>
+                        <div className="flex ml-4 shadow-lg relative h-10 w-60">
+                            <select className="px-4 pr-9 w-full border-2 border-blue-700 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-500">
+                                <option selected>Open this select menu</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        
+                        </div>
+                        <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg ml-4 w-24 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-l-lg`}>DNI</button>
+                        <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg w-28 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg`}>Nombre</button>
                     </div>
-                    <button onClick={OpenModalCreatePatient} type="button" className="ml-auto h-10 bg-blue-900 hover:bg-blue-800 text-white text-lg font-semibold py-2 px-4 md:px-12 border-b-4 border-blue-700 hover:border-blue-500 rounded-lg flex items-center">
+                    <button onClick={OpenModalCreatePatient} type="button" className="shadow-lg ml-auto h-10 bg-blue-900 hover:bg-blue-800 text-white text-lg font-semibold py-2 px-4 md:px-12 border-b-4 border-blue-700 hover:border-blue-500 rounded-lg flex items-center">
                         <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
                     </button>
                 </div>
             </div>
-            <div className="overflow-y-hidden rounded-lg border border-blue-900 ml-4 mr-4 mt-4">
+            <div className="overflow-y-hidden overflow-x-hidden rounded-lg border border-blue-900 ml-4 mr-4 mt-4">
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full ">
                         <thead>
                             <tr className="bg-blue-900 text-left text-xs font-semibold uppercase tracking-widest text-white">
                                 <th className="px-5 py-3">Nombre</th>
@@ -208,11 +216,15 @@ export default function Patients() {
                         {listPatients ? (
                             <tbody className="text-white">
                                 {listPatients.map((patient, index) => (
-                                    <tr onClick={() => handleGoPatient(patient)}
+                                    <tr onClick={() => handleGoPatient(patient.id)}
 
                                         key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
-                                        <td className="px-5 py-3 whitespace-nowrap">
+
+                                        <td className="px-5 py-3">
                                             <div className="flex items-center">
+                                                <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-blue-900 text-md font-semibold">
+                                                    <p>{patient.id}</p>
+                                                </div>
                                                 {patient.gender === 'male' ? (
                                                     <div className="h-10 w-10 flex items-center justify-center">
                                                         <Image width={34} height={34} src="/maleIcon.png" alt="" />
@@ -276,7 +288,7 @@ export default function Patients() {
                         ) : null}
                     </table>
                 </div>
-                <div className="justify-between flex items-center border-t bg-gray-500 px-5 py-3">
+                <div className="justify-between flex items-center border-t bg-gray-500 px-5 py-2">
                     {searchContent ? (
                         <span className="text-md text-white sm:text-sm mr-20">
                             Filtrando Pacientes...
@@ -286,24 +298,11 @@ export default function Patients() {
                             Mostrando {showMin}-{showMax} de {totalPatients}
                         </span>
                     )}
-
-                    <div className="overflow-hidden h-14 w-14 translate-y-8 rounded-full bg-blue-800 text-white text-2xl font-bold flex items-center justify-center border-2 border-blue-600 ">
-                        {searchContent ? (
-                            <span className="transform translate-y-[-0.5rem] ">
-                                <MdPersonSearch className="text-white" size={25} />
-                            </span>
-                        ) : (
-                            <span className="transform translate-y-[-0.5rem]">
-                                {page}
-                            </span>
-                        )}
-
-                    </div>
-                    <div>
+                    <div className='flex mt-2'>
                         {disableBack ? (
-                            <button disabled className="mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
+                            <button disabled className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                         ) : (
-                            <button onClick={HandleBackPage} disabled={backPageLoad} className="mr-2 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
+                            <button onClick={HandleBackPage} disabled={backPageLoad} className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
                                 {backPageLoad ? (
                                     <SyncLoader size={8} color="white" />
                                 ) : (
@@ -312,9 +311,9 @@ export default function Patients() {
                             </button>
                         )}
                         {disableNext ? (
-                            <button disabled className="h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
+                            <button disabled className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
                         ) : (
-                            <button onClick={HandleNextPage} disabled={nextPageLoad} className="h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
+                            <button onClick={HandleNextPage} disabled={nextPageLoad} className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
                                 {nextPageLoad ? (
                                     <SyncLoader size={8} color="white" />
                                 ) : (
@@ -322,6 +321,17 @@ export default function Patients() {
                                 )}
                             </button>
                         )}
+                        <div className="overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-blue-800 text-white text-2xl font-bold flex justify-center border-2 border-blue-600 ">
+                            {searchContent ? (
+                                <span className="">
+                                    <MdPersonSearch className="text-white mr-2 mt-1" size={25} />
+                                </span>
+                            ) : (
+                                <span className="mr-2 mt-1 shadow-lg">
+                                    {page}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
