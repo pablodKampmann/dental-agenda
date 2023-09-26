@@ -39,7 +39,6 @@ export default function Patients() {
     }
 
     function HandleClickRow(patient: any) {
-        //cacaca
         console.log(patient.name);
     }
 
@@ -139,14 +138,13 @@ export default function Patients() {
     }, [page]);
 
     function handleGoPatient(patientId: any) {
-        const params = new URLSearchParams(searchParams.toString());
-        const patientDataJSON = JSON.stringify(patientId);
-        params.set('patientId', patientDataJSON);
-        router.push(`/patients/${patientId}?${params}`);
+        const params = new URLSearchParams();
+        params.set('patientId', patientId);
+        router.push(`/patients/${patientId}?${params.toString()}`);
     }
 
     return (
-        <div className="p-4 sm:ml-64 ">
+        <div className="p-4 ml-64">
             <div>
                 {openModalCreatePatient && (
                     <div>
@@ -163,7 +161,7 @@ export default function Patients() {
                 <div className="flex flex-col md:flex-row gap-3 items-center">
                     <div className="flex rounded-full relative">
                         <TbUserSearch
-                            className="absolute mt-2 ml-2 "
+                            className="absolute mt-2 ml-2"
                             size={24}
 
                         />
@@ -190,7 +188,7 @@ export default function Patients() {
                                 <option>2</option>
                                 <option>3</option>
                             </select>
-                        
+
                         </div>
                         <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg ml-4 w-24 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-l-lg`}>DNI</button>
                         <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg w-28 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg`}>Nombre</button>

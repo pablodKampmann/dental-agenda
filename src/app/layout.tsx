@@ -48,12 +48,14 @@ export default function RootLayout({
     return (
       <html lang="en">
         <body className={`bg-gray-700 ${font.className}`}>
-          <div>
+          <div >
+            <SideBar></SideBar>
             {children}
           </div>
         </body>
       </html>
     )
+
   }
 
 }
