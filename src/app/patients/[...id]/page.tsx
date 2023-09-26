@@ -6,18 +6,32 @@ import { getPatient } from "./../../components/getPatient";
 import React, { useState, useEffect } from 'react';
 import { PiAddressBookBold } from 'react-icons/pi';
 import { RiArrowGoBackFill } from 'react-icons/ri';
-import { TbPhone } from 'react-icons/tb';
+import { TbPhone, TbPencilCog } from 'react-icons/tb';
 import { MdLocationPin } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
 import { ImAccessibility } from 'react-icons/im';
-import { BsFillPhoneFill } from 'react-icons/bs';
+import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
+import { updatePatient } from "./../../components/updatePatient";
 
 export default function patientId() {
   const searchParams = useSearchParams()
   const id = searchParams.get('patientId');
   const [patient, setPatient] = useState<any>(null);
+  const [hovered, setHovered] = useState('');
+  const [rowModify, setRowModify] = useState('');
+  const [changes, setChanges] = useState('');
+
+  async function submitChanges(changes: string, table: string) {
+    if (changes !== '') {
+      const newPatient = await updatePatient(changes, table, id);
+      setPatient(newPatient);
+    }
+    setRowModify('');
+  }
 
   if (id !== null) {
+
+
     useEffect(() => {
       async function get() {
         try {
@@ -35,7 +49,7 @@ export default function patientId() {
       <div className='ml-72 p-4 mt-20 mr-10'>
         <div className='flex mb-2'>
           <Link prefetch={true} href="/patients">
-            <RiArrowGoBackFill size={40} className="shadow-2xl mb-4 hover:scale-125" />
+            <RiArrowGoBackFill size={50} className="mb-4 hover:scale-125 duration-150 ease-in-out" />
           </Link>
         </div>
         {patient && (
@@ -67,22 +81,47 @@ export default function patientId() {
                 <div className='mt-4 ml-4 mb-4'>
                   <div className='flex'>
                     <div>
-                      <h1 className='mb-3 ml-4 text-2xl font-semibold text-blue-500 border-b-2 border-gray-300'>Informacion Basica</h1>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <h1 className=' mb-3 ml-4 text-2xl font-semibold text-blue-500 border-b-2 border-gray-300'>Informacion Basica</h1>
+                      <div onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-red-500' : 'border-blue-500'}`}>
                         <h1 className='text-lg font-semibold'>Nombre:</h1>
-                        <p className='ml-1 text-gray-300 text-lg'>{patient.name}</p>
+                        {rowModify === 'name' ? (
+                          <input onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              submitChanges(changes, rowModify);
+                            }
+                          }} onSubmit={() => submitChanges(changes, rowModify)} defaultValue={patient.name} type="text" className='ml-1 focus:outline-none bg-transparent text-gray-300 text-lg' onChange={(event) => setChanges(event.target.value)} />
+                        ) : (
+                          <p className='ml-1 text-gray-300 text-lg'>{patient.name}</p>
+                        )}
+                        <button className="ml-auto" onClick={() => setRowModify('name')}>
+                          {hovered === "name" && rowModify === '' && (
+                            <TbPencilCog className="hover:scale-125 duration-150 ease-in-out" size={26} />
+                          )}
+                          {rowModify === 'name' && (
+                            <BsFillCheckCircleFill onClick={() => submitChanges(changes, rowModify)} className="hover:scale-125 duration-150 ease-in-out" size={26} />
+                          )}
+                        </button>
                       </div>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <div onMouseEnter={() => setHovered('lastName')} onMouseLeave={() => setHovered('')} className={`border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1  border-blue-500 border-opacity-50 ${hovered === 'lastName' ? '' : ' border-transparent'}`}>
                         <h1 className='text-lg font-semibold'>Apellido:</h1>
                         <p className='ml-1 text-gray-300 text-lg'>{patient.lastName}</p>
+                        <button className='ml-auto'>
+                          {hovered === 'lastName' && <TbPencilCog className="hover:scale-125 duration-150 ease-in-out" size={26} />}
+                        </button>
                       </div>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <div onMouseEnter={() => setHovered('dni')} onMouseLeave={() => setHovered('')} className={`border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-blue-500 border-opacity-50 ${hovered === 'dni' ? ' ' : ' border-transparent'}`}>
                         <h1 className='text-lg font-semibold'>DNI:</h1>
                         <p className='ml-1 text-gray-300 text-lg'>{patient.dni}</p>
+                        <button className='ml-auto'>
+                          {hovered === 'dni' && <TbPencilCog className="hover:scale-125 duration-150 ease-in-out" size={26} />}
+                        </button>
                       </div>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <div onMouseEnter={() => setHovered('birthdate')} onMouseLeave={() => setHovered('')} className={`border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-blue-500 border-opacity-50 ${hovered === 'birthdate' ? ' ' : ' border-transparent'}`}>
                         <h1 className='text-lg font-semibold'>Fecha de Nacimiento:</h1>
                         <p className='ml-1 text-gray-300 text-lg'>{patient.birthDate}</p>
+                        <button className='ml-auto'>
+                          {hovered === 'birthdate' && <TbPencilCog className="hover:scale-125 duration-150 ease-in-out" size={26} />}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -96,11 +135,11 @@ export default function patientId() {
                   <div className='flex'>
                     <div>
                       <h1 className='mb-3 ml-4 text-2xl font-semibold text-blue-500 border-b-2 border-gray-300'>Contacto</h1>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <div className='ml-4 mb-2 flex items-center'>
                         <h1 className='text-lg font-semibold'>Numero de Telefono:</h1>
                         <p className='ml-1 text-gray-300 text-lg'>{patient.num}</p>
                       </div>
-                      <div className='ml-4 mb-1 flex items-center'>
+                      <div className='ml-4 mb-2 flex items-center'>
                         <h1 className='text-lg font-semibold'>Correo Electronico:</h1>
                         <p className='ml-1 text-gray-300 text-lg'>correofalso@gmail.com</p>
                       </div>
