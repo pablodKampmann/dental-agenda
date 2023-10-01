@@ -44,11 +44,11 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-black backdrop-blur-sm bg-opacity-10 backdrop-filter flex items-center justify-center">
+        <div className="absolute inset-x-0 mt-52">
             <form onSubmit={HandleSubmit} className="relative py-2 sm:max-w-lg sm:mx-auto">
-                <div className="border border-2 border-blue-900 relative px-4 py-6 bg-gray-600 mx-4 md:mx-0 shadow rounded-xl sm:p-6 max-w-lg mx-auto">
+                <div className="border-2 border-teal-500 relative px-4 py-6 bg-gray-500 md:mx-0 shadow rounded-xl sm:p-6 max-w-lg mx-auto">
                     <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 bg-yellow-200 rounded-full flex items-center justify-center text-yellow-500 text-xl font-mono">i</div>
+                        <div className="h-10 w-10 bg-teal-500 rounded-full flex items-center justify-center text-teal-900 text-xl font-mono">i</div>
                         <div className="block font-semibold text-xl text-white">
                             <h2 className="leading-tight">Agregar Paciente</h2>
                             <p className="text-sm text-gray-200 font-normal leading-tight">Por favor, completa los datos del formulario.</p>
@@ -229,8 +229,8 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                         </div>
                     </div>
                     <div className="pt-3 flex items-center space-x-3">
-                        <button type="button" onClick={HandleCloseModal} className="bg-red-900 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-white px-4 py-3 rounded-md focus:outline-none">CANCELAR</button>
-                        <button type="submit" className="bg-blue-800 hover:bg-blue-500 font-semibold flex justify-center items-center w-full text-white px-4 py-3 rounded-md focus:outline-none">CREAR</button>
+                        <button type="button" onClick={HandleCloseModal} className="bg-red-900 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">CANCELAR</button>
+                        <button type="submit" className="bg-teal-500 hover:bg-teal-300 font-semibold flex justify-center items-center w-full text-teal-900 px-4 py-3 rounded-md focus:outline-none transition duration-200">CREAR</button>
                     </div>
                 </div>
             </form>

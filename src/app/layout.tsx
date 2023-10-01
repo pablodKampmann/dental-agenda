@@ -47,7 +47,7 @@ export default function RootLayout({
   } else {
     return (
       <html lang="en">
-        <body className={`bg-gray-700 ${font.className}`}>
+        <body className={`bg-zinc-200 ${font.className}`}>
           <div >
             <SideBar></SideBar>
             {children}

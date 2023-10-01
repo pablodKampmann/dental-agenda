@@ -14,7 +14,6 @@ import { MdPersonSearch } from 'react-icons/md';
 import { TbUserSearch } from 'react-icons/tb';
 
 export default function Patients() {
-    const searchParams = useSearchParams()!
     const router = useRouter()
     const [page, setPage] = useState(1);
     const [maxPage, setMaxPage] = useState(Number);
@@ -144,10 +143,11 @@ export default function Patients() {
     }
 
     return (
-        <div className="p-4 ml-64">
+
+        <div className="p-4 ml-64 mt-3 relative">
             <div>
                 {openModalCreatePatient && (
-                    <div>
+                    <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
                         <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
                     </div>
                 )}
@@ -158,17 +158,16 @@ export default function Patients() {
                 )}
             </div>
             <div className="p-4 rounded-md mt-14">
-                <div className="flex flex-col md:flex-row gap-3 items-center">
+                <div className="flex flex-row items-center">
                     <div className="flex rounded-full relative">
                         <TbUserSearch
                             className="absolute mt-2 ml-2"
                             size={24}
-
                         />
                         <input
                             type="text"
                             placeholder="Busca un paciente                              Por:"
-                            className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-blue-800 font-semibold bg-gray-500 focus:outline-none focus:border-blue-600 text-white text-lg"
+                            className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-teal-500 font-semibold bg-gray-500 focus:border-3 focus:outline-none focus:border-teal-200 text-white text-lg"
                             name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -181,28 +180,20 @@ export default function Patients() {
                                 }
                             }}
                         />
-                        <div className="flex ml-4 shadow-lg relative h-10 w-60">
-                            <select className="px-4 pr-9 w-full border-2 border-blue-700 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-500">
-                                <option selected>Open this select menu</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                            </select>
 
-                        </div>
-                        <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg ml-4 w-24 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-l-lg`}>DNI</button>
-                        <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-blue-700' : 'bg-gray-500'} shadow-lg w-28 h-10 border-2 border-blue-800 focus:outline-none focus:border-blue-600 text-white text-lg rounded-r-lg`}>Nombre</button>
+                        <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
+                        <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-28 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
                     </div>
-                    <button onClick={OpenModalCreatePatient} type="button" className="shadow-lg ml-auto h-10 bg-blue-900 hover:bg-blue-800 text-white text-lg font-semibold py-2 px-4 md:px-12 border-b-4 border-blue-700 hover:border-blue-500 rounded-lg flex items-center">
+                    <button onClick={OpenModalCreatePatient} type="button" className="shadow-lg ml-auto h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-4 md:px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
                         <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
                     </button>
                 </div>
             </div>
-            <div className="overflow-y-hidden overflow-x-hidden rounded-lg border border-blue-900 ml-4 mr-4 mt-4">
+            <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-teal-500 ml-4 mr-4 mt-4">
                 <div className="overflow-x-auto">
                     <table className="w-full ">
                         <thead>
-                            <tr className="bg-blue-900 text-left text-xs font-semibold uppercase tracking-widest text-white">
+                            <tr className="bg-teal-500	text-left text-sm font-semibold uppercase tracking-widest text-white">
                                 <th className="px-5 py-3">Nombre</th>
                                 <th className="px-5 py-3">Dni</th>
                                 <th className="px-5 py-3">Contacto</th>
@@ -212,71 +203,59 @@ export default function Patients() {
                             </tr>
                         </thead>
                         {listPatients ? (
-                            <tbody className="text-white">
+                            <tbody className="text-white ">
                                 {listPatients.map((patient, index) => (
-                                    <tr onClick={() => handleGoPatient(patient.id)}
-
-                                        key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-gray-800 hover:text-white cursor-pointer">
-
-                                        <td className="px-5 py-3">
+                                    <tr onClick={() => handleGoPatient(patient.id)} key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-teal-900 hover:text-white cursor-pointer">
+                                        <td className="px-5 py-5">
                                             <div className="flex items-center">
-                                                <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-blue-900 text-md font-semibold">
+                                                <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
                                                     <p>{patient.id}</p>
                                                 </div>
-                                                {patient.gender === 'male' ? (
-                                                    <div className="h-10 w-10 flex items-center justify-center">
-                                                        <Image width={34} height={34} src="/maleIcon.png" alt="" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="h-10 w-10 flex items-center justify-center">
-                                                        <Image width={36} height={36} src="/femaleIcon.png" alt="" />
-                                                    </div>
-                                                )}
                                                 <div className="ml-3">
                                                     <p>{patient.name} {patient.lastName}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-3 whitespace-nowrap">
+                                        <td className="px-5 whitespace-nowrap">
                                             <p>{patient.dni}</p>
                                         </td>
-                                        <td className="px-5 py-3 whitespace-nowrap">
+                                        <td className="px-5 whitespace-nowrap">
                                             <p>{patient.num}</p>
                                         </td>
-                                        <td className="px-5 py-3 whitespace-nowrap">
+                                        <td className="px-5  whitespace-nowrap">
                                             <p>{patient.obra}</p>
                                         </td>
-                                        <td className="px-5 py-3 whitespace-nowrap">
+                                        <td className="px-5  whitespace-nowrap">
                                             <p>{patient.affiliateNum}</p>
                                         </td>
-                                        <td className="px-5 py-3">
+                                        <td className="px-5 ">
                                             <div className="flex items-center space-x-2">
                                                 <button
                                                     onClick={(event) => {
                                                         event.stopPropagation();
                                                         HandleModify();
                                                     }}
-                                                    className="rounded-full bg-blue-200 px-3 py-2 text-xs font-bold text-blue-900 hover:bg-blue-900 hover:text-white transition duration-300"
+                                                    className="rounded-full bg-white px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
                                                 >
                                                     Modificar Datos
                                                 </button>
                                                 <button
                                                     onClick={(event) => {
                                                         event.stopPropagation();
-                                                        HandleClinicalFile();
+                                                        HandleHistory();
                                                     }}
-                                                    className="rounded-full bg-red-300 px-3 py-2 text-xs font-bold text-red-950 hover:bg-red-900 hover:text-white transition duration-300"
+                                                    className="rounded-full bg-teal-100 px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
                                                 >
-                                                    Ficha Clinica
+                                                    Historia Clinica
                                                 </button>
                                                 <button
                                                     onClick={(event) => {
                                                         event.stopPropagation();
-                                                        HandleHistory();
+                                                        HandleClinicalFile();
                                                     }}
-                                                    className="rounded-full bg-green-200 px-3 py-2 text-xs font-bold text-green-900 hover:bg-green-900 hover:text-white transition duration-300"
+                                                    className="rounded-full bg-teal-200 px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
                                                 >
-                                                    Historia Clinica
+                                                    Odontograma
                                                 </button>
                                             </div>
                                         </td>
@@ -286,7 +265,7 @@ export default function Patients() {
                         ) : null}
                     </table>
                 </div>
-                <div className="justify-between flex items-center border-t bg-gray-500 px-5 py-2">
+                <div className="justify-between flex items-center bg-gray-500 px-5 py-2">
                     {searchContent ? (
                         <span className="text-md text-white sm:text-sm mr-20">
                             Filtrando Pacientes...
@@ -300,7 +279,7 @@ export default function Patients() {
                         {disableBack ? (
                             <button disabled className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                         ) : (
-                            <button onClick={HandleBackPage} disabled={backPageLoad} className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
+                            <button onClick={HandleBackPage} disabled={backPageLoad} className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
                                 {backPageLoad ? (
                                     <SyncLoader size={8} color="white" />
                                 ) : (
@@ -311,7 +290,7 @@ export default function Patients() {
                         {disableNext ? (
                             <button disabled className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
                         ) : (
-                            <button onClick={HandleNextPage} disabled={nextPageLoad} className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-blue-800 hover:bg-blue-600 text-white text-md font-semibold">
+                            <button onClick={HandleNextPage} disabled={nextPageLoad} className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
                                 {nextPageLoad ? (
                                     <SyncLoader size={8} color="white" />
                                 ) : (
@@ -319,13 +298,13 @@ export default function Patients() {
                                 )}
                             </button>
                         )}
-                        <div className="overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-blue-800 text-white text-2xl font-bold flex justify-center border-2 border-blue-600 ">
+                        <div className="overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-500 text-white text-2xl font-bold flex justify-center  ">
                             {searchContent ? (
                                 <span className="">
                                     <MdPersonSearch className="text-white mr-2 mt-1" size={25} />
                                 </span>
                             ) : (
-                                <span className="mr-2 mt-1 shadow-lg">
+                                <span className="mr-2 mt-1 shadow-lg ">
                                     {page}
                                 </span>
                             )}
@@ -333,6 +312,6 @@ export default function Patients() {
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
