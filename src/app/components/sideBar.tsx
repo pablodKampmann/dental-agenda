@@ -54,7 +54,7 @@ export function SideBar() {
                                 </svg>
                             </button>
                             <div className="flex ml-1 mt-1 mb-1">
-                                <FaTooth size={30}/>
+                                <FaTooth size={30} />
                                 <span className="underline self-center font-bold ml-3 text-2xl whitespace-nowrap dark:text-white">Dental Agenda</span>
                             </div>
                         </div>
@@ -68,7 +68,7 @@ export function SideBar() {
                                         data-dropdown-toggle="dropdown-user"
                                     >
                                         <span className="sr-only">Open user menu</span>
-                                        <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out"/>
+                                        <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out" />
                                     </button>
                                 </div>
                             </div>
@@ -96,6 +96,7 @@ export function SideBar() {
                                 </li>
                             </Link>
                         )}
+                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
                         {pathname === '/patients' ? (
                             <li>
                                 <button type="button" className="flex text-left items-center p-2 text-teal-300 rounded-lg hover:bg-teal-900 group w-full">
@@ -113,7 +114,7 @@ export function SideBar() {
                                 </Link>
                             </li>
                         )}
-
+                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                 <svg className="flex-shrink-0 w-5 h-5 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -122,6 +123,8 @@ export function SideBar() {
                                 <span className="flex-1 ml-3 whitespace-nowrap">Inbox</span>
                             </a>
                         </li>
+                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
+
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                 <svg className="flex-shrink-0 w-5 h-5 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
@@ -130,6 +133,7 @@ export function SideBar() {
                                 <span className="flex-1 ml-3 whitespace-nowrap">Users</span>
                             </a>
                         </li>
+                        <hr className="border-teal-600 border rounded-full ml-2 mr-16" />
                         <li>
                             <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                 <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">

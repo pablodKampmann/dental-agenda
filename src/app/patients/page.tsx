@@ -1,7 +1,6 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
-import Image from 'next/image';
+import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
 import { ModalCreatePatient } from './../components/modalCreatePatient'
 import { SuccessPatientAlert } from "./../components/successPatientAlert";
@@ -15,6 +14,7 @@ import { TbUserSearch } from 'react-icons/tb';
 
 export default function Patients() {
     const router = useRouter()
+    const params = new URLSearchParams();
     const [page, setPage] = useState(1);
     const [maxPage, setMaxPage] = useState(Number);
     const [disableBack, setDisableBack] = useState(false);
@@ -23,7 +23,8 @@ export default function Patients() {
     const [showMax, setShowMax] = useState(Number);
     const [selectedField, setSelectedField] = useState('dni');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
-    const [executeSuccessPatientAlert, setExecuteSuccessPatientAlert] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [leaveModal, setLeaveModal] = useState(false);
     const [totalPatients, setTotalPatients] = useState(0);
     const [listPatients, setListPatients] = useState<null | any[]>(null);
     const [searchContent, setSearchContent] = useState('');
@@ -31,14 +32,14 @@ export default function Patients() {
     const [backPageLoad, setBackPageLoad] = useState(false);
 
     const showSuccessAlert = () => {
-        setExecuteSuccessPatientAlert(true);
+        setShowSuccess(true);
         setTimeout(() => {
-            setExecuteSuccessPatientAlert(false);
+            setLeaveModal(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                setLeaveModal(false);
+            }, 450)
         }, 5000);
-    }
-
-    function HandleClickRow(patient: any) {
-        console.log(patient.name);
     }
 
     function HandleModify() {
@@ -89,19 +90,21 @@ export default function Patients() {
     }, [selectedField]);
 
     useEffect(() => {
+        if (searchContent.length > 0) {
+            Search();
+        }
+        if (searchContent === "") {
+            Get();
+        }
+
         async function Search() {
             const patientsFilter = await SearchPatient(selectedField, searchContent)
             setListPatients(patientsFilter)
         }
-        if (searchContent.length > 0) {
-            Search();
-        }
+
         async function Get() {
             const data = await GetPatients(page);
             setListPatients(data.patients);
-        }
-        if (searchContent === "") {
-            Get();
         }
     }, [searchContent])
 
@@ -137,7 +140,6 @@ export default function Patients() {
     }, [page]);
 
     function handleGoPatient(patientId: any) {
-        const params = new URLSearchParams();
         params.set('patientId', patientId);
         router.push(`/patients/${patientId}?${params.toString()}`);
     }
@@ -149,11 +151,6 @@ export default function Patients() {
                 {openModalCreatePatient && (
                     <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
                         <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
-                    </div>
-                )}
-                {executeSuccessPatientAlert && (
-                    <div>
-                        <SuccessPatientAlert />
                     </div>
                 )}
             </div>
@@ -184,9 +181,18 @@ export default function Patients() {
                         <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
                         <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-28 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
                     </div>
-                    <button onClick={OpenModalCreatePatient} type="button" className="shadow-lg ml-auto h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-4 md:px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
-                        <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
-                    </button>
+                    <div className='flex justify-end items-center ml-auto'>
+                        {showSuccess && (
+                            <div className='flex fixed items-end justify-end ml-4 mr-80 transform -translate-y-7'>
+                                <div className={`${leaveModal ? 'animate-slide-up' : 'animate-slide-down'}`}>
+                                    <SuccessPatientAlert />
+                                </div>
+                            </div>
+                        )}
+                        <button onClick={OpenModalCreatePatient} type="button" className="shadow-xl ml-auto h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-4 md:px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+                            <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
+                        </button>
+                    </div>
                 </div>
             </div>
             <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-teal-500 ml-4 mr-4 mt-4">
@@ -203,9 +209,9 @@ export default function Patients() {
                             </tr>
                         </thead>
                         {listPatients ? (
-                            <tbody className="text-white ">
+                            <tbody className="text-white">
                                 {listPatients.map((patient, index) => (
-                                    <tr onClick={() => handleGoPatient(patient.id)} key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-teal-900 hover:text-white cursor-pointer">
+                                    <tr onClick={() => handleGoPatient(patient.id)} key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-teal-900 hover:text-white cursor-pointer ml-auto">
                                         <td className="px-5 py-5">
                                             <div className="flex items-center">
                                                 <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
@@ -233,7 +239,7 @@ export default function Patients() {
                                                 <button
                                                     onClick={(event) => {
                                                         event.stopPropagation();
-                                                        HandleModify();
+                                                        handleGoPatient(patient.id);
                                                     }}
                                                     className="rounded-full bg-white px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
                                                 >

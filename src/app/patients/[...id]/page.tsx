@@ -22,6 +22,7 @@ export default function patientId() {
   const [rowModify, setRowModify] = useState('');
   const [changes, setChanges] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
+  const [message, setMessage] = useState('');
 
   async function submitChanges(changes: string, table: string) {
     setRowModify('');
@@ -31,11 +32,7 @@ export default function patientId() {
     }
   }
 
-  function OpenModalCreatePatient() {
-    setOpenAlert(true);
-  }
-
-  function CloseModalCreatePatient() {
+  function closeModal() {
     setOpenAlert(false);
   }
 
@@ -57,7 +54,7 @@ export default function patientId() {
       <div className='ml-72 p-4 mt-20 mr-10 relative'>
         {openAlert && (
           <div className='fixed inset-0 backdrop-blur-sm ml-64 z-10'>
-            <AlertPatient onCloseModal={CloseModalCreatePatient} />
+            <AlertPatient id={id} message={message} onCloseModal={closeModal} />
           </div>
         )}
         <div className='flex justify-between mb-2'>
@@ -67,24 +64,24 @@ export default function patientId() {
         </div>
         {patient && (
           <div>
-            <div className='border-4 rounded-md	border-teal-500 bg-gray-900 shadow-xl bg-opacity-70'>
+            <div className='border-4 rounded-md	border-teal-500 bg-gray-500 shadow-xl '>
               <div className='mt-4 ml-4 mb-4'>
                 <div className='flex'>
                   <PiAddressBookBold size={70} />
                   <div className='flex items-center'>
-                    <h1 className='mb-8 ml-4 text-3xl font-semibold text-teal-500'>{patient.name} {patient.lastName}</h1>
-                    <p className='mb-8 ml-2 mt-1 text-gray-400 text-md'>(Paciente)</p>
+                    <h1 className='mb-8 ml-4 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
+                    <p className='mb-8 ml-2 mt-1 text-md'>(Paciente)</p>
                     <div className='ml-4 mt-9 absolute flex items-center'>
                       <TbPhone size={20} className='shadow-2xl text-yellow-500' />
-                      <p className='ml-1 text-gray-400 text-md'>{patient.num}</p>
+                      <p className='ml-1 text-md'>{patient.num}</p>
                       <MdLocationPin size={20} className='ml-8 shadow-2xl text-red-600' />
-                      <p className='ml-1 text-gray-400 text-md'>{patient.address}</p>
+                      <p className='ml-1 text-md'>{patient.address}</p>
                       <LiaIdCardSolid size={26} className='ml-8 shadow-2xl text-green-600' />
-                      <p className='ml-1 text-gray-400 text-md'>{patient.dni}</p>
+                      <p className='ml-1 text-md'>{patient.dni}</p>
                     </div>
                   </div>
                   <div className='ml-auto'>
-                    <button onClick={() => setOpenAlert(true)} className='flex items-center'>
+                    <button onClick={() => [setOpenAlert(true), setMessage('hola')]} className='flex items-center'>
                       <MdDelete size={60} className="mt-1 mr-2 text-teal-500 hover:scale-125 duration-150 ease-in-out" />
                     </button>
                   </div>
@@ -93,7 +90,7 @@ export default function patientId() {
               </div>
             </div>
             <div className='flex'>
-              <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-900 shadow-xl bg-opacity-70 w-1/2 relative'>
+              <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
                 <div className="absolute top-0 right-0 mt-3 mr-3">
                   <ImAccessibility size={70} />
                 </div>
@@ -106,7 +103,7 @@ export default function patientId() {
                         if (rowModify !== 'name') {
                           setRowModify('name');
                         }
-                      }} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-600' : ''}`}>
+                      }} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-500' : ''}`}>
                         <h1 className='text-lg font-semibold'>Nombre:</h1>
                         {rowModify === 'name' ? (
                           <input onKeyDown={(event) => {
@@ -134,7 +131,7 @@ export default function patientId() {
                         if (rowModify !== 'lastName') {
                           setRowModify('lastName');
                         }
-                      }} onMouseEnter={() => setHovered('lastName')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'lastName' || rowModify === 'lastName' ? '' : 'border-transparent'} ${rowModify === 'lastName' ? 'border-teal-600' : ''}`}>
+                      }} onMouseEnter={() => setHovered('lastName')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'lastName' || rowModify === 'lastName' ? '' : 'border-transparent'} ${rowModify === 'lastName' ? 'border-teal-500' : ''}`}>
                         <h1 className='text-lg font-semibold'>Apellido:</h1>
                         {rowModify === 'lastName' ? (
                           <input onKeyDown={(event) => {
@@ -159,7 +156,7 @@ export default function patientId() {
                         if (rowModify !== 'dni') {
                           setRowModify('dni');
                         }
-                      }} onMouseEnter={() => setHovered('dni')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'dni' || rowModify === 'dni' ? '' : 'border-transparent'} ${rowModify === 'dni' ? 'border-teal-600' : ''}`}>
+                      }} onMouseEnter={() => setHovered('dni')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'dni' || rowModify === 'dni' ? '' : 'border-transparent'} ${rowModify === 'dni' ? 'border-teal-500' : ''}`}>
                         <h1 className='text-lg font-semibold'>DNI:</h1>
                         {rowModify === 'dni' ? (
                           <input onKeyDown={(event) => {
@@ -184,7 +181,7 @@ export default function patientId() {
                         if (rowModify !== 'birthDate') {
                           setRowModify('birthDate');
                         }
-                      }} onMouseEnter={() => setHovered('birthDate')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'birthDate' || rowModify === 'birthDate' ? '' : 'border-transparent'} ${rowModify === 'birthDate' ? 'border-teal-600' : ''}`}>
+                      }} onMouseEnter={() => setHovered('birthDate')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'birthDate' || rowModify === 'birthDate' ? '' : 'border-transparent'} ${rowModify === 'birthDate' ? 'border-teal-500' : ''}`}>
                         <h1 className='text-lg font-semibold'>Nacimiento:</h1>
                         {rowModify === 'birthDate' ? (
                           <input onKeyDown={(event) => {

@@ -13,13 +13,23 @@ module.exports = {
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       animation: {
-        'move-right': 'move-right 0.3s ease-out',     
+        'slide-down': 'slide-down 0.3s ease-out',
+        'slide-up': 'slide-up 0.5s ease-out',
       },
       keyframes: {
-        'move-right': {
-          '0%': { transform: 'translateX(0%)', opacity: 1 },
-          '50%': { transform: 'translateX(2%)', opacity: .5 },
-          '100%': { transform: 'translateX(5%)', opacity: 0 },
+        'slide-down': {
+          '0%': { opacity: '1', transform: 'translateY(-100%)' },
+          '25%': { opacity: '1', transform: 'translateY(-75%)' },
+          '50%': { opacity: '1', transform: 'translateY(-50%)' },
+          '75%': { opacity: '1', transform: 'translateY(-25%)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-up': {
+          '0%': { opacity: '1', transform: 'translateY(0%)' },
+          '25%': { opacity: '1', transform: 'translateY(-25%)' },
+          '50%': { opacity: '1', transform: 'translateY(-50%)' },
+          '75%': { opacity: '1', transform: 'translateY(-75%)' },
+          '100%': { opacity: '1', transform: 'translateY(-100%)' },
         },
       },
     },
