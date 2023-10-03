@@ -60,17 +60,17 @@ export function SideBar() {
                         </div>
                         <div className="flex items-center">
                             <div className="flex items-center ml-3">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className={`flex text-sm bg-teal-900 rounded-full ${openModal ? 'focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600' : ''}`}
-                                        aria-expanded="false"
-                                        data-dropdown-toggle="dropdown-user"
-                                    >
-                                        <span className="sr-only">Open user menu</span>
-                                        <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out" />
-                                    </button>
-                                </div>
+                                <button className="p-3 hover:bg-teal-200 rounded-sm mr-4 font-semibold">
+                                    Nombre Apellido
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`flex text-sm bg-teal-900 rounded-full ${openModal ? 'focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600' : ''}`}
+                                    aria-expanded="false"
+                                    data-dropdown-toggle="dropdown-user"
+                                >
+                                    <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out" />
+                                </button>
                             </div>
                         </div>
                     </div>

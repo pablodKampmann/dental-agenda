@@ -70,7 +70,8 @@ export default function PatientId() {
                 <div className='flex'>
                   <PiAddressBookBold size={70} />
                   <div className='flex items-center'>
-                    <h1 className='mb-8 ml-4 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
+                    <p className='mb-6 bg-teal-500 rounded-full text-center w-8 h-8 font-bold'>{patient.id}</p>
+                    <h1 className='mb-8 ml-2 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
                     <p className='mb-8 ml-2 mt-1 text-md'>(Paciente)</p>
                     <div className='ml-4 mt-9 absolute flex items-center'>
                       <TbPhone size={20} className='shadow-2xl text-yellow-500' />
@@ -93,7 +94,7 @@ export default function PatientId() {
             <div className='flex'>
               <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
                 <div className="absolute top-0 right-0 mt-3 mr-3">
-                  <ImAccessibility size={70} />
+                  <ImAccessibility size={70} className="text-teal-500"/>
                 </div>
                 <div className='mt-4 ml-4 mb-4'>
                   <div className='flex'>
@@ -207,9 +208,9 @@ export default function PatientId() {
                   </div>
                 </div>
               </div>
-              <div className='mt-8 ml-4 border-4 rounded-md border-teal-500 bg-gray-900 shadow-xl bg-opacity-70 w-1/2 relative'>
+              <div className='mt-8 ml-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl  w-1/2 relative'>
                 <div className="absolute top-0 right-0 mt-3 mr-3">
-                  <BsFillPhoneFill size={70} />
+                  <BsFillPhoneFill size={70} className="text-teal-500"/>
                 </div>
                 <div className='mt-4 ml-4 mb-4'>
                   <div className='flex'>

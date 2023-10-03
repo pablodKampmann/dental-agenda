@@ -44,7 +44,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
     }
 
     return (
-        <div className="absolute inset-x-0 mt-52">
+        <div className="fixed inset-0 flex items-center justify-center z-10 mt-12">
             <form onSubmit={HandleSubmit} className="relative py-2 sm:max-w-lg sm:mx-auto">
                 <div className="border-4 border-teal-500 relative px-4 py-6 bg-gray-500 md:mx-0 shadow rounded-xl sm:p-6 max-w-lg mx-auto">
                     <div className="flex items-center space-x-3">
