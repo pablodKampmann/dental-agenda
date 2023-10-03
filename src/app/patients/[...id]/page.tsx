@@ -14,7 +14,7 @@ import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
 import { updatePatient } from "./../../components/updatePatient";
 import { AlertPatient } from "./../../components/alertPatient";
 
-export default function patientId() {
+export default function PatientId() {
   const searchParams = useSearchParams()
   const id = searchParams.get('patientId');
   const [patient, setPatient] = useState<any>(null);
@@ -36,19 +36,20 @@ export default function patientId() {
     setOpenAlert(false);
   }
 
-  if (id !== null) {
-    useEffect(() => {
-      async function get() {
-        try {
-          const data = await getPatient(id);
-          setPatient(data);
-        } catch (error) {
-          console.error(error);
-        }
+  useEffect(() => {
+    async function get() {
+      try {
+        const data = await getPatient(id);
+        setPatient(data);
+      } catch (error) {
+        console.error(error);
       }
+    }
 
-      get();
-    }, []);
+    get();
+  }, []);
+
+  if (id !== null) {
 
     return (
       <div className='ml-72 p-4 mt-20 mr-10 relative'>
