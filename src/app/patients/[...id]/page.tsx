@@ -23,6 +23,7 @@ export default function PatientId() {
   const [changes, setChanges] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedField, setSelectedField] = useState('basic');
 
   async function submitChanges(changes: string, table: string) {
     setRowModify('');
@@ -58,10 +59,15 @@ export default function PatientId() {
             <AlertPatient id={id} message={message} onCloseModal={closeModal} />
           </div>
         )}
-        <div className='flex justify-between mb-2'>
+        <div className='flex mb-2'>
           <Link prefetch={true} href="/patients">
             <RiArrowGoBackFill size={50} className="mb-4 hover:scale-125 duration-150 ease-in-out text-teal-800" />
           </Link>
+          <div className='flex mx-auto items-center mb-2'>
+            <button onClick={() => setSelectedField('basic')} className={`${selectedField === 'basic' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4  h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300 px-3`}>Info. Basica</button>
+            <button onClick={() => setSelectedField('history')} className={`${selectedField === 'history' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold transition duration-300 px-3`}>Historia Clinica</button>
+            <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg  h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300 px-3`}>Odontograma</button>
+          </div>
         </div>
         {patient && (
           <div>
@@ -70,7 +76,9 @@ export default function PatientId() {
                 <div className='flex'>
                   <PiAddressBookBold size={70} />
                   <div className='flex items-center'>
-                    <p className='mb-6 bg-teal-500 rounded-full text-center w-8 h-8 font-bold'>{patient.id}</p>
+                    <div className='mb-8 ml-2 bg-teal-500 rounded-full w-8 h-8 transform translate-y-0.5'>
+                      <p className='font-bold text-center text-lg text-teal-800'>{patient.id}</p>
+                    </div>
                     <h1 className='mb-8 ml-2 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
                     <p className='mb-8 ml-2 mt-1 text-md'>(Paciente)</p>
                     <div className='ml-4 mt-9 absolute flex items-center'>
@@ -94,7 +102,7 @@ export default function PatientId() {
             <div className='flex'>
               <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
                 <div className="absolute top-0 right-0 mt-3 mr-3">
-                  <ImAccessibility size={70} className="text-teal-500"/>
+                  <ImAccessibility size={70} className="text-teal-500" />
                 </div>
                 <div className='mt-4 ml-4 mb-4'>
                   <div className='flex'>
@@ -198,7 +206,7 @@ export default function PatientId() {
                           {hovered === 'birthDate' && rowModify !== 'birthDate' && <TbPencilCog size={26} />}
                         </div>
                         {rowModify === 'birthDate' && (
-                          <button className="ml-auto" >
+                          <button className="ml-auto transform -translate-x-3" >
                             <BsFillCheckCircleFill onClick={() => submitChanges(changes, rowModify)} className="hover:scale-125 duration-150 ease-in-out" size={26} />
                           </button>
                         )}
@@ -210,7 +218,7 @@ export default function PatientId() {
               </div>
               <div className='mt-8 ml-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl  w-1/2 relative'>
                 <div className="absolute top-0 right-0 mt-3 mr-3">
-                  <BsFillPhoneFill size={70} className="text-teal-500"/>
+                  <BsFillPhoneFill size={70} className="text-teal-500" />
                 </div>
                 <div className='mt-4 ml-4 mb-4'>
                   <div className='flex'>

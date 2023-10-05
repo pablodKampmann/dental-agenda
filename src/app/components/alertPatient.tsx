@@ -27,7 +27,7 @@ export function AlertPatient({ id, message, onCloseModal }: ModalSettProps) {
                     <div className="inline-block p-3 bg-teal-700 rounded-full">
                         <MdPersonRemoveAlt1 size={40} className="text-teal-100" />
                     </div>
-                    <h2 className="mt-2 text-lg font-semibold text-gray-800">Cuidado</h2>
+                    <h2 className="mt-2 text-lg font-semibold text-gray-800">Ojo!</h2>
                     <p className="mt-2 text-md text-gray-600 leading-relaxed">¿Estás seguro/a de que deseas eliminar a este paciente?</p>
                     <p className=" text-md text-gray-900 font-semibold leading-relaxed">Esta accion sera permanente y no se podra volver atras</p>
                 </div>
