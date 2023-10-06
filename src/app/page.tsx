@@ -4,13 +4,19 @@ import Image from 'next/image'
 import { useState } from 'react';
 import Calendar from 'react-calendar';
 
+type ValuePiece = Date | null;
+
+type Value = ValuePiece | [ValuePiece, ValuePiece];
+
 export default function Page() {
-  const [value, onChange] = useState(new Date());
+  const [value, onChange] = useState<Value>(new Date());
 
   function isWeekend(date: any) {
-    const day = date.getDay(); 
+    const day = date.getDay();
     return day === 0 || day === 6;
   }
+
+
 
   return (
     <div className="ml-72 p-4 mt-20 mr-10 relative">
@@ -27,12 +33,12 @@ export default function Page() {
           </button>
         </div>
       </div>
-      <div className='flex justify-between'>
+      <div className='flex justify-between w-full ' >
 
-        <div className='border-4 border-teal-500 rounded-2xl mr-2'>
+        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl'>
           <table className='w-full'>
             <thead>
-              <tr className='bg-gray-500 text-center'>
+              <tr className='bg-gray-500 t  ext-center'>
                 <th className='border-2 border-teal-500 p-3 rounded-tl-xl'>Tiempo</th>
                 <th className='border-2 border-teal-500 p-3 '>Lunes</th>
                 <th className='border-2 border-teal-500 p-3 '>Martes</th>
@@ -47,7 +53,7 @@ export default function Page() {
                   <td className='border-2 border-teal-500 p-3 text-center bg-gray-500'>{time}</td>
                   {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (
                     <td key={day} className='border-2 border-teal-500 p-3 text-center'>
-                      {`${day} ${time}:00`}
+                      {`turno`}
                     </td>
                   ))}
                 </tr>
@@ -55,13 +61,43 @@ export default function Page() {
             </tbody>
           </table>
         </div>
-        <div className="border border-dashed border-gray-600 ml-2">
-          <Calendar onChange={onChange}
-          value={value} 
-          className="bg-gray-900 rounded-lg" 
-          tileDisabled={({ date }) => isWeekend(date)} 
-          />
+        <div className="ml-2 w-3/12">
+          <div className='shadow-xl'>
+            <Calendar onChange={onChange}
+              value={value}
+              className="bg-teal-700 border-4 border-teal-500 rounded-lg "
+              maxDate={new Date(2099, 11, 31)}
+              defaultValue={new Date()}
+              view="month"
+              locale="es-ES"
+            />
+          </div>
+          <div className='border-4 mt-4 border-teal-500 rounded-lg shadow-xl bg-teal-500'>
+            <div className='bg-teal-500'>
+              <h1 className='font-bold text-center text-xl'>Turnos del día</h1>
+            </div>
+            <div className='border-4 rounded-md border-teal-800 bg-white'>
+              <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2'>
+                <p className='ml-1'>Maria Gonzales </p>
+                <p className='ml-auto mr-2'>10:30</p>
+              </div>
+              <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-teal-500'>
+                <p className='ml-1'>Jose Mario</p>
+                <p className='ml-auto mr-2'>11:30</p>
 
+              </div>
+              <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-teal-500'>
+                <p className='ml-1'>Vicenzo Giorda</p>
+                <p className='ml-auto mr-2'>15:30</p>
+
+              </div>
+              <div className='flex bg-gray-500 hover:bg-gray-400 text-md  py-2 border-t-2 border-dashed border-teal-500'>
+                <p className='ml-1'>Pablo Mario</p>
+                <p className='ml-auto mr-2'>16:00</p>
+
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
