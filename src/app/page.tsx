@@ -16,6 +16,7 @@ export default function Page() {
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[]>(null);
+  const [patient, setPatient] = useState<any>(null);
 
   function isWeekend(date: any) {
     const day = date.getDay();
@@ -30,9 +31,6 @@ export default function Page() {
     setSearchContent('');
   }, [selectedField]);
 
-  useEffect(() => {
-    console.log(listPatients);
-  }, [listPatients]);
 
   useEffect(() => {
     if (searchContent.length > 0) {
@@ -67,8 +65,7 @@ export default function Page() {
           eoiefjnoq
         </div>
         <div>
-          <button onClick={() => setShowForm(!showForm)} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
-
+          <button onClick={() => {setShowForm(!showForm); setPatient(null)}} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
             {showForm ? (
               <div className='flex justify-center items-center w-44'>
                 <p>Cancelar</p>
@@ -82,10 +79,9 @@ export default function Page() {
           </button>
         </div>
       </div>
-      <div className='flex justify-between w-full ' >
-
-        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl'>
-          <table className='w-full'>
+      <div className='flex justify-between'>
+        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl flex-1 w-4/6'>
+          <table className=''>
             <thead>
               <tr className='bg-gray-500 text-center cursor-default	'>
                 <th className='border-2 border-teal-500 p-3 rounded-tl-xl'>Tiempo</th>
@@ -96,7 +92,7 @@ export default function Page() {
                 <th className='border-2 border-teal-500 p-3 rounded-tr-xl'>Viernes</th>
               </tr>
             </thead>
-            <tbody className='w-full'>
+            <tbody className=''>
               {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((time) => (
                 <tr key={time}>
                   <td className='cursor-default	 bg-gray-500 border-2 border-teal-500 text-center'>{time}</td>
@@ -117,10 +113,10 @@ export default function Page() {
             </tbody>
           </table>
         </div>
-        <div className="ml-2 w-3/12">
+        <div className="w-4/12 mr-8">
           {showForm ? (
-            <div className='flex flex-col border-4 border-teal-500 rounded-lg h-full shadow-lg bg-zinc-200'>
-              <div className='border-teal-700 border-b-4 flex-1'>
+            <div className='flex mr-2 flex-col border-4 border-teal-500 rounded-lg h-full shadow-lg bg-zinc-200'>
+              <div className={`border-teal-700 border-b-4 transition duration-200 ${patient ? '' : 'flex-1'}`}>
                 <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                   <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
                   <h1 className=' text-xl font-semibold text-teal-800 text-center cursor-default'>Selecciona el paciente</h1>
@@ -141,20 +137,28 @@ export default function Page() {
                   <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
                   <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
                 </div>
-                <div className="mt-4 ml-2 mr-2 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-y-auto flex-1">
-                  <div className="h-40">
+                <div className='mt-4 ml-2 mr-2 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
+                  <div className={`${patient ? 'h-8' : 'h-40'} `}>
                     {listPatients ? (
                       <div>
-                        {listPatients.map((patient, index) => (
-                          <div key={index} className="p-1 hover:bg-teal-900 transition duration-100 cursor-pointer flex justify-between">
-                            <p className='ml-1'>
-                              {patient.name} {patient.lastName}
-                            </p>
-                            <p className='mr-1'>
-                              {patient.dni}
-                            </p>
+                        {patient ? (
+                          <div className='hover:bg-teal-900'>
+                            <p className='cursor-pointer ml-1 text-lg text-teal-300 text-center'>{patient.name} {patient.lastName}</p>
                           </div>
-                        ))}
+                        ) : (
+                          <div>
+                            {listPatients.map((patient, index) => (
+                              <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 transition duration-100 cursor-pointer flex justify-between">
+                                <p className='ml-1'>
+                                  {patient.name} {patient.lastName}
+                                </p>
+                                <p className='mr-1'>
+                                  {patient.dni}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="ml-2 p-1">

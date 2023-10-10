@@ -47,7 +47,7 @@ export default function RootLayout({
   } else {
     return (
       <html lang="en">
-        <body className={`bg-zinc-300 ${font.className}`}>
+        <body className={`bg-zinc-300 overflow-hidden	 ${font.className}`}>
           <div >
             <SideBar></SideBar>
             {children}
