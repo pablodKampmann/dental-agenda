@@ -8,6 +8,8 @@ import { GetPatients } from "./components/getPatients"
 import { BsPersonCheck } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
+import { GiClick } from "react-icons/gi";
+import { ModalCreatePatient } from './components/modalCreatePatient'
 
 type ValuePiece = Date | null;
 
@@ -21,6 +23,13 @@ export default function Page() {
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [patient, setPatient] = useState<any>(null);
   const [date, setDate] = useState<any>(null);
+  const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [leaveModal, setLeaveModal] = useState(false);
+  const namesMonths = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
 
   function isWeekend(date: any) {
     const day = date.getDay();
@@ -67,9 +76,34 @@ export default function Page() {
     }
   }, [searchContent])
 
+  function OpenModalCreatePatient() {
+    setOpenModalCreatePatient(true);
+  }
+
+  function CloseModalCreatePatient() {
+    setOpenModalCreatePatient(false);
+  }
+
+  const showSuccessAlert = () => {
+    setShowSuccess(true);
+    setTimeout(() => {
+      setLeaveModal(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setLeaveModal(false);
+      }, 450)
+    }, 5000);
+  }
 
   return (
     <div className="ml-72 p-4 mt-20 mr-10 relative">
+      <div>
+        {openModalCreatePatient && (
+          <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
+            <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
+          </div>
+        )}
+      </div>
       <div className='mb-4 flex justify-between items-center'>
         <div>
           <h1 className='font-bold text-lg text-teal-900'>Jueves 10 de Noviembre (2023)</h1>
@@ -78,7 +112,7 @@ export default function Page() {
           eoiefjnoq
         </div>
         <div>
-          <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent('') }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+          <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
             {showForm ? (
               <div className='flex justify-center items-center w-44'>
                 <p>Cancelar</p>
@@ -93,42 +127,45 @@ export default function Page() {
         </div>
       </div>
       <div className='flex justify-between'>
-        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl flex-1'>
-          <table className=''>
-            <thead>
-              <tr className='bg-gray-500 text-center cursor-default	'>
-                <th className='border-2 border-teal-500 p-3 rounded-tl-xl'>Tiempo</th>
-                <th className='border-2 border-teal-500 p-3 '>Lunes</th>
-                <th className='border-2 border-teal-500 p-3 '>Martes</th>
-                <th className='border-2 border-teal-500 p-3 '>Miércoles</th>
-                <th className='border-2 border-teal-500 p-3 '>Jueves</th>
-                <th className='border-2 border-teal-500 p-3 rounded-tr-xl'>Viernes</th>
-              </tr>
-            </thead>
-            <tbody className=''>
-              {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((time) => (
-                <tr key={time}>
-                  <td className='cursor-default	 bg-gray-500 border-2 border-teal-500 text-center'>{time}</td>
-                  {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (
-                    <td
-                      key={day}
-                      className='border-2 border-teal-500 text-center'
-                    >
-                      <div onClick={() => setShowForm(true)} className={`cursor-pointer w-20 h-15 p-3 ${showForm ? 'hover:bg-teal-500' : ''}`}>
-                        <p>Hola</p>
-                      </div>
-                    </td>
-                  ))}
+        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl flex-1 h-screen overflow-auto'>
+          <div className='h-3/6'>
+            <table className='w-full'>
+              <thead>
+                <tr className='bg-gray-500 text-center cursor-default	'>
+                  <th className='border-2 border-teal-500 p-3 rounded-tl-xl'>Tiempo</th>
+                  <th className='border-2 border-teal-500 p-3 '>Lunes</th>
+                  <th className='border-2 border-teal-500 p-3 '>Martes</th>
+                  <th className='border-2 border-teal-500 p-3 '>Miércoles</th>
+                  <th className='border-2 border-teal-500 p-3 '>Jueves</th>
+                  <th className='border-2 border-teal-500 p-3 rounded-tr-xl'>Viernes</th>
                 </tr>
+              </thead>
+              <tbody className=''>
+                {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((time) => (
+                  <tr key={time}>
+                    <td className='cursor-default	 bg-gray-500 border-2 border-teal-500 text-center'>{time}</td>
+                    {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (
+                      <td
+                        key={day}
+                        className='border-2 border-teal-500 text-center'
+                      >
+                        <div onClick={() => setShowForm(true)} className={`cursor-pointer w-20 h-15 p-3 ${showForm ? 'hover:bg-teal-500' : ''}`}>
+                          <p>Hola</p>
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
 
-              ))}
+                ))}
 
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
+
         </div>
-        <div className="flex w-4/12 ml-16">
+        <div className="flex w-4/12 ml-16 h-screen">
           {showForm ? (
-            <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl h-96 shadow-lg bg-zinc-200 overflow-auto'>
+            <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl shadow-lg h-3/4 bg-zinc-200 overflow-auto'>
               <div className={`border-teal-700 border-b-4 ${patient ? '' : 'flex-1'}`}>
                 {patient ? (
                   <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
@@ -161,7 +198,7 @@ export default function Page() {
                   </div>
                 )}
 
-                <div className='mt-4 ml-2 mr-2 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
+                <div className='mt-4 ml-2 mr-2 mb-1 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
                   <div className={`${patient ? 'h-fit' : 'h-40'} `}>
                     {listPatients && typeof listPatients !== 'string' ? (
                       <div>
@@ -198,6 +235,17 @@ export default function Page() {
                     )}
                   </div>
                 </div>
+                {!patient && (
+                  <div className='flex'>
+                    <p className='ml-2 mb-1 text-gray-500 text-sm font-medium'>No encontras un paciente?</p>
+                    <div onClick={OpenModalCreatePatient} className='cursor-pointer flex items-center'>
+                      <p className='ml-2 mb-1 text-gray-500 text-sm font-extrabold '>Cargalo ahora</p>
+                      <GiClick className="ml-1 text-gray-500" />
+                    </div>
+                  </div>
+
+                )}
+
               </div>
               <div className='border-teal-700 border-b-4 flex-1 '>
 
@@ -215,7 +263,7 @@ export default function Page() {
                 )}
                 <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                   {date ? (
-                    <div className=' ml-1 mr-1 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
+                    <div className=' ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
                       <p className='text-sm text-teal-300 text-center'>Día seleccionado: </p>
                       <p className='ml-1 text-sm text-teal-300 text-center font-bold'>
                         {date.getDate()} del {date.getMonth()} de {date.getFullYear()}
@@ -223,7 +271,7 @@ export default function Page() {
                     </div>) : (
                     <Calendar onChange={setDate}
                       value={date}
-                      className="bg-teal-700 border-4 border-teal-500 rounded-lg"
+                      className="bg-gray-500 border-4 border-teal-500 rounded-lg"
                       maxDate={new Date(2099, 11, 31)}
                       defaultValue={new Date()}
                       view="month"
@@ -232,11 +280,40 @@ export default function Page() {
                   )}
                 </div>
               </div>
+
               <div className='flex-1' >
                 <div className='ml-2 mt-2 mr-2 mb-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                   <h1 className='font-black	text-4xl text-teal-800 mr-4'>3</h1>
                   <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
                 </div>
+                {patient ? (
+                  <div className='mt-4 ml-2 mr-2 mb-2 flex'>
+                    <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
+                      <h1 className='text-xl font-bold text-teal-100 text-center underline'>Resumen del turno: </h1>
+                      <div className='mt-1 m-2 border-2 rounded-lg border-teal-500'>
+                        <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Paciente: </p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Nombre del Paciente: {patient.name} {patient.lastName}</p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>DNI: {patient.dni}</p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Obra Social: {patient.obra}</p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Número de afiliado: {patient.affiliateNum}</p>
+                      </div>
+                      <div className='mt-1 m-2 border-2 rounded-lg border-teal-500'>
+                        <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Fecha: </p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Año: {date.getFullYear()}</p>
+                        <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Para: el Martes {date.getDate()} de {namesMonths[date.getMonth()]}</p>
+                      </div>
+                      <div className='flex justify-center items-center text-xl font-semibold transition duration-100 text-teal-800 border-2 rounded-lg ml-2 mr-2 mb-1 p-1 cursor-pointer hover:bg-teal-300 hover:text-teal-900 border-teal-900 bg-teal-500'>
+                        Confirmar
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='mt-4 ml-2 mr-2 mb-2 flex'>
+                    <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
+                      <p className='text-lg font-bold text-teal-300 text-center'>Completa los Items anteriores antes de confirmar el turno</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -244,7 +321,7 @@ export default function Page() {
               <div className='shadow-xl'>
                 <Calendar onChange={onChange}
                   value={value}
-                  className="bg-teal-700 border-4 border-teal-500 rounded-lg "
+                  className="bg-gray-500 border-4 border-teal-500 rounded-lg "
                   maxDate={new Date(2099, 11, 31)}
                   defaultValue={new Date()}
                   view="month"
