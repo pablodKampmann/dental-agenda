@@ -6,6 +6,7 @@ import { setAppointment } from "./components/setAppointment";
 import { SearchPatient } from "./components/searchPatient";
 import { GetPatients } from "./components/getPatients"
 import { BsPersonCheck } from 'react-icons/bs';
+import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 
 type ValuePiece = Date | null;
@@ -19,6 +20,7 @@ export default function Page() {
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [patient, setPatient] = useState<any>(null);
+  const [date, setDate] = useState<any>(null);
 
   function isWeekend(date: any) {
     const day = date.getDay();
@@ -32,6 +34,10 @@ export default function Page() {
   useEffect(() => {
     setSearchContent('');
   }, [selectedField]);
+
+  useEffect(() => {
+    console.log(value);
+  }, [value]);
 
 
   useEffect(() => {
@@ -61,6 +67,7 @@ export default function Page() {
     }
   }, [searchContent])
 
+
   return (
     <div className="ml-72 p-4 mt-20 mr-10 relative">
       <div className='mb-4 flex justify-between items-center'>
@@ -86,7 +93,7 @@ export default function Page() {
         </div>
       </div>
       <div className='flex justify-between'>
-        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl flex-1 w-4/6'>
+        <div className='border-4 border-teal-500 rounded-2xl mr-2 shadow-xl flex-1'>
           <table className=''>
             <thead>
               <tr className='bg-gray-500 text-center cursor-default	'>
@@ -107,7 +114,7 @@ export default function Page() {
                       key={day}
                       className='border-2 border-teal-500 text-center'
                     >
-                      <div onClick={() => setShowForm(true)} className={`cursor-pointer w-40 h-15 p-3 ${showForm ? 'hover:bg-teal-500' : ''}`}>
+                      <div onClick={() => setShowForm(true)} className={`cursor-pointer w-20 h-15 p-3 ${showForm ? 'hover:bg-teal-500' : ''}`}>
                         <p>Hola</p>
                       </div>
                     </td>
@@ -121,14 +128,13 @@ export default function Page() {
         </div>
         <div className="flex w-4/12 ml-16">
           {showForm ? (
-            <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl h-full shadow-lg bg-zinc-200'>
-              <div className={`border-teal-700 border-b-4 +
-               ${patient ? '' : 'flex-1'}`}>
+            <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl h-96 shadow-lg bg-zinc-200 overflow-auto'>
+              <div className={`border-teal-700 border-b-4 ${patient ? '' : 'flex-1'}`}>
                 {patient ? (
                   <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                    <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
-                    <h1 className='font-black	text-4xl text-teal-800 mr-4'>CHECK</h1>
-                    <BsPersonCheck size={38} className="text-teal-800 " />
+                    <h1 className='font-black	text-4xl text-white mr-4'>1</h1>
+                    <h1 className='font-black	text-4xl text-white mr-4'>CHECK</h1>
+                    <BsPersonCheck size={38} className="text-white " />
                   </div>
                 ) : (
                   <div>
@@ -157,12 +163,12 @@ export default function Page() {
 
                 <div className='mt-4 ml-2 mr-2 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
                   <div className={`${patient ? 'h-fit' : 'h-40'} `}>
-                    {listPatients ? (
+                    {listPatients && typeof listPatients !== 'string' ? (
                       <div>
                         {patient ? (
-                          <div className='hover:bg-teal-900 flex justify-center cursor-pointer'>
-                            <p className=' text-lg text-teal-300 text-center'>Paciente seleccionado: </p>
-                            <p className='ml-1 text-lg text-teal-300 text-center font-bold'>{patient.name} {patient.lastName}</p>
+                          <div className=' p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
+                            <p className='text-sm text-teal-300 text-center'>Paciente seleccionado: </p>
+                            <p className=' ml-1 text-sm text-teal-300 text-center font-bold'>{patient.name} {patient.lastName}</p>
                           </div>
                         ) : (
                           <div>
@@ -194,13 +200,40 @@ export default function Page() {
                 </div>
               </div>
               <div className='border-teal-700 border-b-4 flex-1 '>
-                <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                  <h1 className='font-black	text-4xl text-teal-800 mr-4'>2</h1>
-                  <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona la fecha</h1>
+
+                {date ? (
+                  <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
+                    <h1 className='font-black	text-4xl text-white mr-4'>2</h1>
+                    <h1 className='font-black	text-4xl text-white mr-4'>CHECK</h1>
+                    <AiOutlineSchedule size={38} className="text-white " />
+                  </div>
+                ) : (
+                  <div className='ml-2 mt-2 mr-2 mb-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
+                    <h1 className='font-black	text-4xl text-teal-800 mr-4'>2</h1>
+                    <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona la fecha</h1>
+                  </div>
+                )}
+                <div className='mt-4 ml-2 mr-2 mb-2 flex'>
+                  {date ? (
+                    <div className=' ml-1 mr-1 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
+                      <p className='text-sm text-teal-300 text-center'>Día seleccionado: </p>
+                      <p className='ml-1 text-sm text-teal-300 text-center font-bold'>
+                        {date.getDate()} del {date.getMonth()} de {date.getFullYear()}
+                      </p>
+                    </div>) : (
+                    <Calendar onChange={setDate}
+                      value={date}
+                      className="bg-teal-700 border-4 border-teal-500 rounded-lg"
+                      maxDate={new Date(2099, 11, 31)}
+                      defaultValue={new Date()}
+                      view="month"
+                      locale="es-ES"
+                    />
+                  )}
                 </div>
               </div>
               <div className='flex-1' >
-                <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
+                <div className='ml-2 mt-2 mr-2 mb-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                   <h1 className='font-black	text-4xl text-teal-800 mr-4'>3</h1>
                   <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
                 </div>
