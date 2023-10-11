@@ -5,6 +5,8 @@ import Calendar from 'react-calendar';
 import { setAppointment } from "./components/setAppointment";
 import { SearchPatient } from "./components/searchPatient";
 import { GetPatients } from "./components/getPatients"
+import { BsPersonCheck } from 'react-icons/bs';
+import { ClipLoader } from "react-spinners";
 
 type ValuePiece = Date | null;
 
@@ -15,7 +17,7 @@ export default function Page() {
   const [showForm, setShowForm] = useState(false);
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
-  const [listPatients, setListPatients] = useState<null | any[]>(null);
+  const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [patient, setPatient] = useState<any>(null);
 
   function isWeekend(date: any) {
@@ -50,8 +52,12 @@ export default function Page() {
     }
 
     async function Get() {
-      const patients = await GetPatients(0);
-      //setListPatients(patients);
+      const patients = await GetPatients(1, 20);
+      if (patients === null) {
+        setListPatients('noResult')
+      } else {
+        setListPatients(patients.patients)
+      }
     }
   }, [searchContent])
 
@@ -65,7 +71,7 @@ export default function Page() {
           eoiefjnoq
         </div>
         <div>
-          <button onClick={() => {setShowForm(!showForm); setPatient(null)}} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+          <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent('') }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
             {showForm ? (
               <div className='flex justify-center items-center w-44'>
                 <p>Cancelar</p>
@@ -113,42 +119,55 @@ export default function Page() {
             </tbody>
           </table>
         </div>
-        <div className="w-4/12 mr-8">
+        <div className="flex w-4/12 ml-16">
           {showForm ? (
-            <div className='flex mr-2 flex-col border-4 border-teal-500 rounded-lg h-full shadow-lg bg-zinc-200'>
-              <div className={`border-teal-700 border-b-4 transition duration-200 ${patient ? '' : 'flex-1'}`}>
-                <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                  <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
-                  <h1 className=' text-xl font-semibold text-teal-800 text-center cursor-default'>Selecciona el paciente</h1>
-                </div>
-                <div className='mt-4 ml-2 mr-2 flex'>
-                  <input name='search'
-                    value={searchContent}
-                    onChange={(e) => {
-                      const inputValue = e.target.value;
-                      if (selectedField === 'dni') {
-                        const numericValue = inputValue.replace(/[^0-9]/g, '');
-                        setSearchContent(numericValue);
-                      } else {
-                        setSearchContent(inputValue);
-                      }
-                    }}
-                    type="text" placeholder='Busca un paciente' className='focus:border-3 focus:outline-none focus:border-teal-200 rounded-lg text-white h-10 shadow-lg p-2 w-full bg-gray-500 border-2 border-teal-500' />
-                  <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
-                  <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
-                </div>
+            <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl h-full shadow-lg bg-zinc-200'>
+              <div className={`border-teal-700 border-b-4 +
+               ${patient ? '' : 'flex-1'}`}>
+                {patient ? (
+                  <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
+                    <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
+                    <h1 className='font-black	text-4xl text-teal-800 mr-4'>CHECK</h1>
+                    <BsPersonCheck size={38} className="text-teal-800 " />
+                  </div>
+                ) : (
+                  <div>
+                    <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
+                      <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
+                      <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona el paciente</h1>
+                    </div>
+                    <div className='mt-4 ml-2 mr-2 flex'>
+                      <input name='search'
+                        value={searchContent}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          if (selectedField === 'dni') {
+                            const numericValue = inputValue.replace(/[^0-9]/g, '');
+                            setSearchContent(numericValue);
+                          } else {
+                            setSearchContent(inputValue);
+                          }
+                        }}
+                        type="text" placeholder='Busca un paciente' className='focus:border-3 focus:outline-none focus:border-teal-200 rounded-lg text-white h-10 shadow-lg p-2 w-full bg-gray-500 border-2 border-teal-500' />
+                      <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
+                      <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
+                    </div>
+                  </div>
+                )}
+
                 <div className='mt-4 ml-2 mr-2 mb-2 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
-                  <div className={`${patient ? 'h-8' : 'h-40'} `}>
+                  <div className={`${patient ? 'h-fit' : 'h-40'} `}>
                     {listPatients ? (
                       <div>
                         {patient ? (
-                          <div className='hover:bg-teal-900'>
-                            <p className='cursor-pointer ml-1 text-lg text-teal-300 text-center'>{patient.name} {patient.lastName}</p>
+                          <div className='hover:bg-teal-900 flex justify-center cursor-pointer'>
+                            <p className=' text-lg text-teal-300 text-center'>Paciente seleccionado: </p>
+                            <p className='ml-1 text-lg text-teal-300 text-center font-bold'>{patient.name} {patient.lastName}</p>
                           </div>
                         ) : (
                           <div>
                             {listPatients.map((patient, index) => (
-                              <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 transition duration-100 cursor-pointer flex justify-between">
+                              <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 border-b border-teal-500 transition duration-100 cursor-pointer flex justify-between">
                                 <p className='ml-1'>
                                   {patient.name} {patient.lastName}
                                 </p>
@@ -162,25 +181,28 @@ export default function Page() {
                       </div>
                     ) : (
                       <div className="ml-2 p-1">
-                        <p>
-                          No hay resultados.
-                        </p>
+                        {listPatients === 'noResult' ? (
+                          <p>Sin resultados...</p>
+                        ) : (
+                          <div className='flex justify-center items-center mt-14 mb-14'>
+                            <ClipLoader color='rgb(20 184 166)' size={36} />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-
               </div>
               <div className='border-teal-700 border-b-4 flex-1 '>
                 <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                   <h1 className='font-black	text-4xl text-teal-800 mr-4'>2</h1>
-                  <h1 className=' text-xl font-semibold text-teal-800 text-center cursor-default'>Selecciona la fecha</h1>
+                  <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona la fecha</h1>
                 </div>
               </div>
               <div className='flex-1' >
                 <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                   <h1 className='font-black	text-4xl text-teal-800 mr-4'>3</h1>
-                  <h1 className=' text-xl font-semibold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
+                  <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
                 </div>
               </div>
             </div>
@@ -224,8 +246,8 @@ export default function Page() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 
 }

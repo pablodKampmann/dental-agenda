@@ -103,14 +103,14 @@ export default function Patients() {
         }
 
         async function Get() {
-            const data = await GetPatients(page);
+            const data = await GetPatients(page, 6);
             setListPatients(data.patients);
         }
     }, [searchContent])
 
     useEffect(() => {
         async function Get() {
-            const data = await GetPatients(page);
+            const data = await GetPatients(page, 6);
             setListPatients(data.patients);
             setTotalPatients(data.patientsSize);
             UpdateData(data.patientsSize);
