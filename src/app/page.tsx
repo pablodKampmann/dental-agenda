@@ -145,7 +145,7 @@ export default function Page() {
                 </tr>
               </thead>
               <tbody className=''>
-                {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
+                {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '18:00', '18:00', '18:00'].map((time) => (
                   <tr key={time}>
                     <td className='cursor-default	 bg-gray-500 border-2 border-teal-500 text-center'>{time}</td>
                     {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (

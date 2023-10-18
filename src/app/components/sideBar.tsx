@@ -1,47 +1,47 @@
 'use client'
 
-import Image from "next/image";
-import { useRouter, usePathname } from 'next/navigation'
-import { ModalSett } from './modalSett'
+import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link'
 import { FaUsers, FaTooth } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
 import { IoLogOutSharp } from 'react-icons/io5';
+import { getUser } from "./../components/getUser";
+import { Alert } from "./alert";
 
 export function SideBar() {
-    const router = useRouter();
     const pathname = usePathname();
-    const [selectedPage, setSelectedPage] = useState("");
-    const [openModal, setOpenModal] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [openAlert, setOpenAlert] = useState(false);
 
     useEffect(() => {
-        setSelectedPage(pathname);
-    }, [pathname]);
-
-    function OpenModal() {
-        if (openModal === false) {
-            setOpenModal(true);
-        } else {
-            setOpenModal(false);
+        async function get() {
+            try {
+                const user = await getUser();
+                setUser(user);
+            } catch (error) {
+                console.log(error);
+            }
         }
+
+        get();
+    }, []);
+
+    function handleSignOut() {
+        setOpenAlert(true);
     }
 
-    function CloseModal() {
-        setOpenModal(false);
-    }
+    function closeModal() {
+        setOpenAlert(false);
+      }
 
     return (
         <div>
             <div>
-                {openModal && (
-                    <div
-                        className="fixed inset-0 z-40"
-                        onClick={CloseModal}
-                    >
-                        <ModalSett onCloseModal={CloseModal} />
-                    </div>
-                )}
+                {openAlert && (
+                    <div className='fixed inset-0 backdrop-blur-sm ml-64 z-10'>
+                        <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} />
+                    </div>)}
             </div>
             <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-900	 border-teal-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
@@ -61,13 +61,15 @@ export function SideBar() {
                         <div className="flex items-center">
                             <div className="flex items-center ml-3">
                                 <button className="p-3 hover:bg-teal-200 rounded-sm mr-4 font-semibold">
-                                    Nombre Apellido
+                                    {user && (
+                                        <div>Usuario: {user.displayName}</div>
+                                    )}
                                 </button>
                                 <button
                                     type="button"
-                                    className={`flex text-sm bg-teal-900 rounded-full ${openModal ? 'focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600' : ''}`}
                                     aria-expanded="false"
                                     data-dropdown-toggle="dropdown-user"
+                                    onClick={handleSignOut}
                                 >
                                     <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out" />
                                 </button>

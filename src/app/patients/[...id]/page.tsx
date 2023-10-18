@@ -12,7 +12,7 @@ import { LiaIdCardSolid } from 'react-icons/lia';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
 import { updatePatient } from "./../../components/updatePatient";
-import { AlertPatient } from "./../../components/alertPatient";
+import { Alert } from "../../components/alert";
 
 export default function PatientId() {
   const searchParams = useSearchParams()
@@ -22,7 +22,6 @@ export default function PatientId() {
   const [rowModify, setRowModify] = useState('');
   const [changes, setChanges] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
-  const [message, setMessage] = useState('');
   const [selectedField, setSelectedField] = useState('basic');
 
   async function submitChanges(changes: string, table: string) {
@@ -56,7 +55,7 @@ export default function PatientId() {
       <div className='ml-72 p-4 mt-20 mr-10 relative'>
         {openAlert && (
           <div className='fixed inset-0 backdrop-blur-sm ml-64 z-10'>
-            <AlertPatient id={id} message={message} onCloseModal={closeModal} />
+            <Alert id={id} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} />
           </div>
         )}
         <div className='flex mb-2'>
@@ -91,7 +90,7 @@ export default function PatientId() {
                     </div>
                   </div>
                   <div className='ml-auto'>
-                    <button onClick={() => [setOpenAlert(true), setMessage('hola')]} className='flex items-center'>
+                    <button onClick={() => setOpenAlert(true)} className='flex items-center'>
                       <MdDelete size={60} className="mt-1 mr-2 text-teal-500 hover:scale-125 duration-150 ease-in-out" />
                     </button>
                   </div>
