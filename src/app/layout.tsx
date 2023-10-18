@@ -37,7 +37,7 @@ export default function RootLayout({
   if (pathname === '/notSign') {
     return (
       <html lang="en">
-        <body className={`bg-gray-800 ${font.className}`}>
+        <body className={`bg-black ${font.className}`}>
           <div>
             {children}
           </div>
