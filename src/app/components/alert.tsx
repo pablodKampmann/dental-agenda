@@ -1,80 +1,73 @@
-import { MdPersonRemoveAlt1 } from 'react-icons/md';
-import { FaRunning } from 'react-icons/fa';
-import { deletePatient } from "./deletePatient";
+'use client'
+
+import React, { useState } from 'react';
+import { db, auth } from "./../firebase";
+import { get, ref } from "firebase/database";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from 'next/navigation'
-import { logOut } from "./../components/logOut";
+import { RingLoader } from "react-spinners";
 
-interface ModalSettProps {
-    onCloseModal: () => void;
-    firstMessage: string | null;
-    secondMessage: string | null;
-    action: string | null;
-    id: string | null;
-}
+export default function NotSing() {
+    const router = useRouter();
+    const [user, setUser] = useState("");
+    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("");
+    const [load, setLoad] = useState(false);
 
-export function Alert({ id, firstMessage, secondMessage, action, onCloseModal }: ModalSettProps) {
-    const router = useRouter()
-
-    async function handleDelete() {
-        onCloseModal();
-        await deletePatient(id);
-        router.push('/patients')
+    async function handleSignIn(e: any) {
+        e.preventDefault();
+        setLoad(true);
+        const dbRef = ref(db, 'admins/');
+        const snapshot = await get(dbRef);
+        if (snapshot.val()) {
+            Object.keys(snapshot.val()).forEach((key) => {
+                if (user === snapshot.val()[key].userName) {
+                    setEmail(snapshot.val()[key].email);
+                }
+            });
+            if (email !== "") {
+                const user = await signInWithEmailAndPassword(auth, email, password)
+                if (user) {
+                    router.push('/')
+                }
+            }
+        }
     }
 
-    async function handleLogOut() {
-        onCloseModal();
-        await logOut();
-    }
-
-    function handleCloseModal() {
-        onCloseModal();
-    }
-
-    if (action === 'Cerrar Sesion') {
-        return (
-            <div className="fixed inset-0 flex items-center justify-center z-10">
-                <div className="flex flex-col p-5 rounded-lg shadow bg-white border-4 border-teal-500">
-                    <div className="flex flex-col items-center text-center">
-                        <div className="inline-block p-3 bg-teal-700 rounded-full">
-                            <FaRunning size={40} className="text-teal-100" />
-                        </div>
-                        <h2 className="mt-2 text-lg font-semibold text-gray-800">Ojo!</h2>
-                        <p className="mt-2 text-md text-gray-600 leading-relaxed">{firstMessage}</p>
-                    </div>
-                    <div className="flex items-center mt-3">
-                        <button onClick={handleCloseModal} className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-md font-medium rounded-md transition duration-200">
-                            Cancelar
-                        </button>
-                        <button onClick={handleLogOut} className="flex-1 px-4 py-2 ml-2 bg-red-400 hover:bg-red-700 text-white text-md font-medium rounded-md transition duration-200">
-                            {action}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    } else if (action === 'Eliminar') {
-        return (
-            <div className="fixed inset-0 flex items-center justify-center z-10">
-                <div className="flex flex-col p-5 rounded-lg shadow bg-white border-4 border-teal-500">
-                    <div className="flex flex-col items-center text-center">
-                        <div className="inline-block p-3 bg-teal-700 rounded-full">
-                            <MdPersonRemoveAlt1 size={40} className="text-teal-100" />
-                        </div>
-                        <h2 className="mt-2 text-lg font-semibold text-gray-800">Ojo!</h2>
-                        <p className="mt-2 text-md text-gray-600 leading-relaxed">{firstMessage}</p>
-                        <p className=" text-md text-gray-900 font-semibold leading-relaxed">{secondMessage}</p>
-                    </div>
-                    <div className="flex items-center mt-3">
-                        <button onClick={handleCloseModal} className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-md font-medium rounded-md transition duration-200">
-                            Cancelar
-                        </button>
-                        <button onClick={handleDelete} className="flex-1 px-4 py-2 ml-2 bg-red-400 hover:bg-red-700 text-white text-md font-medium rounded-md transition duration-200">
-                            {action}
-                        </button>
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="relative max-w-lg w-full p-8">
+                <div className="rounded-lg bg-teal-900 shadow-xl">
+                    <div className="px-4 py-6 lg:px-6">
+                        <h1 className="mb-4 text-3xl font-medium dark:text-white">
+                            <span>dawdd </span>
+                            <span className="text-teal-500">Sesion</span>
+                        </h1>
+                        <form className="" onSubmit={handleSignIn}>
+                            <div>
+                                <label htmlFor="text" className=" mb-1 text-sm font-medium ">Usuario</label>
+                                <input type="text" name="user" id="user" value={user} onChange={(e) => setUser(e.target.value)} className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-teal-700 font-semibold" placeholder="nombre.apellido" required />
+                            </div>
+                            <div className='mt-4'>
+                                <label htmlFor="password" className=" mb-1 text-sm font-medium ">Clave</label>
+                                <input type="password" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="•••••••••••••" className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-teal-700 font-semibold" required />
+                            </div>
+                            <button type="submit" className="mt-6 w-full bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium rounded-lg text-md py-2 transition duration-200">
+                                {load ? (
+                                    <div className='flex justify-center'>
+                                        <RingLoader color='white' size={24} />
+                                    </div>
+                                ) : (
+                                    <div>
+                                        PEte
+                                    </div>
+                                )}
+                            </button>
+                            <button className='bg-red-500' onClick={() => setLoad(!load)}>Hola</button>
+                        </form>
                     </div>
                 </div>
             </div>
-        );
-    }
-
+        </div>
+    );
 }
