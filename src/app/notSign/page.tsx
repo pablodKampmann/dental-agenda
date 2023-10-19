@@ -6,6 +6,7 @@ import { get, ref } from "firebase/database";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from 'next/navigation'
 import { RingLoader } from "react-spinners";
+import { BiSolidLogInCircle } from 'react-icons/bi';
 
 export default function NotSing() {
     const router = useRouter();
@@ -35,39 +36,42 @@ export default function NotSing() {
     }
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-r from-teal-500 via-emerald-700 to-emerald-900">
             <div className="relative max-w-lg w-full p-8">
-                <div className="rounded-lg bg-teal-900 shadow-xl">
-                    <div className="px-4 py-6 lg:px-6">
-                        <h1 className="mb-4 text-3xl font-medium dark:text-white">
-                            <span>Iniciar </span>
-                            <span className="text-teal-500">Sesion</span>
+                <div className="rounded-lg bg-teal-900 shadow-2xl transition duration-500 h-80">
+                    <div className="p-6">
+                        <h1 className="flex mb-4 text-3xl font-medium">
+                            <span>Iniciar</span>
+                            <span className="text-teal-500 ml-2">Sesion</span>
+                            <BiSolidLogInCircle size={40} className="text-teal-500 ml-2" />
                         </h1>
                         <form className="" onSubmit={handleSignIn}>
                             <div>
                                 <label htmlFor="text" className=" mb-1 text-sm font-medium ">Usuario</label>
-                                <input type="text" name="user" id="user" value={user} onChange={(e) => setUser(e.target.value)} className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-teal-700 font-semibold" placeholder="nombre.apellido" required />
+                                <input type="text" name="user" id="user" value={user} onChange={(e) => setUser(e.target.value)} className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-black font-semibold" placeholder="nombre.apellido" required />
                             </div>
                             <div className='mt-4'>
                                 <label htmlFor="password" className=" mb-1 text-sm font-medium ">Clave</label>
-                                <input type="password" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="•••••••••••••" className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-teal-700 font-semibold" required />
+                                <input type="password" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="•••••••••••••" className="border-2 border-teal-600 bg-gray-50 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 text-black font-semibold" required />
                             </div>
-
-                            <button type="submit" className="mt-6 w-full bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium rounded-lg text-md py-2 transition duration-200">
-                                {load ? (
-                                    <div className='flex justify-center'>
-                                        <RingLoader color='white' size={24} />
-                                    </div>
-                                ) : (
-                                    <div>
-                                        Continuar
-                                    </div>
-                                )}
-                            </button>
+                            <div className='flex justify-center'>
+                                <button disabled={load} type="submit" className={`${load ? 'w-12 rounded-full scale-110 flex justify-center' : ' scale-100 w-full rounded-lg'} mt-6 bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium text-md py-2 transition duration-500`}>
+                                    {load ? (
+                                        <div className='flex justify-center'>
+                                            <RingLoader color='white' size={30} />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            Continuar
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
+            <button className='bg-red-500' onClick={() => setLoad(!load)}>Hola</button>
         </div>
     );
 }
