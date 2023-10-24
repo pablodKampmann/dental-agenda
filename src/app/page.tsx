@@ -259,7 +259,7 @@ export default function Page() {
                     </div>
                     {!patient && (
                       <div className='flex'>
-                        <p className='ml-2 mb-1 text-gray-500 text-sm font-medium'>No encontras un paciente?</p>
+                        <p className='ml-4 mb-1 text-gray-500 text-sm font-medium'>No encontras un paciente?</p>
                         <div onClick={OpenModalCreatePatient} className='cursor-pointer flex items-center'>
                           <p className='ml-2 mb-1 text-gray-500 text-sm font-extrabold '>Cargalo ahora</p>
                           <GiClick className="ml-1 text-gray-500" />

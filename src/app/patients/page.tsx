@@ -25,7 +25,7 @@ export default function Patients() {
     const [disableNext, setDisableNext] = useState(false);
     const [showMin, setShowMin] = useState(Number);
     const [showMax, setShowMax] = useState(Number);
-    const [selectedField, setSelectedField] = useState('dni');
+    const [selectedField, setSelectedField] = useState('name');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [leaveModal, setLeaveModal] = useState(false);
@@ -34,18 +34,19 @@ export default function Patients() {
     const [searchContent, setSearchContent] = useState('');
     const [nextPageLoad, setNextPageLoad] = useState(false);
     const [backPageLoad, setBackPageLoad] = useState(false);
+    const [loadRow, setLoadRow] = useState<number | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            setIsLoad(false);
-          } else if (!user) {
-            router.push("/notSign");
-          }
+            if (user && listPatients) {
+                setIsLoad(false);
+            } else if (!user) {
+                router.push("/notSign");
+            }
         });
-    
+
         return () => unsubscribe();
-      }, [router]);
+    }, [router, listPatients]);
 
     const showSuccessAlert = () => {
         setShowSuccess(true);
@@ -236,7 +237,7 @@ export default function Patients() {
                                 {listPatients ? (
                                     <tbody className="text-white">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => handleGoPatient(patient.id)} key={index} className="border-b border-gray-200 bg-gray-500 text-sm hover:bg-teal-900 hover:text-white cursor-pointer ml-auto">
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-900 bg-gray-500'} border-b border-gray-200 text-sm cursor-pointer ml-auto`}>
                                                 <td className="px-5 py-5">
                                                     <div className="flex items-center">
                                                         <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
@@ -298,19 +299,19 @@ export default function Patients() {
                         </div>
                         <div className="justify-between flex items-center bg-gray-500 px-5 py-2">
                             {searchContent ? (
-                                <span className="text-md text-white sm:text-sm mr-20">
+                                <span className="text-md text-white sm:text-sm mr-20 select-none">
                                     Filtrando Pacientes...
                                 </span>
                             ) : (
-                                <span className="text-xs text-white sm:text-sm">
+                                <span className="text-xs text-white sm:text-sm select-none">
                                     Mostrando {showMin}-{showMax} de {totalPatients}
                                 </span>
                             )}
                             <div className='flex mt-2'>
                                 {disableBack ? (
-                                    <button disabled className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
+                                    <button disabled className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                                 ) : (
-                                    <button onClick={HandleBackPage} disabled={backPageLoad} className="shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={HandleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
                                         {backPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
@@ -319,9 +320,9 @@ export default function Patients() {
                                     </button>
                                 )}
                                 {disableNext ? (
-                                    <button disabled className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
+                                    <button disabled className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
                                 ) : (
-                                    <button onClick={HandleNextPage} disabled={nextPageLoad} className="shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={HandleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
                                         {nextPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
@@ -329,7 +330,7 @@ export default function Patients() {
                                         )}
                                     </button>
                                 )}
-                                <div className="overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-500 text-white text-2xl font-bold flex justify-center  ">
+                                <div className="select-none overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-500 text-white text-2xl font-bold flex justify-center  ">
                                     {searchContent ? (
                                         <span className="">
                                             <MdPersonSearch className="text-white mr-2 mt-1" size={25} />

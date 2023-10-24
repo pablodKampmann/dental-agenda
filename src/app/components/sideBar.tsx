@@ -112,11 +112,15 @@ export function SideBar() {
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-                        <Link href="/patients" prefetch={true}>
+                        <Link href="/patients" prefetch={true} onClick={() => setLoadOption('/patients')}>
                             <li>
-                                <button type="button" className={`${pathname === '/patients' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
-                                    <FaUsers size={28} className={`${pathname === '/patients' ? 'text-teal-300' : 'text-white'}`} />
-                                    <p className="flex-1 ml-3 select-none">Pacientes</p>
+                                <button type="button" className={`${pathname.includes('/patients') ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <FaUsers size={28} className={`${pathname.includes('/patients') ? 'text-teal-300' : 'text-white'}`} />
+                                    {loadOption === '/patients' ? (
+                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                    ) : (
+                                        <p className="flex-1 ml-3 select-none">Pacientes</p>
+                                        )}
                                 </button>
                             </li>
                         </Link>
