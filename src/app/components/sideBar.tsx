@@ -1,18 +1,25 @@
 'use client'
 
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link'
 import { FaUsers, FaTooth } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
 import { IoLogOutSharp } from 'react-icons/io5';
+import { IoMdArrowDropdown, IoMdArrowDropup } from 'react-icons/io';
+import { MdNotificationsActive, MdNotificationsNone } from 'react-icons/md';
+import { RiUserSettingsFill } from 'react-icons/ri';
 import { getUser } from "./../components/getUser";
 import { Alert } from "./alert";
+import { PropagateLoader, PulseLoader } from "react-spinners";
 
 export function SideBar() {
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [openAlert, setOpenAlert] = useState(false);
+    const [openUserMenu, setOpenUserMenu] = useState(false);
+    const [loadOption, setLoadOption] = useState('');
 
     useEffect(() => {
         async function get() {
@@ -27,13 +34,23 @@ export function SideBar() {
         get();
     }, []);
 
+    useEffect(() => {
+        console.log("hola");
+        
+        if (pathname === loadOption) {
+            console.log("ola2");
+            
+            setLoadOption('');
+        }
+    }, [loadOption, pathname]);
+
     function handleSignOut() {
         setOpenAlert(true);
     }
 
     function closeModal() {
         setOpenAlert(false);
-      }
+    }
 
     return (
         <div>
@@ -43,108 +60,72 @@ export function SideBar() {
                         <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} />
                     </div>)}
             </div>
-            <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-900	 border-teal-700">
+            <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-950	 border-teal-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center justify-start">
-                            <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-                                <span className="sr-only">Open sidebar</span>
-                                <svg className="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
-                                </svg>
-                            </button>
+                        <div className="flex items-center">
                             <div className="flex ml-1 mt-1 mb-1">
                                 <FaTooth size={30} />
-                                <span className="underline self-center font-bold ml-3 text-2xl whitespace-nowrap dark:text-white">Dental Agenda</span>
+                                <span className="underline self-center font-bold ml-3 text-2xl whitespace-nowrap dark:text-white select-none">Admin Panel</span>
                             </div>
                         </div>
-                        <div className="flex items-center">
-                            <div className="flex items-center ml-3">
-                                <button className="p-3 hover:bg-teal-200 rounded-sm mr-4 font-semibold">
-                                    {user && (
-                                        <div>Usuario: {user.displayName}</div>
+                        {user ? (
+                            <div className="flex items-center ">
+                                <MdNotificationsNone size={32} className="mr-3" />
+                                <div onClick={() => setOpenUserMenu(!openUserMenu)} className={`${openUserMenu ? 'rounded-t-2xl bg-teal-500 text-teal-900' : 'border-b-2 rounded-full '} flex justify-center relative items-center mr-2 cursor-pointer hover:bg-teal-500 transition duration-150 py-1 hover:text-teal-900 shadow-xl border-t-2 border-teal-700`}>
+                                    <p className='ml-3 text-base font-medium select-none'>{user.displayName}</p>
+                                    {openUserMenu ? (
+                                        <IoMdArrowDropup size={24} className="ml-1 mr-1" />
+                                    ) : (
+                                        <IoMdArrowDropdown size={24} className="ml-1 mr-1" />
                                     )}
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-expanded="false"
-                                    data-dropdown-toggle="dropdown-user"
-                                    onClick={handleSignOut}
-                                >
-                                    <IoLogOutSharp size={45} className="hover:scale-125 duration-150 ease-in-out" />
-                                </button>
+                                    {openUserMenu && (
+                                        <div className="absolute mt-24 w-full shadow-lg bg-teal-100 transition duration-150 rounded-b-lg border-t-2 border-teal-700 animate-user-menu">
+                                            <div className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 select-none flex items-center"><RiUserSettingsFill className="mr-1 text-teal-900" /> Perfil </div>
+                                            <div onClick={handleSignOut} className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 rounded-b-lg select-none flex items-center"><IoLogOutSharp className="mr-1 text-teal-900" />Cerrar Sesión</div>
+                                        </div>
+                                    )}
+                                </div>
+                                <Image src={`/${user.userName}.jpg`} width={40} height={40} className='rounded-full shadow-2xl select-none' alt="UserPhoto"></Image>
                             </div>
-                        </div>
+                        ) : (
+                            <div className='flex items-center mb-3 mr-24'>
+                                <PropagateLoader color="white" speedMultiplier={2} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </nav>
-            <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-800	" aria-label="Sidebar">
-                <div className="h-full px-3 pb-4 overflow-y-auto bg-teal-800	 ">
+            <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
+                <div className="h-full px-3 pb-4 overflow-y-auto bg-teal-900">
                     <ul className="space-y-2 font-medium">
-                        {pathname === '/' ? (
+                        <Link href="/" prefetch={true} onClick={() => setLoadOption('/')}>
                             <li>
-                                <button type="button" className="flex text-left items-center p-2 text-teal-300 rounded-lg hover:bg-teal-900 group w-full">
-                                    <BsFillCalendar2WeekFill size={24} className="text-teal-300" />
-                                    <span className="flex-1 ml-3 whitespace-nowrap">Calendario</span>
+                                <button type="button" className={`${pathname === '/' ? 'bg-teal-500 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
+                                    <BsFillCalendar2WeekFill size={26} className={`${pathname === '/' ? 'text-teal-300' : 'text-white'}`} />
+                                    {loadOption === '/' ? (
+                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                    ) : (
+                                        <p className="flex-1 ml-3 select-none">Calendario</p>
+                                    )}
                                 </button>
                             </li>
-                        ) : (
-                            <Link href="/">
-                                <li>
-                                    <button type="button" className="flex text-left items-center p-2 text-gray-900 dark:text-white rounded-lg hover:bg-teal-900 group w-full">
-                                        <BsFillCalendar2WeekFill size={24} className="text-white" />
-                                        <span className="flex-1 ml-3 whitespace-nowrap">Calendario</span>
-                                    </button>
-                                </li>
-                            </Link>
-                        )}
-                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
-                        {pathname === '/patients' ? (
+                        </Link>
+                        <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+                        <Link href="/patients" prefetch={true}>
                             <li>
-                                <button type="button" className="flex text-left items-center p-2 text-teal-300 rounded-lg hover:bg-teal-900 group w-full">
-                                    <FaUsers size={28} className="text-teal-300" />
-                                    <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
+                                <button type="button" className={`${pathname === '/patients' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <FaUsers size={28} className={`${pathname === '/patients' ? 'text-teal-300' : 'text-white'}`} />
+                                    <p className="flex-1 ml-3 select-none">Pacientes</p>
                                 </button>
                             </li>
-                        ) : (
-                            <li>
-                                <Link href="/patients">
-                                    <button type="button" className="flex text-left items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-teal-900 group w-full">
-                                        <FaUsers size={28} className="text-white" />
-                                        <span className="flex-1 ml-3 whitespace-nowrap">Pacientes</span>
-                                    </button>
-                                </Link>
-                            </li>
-                        )}
-                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
-                        <li>
-                            <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                                <svg className="flex-shrink-0 w-5 h-5 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
-                                </svg>
-                                <span className="flex-1 ml-3 whitespace-nowrap">Inbox</span>
-                            </a>
-                        </li>
-                        <hr className="border-teal-600 border rounded-full ml-2 mr-8" />
-
-                        <li>
-                            <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                                <svg className="flex-shrink-0 w-5 h-5 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
-                                    <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z" />
-                                </svg>
-                                <span className="flex-1 ml-3 whitespace-nowrap">Users</span>
-                            </a>
-                        </li>
-                        <hr className="border-teal-600 border rounded-full ml-2 mr-16" />
-                        <li>
-                            <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                                <svg className="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
-                                    <path d="M17 5.923A1 1 0 0 0 16 5h-3V4a4 4 0 1 0-8 0v1H2a1 1 0 0 0-1 .923L.086 17.846A2 2 0 0 0 2.08 20h13.84a2 2 0 0 0 1.994-2.153L17 5.923ZM7 9a1 1 0 0 1-2 0V7h2v2Zm0-5a2 2 0 1 1 4 0v1H7V4Zm6 5a1 1 0 1 1-2 0V7h2v2Z" />
-                                </svg>
-                                <span className="flex-1 ml-3 whitespace-nowrap">Products</span>
-                            </a>
-                        </li>
+                        </Link>
+                        <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     </ul>
+                    <button type="button" onClick={handleSignOut} className='flex absolute bottom-0 justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-5 ease-in-out border-2 rounded-xl px-3 mb-3 hover:bg-teal-700'>
+                        <IoLogOutSharp size={45} className="" />
+                        <p className='text-lg font-medium'>Cerrar Sesión</p>
+                    </button>
                 </div>
             </aside>
         </div>

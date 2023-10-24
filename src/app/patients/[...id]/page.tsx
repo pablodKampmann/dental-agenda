@@ -47,7 +47,7 @@ export default function PatientId() {
     }
 
     get();
-  }, []);
+  }, [id]);
 
   if (id !== null) {
 

@@ -16,6 +16,7 @@ module.exports = {
         'slide-down': 'slide-down 0.3s ease-out',
         'slide-up': 'slide-up 0.5s ease-out',
         'move-from-right': 'move-from-right 0.3s ease-out',
+        'user-menu': 'user-menu 0.1s ease-out',
       },
       keyframes: {
         'slide-down': {
@@ -45,6 +46,13 @@ module.exports = {
           '90%': { opacity: '1', transform: 'translateX(5%)' },
           '100%': { opacity: '1', transform: 'translateX(0%)' },
         },
+        'user-menu': {
+          '0%': { opacity: '1', transform: 'translateY(-20%)' },
+          '25%': { opacity: '1', transform: 'translateY(-15%)' },
+          '50%': { opacity: '1', transform: 'translateY(-10%)' },
+          '75%': { opacity: '1', transform: 'translateY(-5%)' },
+          '100%': { opacity: '1', transform: 'translateY(0%)' },
+        }
       },
     },
   },
