@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { FaUsers, FaTooth } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
 import { IoLogOutSharp } from 'react-icons/io5';
-import { IoMdArrowDropdown, IoMdArrowDropup } from 'react-icons/io';
+import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
 import { MdNotificationsActive, MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { getUser } from "./../components/getUser";
@@ -36,10 +36,10 @@ export function SideBar() {
 
     useEffect(() => {
         console.log("hola");
-        
+
         if (pathname === loadOption) {
             console.log("ola2");
-            
+
             setLoadOption('');
         }
     }, [loadOption, pathname]);
@@ -66,7 +66,8 @@ export function SideBar() {
                         <div className="flex items-center">
                             <div className="flex ml-1 mt-1 mb-1">
                                 <FaTooth size={30} />
-                                <span className="underline self-center font-bold ml-3 text-2xl whitespace-nowrap dark:text-white select-none">Admin Panel</span>
+                                <span className="self-center font-bold ml-3 text-2xl select-none">Admin</span>
+                                <span className="bg-teal-600 px-1 rounded-lg self-center font-bold ml-1 text-lg select-none">PANEL</span>
                             </div>
                         </div>
                         {user ? (
@@ -120,16 +121,32 @@ export function SideBar() {
                                         <PulseLoader color="white" size={10} className='ml-16' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Pacientes</p>
-                                        )}
+                                    )}
+                                </button>
+                            </li>
+                        </Link>
+                        <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+                        <Link href="/chat" prefetch={true} onClick={() => setLoadOption('/chat')}>
+                            <li>
+                                <button type="button" className={`${pathname === '/chat' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <IoLogoWhatsapp size={28} className={`${pathname === '/chat' ? 'text-teal-300' : 'text-white'}`} />
+                                    {loadOption === '/chat' ? (
+                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                    ) : (
+                                        <p className="flex-1 ml-3 select-none">Mensajeria</p>
+                                    )}
                                 </button>
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     </ul>
-                    <button type="button" onClick={handleSignOut} className='flex absolute bottom-0 justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-5 ease-in-out border-2 rounded-xl px-3 mb-3 hover:bg-teal-700'>
-                        <IoLogOutSharp size={45} className="" />
-                        <p className='text-lg font-medium'>Cerrar Sesión</p>
-                    </button>
+                    <div className='absolute bottom-0'>
+                        <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
+                        <button type="button" onClick={handleSignOut} className='flex  justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-4 ease-in-out border-2 rounded-xl px-3 mb-3 hover:bg-teal-700'>
+                            <IoLogOutSharp size={45} className="" />
+                            <p className='text-lg font-medium'>Cerrar Sesión</p>
+                        </button>
+                    </div>
                 </div>
             </aside>
         </div>

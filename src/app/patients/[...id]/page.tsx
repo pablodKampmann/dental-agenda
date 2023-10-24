@@ -71,7 +71,7 @@ export default function PatientId() {
   if (id !== null) {
 
     return (
-      <div>
+      <div className='ml-64 mt-2'>
         {isLoad ? (
           <div className='fixed inset-0 backdrop-blur-sm ml-64'>
             <div className='fixed inset-0 flex items-center justify-center'>
@@ -81,7 +81,7 @@ export default function PatientId() {
             </div>
           </div>
         ) : (
-          <div className='ml-72 p-4 mt-20 mr-10 relative'>
+          <div className='ml-2 p-4 mt-16 mr-2 relative'>
             {openAlert && (
               <div className='fixed inset-0 backdrop-blur-sm ml-64 z-10'>
                 <Alert id={id} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} />

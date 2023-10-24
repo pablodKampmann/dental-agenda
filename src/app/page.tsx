@@ -113,7 +113,7 @@ export default function Page() {
   }
 
   return (
-    <div>
+    <div className='mt-2 ml-64'>
       {isLoad ? (
         <div className='fixed inset-0 backdrop-blur-sm ml-64'>
           <div className='fixed inset-0 flex items-center justify-center'>
@@ -123,7 +123,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className='ml-64 p-4 mt-20 relative'>
+        <div className='ml-2 mr-2 p-4 mt-16 relative'>
           <div>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
@@ -139,7 +139,7 @@ export default function Page() {
               puto el que lee
             </div>
             <div>
-              <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2  px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+              <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
                 {showForm ? (
                   <div className='flex justify-center items-center w-44'>
                     <p>Cancelar</p>

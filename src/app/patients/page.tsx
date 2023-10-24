@@ -172,7 +172,7 @@ export default function Patients() {
                     </div>
                 </div>
             ) : (
-                <div className="p-4 ml-64 mt-3 relative">
+                <div className="p-4 ml-64 mt-2 relative">
                     <div>
                         {openModalCreatePatient && (
                             <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
@@ -180,7 +180,7 @@ export default function Patients() {
                             </div>
                         )}
                     </div>
-                    <div className="p-4 rounded-md mt-14">
+                    <div className="mr-2 ml-2 rounded-md mt-16">
                         <div className="flex flex-row items-center">
                             <div className="flex rounded-full relative">
                                 <TbUserSearch
@@ -215,13 +215,13 @@ export default function Patients() {
                                         </div>
                                     </div>
                                 )}
-                                <button onClick={OpenModalCreatePatient} type="button" className="shadow-xl ml-auto h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-4 md:px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+                                <button onClick={OpenModalCreatePatient} type="button" className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
                                     <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-teal-500 ml-4 mr-4 mt-4">
+                    <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-teal-500 ml-2 mr-2 mt-4">
                         <div className="overflow-x-auto">
                             <table className="w-full ">
                                 <thead>
