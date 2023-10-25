@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { getPatient } from "./../../components/getPatient";
+import { getPatient } from "../../components/getPatient";
 import React, { useState, useEffect } from 'react';
 import { PiAddressBookBold } from 'react-icons/pi';
 import { RiArrowGoBackFill } from 'react-icons/ri';
@@ -11,18 +10,19 @@ import { MdLocationPin, MdDelete } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
-import { updatePatient } from "./../../components/updatePatient";
+import { updatePatient } from "../../components/updatePatient";
 import { Alert } from "../../components/alert";
-import { auth } from "./../../firebase";
+import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export default function PatientId() {
   const router = useRouter()
   const [isLoad, setIsLoad] = useState(true);
-  const searchParams = useSearchParams()
-  const id = searchParams.get('patientId');
+  const pathname = usePathname()
+  const id = (pathname.split('/').pop() || null) as string | null;
   const [patient, setPatient] = useState<any>(null);
   const [hovered, setHovered] = useState('');
   const [rowModify, setRowModify] = useState('');
@@ -94,7 +94,9 @@ export default function PatientId() {
               <div className='flex mx-auto items-center mb-2'>
                 <button onClick={() => setSelectedField('basic')} className={`${selectedField === 'basic' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4  h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300 px-3`}>Info. Basica</button>
                 <button onClick={() => setSelectedField('history')} className={`${selectedField === 'history' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold transition duration-300 px-3`}>Historia Clinica</button>
-                <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg  h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300 px-3`}>Odontograma</button>
+                <Link prefetch={true} href={`/patients/${id}/odontogram`}>
+                  <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg  h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300 px-3`}>Odontograma</button>
+                </Link>
               </div>
             </div>
             {patient && (

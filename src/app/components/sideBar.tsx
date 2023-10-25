@@ -35,11 +35,8 @@ export function SideBar() {
     }, []);
 
     useEffect(() => {
-        console.log("hola");
 
         if (pathname === loadOption) {
-            console.log("ola2");
-
             setLoadOption('');
         }
     }, [loadOption, pathname]);

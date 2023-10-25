@@ -18,7 +18,6 @@ import { FaTooth } from "react-icons/fa";
 export default function Patients() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
-    const params = new URLSearchParams();
     const [page, setPage] = useState(1);
     const [maxPage, setMaxPage] = useState(Number);
     const [disableBack, setDisableBack] = useState(false);
@@ -157,8 +156,7 @@ export default function Patients() {
     }, [page, totalPatients]);
 
     function handleGoPatient(patientId: any) {
-        params.set('patientId', patientId);
-        router.push(`/patients/${patientId}?${params.toString()}`);
+        router.push(`/patients/${patientId}`);
     }
 
     return (
