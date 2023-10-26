@@ -17,6 +17,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
+import { PatientRecord } from "./../../components/patientRecord";
 
 export default function PatientId() {
   const router = useRouter()
@@ -101,34 +102,7 @@ export default function PatientId() {
             </div>
             {patient && (
               <div>
-                <div className='border-4 rounded-md	border-teal-500 bg-gray-500 shadow-xl '>
-                  <div className='mt-4 ml-4 mb-4'>
-                    <div className='flex'>
-                      <PiAddressBookBold size={70} />
-                      <div className='flex items-center'>
-                        <div className='mb-8 ml-2 bg-teal-500 rounded-full w-8 h-8 transform translate-y-0.5'>
-                          <p className='font-bold text-center text-lg text-teal-800'>{patient.id}</p>
-                        </div>
-                        <h1 className='mb-8 ml-2 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
-                        <p className='mb-8 ml-2 mt-1 text-md'>(Paciente)</p>
-                        <div className='ml-4 mt-9 absolute flex items-center'>
-                          <TbPhone size={20} className='shadow-2xl text-yellow-500' />
-                          <p className='ml-1 text-md'>{patient.num}</p>
-                          <MdLocationPin size={20} className='ml-8 shadow-2xl text-red-600' />
-                          <p className='ml-1 text-md'>{patient.address}</p>
-                          <LiaIdCardSolid size={26} className='ml-8 shadow-2xl text-green-600' />
-                          <p className='ml-1 text-md'>{patient.dni}</p>
-                        </div>
-                      </div>
-                      <div className='ml-auto'>
-                        <button onClick={() => setOpenAlert(true)} className='flex items-center'>
-                          <MdDelete size={60} className="mt-1 mr-2 text-teal-500 hover:scale-125 duration-150 ease-in-out" />
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
+                <PatientRecord patient={patient}/>
                 <div className='flex'>
                   <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
                     <div className="absolute top-0 right-0 mt-3 mr-3">
