@@ -72,7 +72,7 @@ export default function PatientId() {
   if (id !== null) {
 
     return (
-      <div className='ml-64 mt-2'>
+      <div className='ml-64'>
         {isLoad ? (
           <div className='fixed inset-0 backdrop-blur-sm ml-64'>
             <div className='fixed inset-0 flex items-center justify-center'>
@@ -88,21 +88,9 @@ export default function PatientId() {
                 <Alert id={id} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} />
               </div>
             )}
-            <div className='flex mb-2'>
-              <Link prefetch={true} href="/patients" onClick={() => setGoBack(!goBack)}>
-                <RiArrowGoBackFill size={50} className={`mb-4 hover:scale-125 duration-150 ease-in-out text-teal-800 ${goBack ? 'animate-spinBack' : ''}`} />
-              </Link>
-              <div className='flex mx-auto items-center mb-2'>
-                <button onClick={() => setSelectedField('basic')} className={`${selectedField === 'basic' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4  h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300 px-3`}>Info. Basica</button>
-                <button onClick={() => setSelectedField('history')} className={`${selectedField === 'history' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold transition duration-300 px-3`}>Historia Clinica</button>
-                <Link prefetch={true} href={`/patients/${id}/odontogram`}>
-                  <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg  h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300 px-3`}>Odontograma</button>
-                </Link>
-              </div>
-            </div>
             {patient && (
               <div>
-                <PatientRecord patient={patient}/>
+                <PatientRecord patient={patient} />
                 <div className='flex'>
                   <div className='mt-8 mr-4 border-4 rounded-md border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
                     <div className="absolute top-0 right-0 mt-3 mr-3">

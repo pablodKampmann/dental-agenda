@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link'
-import { FaUsers, FaTooth } from 'react-icons/fa';
+import { FaUsers, FaTooth, FaDollarSign } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
 import { IoLogOutSharp } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
@@ -131,6 +131,19 @@ export function SideBar() {
                                         <PulseLoader color="white" size={10} className='ml-16' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Mensajeria</p>
+                                    )}
+                                </button>
+                            </li>
+                        </Link>
+                        <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+                        <Link href="/billing" prefetch={true} onClick={() => setLoadOption('/billing')}>
+                            <li>
+                                <button type="button" className={`${pathname === '/billing' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <FaDollarSign size={26} className={`${pathname === '/billing' ? 'text-teal-300' : 'text-white'}`} />
+                                    {loadOption === '/billing' ? (
+                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                    ) : (
+                                        <p className="flex-1 ml-3 select-none">Facturación</p>
                                     )}
                                 </button>
                             </li>
