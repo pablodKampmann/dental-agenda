@@ -5,14 +5,21 @@ import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
 import { FaHandHoldingMedical, FaFileMedical } from 'react-icons/fa';
-import { AiOutlineFieldNumber } from 'react-icons/ai';
+import { AiOutlineFieldNumber, AiFillEdit } from 'react-icons/ai';
 import { BsWhatsapp } from 'react-icons/bs';
+import { setObservations } from "./../components/setObservations";
+import { getObservations } from "./../components/getObservations";
+import { PulseLoader } from "react-spinners";
 interface ModalSettProps {
     patient: any | null;
 }
 
 export function PatientRecord({ patient }: ModalSettProps) {
     const [selectedField, setSelectedField] = useState('basic');
+    const [initialContent, setInitialContent] = useState<string | null>(null);
+    const [observationsContent, setObservationsContent] = useState('');
+    const [saveButton, setSaveButton] = useState(false);
+    const [load, setLoad] = useState(false);
 
     function getAge(date: Date) {
         var today = new Date();
@@ -25,12 +32,40 @@ export function PatientRecord({ patient }: ModalSettProps) {
         return age;
     }
 
+    useEffect(() => {
+        async function get() {
+            const result = await getObservations(patient.id)
+            setObservationsContent(result);
+            setInitialContent(result);
+        }
+
+        get();
+    }, []);
+
+    useEffect(() => {
+        if (initialContent === observationsContent) {
+            setSaveButton(false);
+        } else {
+            setSaveButton(true);
+        }
+    }, [observationsContent]);
+
+    async function handleSetObservations() {
+        setLoad(true);
+        await setObservations(patient.id, observationsContent);
+        setInitialContent(observationsContent);
+        setTimeout(() => {
+            setSaveButton(false);
+            setLoad(false);
+        }, 1500);
+    }
+
     return (
         <div className='flex-col mt-2'>
-            <div className='border-4 rounded-3xl border-teal-500 bg-gray-500 opacity-95 shadow-md '>
-                <div className='flex'>
-                    <PiIdentificationBadgeDuotone className="text-teal-500" size={120} />
-                    <div className='flex-col mt-2'>
+            <div className='border-4 rounded-3xl border-teal-500 bg-teal-950 opacity-95 shadow-md'>
+                <div className='flex mb-2'>
+                    <PiIdentificationBadgeDuotone className="text-teal-500 mt-2" size={120} />
+                    <div className='flex-col mt-4'>
                         <div className='flex justify-start items-center'>
                             <div className='ml-2 bg-teal-500 rounded-full w-8 h-8 flex items-center justify-center'>
                                 <p className='font-bold text-lg text-teal-800'>{patient.id}</p>
@@ -40,7 +75,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             {patient.gender === 'male' ? (
                                 <p className='ml-2 mt-1 text-md'>Género: Hombre</p>
                             ) : (
-                                <p className='l-2 mt-1 text-md'>Género: Mujer</p>
+                                <p className='ml-2 mt-1 text-md'>Género: Mujer</p>
                             )}
                         </div>
                         <div className='ml-4 mt-2 flex justify-start items-center'>
@@ -64,13 +99,37 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             <p className='ml-1 text-sm'>{patient.affiliateNum}</p>
                         </div>
                     </div>
-                    <div className='flex-col ml-auto mr-2 border-2 mt-2 mb-2 w-60 rounded-md relative'>
-                        <h1 className='ml-1 '>Observaciones:</h1>
-                        <input type="text" className=' bg-transparent border-teal-500 border-2 w-full h-20 rounded-md focus:outline-none focus:border-teal-300' />
-                    </div>
-                    <div className='flex-col ml-auto mr-2'>
-                        <BsWhatsapp className="text-teal-500 ml-auto mr-10 mt-2" size={70} />
-                        <h1 className='bg-teal-500 font-medium hover:text-teal-900 hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-6 select-none cursor-pointer transition duration-150'>CONTACTAR</h1>
+                    <div className='flex ml-auto'>
+                        <div className='flex mr-6 mt-3 mb-1 justify-between'>
+                            <div>
+                                <div className='flex justify-center mr-2 bg-teal-500 rounded-md px-1 py-0.5 h-fit'>
+                                    <AiFillEdit className="mt-0.5" size={20} />
+                                    <h1 className='ml-1 select-none text-medium font-medium'>OBSERVACIONES:</h1>
+                                </div>
+                                {saveButton ? (
+                                    <div className='flex justify-center items-center mt-4 mr-1.5'>
+                                        <button onClick={handleSetObservations} className='select-none p-2 rounded-xl text-teal-900 text-medium hover:scale-110 transition duration-150 font-medium bg-gradient-to-r from-teal-100 via-teal-500 to-teal-100 background-animate'>
+                                            {load ? (
+                                                <div className='flex justify-center items-center py-0.5 px-1'>
+                                                    <PulseLoader size={14} color='white' />
+                                                </div>
+                                            ) : (
+                                                "Guardar Cambios"
+                                            )}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className='flex justify-center items-center mt-4 mr-1.5'>
+                                        <button disabled className='select-none p-2 rounded-xl text-white text-medium bg-gray-500 bg-opacity-40 text-opacity-10 font-medium'>Guardar Cambios</button>
+                                    </div>
+                                )}
+                            </div>
+                            <textarea value={observationsContent} onChange={(e) => setObservationsContent(e.target.value)} placeholder='No hay ninguna observación' className='resize-none bg-transparent p-1 border-teal-500 border-2 w-72 h-full rounded-md focus:outline-none focus:border-teal-100 focus:border-dashed'></textarea>
+                        </div>
+                        <div className='flex-col mt-2'>
+                            <BsWhatsapp className="text-teal-500 ml-auto mr-10 mt-2" size={70} />
+                            <h1 className='bg-teal-500 font-medium hover:text-teal-900 hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-6 select-none cursor-pointer transition duration-150'>CONTACTAR</h1>
+                        </div>
                     </div>
                 </div>
 
@@ -86,6 +145,6 @@ export function PatientRecord({ patient }: ModalSettProps) {
                 <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 ' : 'bg-gray-500 hover:bg-teal-900'} shadow-lg py-1 border-x-2 focus:outline-none border-teal-500 text-white text-md font-semibold transition duration-300 px-3`}>Recetas</button>
                 <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-500 border-teal-200 ' : 'bg-gray-500 hover:bg-teal-900'} shadow-lg py-1 border-x-2 focus:outline-none border-teal-500 text-white text-md font-semibold rounded-br-lg transition duration-300 px-3`}>Consentimientos</button>
             </div>
-        </div>
+        </div >
     );
 }
