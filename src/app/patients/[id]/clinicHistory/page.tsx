@@ -8,12 +8,13 @@ import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
+import { PatientRecord } from "./../../../components/patientRecord";
 
-export default function PatientId() {
+export default function clinicHistory() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()
-    const id = (pathname.split('/').pop() || null) as string | null;
+    const id = pathname.split('/').slice(-2, -1)[0] || null;
     const [patient, setPatient] = useState<any>(null);
 
     useEffect(() => {
@@ -56,6 +57,8 @@ export default function PatientId() {
                     </div>
                 ) : (
                     <div className='ml-2 p-4 mt-16 mr-2 relative'>
+                        <PatientRecord patient={patient} />
+
                         <p>hola</p>
                     </div>
                 )}

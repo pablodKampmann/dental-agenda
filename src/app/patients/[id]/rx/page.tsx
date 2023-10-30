@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patientRecord";
 
-export default function odontogram() {
+export default function rx() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()
@@ -57,19 +57,8 @@ export default function odontogram() {
                 ) : (
                     <div className='ml-2 p-4 mt-16 mr-2 relative'>
                         <PatientRecord patient={patient} />
-                        <div className="border-4 border-teal-500 mt-8 rounded-3xl ml-1 mr-1 bg-teal-700">
-                            <div className="bg-black py-8 px-20 rounded-3xl flex justify-center items-center">
-                                <div className="flex items-center justify-center w-full">
-                                    <div className="w-32 h-64 border border-black relative">
-                                        <div className="w-1/3 h-1/4 bg-white absolute top-0 left-0"></div>
-                                        <div className="w-1/4 h-1/2 bg-white absolute top-1/4 right-0"></div>
-                                        <div className="w-1/4 h-1/2 bg-white absolute top-1/4 left-0"></div>
-                                        <div className="w-1/3 h-1/4 bg-white absolute bottom-0 left-0"></div>
-                                        <div className="w-1/3 h-1/2 bg-white absolute top-1/4 left-1/3"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+                        <p>rx</p>
                     </div>
                 )}
             </div>

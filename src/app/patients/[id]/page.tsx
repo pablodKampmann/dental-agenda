@@ -1,16 +1,12 @@
 'use client'
 
-import Link from 'next/link'
 import { getPatient } from "../../components/getPatient";
 import React, { useState, useEffect } from 'react';
-import { PiAddressBookBold } from 'react-icons/pi';
-import { RiArrowGoBackFill } from 'react-icons/ri';
-import { TbPhone, TbPencilCog } from 'react-icons/tb';
-import { MdLocationPin, MdDelete } from 'react-icons/md';
-import { LiaIdCardSolid } from 'react-icons/lia';
+import { TbPencilCog } from 'react-icons/tb';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
 import { updatePatient } from "../../components/updatePatient";
+import { BiPlusMedical } from 'react-icons/bi';
 import { Alert } from "../../components/alert";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -91,16 +87,14 @@ export default function PatientId() {
             {patient && (
               <div>
                 <PatientRecord patient={patient} />
-                <div className='flex mt-4'>
-
-                  <div className='mr-4 border-4 rounded-3xl border-teal-500 bg-gray-500 shadow-xl w-1/2 relative'>
+                <div className='flex mt-8'>
+                  <div className='mr-4 border-4 rounded-3xl border-teal-500 bg-black shadow-xl w-1/2 relative'>
                     <div className="absolute top-0 right-0 mt-3 mr-3">
                       <ImAccessibility size={70} className="text-teal-500" />
                     </div>
-
-                    <div className='flex mt-4 mb-4'>
+                    <div className='flex mb-4'>
                       <div>
-                        <h1 className='mb-3 ml-4 text-2xl font-semibold text-teal-500 border-b-2 border-teal-500 bg-teal-950 bg-opacity-70 rounded-lg px-2 select-none'>Información Básica</h1>
+                        <h1 className='mb-3 text-2xl font-semibold text-teal-500 border-b-4 border-r-2 border-teal-500 bg-teal-950 bg-opacity-70 w-full rounded-t-3xl rounded-br-3xl px-6 pt-2 select-none'>INFORMACIÓN BÁSICA</h1>
                         <div onClick={() => setRowModify('name')} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-500' : ''}`}>
                           <h1 className='text-lg font-semibold'>Nombre:</h1>
                           {rowModify === 'name' ? (
@@ -170,13 +164,13 @@ export default function PatientId() {
                         <div onClick={() => setRowModify('address')} onMouseEnter={() => setHovered('address')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'address' || rowModify === 'address' ? '' : 'border-transparent'} ${rowModify === 'address' ? 'border-teal-500' : ''}`}>
                           <h1 className='text-lg font-semibold'>Domicilio:</h1>
                           {rowModify === 'address' ? (
-                            <input onKeyDown={(event) => {
+                            <textarea onKeyDown={(event) => {
                               if (event.key === 'Enter') {
                                 submitChanges(changes, rowModify);
                               } else if ((event.key === 'Escape')) {
                                 setRowModify('');
                               }
-                            }} autoFocus defaultValue={patient.address} type="text" className='text-teal-500 font-semibold ml-1 focus:outline-none bg-transparent text-lg' onChange={(event) => setChanges(event.target.value)} />
+                            }} autoFocus defaultValue={patient.address} className='text-teal-500 flex h-fit font-semibold focus:bg-teal-400 focus:text-black bg-transparent text-lg overflow-y-auto w-60 ml-2' onChange={(event) => setChanges(event.target.value)} />
                           ) : (
                             <p className='ml-1 text-gray-300 text-lg'>{patient.address}</p>
                           )}
@@ -244,15 +238,15 @@ export default function PatientId() {
                   </div>
 
                   <div className='w-1/2'>
-                    <div className='ml-4 mb-2 border-4 rounded-3xl border-teal-500 bg-gray-500 shadow-xl relative'>
+                    <div className=' border-4 rounded-3xl border-teal-500 bg-black shadow-xl relative'>
                       <div className="absolute top-0 right-0 mt-3 mr-3">
                         <BsFillPhoneFill size={70} className="text-teal-500" />
                       </div>
-                      <div className='mt-4 ml-4 mb-4'>
+                      <div className='mb-4'>
                         <div className='flex'>
                           <div>
-                            <h1 className='mb-3 ml-4 text-2xl font-semibold text-teal-500 border-b-2 bg-teal-950 bg-opacity-70 px-2 rounded-lg border-teal-500 select-none'>Contacto</h1>
-                            <div onClick={() => setRowModify('num')} onMouseEnter={() => setHovered('num')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'num' || rowModify === 'num' ? '' : 'border-transparent'} ${rowModify === 'num' ? 'border-teal-500' : ''}`}>
+                            <h1 className='mb-3 text-2xl font-semibold text-teal-500 border-b-4 border-r-2 border-teal-500 bg-teal-950 bg-opacity-70 w-full rounded-t-3xl rounded-br-3xl px-6 pt-2 select-none'>CONTACTO</h1>
+                            <div onClick={() => setRowModify('num')} onMouseEnter={() => setHovered('num')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-9/12 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'num' || rowModify === 'num' ? '' : 'border-transparent'} ${rowModify === 'num' ? 'border-teal-500' : ''}`}>
                               <h1 className='text-lg font-semibold'>Núm. Tel:</h1>
                               {rowModify === 'num' ? (
                                 <input onKeyDown={(event) => {
@@ -274,7 +268,7 @@ export default function PatientId() {
                                 </button>
                               )}
                             </div>
-                            <div onClick={() => setRowModify('email')} onMouseEnter={() => setHovered('email')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'email' || rowModify === 'email' ? '' : 'border-transparent'} ${rowModify === 'email' ? 'border-teal-500' : ''}`}>
+                            <div onClick={() => setRowModify('email')} onMouseEnter={() => setHovered('email')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-9/12 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'email' || rowModify === 'email' ? '' : 'border-transparent'} ${rowModify === 'email' ? 'border-teal-500' : ''}`}>
                               <h1 className='text-lg font-semibold'>Correo:</h1>
                               {rowModify === 'email' ? (
                                 <input onKeyDown={(event) => {
@@ -300,12 +294,85 @@ export default function PatientId() {
                         </div>
                       </div>
                     </div>
-                    <div className='border-4 rounded-3xl border-teal-500 bg-gray-500 shadow-xl relative ml-4 mt-2'>
-                      hola
+                    <div className='border-4 rounded-3xl border-teal-500 bg-black shadow-xl relative mt-4'>
+                      <div className="absolute top-0 right-0 mt-3 mr-3">
+                        <BiPlusMedical size={70} className="text-teal-500" />
+                      </div>
+                      <div className='mb-4'>
+                        <div className='flex'>
+                          <div>
+                            <h1 className='mb-3 text-2xl font-semibold text-teal-500 border-b-4 border-r-2 border-teal-500 bg-teal-950 bg-opacity-70 w-full rounded-t-3xl rounded-br-3xl px-6 pt-2 select-none'>SALUD</h1>
+                            <div onClick={() => setRowModify('obra')} onMouseEnter={() => setHovered('obra')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'obra' || rowModify === 'obra' ? '' : 'border-transparent'} ${rowModify === 'obra' ? 'border-teal-500' : ''}`}>
+                              <h1 className='text-lg font-semibold'>Obra Social:</h1>
+                              {rowModify === 'obra' ? (
+                                <input onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    submitChanges(changes, rowModify);
+                                  } else if ((event.key === 'Escape')) {
+                                    setRowModify('');
+                                  }
+                                }} autoFocus defaultValue={patient.obra} type="text" className='text-teal-500 font-semibold ml-1 focus:outline-none bg-transparent text-lg' onChange={(event) => setChanges(event.target.value)} />
+                              ) : (
+                                <p className='ml-1 text-gray-300 text-lg'>{patient.obra}</p>
+                              )}
+                              <div className='ml-auto'>
+                                {hovered === 'obra' && rowModify !== 'obra' && <TbPencilCog size={26} />}
+                              </div>
+                              {rowModify === 'obra' && (
+                                <button className="ml-auto" >
+                                  <BsFillCheckCircleFill onClick={() => submitChanges(changes, rowModify)} className="hover:scale-125 duration-150 ease-in-out" size={26} />
+                                </button>
+                              )}
+                            </div>
+                            <div onClick={() => setRowModify('plan')} onMouseEnter={() => setHovered('plan')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'plan' || rowModify === 'plan' ? '' : 'border-transparent'} ${rowModify === 'plan' ? 'border-teal-500' : ''}`}>
+                              <h1 className='text-lg font-semibold'>Plan:</h1>
+                              {rowModify === 'plan' ? (
+                                <input onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    submitChanges(changes, rowModify);
+                                  } else if ((event.key === 'Escape')) {
+                                    setRowModify('');
+                                  }
+                                }} autoFocus defaultValue={patient.plan} type="text" className='text-teal-500 font-semibold ml-1 focus:outline-none bg-transparent text-lg' onChange={(event) => setChanges(event.target.value)} />
+                              ) : (
+                                <p className='ml-1 text-gray-300 text-lg'>{patient.plan}</p>
+                              )}
+                              <div className='ml-auto'>
+                                {hovered === 'plan' && rowModify !== 'plan' && <TbPencilCog size={26} />}
+                              </div>
+                              {rowModify === 'plan' && (
+                                <button className="ml-auto" >
+                                  <BsFillCheckCircleFill onClick={() => submitChanges(changes, rowModify)} className="hover:scale-125 duration-150 ease-in-out" size={26} />
+                                </button>
+                              )}
+                            </div>
+                            <div onClick={() => setRowModify('affiliateNum')} onMouseEnter={() => setHovered('affiliateNum')} onMouseLeave={() => setHovered('')} className={`hover:cursor-pointer w-96 border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'affiliateNum' || rowModify === 'affiliateNum' ? '' : 'border-transparent'} ${rowModify === 'affiliateNum' ? 'border-teal-500' : ''}`}>
+                              <h1 className='text-lg font-semibold'>Núm. Afiliado:</h1>
+                              {rowModify === 'affiliateNum' ? (
+                                <input onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    submitChanges(changes, rowModify);
+                                  } else if ((event.key === 'Escape')) {
+                                    setRowModify('');
+                                  }
+                                }} autoFocus defaultValue={patient.affiliateNum} type="text" className='text-teal-500 font-semibold ml-1 focus:outline-none bg-transparent text-lg' onChange={(event) => setChanges(event.target.value)} />
+                              ) : (
+                                <p className='ml-1 text-gray-300 text-lg'>{patient.affiliateNum}</p>
+                              )}
+                              <div className='ml-auto'>
+                                {hovered === 'affiliateNum' && rowModify !== 'affiliateNum' && <TbPencilCog size={26} />}
+                              </div>
+                              {rowModify === 'affiliateNum' && (
+                                <button className="ml-auto" >
+                                  <BsFillCheckCircleFill onClick={() => submitChanges(changes, rowModify)} className="hover:scale-125 duration-150 ease-in-out" size={26} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-
                 </div>
               </div>
             )}
