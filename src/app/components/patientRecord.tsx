@@ -101,7 +101,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                     <PiIdentificationBadgeDuotone className="text-teal-500 mt-2" size={120} />
                     <div className='flex-col mt-4'>
                         <div className='flex justify-start items-center'>
-                            <div className='ml-2 bg-teal-500 rounded-full w-8 h-8 flex items-center justify-center'>
+                            <div className='bg-teal-500 rounded-full w-8 h-8 flex items-center justify-center'>
                                 <p className='font-bold text-lg text-teal-800'>{patient.id}</p>
                             </div>
                             <h1 className='ml-2 text-3xl font-bold text-teal-500'>{patient.name} {patient.lastName}</h1>
@@ -112,7 +112,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                                 <p className='ml-2 mt-1 text-md'>Género: Mujer</p>
                             )}
                         </div>
-                        <div className='ml-4 mt-2 flex justify-start items-center'>
+                        <div className='mt-2 flex justify-start items-center'>
                             <LiaIdCardSolid size={26} className='shadow-2xl text-green-600' />
                             <p className='ml-1 text-sm'>{patient.dni}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
@@ -122,7 +122,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             <MdLocationPin size={20} className='ml-2 shadow-2xl text-red-600' />
                             <p className='ml-1 text-sm'>{patient.address}</p>
                         </div>
-                        <div className='ml-4 mt-2 flex justify-start items-center'>
+                        <div className='mt-2 flex justify-start items-center'>
                             <FaHandHoldingMedical size={20} className='shadow-2xl text-blue-500' />
                             <p className='ml-2 text-sm'>{patient.obra}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
