@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { getPatient } from "../../../components/getPatient";
 import React, { useState, useEffect } from 'react';
 import { auth } from "../../../firebase";

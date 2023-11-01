@@ -57,15 +57,21 @@ export default function odontogram() {
                 ) : (
                     <div className='ml-2 p-4 mt-16 mr-2 relative'>
                         <PatientRecord patient={patient} />
+
                         <div className="border-4 border-teal-500 mt-8 rounded-3xl ml-1 mr-1 bg-teal-700">
                             <div className="bg-black py-8 px-20 rounded-3xl flex justify-center items-center">
                                 <div className="flex items-center justify-center w-full">
                                     <div className="w-32 h-64 border border-black relative">
-                                        <div className="w-1/3 h-1/4 bg-white absolute top-0 left-0"></div>
-                                        <div className="w-1/4 h-1/2 bg-white absolute top-1/4 right-0"></div>
-                                        <div className="w-1/4 h-1/2 bg-white absolute top-1/4 left-0"></div>
-                                        <div className="w-1/3 h-1/4 bg-white absolute bottom-0 left-0"></div>
-                                        <div className="w-1/3 h-1/2 bg-white absolute top-1/4 left-1/3"></div>
+                                        <div className="relative w-40 h-40 border-4 border-gray-500">
+                                            <div className="top-1/4 left-1/4 w-20 h-20 border-4 border-gray-500"></div>
+                                            <div className=" border-t-2 border-l-2 border-gray-500 border-solid border-opacity-100 top-0 left-0"></div>
+                                            <rect x="50" y="50" width="100" height="100" fill="" stroke="black" stroke-width="2" />
+                                            <rect x="75" y="75" width="50" height="50" fill="" stroke="black" stroke-width="2" />
+                                            <line x1="50" y1="50" x2="75" y2="75" stroke="black" stroke-width="2" />
+                                            <line x1="150" y1="50" x2="125" y2="75" stroke="black" stroke-width="2" />
+                                            <line x1="50" y1="150" x2="75" y2="125" stroke="black" stroke-width="2" />
+                                            <line x1="150" y1="150" x2="125" y2="125" stroke="black" stroke-width="2" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

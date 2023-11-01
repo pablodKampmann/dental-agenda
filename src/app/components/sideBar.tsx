@@ -57,7 +57,7 @@ export function SideBar() {
                         <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} />
                     </div>)}
             </div>
-            <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-950	 border-teal-700">
+            <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -94,7 +94,7 @@ export function SideBar() {
                     </div>
                 </div>
             </nav>
-            <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
+            <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-56 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-teal-900">
                     <ul className="space-y-2 font-medium">
                         <Link href="/" prefetch={true} onClick={() => setLoadOption('/')}>
@@ -152,9 +152,9 @@ export function SideBar() {
                     </ul>
                     <div className='absolute bottom-0'>
                         <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
-                        <button type="button" onClick={handleSignOut} className='flex  justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-4 ease-in-out border-2 rounded-xl px-3 mb-3 hover:bg-teal-700'>
-                            <IoLogOutSharp size={45} className="" />
-                            <p className='text-lg font-medium'>Cerrar Sesión</p>
+                        <button type="button" onClick={handleSignOut} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
+                            <IoLogOutSharp size={40} className="" />
+                            <p className='text-medium font-medium'>Cerrar Sesión</p>
                         </button>
                     </div>
                 </div>
