@@ -6,7 +6,7 @@ import { TbPencilCog } from 'react-icons/tb';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
 import { updatePatient } from "../../components/updatePatient";
-import { BiPlusMedical } from 'react-icons/bi';
+import { BiPhoneCall, BiPlusMedical } from 'react-icons/bi';
 import { Alert } from "../../components/alert";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -103,26 +103,26 @@ export default function PatientId() {
               <div>
                 <PatientRecord patient={patient} />
                 <div className='flex mt-8 transition duration-300'>
-                  <div className='mr-4 border-4 rounded-3xl border-teal-700 bg-gradient-to-r from-black via-teal-950 to-teal-900 shadow-xl w-1/2 relative'>
-                    <div className="absolute top-0 right-0 mt-2 mr-2 bg-gray-400 bg-opacity-30 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
+                  <div className='mr-4 border-4 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-xl w-1/2 relative'>
+                    <div className="absolute top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-60 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
                       <ImAccessibility size={70} className="text-teal-600" />
                     </div>
                     <div className='flex mb-4'>
                       <div>
-                        <h1 className='mb-3 text-2xl font-semibold text-teal-600 border-b-4 border-r-2 border-teal-700 bg-gray-400 bg-opacity-30 w-full rounded-t-2xl rounded-br-3xl px-6 pt-2 select-none'>INFORMACIÓN BÁSICA</h1>
+                        <h1 className='mb-3 text-2xl font-semibold text-teal-600 border-b-4 border-r-2 border-gray-600 bg-gray-400 bg-opacity-30 w-full rounded-t-2xl rounded-br-3xl px-6 pt-1 pb-1 select-none'>INFORMACIÓN BÁSICA</h1>
                         <div onClick={() => {
                           if (rowModify !== 'name') {
                             setRowModify('name');
                           }
-                        }} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 border-opacity-50 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-200' : ''}`}>
-                          <h1 className='text-lg font-semibold'>Nombre:</h1>
+                        }} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-200' : ''}`}>
+                          <h1 className='text-lg text-teal-600 font-semibold'>Nombre:</h1>
                           {rowModify === 'name' ? (
                             <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.name} className="text-teal-500 bg-teal-200 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-200 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-4/6 ml-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
-                            <p className='ml-2 text-gray-200 text-lg w-4/6 overflow-auto'>{patient.name}</p>
+                            <p className='ml-2 text-gray-700 text-xl w-4/6 overflow-auto'>{patient.name}</p>
                           )}
                           <div className='ml-auto'>
-                            {hovered === 'name' && rowModify !== 'name' && <TbPencilCog size={26} className="" />}
+                            {hovered === 'name' && rowModify !== 'name' && <TbPencilCog size={26} className="text-gray-600" />}
                           </div>
                           {rowModify === 'name' && (
                             <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
@@ -237,14 +237,14 @@ export default function PatientId() {
                   </div>
 
                   <div className='w-1/2'>
-                    <div className='mr-4 border-4 rounded-3xl border-teal-500 bg-gradient-to-r from-teal-900 via-teal-700 to-teal-600 shadow-xl w-full relative'>
-                      <div className="absolute top-0 right-0 mt-2 mr-2 bg-teal-950 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
-                        <BsFillPhoneFill size={60} className="text-teal-500" />
+                    <div className='mr-4 border-4 rounded-3xl border-gray-600 bg-gradient-to-r from-black via-black to-teal-900 shadow-xl w-full relative'>
+                      <div className="absolute top-0 right-0 mt-2 mr-2 bg-gray-400 bg-opacity-30 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
+                        <BsFillPhoneFill size={70} className="text-teal-600" />
                       </div>
                       <div className='mb-4'>
                         <div className='flex'>
                           <div>
-                            <h1 className='mb-3 text-2xl font-semibold text-teal-500 border-b-4 border-r-2 border-teal-500 bg-teal-950 bg-opacity-70 w-full rounded-t-2xl rounded-br-3xl px-6 pt-2 select-none'>CONTACTO</h1>
+                            <h1 className='mb-3 text-2xl font-semibold text-white border-b-4 border-r-2 border-gray-600 bg-gray-400 bg-opacity-30 w-full rounded-t-2xl rounded-br-3xl px-6 pt-2 select-none'>CONTACTO</h1>
                             <div onClick={() => {
                               if (rowModify !== 'num') {
                                 setRowModify('num');
@@ -289,14 +289,14 @@ export default function PatientId() {
                         </div>
                       </div>
                     </div>
-                    <div className='mt-4 mr-4 border-4 rounded-3xl border-teal-500 bg-gradient-to-r from-teal-900 via-teal-700 to-teal-600 shadow-xl w-full relative'>
-                      <div className="absolute top-0 right-0 mt-2 mr-2 bg-teal-950 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
-                        <BiPlusMedical size={70} className="text-teal-500" />
+                    <div className='mr-4 mt-4 border-4 rounded-3xl border-gray-600 bg-gradient-to-r from-black via-black to-teal-900 shadow-xl w-full relative'>
+                      <div className="absolute top-0 right-0 mt-2 mr-2 bg-gray-400 bg-opacity-30 rounded-full w-24 h-24 flex justify-center items-center shadow-xl">
+                        <BiPlusMedical size={70} className="text-teal-600" />
                       </div>
                       <div className='mb-4'>
                         <div className='flex'>
                           <div>
-                            <h1 className='mb-3 text-2xl font-semibold text-teal-500 border-b-4 border-r-2 border-teal-500 bg-teal-950 bg-opacity-70 w-full rounded-t-2xl rounded-br-3xl px-6 pt-2 select-none'>SALUD</h1>
+                            <h1 className='mb-3 text-2xl font-semibold text-white border-b-4 border-r-2 border-gray-600 bg-gray-400 bg-opacity-30 w-full rounded-t-2xl rounded-br-3xl px-6 pt-2 select-none'>SALUD</h1>
                             <div onClick={() => {
                               if (rowModify !== 'obra') {
                                 setRowModify('obra');

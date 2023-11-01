@@ -45,9 +45,9 @@ export default function odontogram() {
     if (id !== null) {
 
         return (
-            <div className='ml-64 mt-2'>
+            <div className='ml-56 mt-2'>
                 {isLoad ? (
-                    <div className='fixed inset-0 backdrop-blur-sm ml-64'>
+                    <div className='fixed inset-0 backdrop-blur-sm ml-56'>
                         <div className='fixed inset-0 flex items-center justify-center'>
                             <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
                                 <FaTooth size={100} />

@@ -106,7 +106,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
         <div className='flex-col mt-2'>
             <div className='border-4 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
                 <div className='flex mb-2'>
-                    <PiIdentificationBadgeDuotone className="text-teal-600 mt-2" size={120} />
+                    <PiIdentificationBadgeDuotone className="text-gray-600 mt-2" size={120} />
                     <div className='flex-col mt-4'>
                         <div className='flex justify-start items-center'>
                             <div className='bg-teal-600 rounded-full w-8 h-8 flex items-center justify-center'>
@@ -149,7 +149,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                         ) : (
                             <div className='flex mr-3 mt-3 mb-1 justify-between'>
                                 <div>
-                                    <div className='flex justify-center mr-2 bg-teal-600 rounded-md px-1 py-0.5 h-fit mt-3.5'>
+                                    <div className='flex justify-center mr-2 border-black border-b-2 border-t-2 rounded-md px-1 py-0.5 h-fit mt-3.5'>
                                         <AiFillEdit className="mt-0.5 text-black" size={18} />
                                         <h1 className='ml-1 select-none text-sm text-black font-medium'>OBSERVACIONES:</h1>
                                     </div>
@@ -179,11 +179,11 @@ export function PatientRecord({ patient }: ModalSettProps) {
                                     if (event.key === "Enter") {
                                         event.preventDefault(); 
                                     }; handleKeyPress(event);
-                                }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-teal-900 bg-opacity-70 p-1 cursor-default border-teal-500 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-100 focus:border-dashed text-sm'></textarea>
+                                }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-teal-700 text-black bg-opacity-70 p-1 cursor-default border-gray-600 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-100 focus:border-dashed text-sm'></textarea>
                             </div>
                         )}
                         <div className='flex-col mt-2'>
-                            <BsWhatsapp className="text-teal-600 ml-auto mr-10 mt-2" size={70} />
+                            <BsWhatsapp className="text-gray-600 ml-auto mr-10 mt-2" size={70} />
                             <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-6 select-none cursor-pointer transition duration-150'>CONTACTAR</h1>
                         </div>
                     </div>
