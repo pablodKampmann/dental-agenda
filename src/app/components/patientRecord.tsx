@@ -116,20 +116,20 @@ export function PatientRecord({ patient }: ModalSettProps) {
                         <div className='mt-2 flex justify-start items-center'>
                             <LiaIdCardSolid size={26} className='shadow-2xl text-green-600' />
                             <p className='ml-1 text-sm text-black'>{patient.dni}</p>
-                            <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
+                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <TbPhone size={20} className='ml-2 shadow-2xl text-yellow-500' />
                             <p className='ml-1 text-sm text-black'>{patient.num}</p>
-                            <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
+                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <MdLocationPin size={20} className='ml-2 shadow-2xl text-red-600' />
                             <p className='ml-1 text-sm text-black'>{patient.address}</p>
                         </div>
                         <div className='mt-2 flex justify-start items-center'>
                             <FaHandHoldingMedical size={20} className='shadow-2xl text-blue-500' />
                             <p className='ml-2 text-sm text-black'>{patient.obra}</p>
-                            <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
+                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <FaFileMedical size={20} className='ml-2 shadow-2xl text-pink-500' />
                             <p className='ml-1 text-sm text-black'>{patient.plan}</p>
-                            <hr className='ml-2 border-2 rounded-full border-teal-500 h-6' />
+                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <AiOutlineFieldNumber size={28} className='ml-2 shadow-2xl text-purple-400' />
                             <p className='ml-1 text-sm text-black'>{patient.affiliateNum}</p>
                         </div>

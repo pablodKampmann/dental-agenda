@@ -53,7 +53,7 @@ export function SideBar() {
         <div>
             <div>
                 {openAlert && (
-                    <div className='fixed inset-0 backdrop-blur-sm ml-64 z-10'>
+                    <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
                         <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} />
                     </div>)}
             </div>
@@ -102,7 +102,7 @@ export function SideBar() {
                                 <button type="button" className={`${pathname === '/' ? 'bg-teal-500 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
                                     <BsFillCalendar2WeekFill size={26} className={`${pathname === '/' ? 'text-teal-300' : 'text-white'}`} />
                                     {loadOption === '/' ? (
-                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                        <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Calendario</p>
                                     )}
@@ -115,7 +115,7 @@ export function SideBar() {
                                 <button type="button" className={`${pathname.includes('/patients') ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <FaUsers size={28} className={`${pathname.includes('/patients') ? 'text-teal-300' : 'text-white'}`} />
                                     {loadOption === '/patients' ? (
-                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                        <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Pacientes</p>
                                     )}
@@ -128,7 +128,7 @@ export function SideBar() {
                                 <button type="button" className={`${pathname === '/chat' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <IoLogoWhatsapp size={28} className={`${pathname === '/chat' ? 'text-teal-300' : 'text-white'}`} />
                                     {loadOption === '/chat' ? (
-                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                        <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Mensajeria</p>
                                     )}
@@ -141,7 +141,7 @@ export function SideBar() {
                                 <button type="button" className={`${pathname === '/billing' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <FaDollarSign size={26} className={`${pathname === '/billing' ? 'text-teal-300' : 'text-white'}`} />
                                     {loadOption === '/billing' ? (
-                                        <PulseLoader color="white" size={10} className='ml-16' />
+                                        <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
                                         <p className="flex-1 ml-3 select-none">Facturación</p>
                                     )}
