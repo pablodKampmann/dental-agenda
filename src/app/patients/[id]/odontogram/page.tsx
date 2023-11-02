@@ -59,20 +59,14 @@ export default function odontogram() {
                         <PatientRecord patient={patient} />
 
                         <div className="border-4 border-teal-500 mt-8 rounded-3xl ml-1 mr-1 bg-teal-700">
-                            <div className="bg-black py-8 px-20 rounded-3xl flex justify-center items-center">
+                            <div className="bg-whte py-8 px-20 rounded-3xl flex justify-center items-center">
                                 <div className="flex items-center justify-center w-full">
-                                    <div className="w-32 h-64 border border-black relative">
-                                        <div className="relative w-40 h-40 border-4 border-gray-500">
-                                            <div className="top-1/4 left-1/4 w-20 h-20 border-4 border-gray-500"></div>
-                                            <div className=" border-t-2 border-l-2 border-gray-500 border-solid border-opacity-100 top-0 left-0"></div>
-                                            <rect x="50" y="50" width="100" height="100" fill="" stroke="black" stroke-width="2" />
-                                            <rect x="75" y="75" width="50" height="50" fill="" stroke="black" stroke-width="2" />
-                                            <line x1="50" y1="50" x2="75" y2="75" stroke="black" stroke-width="2" />
-                                            <line x1="150" y1="50" x2="125" y2="75" stroke="black" stroke-width="2" />
-                                            <line x1="50" y1="150" x2="75" y2="125" stroke="black" stroke-width="2" />
-                                            <line x1="150" y1="150" x2="125" y2="125" stroke="black" stroke-width="2" />
-                                        </div>
-                                    </div>
+                                    <polygon points="0,0 	20,0 	15,5 	5,5" fill="white" stroke="white" stroke-width="0.5" id="T" opacity="1"></polygon>
+                                    <polygon points="5,15 	15,15 	20,20 	0,20" fill="white" stroke="white" stroke-width="0.5" id="B" opacity="1"></polygon>
+                                    <polygon points="15,5 	20,0 	20,20 	15,15" fill="white" stroke="white" stroke-width="0.5" id="R" opacity="1"></polygon>
+                                    <polygon points="0,0 	5,5 	5,15 	0,20" fill="white" stroke="white" stroke-width="0.5" id="L" opacity="1"></polygon>
+                                    <polygon points="5,5 	15,5 	15,15 	5,15" fill="white" stroke="white" stroke-width="0.5" id="C" opacity="1"></polygon>
+                                    <text x="6" y="30" stroke="navy" fill="navy" stroke-width="0.1" className="font-size: 6pt;font-weight:normal">18</text>
                                 </div>
                             </div>
                         </div>

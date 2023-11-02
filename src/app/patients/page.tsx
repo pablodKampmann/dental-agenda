@@ -162,7 +162,7 @@ export default function Patients() {
     return (
         <div>
             {isLoad ? (
-                <div className='fixed inset-0 backdrop-blur-sm ml-64'>
+                <div className='fixed inset-0 backdrop-blur-sm ml-56'>
                     <div className='fixed inset-0 flex items-center justify-center'>
                         <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
                             <FaTooth size={100} />
@@ -170,10 +170,10 @@ export default function Patients() {
                     </div>
                 </div>
             ) : (
-                <div className="p-4 ml-64 mt-2 relative">
+                <div className="p-4 ml-56 mt-2 relative">
                     <div>
                         {openModalCreatePatient && (
-                            <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
+                            <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                                 <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
                             </div>
                         )}
@@ -182,13 +182,13 @@ export default function Patients() {
                         <div className="flex flex-row items-center">
                             <div className="flex rounded-full relative">
                                 <TbUserSearch
-                                    className="absolute mt-2 ml-2"
+                                    className="absolute mt-2 ml-2 text-teal-600"
                                     size={24}
                                 />
                                 <input
                                     type="text"
                                     placeholder="Busca un paciente                              Por:"
-                                    className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-teal-500 font-semibold bg-gray-500 focus:border-3 focus:outline-none focus:border-teal-200 text-white text-lg"
+                                    className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
                                     name='search'
                                     value={searchContent}
                                     onChange={(e) => {
@@ -201,9 +201,8 @@ export default function Patients() {
                                         }
                                     }}
                                 />
-
-                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
-                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-28 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
+                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
+                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
                             </div>
                             <div className='flex justify-end items-center ml-auto'>
                                 {showSuccess && (
@@ -219,11 +218,11 @@ export default function Patients() {
                             </div>
                         </div>
                     </div>
-                    <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-teal-500 ml-2 mr-2 mt-4">
+                    <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-gray-600 ml-2 mr-2 mt-4">
                         <div className="overflow-x-auto">
                             <table className="w-full ">
                                 <thead>
-                                    <tr className="bg-teal-500	text-left text-sm font-semibold uppercase tracking-widest text-white">
+                                    <tr className="bg-teal-600	text-left text-sm font-semibold uppercase tracking-widest text-white">
                                         <th className="px-5 py-3">Nombre</th>
                                         <th className="px-5 py-3">Dni</th>
                                         <th className="px-5 py-3">Contacto</th>
@@ -235,27 +234,27 @@ export default function Patients() {
                                 {listPatients ? (
                                     <tbody className="text-white">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-900 bg-gray-500'} border-b border-gray-200 text-sm cursor-pointer ml-auto`}>
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-900 bg-gray-400 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto`}>
                                                 <td className="px-5 py-5">
                                                     <div className="flex items-center">
-                                                        <div className="text-center items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
+                                                        <div className="text-center text-black items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
                                                             <p>{patient.id}</p>
                                                         </div>
-                                                        <div className="ml-3">
+                                                        <div className="ml-3 text-black">
                                                             <p>{patient.name} {patient.lastName}</p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap">
+                                                <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.dni}</p>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap">
+                                                <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.num}</p>
                                                 </td>
-                                                <td className="px-5  whitespace-nowrap">
+                                                <td className="px-5  whitespace-nowrap text-black">
                                                     <p>{patient.obra}</p>
                                                 </td>
-                                                <td className="px-5  whitespace-nowrap">
+                                                <td className="px-5  whitespace-nowrap text-black">
                                                     <p>{patient.affiliateNum}</p>
                                                 </td>
                                                 <td className="px-5 ">
@@ -295,7 +294,7 @@ export default function Patients() {
                                 ) : null}
                             </table>
                         </div>
-                        <div className="justify-between flex items-center bg-gray-500 px-5 py-2">
+                        <div className="justify-between flex items-center bg-gray-400 bg-opacity-30 px-5 py-2">
                             {searchContent ? (
                                 <span className="text-md text-white sm:text-sm mr-20 select-none">
                                     Filtrando Pacientes...
