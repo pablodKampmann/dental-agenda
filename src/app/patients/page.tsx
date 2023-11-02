@@ -212,8 +212,8 @@ export default function Patients() {
                                         </div>
                                     </div>
                                 )}
-                                <button onClick={OpenModalCreatePatient} type="button" className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
-                                    <span className="text-2xl md:text-3xl mr-2 md:mr-4">+</span> Agregar Paciente
+                                <button onClick={OpenModalCreatePatient} type="button" className="group shadow-xl h-10 text-black bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-teal-500 hover:text-white text-xl font-semibold py-2 px-12 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
+                                    <span className="text-3xl text-black mr-4 group-hover:text-white transition duration-200">+</span> Agregar Paciente
                                 </button>
                             </div>
                         </div>
@@ -222,26 +222,27 @@ export default function Patients() {
                         <div className="overflow-x-auto">
                             <table className="w-full ">
                                 <thead>
-                                    <tr className="bg-teal-600	text-left text-sm font-semibold uppercase tracking-widest text-white">
-                                        <th className="px-5 py-3">Nombre</th>
+                                    <tr className="bg-teal-600 select-none border-b-2 border-gray-600 text-left text-sm font-semibold uppercase tracking-widest text-white">
+                                        <th className="px-5 py-3 ">Nombre</th>
                                         <th className="px-5 py-3">Dni</th>
                                         <th className="px-5 py-3">Contacto</th>
                                         <th className="px-5 py-3">Obra Social</th>
-                                        <th className="px-5 py-3">N. Afiliado</th>
                                         <th className="px-5 py-3">Acciones</th>
                                     </tr>
                                 </thead>
                                 {listPatients ? (
                                     <tbody className="text-white">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-900 bg-gray-400 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto`}>
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-600 bg-gray-400 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
                                                 <td className="px-5 py-5">
                                                     <div className="flex items-center">
-                                                        <div className="text-center text-black items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
+                                                        <div className="text-center text-white items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
                                                             <p>{patient.id}</p>
                                                         </div>
                                                         <div className="ml-3 text-black">
-                                                            <p>{patient.name} {patient.lastName}</p>
+                                                            <p>
+                                                                {patient.name} {patient.lastName}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -253,9 +254,6 @@ export default function Patients() {
                                                 </td>
                                                 <td className="px-5  whitespace-nowrap text-black">
                                                     <p>{patient.obra}</p>
-                                                </td>
-                                                <td className="px-5  whitespace-nowrap text-black">
-                                                    <p>{patient.affiliateNum}</p>
                                                 </td>
                                                 <td className="px-5 ">
                                                     <div className="flex items-center space-x-2">
@@ -296,11 +294,11 @@ export default function Patients() {
                         </div>
                         <div className="justify-between flex items-center bg-gray-400 bg-opacity-30 px-5 py-2">
                             {searchContent ? (
-                                <span className="text-md text-white sm:text-sm mr-20 select-none">
+                                <span className="text-sm text-black mr-20 select-none">
                                     Filtrando Pacientes...
                                 </span>
                             ) : (
-                                <span className="text-xs text-white sm:text-sm select-none">
+                                <span className="text-sm text-black select-none">
                                     Mostrando {showMin}-{showMax} de {totalPatients}
                                 </span>
                             )}
@@ -308,7 +306,7 @@ export default function Patients() {
                                 {disableBack ? (
                                     <button disabled className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                                 ) : (
-                                    <button onClick={HandleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={HandleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
                                         {backPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
@@ -319,7 +317,7 @@ export default function Patients() {
                                 {disableNext ? (
                                     <button disabled className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
                                 ) : (
-                                    <button onClick={HandleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={HandleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
                                         {nextPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
@@ -327,7 +325,7 @@ export default function Patients() {
                                         )}
                                     </button>
                                 )}
-                                <div className="select-none overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-500 text-white text-2xl font-bold flex justify-center  ">
+                                <div className="select-none overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-600 text-white text-2xl font-bold flex justify-center  ">
                                     {searchContent ? (
                                         <span className="">
                                             <MdPersonSearch className="text-white mr-2 mt-1" size={25} />

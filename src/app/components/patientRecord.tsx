@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PiIdentificationBadgeDuotone } from 'react-icons/pi';
 import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
 import { FaHandHoldingMedical, FaFileMedical } from 'react-icons/fa';
 import { AiOutlineFieldNumber, AiFillEdit } from 'react-icons/ai';
-import { BsWhatsapp } from 'react-icons/bs';
+import { HiMiniPencilSquare } from 'react-icons/hi2';
 import { setObservations } from "./../components/setObservations";
 import { getObservations } from "./../components/getObservations";
 import { PulseLoader, GridLoader } from "react-spinners";
@@ -24,6 +24,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
     const [loadObservations, setLoadObservations] = useState(true);
     const [showCancel, setShowCancel] = useState(false);
     const pathname = usePathname()
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     function getAge(date: Date) {
         var today = new Date();
@@ -94,17 +95,9 @@ export function PatientRecord({ patient }: ModalSettProps) {
         }, 1000);
     }
 
-    async function handleKeyPress(event: any) {
-        if (event.key === 'Enter') {
-            await handleSetObservations();
-        } else if (event.key === 'Escape') {
-            console.log("esc");
-        }
-    }
-
     return (
         <div className='flex-col mt-2'>
-            <div className='border-4 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
+            <div className='border-2 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
                 <div className='flex mb-2'>
                     <PiIdentificationBadgeDuotone className="text-gray-600 mt-2" size={120} />
                     <div className='flex-col mt-4'>
@@ -149,13 +142,13 @@ export function PatientRecord({ patient }: ModalSettProps) {
                         ) : (
                             <div className='flex mr-3 mt-3 mb-1 justify-between'>
                                 <div>
-                                    <div className='flex justify-center mr-2 border-black border-b-2 border-t-2 rounded-md px-1 py-0.5 h-fit mt-3.5'>
+                                    <div className='flex justify-center mr-3 border-black border-b-2 border-t-2 rounded-md px-1 py-0.5 h-fit mt-3.5'>
                                         <AiFillEdit className="mt-0.5 text-black" size={18} />
                                         <h1 className='ml-1 select-none text-sm text-black font-medium'>OBSERVACIONES:</h1>
                                     </div>
                                     {saveButton ? (
                                         <div className='flex justify-center items-center mt-4 mr-1.5'>
-                                            <button onClick={handleSetObservations} className='select-none p-2 rounded-xl text-teal-900 text-medium hover:scale-110 transition duration-150 font-medium bg-gradient-to-r from-teal-100 via-teal-500 to-teal-100 background-animate'>
+                                            <button onClick={handleSetObservations} className='select-none p-2 rounded-xl text-teal-900 text-medium hover:scale-110 transition duration-150 font-medium bg-gradient-to-r from-teal-100 border-2 border-gray-600 border-opacity-50 mr-1 via-teal-600 to-gray-100 background-animate'>
                                                 {load ? (
                                                     <div className='flex justify-center items-center py-0.5 px-1'>
                                                         <PulseLoader size={14} color='white' />
@@ -175,16 +168,16 @@ export function PatientRecord({ patient }: ModalSettProps) {
                                         </div>
                                     )}
                                 </div>
-                                <textarea onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
-                                        event.preventDefault(); 
-                                    }; handleKeyPress(event);
-                                }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-teal-700 text-black bg-opacity-70 p-1 cursor-default border-gray-600 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-100 focus:border-dashed text-sm'></textarea>
+                                <textarea ref={textareaRef} onKeyDown={(event) => {
+                                    if (event.key === "Escape") {
+                                        textareaRef.current?.blur();
+                                    };
+                                }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-gray-400 bg-opacity-70 text-black p-1 cursor-default border-gray-600 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-600 text-sm'></textarea>
                             </div>
                         )}
                         <div className='flex-col mt-2'>
-                            <BsWhatsapp className="text-gray-600 ml-auto mr-10 mt-2" size={70} />
-                            <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-6 select-none cursor-pointer transition duration-150'>CONTACTAR</h1>
+                            <HiMiniPencilSquare className="text-gray-600 ml-auto mr-7 mt-2" size={70} />
+                            <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-5 select-none cursor-pointer transition duration-150'>DAR CITA</h1>
                         </div>
                     </div>
                 </div>
