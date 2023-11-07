@@ -55,7 +55,7 @@ export function Alert({ id, firstMessage, secondMessage, action, onCloseModal }:
     } else if (action === 'Eliminar') {
         return (
             <div className="fixed inset-0 flex items-center justify-center z-10">
-                <div className="flex flex-col p-5 rounded-lg shadow bg-white border-4 border-teal-500">
+                <div className="flex flex-col p-5 rounded-lg shadow bg-white border-4 border-teal-600">
                     <div className="flex flex-col items-center text-center">
                         <div className="inline-block p-3 bg-teal-700 rounded-full">
                             <MdPersonRemoveAlt1 size={40} className="text-teal-100" />

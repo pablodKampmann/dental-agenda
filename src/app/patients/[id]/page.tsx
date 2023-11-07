@@ -14,7 +14,11 @@ import { FaTooth, FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../components/patientRecord";
-import { GetObrasSociales } from "./../../components/getObras";
+import { getInsuranceOptions } from "../../components/getInsuranceOpt";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from 'dayjs';
 
 export default function PatientId() {
   const router = useRouter()
@@ -28,7 +32,7 @@ export default function PatientId() {
   const [openAlert, setOpenAlert] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [openInfo, setOpenInfo] = useState(false);
-  const [obrasOptions, setObrasOptions] = useState<null | any[]>(null);
+  const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -45,6 +49,7 @@ export default function PatientId() {
   async function submitChanges(changes: string, table: string) {
     setRowModify('');
     setHovered('')
+    setChanges('')
     if (changes !== '') {
       const newPatient = await updatePatient(changes, table, id);
       setPatient(newPatient);
@@ -60,8 +65,8 @@ export default function PatientId() {
       try {
         const data = await getPatient(id);
         setPatient(data);
-        const options = await GetObrasSociales();
-        setObrasOptions(options);
+        const options = await getInsuranceOptions();
+        setInsuranceOptions(options);
       } catch (error) {
         console.error(error);
       }
@@ -79,6 +84,8 @@ export default function PatientId() {
   };
 
   function handleKeyPress(event: any, changes: any, rowModify: any) {
+    const formattedDate = dayjs(date.$d);
+    const formattedDateString = formattedDate.format('DD/MM/YYYY');
     if (event.key === 'Enter') {
       submitChanges(changes, rowModify);
     } else if (event.key === 'Escape') {
@@ -107,15 +114,14 @@ export default function PatientId() {
             {patient && (
               <div>
                 <PatientRecord patient={patient} />
-                <div onMouseEnter={() => setOpenInfo(true)} onMouseLeave={() => setOpenInfo(false)} className="hover:scale-125 transition duration-100 w-7 -translate-y-5 mr-2 ml-auto relative">
+                <div onMouseEnter={() => setOpenInfo(true)} onMouseLeave={() => setOpenInfo(false)} className="hover:scale-125 transition duration-100 w-7 -translate-y-5 mr-2 ml-auto relative" style={{ zIndex: 1000 }}>
                   <FaQuestionCircle className="text-teal-600 cursor-pointer" size={26} />
                   {openInfo ? (
-                    <div className=" top-0 -translate-x-[324px] mr-2 bg-teal-600 border-2 border-gray-600 rounded-lg px-2 py-1 text-xs w-80 absolute">
-                      Para actualizar los datos de un paciente, simplemente coloca el cursor sobre la fila que deseas modificar. Si deseas eliminar al paciente, encontrarás un botón correspondiente en la parte inferior de la página.
+                    <div className="top-0 -translate-x-[324px] mr-2 bg-teal-600 border-2 border-gray-600 rounded-lg px-2 py-1 text-xs w-80 absolute" style={{ zIndex: 1001 }}>
+                      Para actualizar los datos de un paciente, simplemente coloca el mouse sobre el dato que deseas modificar. <br />
+                      Si deseas eliminar un paciente, encontrarás un botón correspondiente en la parte inferior de la página.
                     </div>
-                  ) : (
-                    null
-                  )}
+                  ) : null}
                 </div>
                 <div className='flex'>
                   <div className='mr-4 border-2 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-xl w-1/2 relative'>
@@ -132,7 +138,7 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('name')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'name' || rowModify === 'name' ? '' : 'border-transparent'} ${rowModify === 'name' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Nombre:</h1>
                           {rowModify === 'name' ? (
-                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.name} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.name} className="rounded-md text-black bg-teal-600  flex h-7 font-semibold  focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.name}</p>
                           )}
@@ -152,7 +158,7 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('lastName')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'lastName' || rowModify === 'lastName' ? '' : 'border-transparent'} ${rowModify === 'lastName' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Apellido:</h1>
                           {rowModify === 'lastName' ? (
-                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.lastName} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.lastName} className="rounded-md text-black bg-teal-600 flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.lastName}</p>
                           )}
@@ -172,7 +178,7 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('dni')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'dni' || rowModify === 'dni' ? '' : 'border-transparent'} ${rowModify === 'dni' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>DNI:</h1>
                           {rowModify === 'dni' ? (
-                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.dni} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.dni} className="rounded-md text-black bg-teal-600 flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.dni}</p>
                           )}
@@ -192,7 +198,7 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('address')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'address' || rowModify === 'address' ? '' : 'border-transparent'} ${rowModify === 'address' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Domicilio:</h1>
                           {rowModify === 'address' ? (
-                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.address} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                            <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.address} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.address}</p>
                           )}
@@ -212,7 +218,14 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('birthDate')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'birthDate' || rowModify === 'birthDate' ? '' : 'border-transparent'} ${rowModify === 'birthDate' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Nacimiento:</h1>
                           {rowModify === 'birthDate' ? (
-                            <input type="datetime" onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.birthDate} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                            <div>
+                              <input type="datetime" onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.birthDate} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                              <div className="relative text-gray-400">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                  <DatePicker value={patient.date} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className='h-10 rounded-md' />
+                                </LocalizationProvider>
+                              </div>
+                            </div>
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.birthDate}</p>
                           )}
@@ -232,7 +245,7 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('gender')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'gender' || rowModify === 'gender' ? '' : 'border-transparent'} ${rowModify === 'gender' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Género:</h1>
                           {rowModify === 'gender' ? (
-                            <select value={changes} onChange={(event) => setChanges(event.target.value)} onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} autoFocus className="text-black bg-teal-600 bg-opacity-50 flex h-8 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" name="" id="">
+                            <select defaultValue={patient.gender} onChange={(event) => setChanges(event.target.value)} onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} autoFocus className="rounded-md text-black bg-teal-600 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" name="" id="">
                               <option value="male">Hombre</option>
                               <option value="female">Mujer</option>
                             </select>
@@ -274,7 +287,7 @@ export default function PatientId() {
                             }} onMouseEnter={() => setHovered('num')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'num' || rowModify === 'num' ? '' : 'border-transparent'} ${rowModify === 'num' ? 'border-teal-600' : ''}`}>
                               <h1 className='text-md text-black font-semibold'>Núm.Telefono:</h1>
                               {rowModify === 'num' ? (
-                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.num} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.num} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                               ) : (
                                 <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.num}</p>
                               )}
@@ -294,7 +307,7 @@ export default function PatientId() {
                             }} onMouseEnter={() => setHovered('email')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'email' || rowModify === 'email' ? '' : 'border-transparent'} ${rowModify === 'email' ? 'border-teal-600' : ''}`}>
                               <h1 className='text-md text-black font-semibold'>Correo:</h1>
                               {rowModify === 'email' ? (
-                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.email} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.email} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                               ) : (
                                 <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.email}</p>
                               )}
@@ -320,70 +333,86 @@ export default function PatientId() {
                           <div>
                             <h1 className='mb-2 text-2xl font-semibold text-teal-600 border-b-4 border-r-2 border-gray-600 bg-gray-400 bg-opacity-30 w-full rounded-t-2xl rounded-br-3xl px-6 pt-1 pb-1 select-none'>SALUD</h1>
                             <div onClick={() => {
-                              if (rowModify !== 'obra') {
-                                setRowModify('obra');
+                              if (rowModify !== 'insurance') {
+                                setRowModify('insurance');
                               }
-                            }} onMouseEnter={() => setHovered('obra')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'obra' || rowModify === 'obra' ? '' : 'border-transparent'} ${rowModify === 'obra' ? 'border-teal-600' : ''}`}>
+                            }} onMouseEnter={() => setHovered('insurance')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'insurance' || rowModify === 'insurance' ? '' : 'border-transparent'} ${rowModify === 'insurance' ? 'border-teal-600' : ''}`}>
                               <h1 className='text-md text-black font-semibold'>ObraSocial:</h1>
-                              {rowModify === 'obra' ? (
-                                <select value={changes} onChange={(event) => setChanges(event.target.value)} onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} autoFocus className="text-black bg-teal-600 bg-opacity-50 flex h-8 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" name="" id="">
-                                  {obrasOptions?.map((obra, index) => (
-                                    <option key={index} value={obra}>
-                                      {obra}
+                              {rowModify === 'insurance' ? (
+                                <select defaultValue={patient.insurance} onChange={(event) => setChanges(event.target.value)} onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} autoFocus className="rounded-md text-black bg-teal-600 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" name="" id="">
+                                  {insuranceOptions?.map((insurance, index) => (
+                                    <option key={index} value={insurance}>
+                                      {insurance}
                                     </option>
                                   ))}
-                                </select>) : (
-                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.obra}</p>
-                              )}
-                              <div className='ml-auto'>
-                                {hovered === 'obra' && rowModify !== 'obra' && <TbPencilCog size={26} className="text-gray-600" />}
-                              </div>
-                              {rowModify === 'obra' && (
-                                <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
-                                  <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
-                                </button>
-                              )}
-                            </div>
-                            <div onClick={() => {
-                              if (rowModify !== 'plan') {
-                                setRowModify('plan');
-                              }
-                            }} onMouseEnter={() => setHovered('plan')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'plan' || rowModify === 'plan' ? '' : 'border-transparent'} ${rowModify === 'plan' ? 'border-teal-600' : ''}`}>
-                              <h1 className='text-md text-black font-semibold'>Plan:</h1>
-                              {rowModify === 'plan' ? (
-                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.plan} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                                </select>
                               ) : (
-                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.plan}</p>
+                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.insurance}</p>
                               )}
                               <div className='ml-auto'>
-                                {hovered === 'plan' && rowModify !== 'plan' && <TbPencilCog size={26} className="text-gray-600" />}
+                                {hovered === 'insurance' && rowModify !== 'insurance' && <TbPencilCog size={26} className="text-gray-600" />}
                               </div>
-                              {rowModify === 'plan' && (
+                              {rowModify === 'insurance' && (
                                 <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
                                   <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
                                 </button>
                               )}
                             </div>
-                            <div onClick={() => {
-                              if (rowModify !== 'affiliateNum') {
-                                setRowModify('affiliateNum');
-                              }
-                            }} onMouseEnter={() => setHovered('affiliateNum')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'affiliateNum' || rowModify === 'affiliateNum' ? '' : 'border-transparent'} ${rowModify === 'affiliateNum' ? 'border-teal-600' : ''}`}>
-                              <h1 className='text-md text-black font-semibold'>Núm.Afiliado:</h1>
-                              {rowModify === 'affiliateNum' ? (
-                                <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.affiliateNum} className="text-black bg-teal-600 bg-opacity-50 flex h-16 font-semibold focus:bg-teal-600 focus:bg-opacity-50 focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
-                              ) : (
-                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.affiliateNum}</p>
-                              )}
-                              <div className='ml-auto'>
-                                {hovered === 'affiliateNum' && rowModify !== 'affiliateNum' && <TbPencilCog size={26} className="text-gray-600" />}
+                            {patient.insurance === 'Particular' ? (
+                              <div>
+                                <div className="transition duration-100 w-[25rem] border-2 border-transparent ml-4 mb-1 flex items-center rounded-lg p-1">
+                                  <h1 className='text-md text-black font-semibold'>Plan:</h1>
+                                  <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                </div>
+                                <div className="transition duration-100 w-[25rem] border-2 border-transparent ml-4 mb-1 flex items-center rounded-lg p-1">
+                                  <h1 className='text-md text-black font-semibold'>Núm.Afiliado:</h1>
+                                  <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                </div>
                               </div>
-                              {rowModify === 'affiliateNum' && (
-                                <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
-                                  <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
-                                </button>
-                              )}
-                            </div>
+                            ) : (
+                              <div>
+                                <div onClick={() => {
+                                  if (rowModify !== 'plan') {
+                                    setRowModify('plan');
+                                  }
+                                }} onMouseEnter={() => setHovered('plan')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'plan' || rowModify === 'plan' ? '' : 'border-transparent'} ${rowModify === 'plan' ? 'border-teal-600' : ''}`}>
+                                  <h1 className='text-md text-black font-semibold'>Plan:</h1>
+                                  {rowModify === 'plan' ? (
+                                    <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.plan} className="rounded-md text-black bg-teal-600 flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                                  ) : (
+                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.plan}</p>
+                                  )}
+                                  <div className='ml-auto'>
+                                    {hovered === 'plan' && rowModify !== 'plan' && <TbPencilCog size={26} className="text-gray-600" />}
+                                  </div>
+                                  {rowModify === 'plan' && (
+                                    <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
+                                      <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
+                                    </button>
+                                  )}
+                                </div>
+                                <div onClick={() => {
+                                  if (rowModify !== 'affiliateNum') {
+                                    setRowModify('affiliateNum');
+                                  }
+                                }} onMouseEnter={() => setHovered('affiliateNum')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'affiliateNum' || rowModify === 'affiliateNum' ? '' : 'border-transparent'} ${rowModify === 'affiliateNum' ? 'border-teal-600' : ''}`}>
+                                  <h1 className='text-md text-black font-semibold'>Núm.Afiliado:</h1>
+                                  {rowModify === 'affiliateNum' ? (
+                                    <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.affiliateNum} className="rounded-md text-black bg-teal-600  flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
+                                  ) : (
+                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.affiliateNum}</p>
+                                  )}
+                                  <div className='ml-auto'>
+                                    {hovered === 'affiliateNum' && rowModify !== 'affiliateNum' && <TbPencilCog size={26} className="text-gray-600" />}
+                                  </div>
+                                  {rowModify === 'affiliateNum' && (
+                                    <button className="ml-auto" onClick={() => submitChanges(changes, rowModify)}>
+                                      <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -398,8 +427,9 @@ export default function PatientId() {
               </div>
             )}
           </div>
-        )}
-      </div>
+        )
+        }
+      </div >
     );
   }
 }

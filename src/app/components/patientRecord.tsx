@@ -26,9 +26,10 @@ export function PatientRecord({ patient }: ModalSettProps) {
     const pathname = usePathname()
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-    function getAge(date: Date) {
+    function getAge(date: any) {
         var today = new Date();
-        var birthDate = new Date(date);
+        var parts = date.split("/");
+        var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
         var age = today.getFullYear() - birthDate.getFullYear();
         var m = today.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -125,13 +126,21 @@ export function PatientRecord({ patient }: ModalSettProps) {
                         </div>
                         <div className='mt-2 flex justify-start items-center'>
                             <FaHandHoldingMedical size={20} className='shadow-2xl text-blue-500' />
-                            <p className='ml-2 text-sm text-black'>{patient.obra}</p>
+                            <p className='ml-2 text-sm text-black'>{patient.insurance}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <FaFileMedical size={20} className='ml-2 shadow-2xl text-pink-500' />
-                            <p className='ml-1 text-sm text-black'>{patient.plan}</p>
+                            {patient.insurance === 'Particular' ? (
+                                <p className='ml-1 text-sm text-black'>-</p>
+                            ) : (
+                                <p className='ml-1 text-sm text-black'>{patient.plan}</p>
+                            )}
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <AiOutlineFieldNumber size={28} className='ml-2 shadow-2xl text-purple-400' />
-                            <p className='ml-1 text-sm text-black'>{patient.affiliateNum}</p>
+                            {patient.insurance === 'Particular' ? (
+                                <p className='ml-1 text-sm text-black'>-</p>
+                            ) : (
+                                <p className='ml-1 text-sm text-black'>{patient.affiliateNum}</p>
+                            )}
                         </div>
                     </div>
                     <div className='flex ml-auto'>

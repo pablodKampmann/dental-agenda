@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { ref, set, get } from "firebase/database";
 
-export async function SetPatients(name: any, lastName: any, gender: any, date: any, dni: any, newNum: any, address: any, obra: any, plan: any, affiliate: any) {
+export async function SetPatients(name: any, lastName: any, gender: any, date: any, dni: any, num: any, address: any, email: any, insurance: any, plan: any, affiliate: any) {
     let isIdFree = false;
     let patientId = 1;
     let dbRef = ref(db, '/patients/');
@@ -13,9 +13,9 @@ export async function SetPatients(name: any, lastName: any, gender: any, date: a
     while (isIdFree === false) {
         dbRef = ref(db, '/patients/' + patientId);
         snapshot = await get(dbRef);
-        if (snapshot.exists()) {            
+        if (snapshot.exists()) {
             patientId++;
-        } else {            
+        } else {
             isIdFree = true;
             await set(dbRef, {
                 id: patientId,
@@ -24,9 +24,10 @@ export async function SetPatients(name: any, lastName: any, gender: any, date: a
                 gender: gender,
                 birthDate: date,
                 dni: dni,
-                num: newNum,
+                num: num,
                 address: address,
-                obra: obra,
+                email: email,
+                insurance: insurance,
                 plan: plan,
                 affiliateNum: affiliate
             });

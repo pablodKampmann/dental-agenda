@@ -99,8 +99,8 @@ export function SideBar() {
                     <ul className="space-y-2 font-medium">
                         <Link href="/" prefetch={true} onClick={() => setLoadOption('/')}>
                             <li>
-                                <button type="button" className={`${pathname === '/' ? 'bg-teal-500 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
-                                    <BsFillCalendar2WeekFill size={26} className={`${pathname === '/' ? 'text-teal-300' : 'text-white'}`} />
+                                <button type="button" className={`${pathname === '/' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
+                                    <BsFillCalendar2WeekFill size={26} />
                                     {loadOption === '/' ? (
                                         <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
@@ -112,8 +112,8 @@ export function SideBar() {
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                         <Link href="/patients" prefetch={true} onClick={() => setLoadOption('/patients')}>
                             <li>
-                                <button type="button" className={`${pathname.includes('/patients') ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
-                                    <FaUsers size={28} className={`${pathname.includes('/patients') ? 'text-teal-300' : 'text-white'}`} />
+                                <button type="button" className={`${pathname.includes('/patients') ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <FaUsers size={28} />
                                     {loadOption === '/patients' ? (
                                         <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
@@ -125,8 +125,8 @@ export function SideBar() {
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                         <Link href="/chat" prefetch={true} onClick={() => setLoadOption('/chat')}>
                             <li>
-                                <button type="button" className={`${pathname === '/chat' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
-                                    <IoLogoWhatsapp size={28} className={`${pathname === '/chat' ? 'text-teal-300' : 'text-white'}`} />
+                                <button type="button" className={`${pathname === '/chat' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <IoLogoWhatsapp size={28} />
                                     {loadOption === '/chat' ? (
                                         <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
@@ -138,8 +138,8 @@ export function SideBar() {
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                         <Link href="/billing" prefetch={true} onClick={() => setLoadOption('/billing')}>
                             <li>
-                                <button type="button" className={`${pathname === '/billing' ? 'bg-teal-600 bg-opacity-30 text-teal-300' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
-                                    <FaDollarSign size={26} className={`${pathname === '/billing' ? 'text-teal-300' : 'text-white'}`} />
+                                <button type="button" className={`${pathname === '/billing' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                    <FaDollarSign size={26} />
                                     {loadOption === '/billing' ? (
                                         <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
@@ -152,7 +152,7 @@ export function SideBar() {
                     </ul>
                     <div className='absolute bottom-0'>
                         <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
-                        <button type="button" onClick={handleSignOut} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-300 hover:text-teal-300 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
+                        <button type="button" onClick={handleSignOut} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
                             <IoLogOutSharp size={40} className="" />
                             <p className='text-medium font-medium'>Cerrar Sesión</p>
                         </button>

@@ -113,9 +113,9 @@ export default function Page() {
   }
 
   return (
-    <div className='mt-2 ml-64'>
+    <div className='mt-2 ml-56'>
       {isLoad ? (
-        <div className='fixed inset-0 backdrop-blur-sm ml-64'>
+        <div className='fixed inset-0 backdrop-blur-sm ml-56'>
           <div className='fixed inset-0 flex items-center justify-center'>
             <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
               <FaTooth size={100}/>
@@ -126,7 +126,7 @@ export default function Page() {
         <div className='ml-2 mr-2 p-4 mt-16 relative'>
           <div>
             {openModalCreatePatient && (
-              <div className="fixed inset-0 backdrop-blur-sm ml-64 z-10">
+              <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
               </div>
             )}

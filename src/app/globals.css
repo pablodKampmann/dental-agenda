@@ -70,3 +70,6 @@ body {
   }
 }
 
+.input-phone-number input:focus{
+  outline: none !important;
+}

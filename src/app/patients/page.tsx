@@ -223,28 +223,25 @@ export default function Patients() {
                             <table className="w-full ">
                                 <thead>
                                     <tr className="bg-teal-600 select-none border-b-2 border-gray-600 text-left text-sm font-semibold uppercase tracking-widest text-white">
+                                        <th className="px-5 py-3 ">ID</th>
                                         <th className="px-5 py-3 ">Nombre</th>
                                         <th className="px-5 py-3">Dni</th>
-                                        <th className="px-5 py-3">Contacto</th>
+                                        <th className="px-5 py-3">Teléfono</th>
+                                        <th className="px-5 py-3">Correo</th>
                                         <th className="px-5 py-3">Obra Social</th>
-                                        <th className="px-5 py-3">Acciones</th>
                                     </tr>
                                 </thead>
                                 {listPatients ? (
                                     <tbody className="text-white">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-teal-600 bg-gray-400 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
-                                                <td className="px-5 py-5">
-                                                    <div className="flex items-center">
-                                                        <div className="text-center text-white items-center justify-center flex mr-2 rounded-full h-6 w-6 bg-teal-500 text-md font-semibold">
-                                                            <p>{patient.id}</p>
-                                                        </div>
-                                                        <div className="ml-3 text-black">
-                                                            <p>
-                                                                {patient.name} {patient.lastName}
-                                                            </p>
-                                                        </div>
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-gray-900 bg-gray-400 hover:bg-opacity-30 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
+                                                <td className="px-5 whitespace-nowrap">
+                                                    <div className="text-center text-white items-center justify-center flex rounded-full h-6 w-6 bg-teal-600 text-md font-semibold">
+                                                        <p>{patient.id}</p>
                                                     </div>
+                                                </td>
+                                                <td className="px-5 py-5 whitespace-nowrap text-black">
+                                                    <p>{patient.name} {patient.lastName}</p>
                                                 </td>
                                                 <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.dni}</p>
@@ -252,39 +249,11 @@ export default function Patients() {
                                                 <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.num}</p>
                                                 </td>
-                                                <td className="px-5  whitespace-nowrap text-black">
-                                                    <p>{patient.obra}</p>
+                                                <td className="px-5 whitespace-nowrap text-black">
+                                                    <p>{patient.email}</p>
                                                 </td>
-                                                <td className="px-5 ">
-                                                    <div className="flex items-center space-x-2">
-                                                        <button
-                                                            onClick={(event) => {
-                                                                event.stopPropagation();
-                                                                handleGoPatient(patient.id);
-                                                            }}
-                                                            className="rounded-full bg-white px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
-                                                        >
-                                                            Modificar Datos
-                                                        </button>
-                                                        <button
-                                                            onClick={(event) => {
-                                                                event.stopPropagation();
-                                                                HandleHistory();
-                                                            }}
-                                                            className="rounded-full bg-teal-100 px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
-                                                        >
-                                                            Historia Clinica
-                                                        </button>
-                                                        <button
-                                                            onClick={(event) => {
-                                                                event.stopPropagation();
-                                                                HandleClinicalFile();
-                                                            }}
-                                                            className="rounded-full bg-teal-200 px-3 py-2 text-sm font-bold text-teal-900 hover:bg-teal-700 hover:text-white transition duration-200"
-                                                        >
-                                                            Odontograma
-                                                        </button>
-                                                    </div>
+                                                <td className="px-5 whitespace-nowrap text-black">
+                                                    <p>{patient.insurance}</p>
                                                 </td>
                                             </tr>
                                         ))}

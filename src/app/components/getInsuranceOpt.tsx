@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { get, ref } from "firebase/database";
 
-export async function GetObrasSociales() {
+export async function getInsuranceOptions() {
     const dbRef = ref(db, 'obrasSociales')
     const snapshot = await get(dbRef);
     const array: any[] = [];
