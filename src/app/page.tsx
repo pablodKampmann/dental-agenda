@@ -154,27 +154,27 @@ export default function Page() {
             </div>
           </div>
           <div className='flex justify-between '>
-            <div className='border-4 border-teal-500 rounded-2xl shadow-xl flex-1 max-h-[33rem] w-8/12	overflow-y-auto'>
-              <div className=''>
-                <table className='w-full'>
+            <div className='border-2 border-gray-600 bg-gray-400 bg-opacity-30 rounded-xl shadow-xl flex-1 h-fit w-fit overflow-y-auto'>
+              <div>
+                <table>
                   <thead>
-                    <tr className='bg-gray-500 text-center cursor-default	'>
-                      <th className='border-2 w-10 border-teal-500 p-3 rounded-tl-xl'>Tiempo</th>
-                      <th className='border-2 w-40 border-teal-500 p-3 '>Lunes</th>
-                      <th className='border-2 w-40 border-teal-500 p-3 '>Martes</th>
-                      <th className='border-2 w-36 border-teal-500 p-3 '>Miércoles</th>
-                      <th className='border-2 w-40 border-teal-500 p-3 '>Jueves</th>
-                      <th className='border-2 w-40 border-teal-500 p-3 rounded-tr-xl'>Viernes</th>
+                    <tr className='text-black text-center cursor-default select-none w-full'>
+                      <th className='border w-10 border-gray-600 px-2 py-0.5'>Tiempo</th>
+                      <th className='border w-40 border-gray-600'>Lunes</th>
+                      <th className='border w-40 border-gray-600'>Martes</th>
+                      <th className='border w-36 border-gray-600'>Miércoles</th>
+                      <th className='border w-40 border-gray-600'>Jueves</th>
+                      <th className='border w-40 border-gray-600'>Viernes</th>
                     </tr>
                   </thead>
-                  <tbody className=''>
-                    {['7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '18:00', '18:00', '18:00'].map((time) => (
+                  <tbody className='text-black'>
+                    {['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
                       <tr key={time}>
-                        <td className='cursor-default	 bg-gray-500 border-2 border-teal-500 text-center'>{time}</td>
+                        <td className='cursor-default	 border border-gray-600 text-center'>{time}</td>
                         {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (
                           <td
                             key={day}
-                            className='border-2 p-3 border-teal-500 hover:bg-teal-600 text-center cursor-pointer items-center transition duration-200'
+                            className='border p-3 border-gray-600 hover:bg-gray-900 hover:bg-opacity-30 text-center cursor-pointer items-center transition duration-200'
                           >
                             Hola
                           </td>
@@ -187,7 +187,7 @@ export default function Page() {
             </div>
             <div className="flex w-4/12 ml-16 h-screen">
               {showForm ? (
-                <div className='flex-1 flex-col border-4 border-teal-500 rounded-xl shadow-lg h-3/4 bg-zinc-200 overflow-auto'>
+                <div className='flex-1 flex-col border-4 border-gray-600 rounded-xl shadow-lg h-3/4 bg-zinc-200 overflow-auto'>
                   <div className={`border-teal-700 border-b-4 ${patient ? '' : 'flex-1'}`}>
                     {patient ? (
                       <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
@@ -213,9 +213,9 @@ export default function Page() {
                                 setSearchContent(inputValue);
                               }
                             }}
-                            type="text" placeholder='Busca un paciente' className='focus:border-3 focus:outline-none focus:border-teal-200 rounded-lg text-white h-10 shadow-lg p-2 w-full bg-gray-500 border-2 border-teal-500' />
-                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-teal-500 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
-                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-teal-500 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
+                            type="text" placeholder='Busca un paciente' className='focus:border-3 focus:outline-none focus:border-teal-200 rounded-lg text-white h-10 shadow-lg p-2 w-full bg-gray-500 border-2 border-gray-600' />
+                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-gray-600 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
+                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-gray-600 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
                         </div>
                       </div>
                     )}
@@ -232,7 +232,7 @@ export default function Page() {
                             ) : (
                               <div>
                                 {listPatients.map((patient, index) => (
-                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 border-b border-teal-500 transition duration-100 cursor-pointer flex justify-between">
+                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                     <p className='ml-1'>
                                       {patient.name} {patient.lastName}
                                     </p>
@@ -293,7 +293,7 @@ export default function Page() {
                         </div>) : (
                         <Calendar onChange={setDate}
                           value={date}
-                          className="bg-gray-500 border-4 border-teal-500 rounded-lg"
+                          className="bg-gray-500 border-4 border-gray-600 rounded-lg"
                           maxDate={new Date(2099, 11, 31)}
                           defaultValue={new Date()}
                           view="month"
@@ -311,14 +311,14 @@ export default function Page() {
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
                           <h1 className='text-xl font-bold text-teal-100 text-center underline'>Resumen del turno: </h1>
-                          <div className='mt-1 m-2 border-2 rounded-lg border-teal-500'>
+                          <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Paciente: </p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Nombre del Paciente: {patient.name} {patient.lastName}</p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>DNI: {patient.dni}</p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Obra Social: {patient.obra}</p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Número de afiliado: {patient.affiliateNum}</p>
                           </div>
-                          <div className='mt-1 m-2 border-2 rounded-lg border-teal-500'>
+                          <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Fecha: </p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Año: {date.getFullYear()}</p>
                             <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Para: el Martes {date.getDate()} de {namesMonths[date.getMonth()]}</p>
@@ -342,14 +342,14 @@ export default function Page() {
                   <div className='shadow-xl'>
                     <Calendar onChange={onChange}
                       value={value}
-                      className="bg-gray-500 border-4 border-teal-500 rounded-lg "
+                      className="bg-gray-500 border-4 border-gray-600 rounded-lg "
                       maxDate={new Date(2099, 11, 31)}
                       defaultValue={new Date()}
                       view="month"
                       locale="es-ES"
                     />
                   </div>
-                  <div className='border-4 mt-4 border-teal-500 rounded-lg shadow-xl bg-teal-500'>
+                  <div className='border-4 mt-4 border-gray-600 rounded-lg shadow-xl bg-teal-500'>
                     <div className='bg-teal-500'>
                       <h1 className='font-bold text-center text-xl'>Turnos del día</h1>
                     </div>
@@ -358,17 +358,17 @@ export default function Page() {
                         <p className='ml-1'>Maria Gonzales </p>
                         <p className='ml-auto mr-2'>10:30</p>
                       </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-teal-500'>
+                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-gray-600'>
                         <p className='ml-1'>Jose Mario</p>
                         <p className='ml-auto mr-2'>11:30</p>
 
                       </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-teal-500'>
+                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-gray-600'>
                         <p className='ml-1'>Vicenzo Giorda</p>
                         <p className='ml-auto mr-2'>15:30</p>
 
                       </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md  py-2 border-t-2 border-dashed border-teal-500'>
+                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md  py-2 border-t-2 border-dashed border-gray-600'>
                         <p className='ml-1'>Pablo Mario</p>
                         <p className='ml-auto mr-2'>16:00</p>
                       </div>

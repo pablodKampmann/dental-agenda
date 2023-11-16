@@ -33,11 +33,13 @@ export default function PatientId() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [openInfo, setOpenInfo] = useState(false);
   const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
+  const [selectedDate, setSelectedDate] = useState(dayjs(patient?.birthDate, 'DD/MM/YYYY'));
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && patient) {
         setIsLoad(false);
+        setSelectedDate(dayjs(patient.birthDate, 'DD/MM/YYYY'));
       } else if (!user) {
         router.push("/notSign");
       }
@@ -84,8 +86,6 @@ export default function PatientId() {
   };
 
   function handleKeyPress(event: any, changes: any, rowModify: any) {
-    const formattedDate = dayjs(date.$d);
-    const formattedDateString = formattedDate.format('DD/MM/YYYY');
     if (event.key === 'Enter') {
       submitChanges(changes, rowModify);
     } else if (event.key === 'Escape') {
@@ -222,7 +222,7 @@ export default function PatientId() {
                               <input type="datetime" onKeyDown={(event) => handleKeyPress(event, changes, rowModify)} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.birthDate} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                               <div className="relative text-gray-400">
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                  <DatePicker value={patient.date} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className='h-10 rounded-md' />
+                                  <DatePicker value={patient.birthDate} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className='rounded-md  text-black bg-teal-600 flex h-10 focus:outline-none font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4' />
                                 </LocalizationProvider>
                               </div>
                             </div>

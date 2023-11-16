@@ -95,7 +95,7 @@ export function SideBar() {
                 </div>
             </nav>
             <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-56 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
-                <div className="h-full px-3 pb-4 overflow-y-auto bg-teal-900">
+                <div className="h-full px-3 pb-4 overflow-y-auto bg-gradient-to-b from-teal-900 from-90% to-teal-800">
                     <ul className="space-y-2 font-medium">
                         <Link href="/" prefetch={true} onClick={() => setLoadOption('/')}>
                             <li>

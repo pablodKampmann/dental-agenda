@@ -110,7 +110,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                     <label className="text-black select-none">Nacimiento</label>
                                     <div className="relative text-gray-400">
                                         <LocalizationProvider dateAdapter={AdapterDayjs} >
-                                            <DatePicker required  value={date} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className='h-10 rounded-md' />
+                                            <DatePicker value={date} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className='h-10 rounded-md' />
                                         </LocalizationProvider>
                                     </div>
                                 </div>
