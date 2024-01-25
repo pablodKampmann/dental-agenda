@@ -5,7 +5,7 @@ import Calendar from 'react-calendar';
 import { setAppointment } from "./components/setAppointment";
 import { SearchPatient } from "./components/searchPatient";
 import { GetPatients } from "./components/getPatients"
-import { BsPersonCheck } from 'react-icons/bs';
+import { BsPersonCheck, BsCalendar2Date } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
@@ -14,21 +14,23 @@ import { ModalCreatePatient } from './components/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-
-type ValuePiece = Date | null;
-
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+import { BiRightArrow, BiLeftArrow } from "react-icons/bi";
+import { MdUpdate } from "react-icons/md";
 
 export default function Page() {
   const router = useRouter()
   const [isLoad, setIsLoad] = useState(true);
-  const [value, onChange] = useState<Value>(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [patient, setPatient] = useState<any>(null);
+  const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
+  const [dayName, setDayName] = useState<any>(null);
+  const [day, setDay] = useState<any>(null);
+  const [monthName, setMonthName] = useState<any>(null);
+  const [appointmentDate, setAppointmentDate] = useState<any>(null);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [leaveModal, setLeaveModal] = useState(false);
@@ -49,11 +51,6 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
-  function isWeekend(date: any) {
-    const day = date.getDay();
-    return day === 0 || day === 6;
-  }
-
   async function handleSetAppointment() {
     //await setAppointment();
   }
@@ -61,6 +58,41 @@ export default function Page() {
   useEffect(() => {
     setSearchContent('');
   }, [selectedField]);
+
+  useEffect(() => {
+    const options = { timeZone: 'America/Argentina/Buenos_Aires' };
+    const formattedDate = today.toLocaleDateString('es-AR', options);
+    setDate(formattedDate);
+    let dayName = today.toLocaleDateString('es-AR', { ...options, weekday: 'long' });
+    dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    setDayName(dayName);
+    const day = today.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
+    setDay(day);
+    let monthName = today.toLocaleDateString('es-AR', { ...options, month: 'long' });
+    monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    setMonthName(monthName);
+  }, [today]);
+
+  function dayBack() {
+    const newDate = new Date(today);
+    newDate.setDate(today.getDate() - 1);
+    setToday(newDate);
+  }
+
+  function dayNext() {
+    const newDate = new Date(today);
+    newDate.setDate(today.getDate() + 1);
+    setToday(newDate);
+  }
+
+  function isToday(dateToCheck: Date) {
+    const todayDate = new Date();
+    return (
+      dateToCheck.getDate() === todayDate.getDate() &&
+      dateToCheck.getMonth() === todayDate.getMonth() &&
+      dateToCheck.getFullYear() === todayDate.getFullYear()
+    );
+  }
 
   useEffect(() => {
     if (searchContent.length > 0) {
@@ -118,7 +150,7 @@ export default function Page() {
         <div className='fixed inset-0 backdrop-blur-sm ml-56'>
           <div className='fixed inset-0 flex items-center justify-center'>
             <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
-              <FaTooth size={100}/>
+              <FaTooth size={100} />
             </div>
           </div>
         </div>
@@ -132,14 +164,27 @@ export default function Page() {
             )}
           </div>
           <div className='mb-4 flex justify-between items-center'>
-            <div>
-              <h1 className='font-bold text-lg text-teal-900'>Jueves 10 de Noviembre (2023)</h1>
+            <div className='flex justify-center items-center'>
+              {isToday(today) ? (
+                <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                  <h1 className='flex font-bold text-lg text-black select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
+                </div>
+              ) : (
+                <div onClick={() => setToday(new Date())} className='cursor-pointer hover:bg-teal-700 bg-gray-400 border-2 border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                  <h1 className='flex font-bold text-lg text-black select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
+                </div>
+              )}
+              <BiLeftArrow onClick={dayBack} size={32} className="hover:text-white hover:bg-teal-800 transition duration-150 hover:scale-110 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <div className='bg-gray-400 border-2 border-gray-600 bg-opacity-30 px-3 rounded-lg  py-0.5 '>
+                <h1 className='flex font-bold text-lg text-black select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {day} de {monthName} ({date})</h1>
+              </div>
+              <BiRightArrow onClick={dayNext} size={32} className="hover:text-white hover:bg-teal-800 transition duration-150 hover:scale-110 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
             </div>
             <div>
               puto el que lee
             </div>
             <div>
-              <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
+              <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
                 {showForm ? (
                   <div className='flex justify-center items-center w-44'>
                     <p>Cancelar</p>
@@ -271,7 +316,7 @@ export default function Page() {
                   </div>
                   <div className='border-teal-700 border-b-4 flex-1 '>
 
-                    {date ? (
+                    {appointmentDate ? (
                       <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
                         <h1 className='font-black	text-4xl text-white mr-4'>2</h1>
                         <h1 className='font-black	text-4xl text-white mr-4'>CHECK</h1>
@@ -284,15 +329,15 @@ export default function Page() {
                       </div>
                     )}
                     <div className='mt-4 ml-2 mr-2 mb-2 flex'>
-                      {date ? (
+                      {appointmentDate ? (
                         <div className=' ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
                           <p className='text-sm text-teal-300 text-center'>Día seleccionado: </p>
                           <p className='ml-1 text-sm text-teal-300 text-center font-bold'>
-                            {date.getDate()} de {namesMonths[date.getMonth()]} de {date.getFullYear()}
+                            {appointmentDate.getDate()} de {namesMonths[appointmentDate.getMonth()]} de {appointmentDate.getFullYear()}
                           </p>
                         </div>) : (
-                        <Calendar onChange={setDate}
-                          value={date}
+                        <Calendar onChange={setAppointmentDate}
+                          value={appointmentDate}
                           className="bg-gray-500 border-4 border-gray-600 rounded-lg"
                           maxDate={new Date(2099, 11, 31)}
                           defaultValue={new Date()}
@@ -307,7 +352,7 @@ export default function Page() {
                       <h1 className='font-black	text-4xl text-teal-800 mr-4'>3</h1>
                       <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
                     </div>
-                    {patient && date ? (
+                    {patient && appointmentDate ? (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
                           <h1 className='text-xl font-bold text-teal-100 text-center underline'>Resumen del turno: </h1>
@@ -320,8 +365,8 @@ export default function Page() {
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Fecha: </p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Año: {date.getFullYear()}</p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Para: el Martes {date.getDate()} de {namesMonths[date.getMonth()]}</p>
+                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Año: {appointmentDate.getFullYear()}</p>
+                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Para: el Martes {appointmentDate.getDate()} de {namesMonths[appointmentDate.getMonth()]}</p>
                           </div>
                           <div onClick={handleSetAppoint} className='flex justify-center items-center text-xl font-semibold transition duration-100 text-teal-800 border-2 rounded-lg ml-2 mr-2 mb-1 p-1 cursor-pointer hover:bg-teal-300 hover:text-teal-900 border-teal-900 bg-teal-500'>
                             Confirmar
@@ -338,17 +383,7 @@ export default function Page() {
                   </div>
                 </div>
               ) : (
-                <div>
-                  <div className='shadow-xl'>
-                    <Calendar onChange={onChange}
-                      value={value}
-                      className="bg-gray-500 border-4 border-gray-600 rounded-lg "
-                      maxDate={new Date(2099, 11, 31)}
-                      defaultValue={new Date()}
-                      view="month"
-                      locale="es-ES"
-                    />
-                  </div>
+                <div className='w-full'>
                   <div className='border-4 mt-4 border-gray-600 rounded-lg shadow-xl bg-teal-500'>
                     <div className='bg-teal-500'>
                       <h1 className='font-bold text-center text-xl'>Turnos del día</h1>

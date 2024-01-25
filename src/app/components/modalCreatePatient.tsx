@@ -61,7 +61,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                     </div>
                     <div className="py-4 text-gray-white text-lg">
                         <div className='flex justify-between'>
-                            <div className="group items-center w-1/2 mr-2">
+                            <div className="group items-center w-1/3 mr-2">
                                 <div className="flex flex-col">
                                     <label className="text-black select-none">Nombre</label>
                                     <div className="relative text-gray-400 ">
@@ -105,7 +105,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                     </div>
                                 </div>
                             </div>
-                            <div className="items-center w-1/2 ml-2 ">
+                            <div className="items-center w-1/3 ml-2 ">
                                 <div className="flex flex-col">
                                     <label className="text-black select-none">Nacimiento</label>
                                     <div className="relative text-gray-400">
@@ -114,6 +114,57 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                         </LocalizationProvider>
                                     </div>
                                 </div>
+                                <div className="flex flex-col mt-1">
+                                    <label className="text-black select-none">DNI</label>
+                                    <div className="relative text-gray-400">
+                                        <input
+                                            type="text"
+                                            maxLength={8}
+                                            onKeyPress={(event) => {
+                                                if (!/[0-9]/.test(event.key)) {
+                                                    event.preventDefault();
+                                                }
+                                            }}
+                                            style={{ padding: '9px 15px' }}
+                                            className="h-10 px-3 border focus:ring-gray-500 focus:border-teal-600 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-black"
+                                            required
+                                            name='dni'
+                                            value={dni}
+                                            onChange={(e) => setDni(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col mt-1">
+                                    <label className="text-black select-none">Núm. Teléfono</label>
+                                    <div className="relative text-gray-400">
+                                        <PhoneInput
+                                            international
+                                            countryCallingCodeEditable={false}
+                                            defaultCountry="AR"
+                                            name='num'
+                                            value={num}
+                                            onChange={(value) => setNum(value || '')}
+                                            className="h-10 px-3 border input-phone-number w-full sm:text-sm border-gray-300 rounded-md text-black bg-white"
+                                            required
+                                            countries={['AR', 'UY', 'BR', 'US']}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="items-center w-1/3 ml-2 ">
+                            <div className="flex flex-col w-full mt-1">
+                                <label className="text-black select-none">Domicilio</label>
+                                <div className="relative text-gray-400">
+                                    <input
+                                        type="text"
+                                        className="px-3 py-2 border focus:ring-gray-500 focus:border-teal-600 w-full sm:text-sm border-gray-300 rounded-md focus:outline-none text-black"
+                                        required
+                                        name='address'
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                                 <div className="flex flex-col mt-1">
                                     <label className="text-black select-none">DNI</label>
                                     <div className="relative text-gray-400">

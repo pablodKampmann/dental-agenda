@@ -236,8 +236,8 @@ export default function Patients() {
                                         {listPatients.map((patient, index) => (
                                             <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500 background-animate' : 'hover:bg-gray-900 bg-gray-400 hover:bg-opacity-30 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
                                                 <td className="px-5 whitespace-nowrap">
-                                                    <div className="text-center text-white items-center justify-center flex rounded-full h-6 w-6 bg-teal-600 text-md font-semibold">
-                                                        <p>{patient.id}</p>
+                                                    <div className="text-center text-white items-center justify-center flex rounded-full w-fit bg-teal-600 text-md font-semibold">
+                                                        <p className='ml-1.5 mr-1.5'>{patient.id}</p>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-5 whitespace-nowrap text-black">

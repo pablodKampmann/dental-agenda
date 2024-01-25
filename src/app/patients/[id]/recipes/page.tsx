@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patientRecord";
 
-export default function recipes() {
+export default function Recipes() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()

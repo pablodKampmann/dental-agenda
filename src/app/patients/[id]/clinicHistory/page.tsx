@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patientRecord";
 
-export default function clinicHistory() {
+export default function ClinicHistory() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()
