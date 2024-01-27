@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { setAppointment } from "./components/setAppointment";
+import { getAppointments } from "./components/getAppointments";
 import { SearchPatient } from "./components/searchPatient";
 import { GetPatients } from "./components/getPatients"
-import { BsPersonCheck, BsCalendar2Date } from 'react-icons/bs';
+import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle, BsClipboardCheck } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
@@ -14,13 +15,13 @@ import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { BiRightArrow, BiLeftArrow } from "react-icons/bi";
-import { MdUpdate, MdEditCalendar, MdAddCircleOutline } from "react-icons/md";
+import { MdUpdate, MdAddCircleOutline } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 
 export interface dateData {
   date: string;
   dayComplete: string;
-  year: number; 
+  year: number;
   time: string;
 }
 
@@ -31,6 +32,7 @@ export default function Page() {
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
+  const [appointments, setAppointments] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
   const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
@@ -59,6 +61,48 @@ export default function Page() {
   useEffect(() => {
     setSearchContent('');
   }, [selectedField]);
+
+  function handleSetAppointmentDate(time: string) {
+    const parts = date.split("/");
+    const year = parts[2];
+    setAppointmentDate({
+      date: date,
+      dayComplete: `${dayName} ${dayNum} de ${monthName}`,
+      year: year,
+      time: time
+    });
+    setShowForm(true);
+  }
+
+  async function handleSetAppoint(patientId: number, patientName: string, patientLastName: string, patientNum: string, patientDni: number, patientEmail: string, dateData: dateData) {
+    setShowForm(false);
+    setShowSuccess(true);
+    setAppointmentDate(null);
+    setPatient(null);
+    await setAppointment(patientId, patientName, patientLastName, patientNum, patientDni, patientEmail, dateData);
+    const formattedDate = date?.replace(/\//g, '');
+    const appointments = await getAppointments(formattedDate)
+    if (appointments === 'vacio') {
+      setAppointments(null);
+    } else {
+      setAppointments(appointments);
+    }
+  }
+
+  useEffect(() => {
+    const formattedDate = date?.replace(/\//g, '');
+
+    async function get() {
+      const appointments = await getAppointments(formattedDate)
+      if (appointments === 'vacio') {
+        setAppointments(null);
+      } else {
+        setAppointments(appointments);
+      }
+    }
+
+    get()
+  }, [date]);
 
   useEffect(() => {
     const options = { timeZone: 'America/Argentina/Buenos_Aires' };
@@ -133,22 +177,6 @@ export default function Page() {
     }, 5000);
   }
 
-  function handleSetAppointmentDate(time: string) {
-    const parts = date.split("/");
-    const year = parts[2];
-    setAppointmentDate({
-      date: date,
-      dayComplete: `${dayName} ${dayNum} de ${monthName}`,
-      year: year,
-      time: time
-    });
-  }
-
-  
-  async function handleSetAppoint(patientId: number, dateData: dateData) {
-    await setAppointment(patientId, dateData);
-  }
-
   function getAge(date: any) {
     var today = new Date();
     var parts = date.split("/");
@@ -160,6 +188,15 @@ export default function Page() {
     }
     return age;
   }
+
+  useEffect(() => {
+
+    const timeoutId = setTimeout(() => {
+      setShowSuccess(false);
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
+  }, [showSuccess]);
 
   return (
     <div className='mt-2 ml-56'>
@@ -177,6 +214,14 @@ export default function Page() {
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={showSuccessAlert} />
+              </div>
+            )}
+            {showSuccess && (
+              <div className="fixed top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+                <div className='flex justify-start items-center'>
+                  <BsClipboardCheck className='text-black' size={36} />
+                  <p className='ml-2 text-black font-semibold text-lg select-none'>Turno asignado exitosamente</p>
+                </div>
               </div>
             )}
           </div>
@@ -197,35 +242,71 @@ export default function Page() {
               </div>
               <BiRightArrow onClick={dayNext} size={32} className="hover:text-white hover:bg-teal-600 transition duration-150 hover:scale-110 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
             </div>
-            <button className='shadow-xl mt-2 h-11 bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-b-gray-600 hover:text-white border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200' onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null) }}>
+            <button className='shadow-xl mt-2 h-11 bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-b-gray-600 group border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200' onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null) }}>
               {showForm ? (
-                <p className='text-xl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 hover:text-white'><ImCancelCircle size={20} className="mr-2 mt-1 font-semibold" /> Cancelar</p>
+                <p className='text-xl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 group-hover:text-white'><ImCancelCircle size={20} className="mr-2 mt-1 font-semibold" /> Cancelar</p>
               ) : (
-                <p className='text-xl text-black hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
+                <p className='text-xl text-black group-hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
               )}
             </button>
           </div>
-          <div className='flex justify-between '>
-            <div>
-              <div className=' bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[500px] w-[600px] border-2 border-gray-600  rounded-lg overflow-y-auto'>
-                <table>
-                  <tbody className='text-black '>
-                    {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
-                      <tr key={time}>
-                        <td className={`select-none cursor-default text- -translate-y-3.5 text-xs font-medium px-4 border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>{time}</td>
-                        <td
-                          className={`${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-teal-600' : ''} select-none w-full p-8  ${index === array.length - 1 ? '' : 'border-b '} border-gray-600 hover:bg-gray-900 hover:bg-opacity-30 text-center cursor-pointer items-center transition duration-200`}
-                          onClick={() => handleSetAppointmentDate(time)}
-                        >
-
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className='flex justify-between'>
+            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[500px] w-full border-2 border-gray-600  rounded-lg overflow-y-auto'>
+              <table>
+                <tbody className='text-black '>
+                  {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
+                    <tr key={time}>
+                      <td className={`text-black select-none cursor-default align-top px-3 translate-y-2 text-xs font-semibold  border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>{time}</td>
+                      <td
+                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-teal-600 pt-1 pb-1 px-2 hover:bg-opacity-70' : 'p-8 hover:bg-gray-900 hover:bg-opacity-30'}
+                         ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-teal-600 animate-breathe' : ''} 
+                         ${index === array.length - 1 ? '' : 'border-b '}
+                         select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
+                        onClick={() => handleSetAppointmentDate(time)}
+                      >
+                        {appointments &&
+                          appointments
+                            .filter((appointment: { time: string }) => appointment.time === time)
+                            .map((filteredAppointment: {
+                              patientData: any;
+                              id: number;
+                              time: string;
+                            }) => {
+                              const [hoursStr, minutesStr] = time.split(':');
+                              const hours = parseInt(hoursStr, 10);
+                              const newHours = hours + 1;
+                              const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
+                              return (
+                                <div key={filteredAppointment.id} className='flex-col'>
+                                  <p className='text-left text-xs font-bold'>
+                                    {time}-{newTime}
+                                  </p>
+                                  <div className='flex'>
+                                    <p className='text-left text-sm ml-2'> Paciente:</p>
+                                    <p className='text-left text-sm font-semibold ml-1'>
+                                      {filteredAppointment.patientData.name}{' '}
+                                      {filteredAppointment.patientData.lastName}
+                                    </p>
+                                  </div>
+                                  <div className='flex'>
+                                    <p className='text-left text-sm ml-2'> DNI:</p>
+                                    <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.dni}</p>
+                                  </div>
+                                  <div className='flex'>
+                                    <p className='text-left text-sm ml-2'> Contacto:</p>
+                                    <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.num} <br /> {filteredAppointment.patientData.email}</p>
+                                  </div>
+                                </div>
+                              );
+                            })
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="flex w-4/12 ml-16 h-[500px]">
+            <div className="flex w-[40%] ml-10 h-[500px]">
               {showForm ? (
                 <div className='flex-1 flex-col border-2 border-gray-600 rounded-lg shadow-lg h-full bg-gray-400 bg-opacity-30 overflow-auto'>
 
@@ -260,9 +341,9 @@ export default function Page() {
                           <h1 className='font-black	text-2xl text-white mr-2 select-none'>1.</h1>
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona la fecha</h1>
                         </div>
-                        <div className='flex-col mt-2'>
-                          <MdEditCalendar className="m-auto text-gray-600" size={120} />
-                          <h1 className='m-auto text-center font-medium text-xl select-none text-gray-600'>SELECCIONA EL DIA Y HORARIO <br /> EN EL CALENDARIO</h1>
+                        <div className='flex-col  border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-2 bg-gray-200 bg-opacity-30 py-1'>
+                          <BsArrowLeftCircle className="m-auto mt-2 mb-1 text-teal-600" size={120} />
+                          <h1 className='m-auto text-center font-medium text-lg select-none text-black'>SELECCIONA EL DIA Y HORARIO <br /> EN EL CALENDARIO</h1>
                         </div>
                       </div>
                     )}
@@ -279,7 +360,7 @@ export default function Page() {
                           <h1 className='font-black	text-2xl text-white mr-2 select-none'>2.</h1>
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona el paciente</h1>
                         </div>
-                        <div className='mt-4 ml-2 mr-2 flex'>
+                        <div className='mt-4 mx-4 flex'>
                           <input name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -379,7 +460,7 @@ export default function Page() {
                             <p className='ml-1 text-lg font-bold text-black select-none text-left'>Fecha: </p>
                             <p className='ml-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}</p>
                           </div>
-                          <div onClick={() => handleSetAppoint(patient.id, appointmentDate)} className='flex justify-center items-center text-xl font-semibold transition duration-200 text-teal-950  rounded-lg ml-2 mr-2 mb-1 mt-4 p-1 cursor-pointer hover:bg-teal-500 hover:text-white border-teal-900 bg-teal-600'>
+                          <div onClick={() => handleSetAppoint(patient.id, patient.name, patient.lastName, patient.num, patient.dni, patient.email, appointmentDate)} className='flex justify-center items-center text-xl font-semibold transition duration-200 text-teal-950  rounded-lg ml-2 mr-2 mb-1 mt-4 p-1 cursor-pointer hover:bg-teal-600 hover:text-white border-gray-600 border-2 bg-white'>
                             Confirmar
                           </div>
                         </div>
