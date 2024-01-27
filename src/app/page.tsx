@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import Calendar from 'react-calendar';
 import { setAppointment } from "./components/setAppointment";
 import { SearchPatient } from "./components/searchPatient";
 import { GetPatients } from "./components/getPatients"
@@ -15,7 +14,15 @@ import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { BiRightArrow, BiLeftArrow } from "react-icons/bi";
-import { MdUpdate } from "react-icons/md";
+import { MdUpdate, MdEditCalendar, MdAddCircleOutline } from "react-icons/md";
+import { ImCancelCircle } from "react-icons/im";
+
+export interface dateData {
+  date: string;
+  dayComplete: string;
+  year: number; 
+  time: string;
+}
 
 export default function Page() {
   const router = useRouter()
@@ -28,16 +35,14 @@ export default function Page() {
   const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
   const [dayName, setDayName] = useState<any>(null);
-  const [day, setDay] = useState<any>(null);
+  const [dayNum, setDayNum] = useState<any>(null);
   const [monthName, setMonthName] = useState<any>(null);
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [leaveModal, setLeaveModal] = useState(false);
-  const namesMonths = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-  ];
+  const [hoveredOne, setHoveredOne] = useState(false);
+  const [hoveredTwo, setHoveredTwo] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -51,10 +56,6 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
-  async function handleSetAppointment() {
-    //await setAppointment();
-  }
-
   useEffect(() => {
     setSearchContent('');
   }, [selectedField]);
@@ -66,8 +67,8 @@ export default function Page() {
     let dayName = today.toLocaleDateString('es-AR', { ...options, weekday: 'long' });
     dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
     setDayName(dayName);
-    const day = today.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
-    setDay(day);
+    const dayNum = today.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
+    setDayNum(dayNum);
     let monthName = today.toLocaleDateString('es-AR', { ...options, month: 'long' });
     monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
     setMonthName(monthName);
@@ -121,14 +122,6 @@ export default function Page() {
     }
   }, [searchContent, selectedField])
 
-  function OpenModalCreatePatient() {
-    setOpenModalCreatePatient(true);
-  }
-
-  function CloseModalCreatePatient() {
-    setOpenModalCreatePatient(false);
-  }
-
   const showSuccessAlert = () => {
     setShowSuccess(true);
     setTimeout(() => {
@@ -140,8 +133,32 @@ export default function Page() {
     }, 5000);
   }
 
-  function handleSetAppoint() {
-    console.log("hola");
+  function handleSetAppointmentDate(time: string) {
+    const parts = date.split("/");
+    const year = parts[2];
+    setAppointmentDate({
+      date: date,
+      dayComplete: `${dayName} ${dayNum} de ${monthName}`,
+      year: year,
+      time: time
+    });
+  }
+
+  
+  async function handleSetAppoint(patientId: number, dateData: dateData) {
+    await setAppointment(patientId, dateData);
+  }
+
+  function getAge(date: any) {
+    var today = new Date();
+    var parts = date.split("/");
+    var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    var age = today.getFullYear() - birthDate.getFullYear();
+    var m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   }
 
   return (
@@ -159,7 +176,7 @@ export default function Page() {
           <div>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
+                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={showSuccessAlert} />
               </div>
             )}
           </div>
@@ -167,84 +184,100 @@ export default function Page() {
             <div className='flex justify-center items-center'>
               {isToday(today) ? (
                 <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
-                  <h1 className='flex font-bold text-lg text-black select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
+                  <h1 className='flex font-bold text-lg text-white select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               ) : (
                 <div onClick={() => setToday(new Date())} className='cursor-pointer hover:bg-teal-700 bg-gray-400 border-2 border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
                   <h1 className='flex font-bold text-lg text-black select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               )}
-              <BiLeftArrow onClick={dayBack} size={32} className="hover:text-white hover:bg-teal-800 transition duration-150 hover:scale-110 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <BiLeftArrow onClick={dayBack} size={32} className="hover:text-white hover:bg-teal-600 transition duration-150 hover:scale-110 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
               <div className='bg-gray-400 border-2 border-gray-600 bg-opacity-30 px-3 rounded-lg  py-0.5 '>
-                <h1 className='flex font-bold text-lg text-black select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {day} de {monthName} ({date})</h1>
+                <h1 className='flex font-bold text-lg text-black select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
               </div>
-              <BiRightArrow onClick={dayNext} size={32} className="hover:text-white hover:bg-teal-800 transition duration-150 hover:scale-110 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <BiRightArrow onClick={dayNext} size={32} className="hover:text-white hover:bg-teal-600 transition duration-150 hover:scale-110 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
             </div>
-            <div>
-              puto el que lee
-            </div>
-            <div>
-              <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null) }} className="shadow-xl h-10 bg-teal-500 hover:bg-teal-900 hover:border-teal-600 text-white text-xl font-semibold py-2 px-12 border-b-4 border-teal-700 rounded-lg flex items-center transition duration-200">
-                {showForm ? (
-                  <div className='flex justify-center items-center w-44'>
-                    <p>Cancelar</p>
-                  </div>
-                ) : (
-                  <div className='flex justify-center items-center w-44'>
-                    <p className="text-3xl mr-4 mb-1">+</p>
-                    <p>Agregar Turno</p>
-                  </div>
-                )}
-              </button>
-            </div>
+            <button className='shadow-xl mt-2 h-11 bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-b-gray-600 hover:text-white border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200' onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null) }}>
+              {showForm ? (
+                <p className='text-xl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 hover:text-white'><ImCancelCircle size={20} className="mr-2 mt-1 font-semibold" /> Cancelar</p>
+              ) : (
+                <p className='text-xl text-black hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
+              )}
+            </button>
           </div>
           <div className='flex justify-between '>
-            <div className='border-2 border-gray-600 bg-gray-400 bg-opacity-30 rounded-xl shadow-xl flex-1 h-fit w-fit overflow-y-auto'>
-              <div>
+            <div>
+              <div className=' bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[500px] w-[600px] border-2 border-gray-600  rounded-lg overflow-y-auto'>
                 <table>
-                  <thead>
-                    <tr className='text-black text-center cursor-default select-none w-full'>
-                      <th className='border w-10 border-gray-600 px-2 py-0.5'>Tiempo</th>
-                      <th className='border w-40 border-gray-600'>Lunes</th>
-                      <th className='border w-40 border-gray-600'>Martes</th>
-                      <th className='border w-36 border-gray-600'>Miércoles</th>
-                      <th className='border w-40 border-gray-600'>Jueves</th>
-                      <th className='border w-40 border-gray-600'>Viernes</th>
-                    </tr>
-                  </thead>
-                  <tbody className='text-black'>
-                    {['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time) => (
+                  <tbody className='text-black '>
+                    {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
                       <tr key={time}>
-                        <td className='cursor-default	 border border-gray-600 text-center'>{time}</td>
-                        {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day) => (
-                          <td
-                            key={day}
-                            className='border p-3 border-gray-600 hover:bg-gray-900 hover:bg-opacity-30 text-center cursor-pointer items-center transition duration-200'
-                          >
-                            Hola
-                          </td>
-                        ))}
+                        <td className={`select-none cursor-default text- -translate-y-3.5 text-xs font-medium px-4 border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>{time}</td>
+                        <td
+                          className={`${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-teal-600' : ''} select-none w-full p-8  ${index === array.length - 1 ? '' : 'border-b '} border-gray-600 hover:bg-gray-900 hover:bg-opacity-30 text-center cursor-pointer items-center transition duration-200`}
+                          onClick={() => handleSetAppointmentDate(time)}
+                        >
+
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <div className="flex w-4/12 ml-16 h-screen">
+            <div className="flex w-4/12 ml-16 h-[500px]">
               {showForm ? (
-                <div className='flex-1 flex-col border-4 border-gray-600 rounded-xl shadow-lg h-3/4 bg-zinc-200 overflow-auto'>
-                  <div className={`border-teal-700 border-b-4 ${patient ? '' : 'flex-1'}`}>
-                    {patient ? (
-                      <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                        <h1 className='font-black	text-4xl text-white mr-4'>1</h1>
-                        <h1 className='font-black	text-4xl text-white mr-4'>CHECK</h1>
-                        <BsPersonCheck size={38} className="text-white " />
+                <div className='flex-1 flex-col border-2 border-gray-600 rounded-lg shadow-lg h-full bg-gray-400 bg-opacity-30 overflow-auto'>
+
+                  <div className='border-teal-700 border-b-4 flex-1 p-2'>
+                    {appointmentDate ? (
+                      <div>
+                        <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg'>
+                          <AiOutlineSchedule size={38} className="text-white ml-2" />
+                        </div>
+                        <div onClick={() => { setAppointmentDate(null); setHoveredOne(false) }} onMouseEnter={() => setHoveredOne(true)} onMouseLeave={() => setHoveredOne(false)} className='bg-white mt-4 mb-2 mx-4 py-1 transition duration-150 border-2 border-gray-600 rounded-lg flex-col hover:bg-red-800 hover:bg-opacity-50   flex justify-center items-center cursor-pointer'>
+                          {hoveredOne ? (
+                            <div className='flex'>
+                              <ImCancelCircle size={40} className=" text-red-600" />
+                            </div>
+                          ) : (
+                            <div>
+                              <div className='flex'>
+                                <p className='text-sm text-black text-center select-none'>Día seleccionado: </p>
+                                <p className='ml-1 text-sm text-black text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
+                              </div>
+                              <div className='flex justify-center'>
+                                <p className='text-sm flex-col text-black text-center select-none'>Horario seleccionado: </p>
+                                <p className='ml-1 text-sm text-black text-center font-bold select-none'>{appointmentDate.time} </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div>
-                        <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                          <h1 className='font-black	text-4xl text-teal-800 mr-4'>1</h1>
-                          <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona el paciente</h1>
+                        <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg'>
+                          <h1 className='font-black	text-2xl text-white mr-2 select-none'>1.</h1>
+                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona la fecha</h1>
+                        </div>
+                        <div className='flex-col mt-2'>
+                          <MdEditCalendar className="m-auto text-gray-600" size={120} />
+                          <h1 className='m-auto text-center font-medium text-xl select-none text-gray-600'>SELECCIONA EL DIA Y HORARIO <br /> EN EL CALENDARIO</h1>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className='border-teal-700 border-b-4 flex-1 p-2'>
+                    {patient ? (
+                      <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg'>
+                        <BsPersonCheck size={32} className="ml-2" />
+                      </div>
+                    ) : (
+                      <div>
+                        <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg'>
+                          <h1 className='font-black	text-2xl text-white mr-2 select-none'>2.</h1>
+                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona el paciente</h1>
                         </div>
                         <div className='mt-4 ml-2 mr-2 flex'>
                           <input name='search'
@@ -258,26 +291,35 @@ export default function Page() {
                                 setSearchContent(inputValue);
                               }
                             }}
-                            type="text" placeholder='Busca un paciente' className='focus:border-3 focus:outline-none focus:border-teal-200 rounded-lg text-white h-10 shadow-lg p-2 w-full bg-gray-500 border-2 border-gray-600' />
-                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg ml-4 w-24 h-10 border-2 focus:outline-none border-gray-600 text-white text-lg font-semibold rounded-l-lg transition duration-300`}>DNI</button>
-                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-500 border-teal-200 border-4' : 'bg-gray-500 hover:bg-teal-900'}  shadow-lg w-40 h-10 border-2 focus:outline-none border-gray-600 text-white  text-lg font-semibold rounded-r-lg transition duration-300`}>Nombre</button>
+                            type="text" placeholder='Busca un paciente' className='select-none focus:border-3 focus:outline-none focus:border-teal-600 rounded-lg text-black h-10 shadow-lg p-2 w-full bg-gray-200 bg-opacity-30 border-2 border-gray-600' />
+                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
+                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
                         </div>
                       </div>
                     )}
-
-                    <div className='mt-4 ml-2 mr-2 mb-1 border-2 border-teal-300 rounded-lg bg-gray-500 overflow-auto'>
-                      <div className={`${patient ? 'h-fit' : 'h-40'} `}>
+                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-gray-200 shadow-xl bg-opacity-30 overflow-auto'>
+                      <div className={`${patient ? '' : 'h-40'} `}>
                         {listPatients && typeof listPatients !== 'string' ? (
                           <div>
                             {patient ? (
-                              <div className=' p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
-                                <p className='text-sm text-teal-300 text-center'>Paciente seleccionado: </p>
-                                <p className=' ml-1 text-sm text-teal-300 text-center font-bold'>{patient.name} {patient.lastName}</p>
+                              <div onClick={() => { setPatient(null); setHoveredTwo(false) }} onMouseEnter={() => setHoveredTwo(true)} onMouseLeave={() => setHoveredTwo(false)} className='hover:bg-red-800 transition duration-150  hover:bg-opacity-50 cursor-pointer  '>
+                                {hoveredTwo ? (
+                                  <div className='flex justify-center items-center'>
+                                    <ImCancelCircle size={44} className=" text-red-600 py-1" />
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div className='flex justify-center items-center py-3 bg-white '>
+                                      <p className='text-sm text-black text-center select-none'>Paciente seleccionado: </p>
+                                      <p className='ml-1 text-sm text-black text-center font-bold select-none'>{patient.name} {patient.lastName}</p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <div>
                                 {listPatients.map((patient, index) => (
-                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 hover:bg-teal-900 border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 select-none hover:bg-gray-400 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                     <p className='ml-1'>
                                       {patient.name} {patient.lastName}
                                     </p>
@@ -303,119 +345,62 @@ export default function Page() {
                       </div>
                     </div>
                     {!patient && (
-                      <div className='flex'>
-                        <p className='ml-4 mb-1 text-gray-500 text-sm font-medium'>No encontras un paciente?</p>
-                        <div onClick={OpenModalCreatePatient} className='cursor-pointer flex items-center'>
-                          <p className='ml-2 mb-1 text-gray-500 text-sm font-extrabold '>Cargalo ahora</p>
-                          <GiClick className="ml-1 text-gray-500" />
+                      <div className='flex ml-1'>
+                        <p className='ml-4 mb-1 mt-0.5 text-gray-500 text-sm font-medium select-none'>No encontras un paciente?</p>
+                        <div onClick={() => setOpenModalCreatePatient(true)} className='cursor-pointer flex items-center'>
+                          <p className='ml-2 mb-0.5 text-gray-500 text-sm font-extrabold select-none '>Cargalo ahora</p>
+                          <GiClick className="ml-1 mb-1 text-gray-500" />
                         </div>
                       </div>
-
                     )}
-
                   </div>
-                  <div className='border-teal-700 border-b-4 flex-1 '>
 
-                    {appointmentDate ? (
-                      <div className='ml-2 mt-2 mr-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                        <h1 className='font-black	text-4xl text-white mr-4'>2</h1>
-                        <h1 className='font-black	text-4xl text-white mr-4'>CHECK</h1>
-                        <AiOutlineSchedule size={38} className="text-white " />
-                      </div>
-                    ) : (
-                      <div className='ml-2 mt-2 mr-2 mb-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                        <h1 className='font-black	text-4xl text-teal-800 mr-4'>2</h1>
-                        <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Selecciona la fecha</h1>
-                      </div>
-                    )}
-                    <div className='mt-4 ml-2 mr-2 mb-2 flex'>
-                      {appointmentDate ? (
-                        <div className=' ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1 hover:bg-teal-900 flex justify-center cursor-pointer'>
-                          <p className='text-sm text-teal-300 text-center'>Día seleccionado: </p>
-                          <p className='ml-1 text-sm text-teal-300 text-center font-bold'>
-                            {appointmentDate.getDate()} de {namesMonths[appointmentDate.getMonth()]} de {appointmentDate.getFullYear()}
-                          </p>
-                        </div>) : (
-                        <Calendar onChange={setAppointmentDate}
-                          value={appointmentDate}
-                          className="bg-gray-500 border-4 border-gray-600 rounded-lg"
-                          maxDate={new Date(2099, 11, 31)}
-                          defaultValue={new Date()}
-                          view="month"
-                          locale="es-ES"
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div className='flex-1' >
-                    <div className='ml-2 mt-2 mr-2 mb-2 flex items-center justify-center bg-teal-500 rounded-full h-10 cursor-default shadow-lg'>
-                      <h1 className='font-black	text-4xl text-teal-800 mr-4'>3</h1>
-                      <h1 className=' text-xl font-bold text-teal-800 text-center cursor-default'>Confirmar Turno</h1>
+
+
+                  <div className=" flex-1 p-2">
+                    <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg'>
+                      <h1 className='font-black	text-2xl text-white mr-2 select-none'>3.</h1>
+                      <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
                     </div>
                     {patient && appointmentDate ? (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
-                        <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
-                          <h1 className='text-xl font-bold text-teal-100 text-center underline'>Resumen del turno: </h1>
+                        <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1'>
+                          <h1 className='text-xl font-bold text-black select-none text-center'>Resumen: </h1>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
-                            <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Paciente: </p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Nombre del Paciente: {patient.name} {patient.lastName}</p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>DNI: {patient.dni}</p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Obra Social: {patient.obra}</p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Número de afiliado: {patient.affiliateNum}</p>
+                            <p className='ml-1 text-lg font-bold text-black text-left select-none'>Paciente: </p>
+                            <p className='ml-1 text-sm text-black text-left font-bold'>Nombre: {patient.name} {patient.lastName} <br /> DNI: {patient.dni} <br />Edad: {getAge(patient.birthDate)} años</p>
+                            {patient.insurance === 'Particular' ? (
+                              <p className='ml-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance}</p>
+                            ) : (
+                              <p className='ml-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance} <br /> Plan:  {patient.plan}<br />Número de afiliado: {patient.affiliateNum}</p>
+                            )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
-                            <p className='ml-1 text-lg font-bold text-teal-300 text-left'>Fecha: </p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Año: {appointmentDate.getFullYear()}</p>
-                            <p className='ml-1 text-sm text-teal-100 text-left font-bold'>Para: el Martes {appointmentDate.getDate()} de {namesMonths[appointmentDate.getMonth()]}</p>
+                            <p className='ml-1 text-lg font-bold text-black select-none text-left'>Fecha: </p>
+                            <p className='ml-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}</p>
                           </div>
-                          <div onClick={handleSetAppoint} className='flex justify-center items-center text-xl font-semibold transition duration-100 text-teal-800 border-2 rounded-lg ml-2 mr-2 mb-1 p-1 cursor-pointer hover:bg-teal-300 hover:text-teal-900 border-teal-900 bg-teal-500'>
+                          <div onClick={() => handleSetAppoint(patient.id, appointmentDate)} className='flex justify-center items-center text-xl font-semibold transition duration-200 text-teal-950  rounded-lg ml-2 mr-2 mb-1 mt-4 p-1 cursor-pointer hover:bg-teal-500 hover:text-white border-teal-900 bg-teal-600'>
                             Confirmar
                           </div>
                         </div>
                       </div>
                     ) : (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
-                        <div className='ml-1 mr-1 border-2 border-teal-300 rounded-lg bg-gray-500 w-full p-1'>
-                          <p className='text-lg font-semibold text-teal-300 text-center'>Completa los Items anteriores antes de confirmar el turno</p>
+                        <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-gray-200 bg-opacity-30 w-full p-1 shadow-xl'>
+                          <p className='text-lg font-semibold select-none text-black text-center'>Completa los datos anteriores antes de confirmar el turno</p>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className='w-full'>
-                  <div className='border-4 mt-4 border-gray-600 rounded-lg shadow-xl bg-teal-500'>
-                    <div className='bg-teal-500'>
-                      <h1 className='font-bold text-center text-xl'>Turnos del día</h1>
-                    </div>
-                    <div className='border-4 rounded-md border-teal-800 bg-white'>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2'>
-                        <p className='ml-1'>Maria Gonzales </p>
-                        <p className='ml-auto mr-2'>10:30</p>
-                      </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-gray-600'>
-                        <p className='ml-1'>Jose Mario</p>
-                        <p className='ml-auto mr-2'>11:30</p>
-
-                      </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md py-2 border-t-2 border-dashed border-gray-600'>
-                        <p className='ml-1'>Vicenzo Giorda</p>
-                        <p className='ml-auto mr-2'>15:30</p>
-
-                      </div>
-                      <div className='flex bg-gray-500 hover:bg-gray-400 text-md  py-2 border-t-2 border-dashed border-gray-600'>
-                        <p className='ml-1'>Pablo Mario</p>
-                        <p className='ml-auto mr-2'>16:00</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                null
               )}
             </div>
           </div >
-        </div>
+        </div >
       )
       }
-    </div>
+    </div >
   )
 }

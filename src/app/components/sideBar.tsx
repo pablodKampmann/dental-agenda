@@ -104,7 +104,7 @@ export function SideBar() {
                                     {loadOption === '/' ? (
                                         <PulseLoader color="white" size={10} className='ml-12' />
                                     ) : (
-                                        <p className="flex-1 ml-3 select-none">Calendario</p>
+                                        <p className="flex-1 ml-3 select-none">Agenda</p>
                                     )}
                                 </button>
                             </li>
