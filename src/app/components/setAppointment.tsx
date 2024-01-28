@@ -2,16 +2,8 @@ import { db } from "../firebase";
 import { ref, set, get } from "firebase/database";
 import { dateData } from "./../page";
 
-export async function setAppointment(patientId: number, patientName: string, patientLastName: string, patientNum: string, patientDni: number, patientEmail: string, dateData: dateData) {
+export async function setAppointment(patientId: number, dateData: dateData, reason: string, observations?: string) {
     try {
-        const patientData = {
-            id: patientId,
-            name: patientName,
-            lastName: patientLastName,
-            num: patientNum,
-            dni: patientDni,
-            email: patientEmail,
-        };
         let appointmentId = 1;
         const formattedDate = dateData.date.replace(/\//g, '');
         let dbRef = ref(db, '/appointments/' + formattedDate);
@@ -23,11 +15,13 @@ export async function setAppointment(patientId: number, patientName: string, pat
         dbRef = ref(db, '/appointments/' + `/${formattedDate}/` + `/${appointmentId}/`);
         await set(dbRef, {
             id: appointmentId,
-            patientData,
+            patientId: patientId,
             date: dateData.date,
             dayComplete: dateData.dayComplete,
             year: dateData.year,
-            time: dateData.time
+            time: dateData.time,
+            reason: reason,
+            observations: observations
         });
     } catch (error) {
         console.log(error);

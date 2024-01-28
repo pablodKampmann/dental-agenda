@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { get, ref } from "firebase/database";
 
-export async function getPatient(patientId: string | null) {
+export async function getPatient(patientId: string | number |null) {
     const dbRef = ref(db, `patients/${patientId}`);
     const snapshot = await get(dbRef);
     if (snapshot.exists()) {

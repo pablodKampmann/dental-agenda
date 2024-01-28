@@ -98,7 +98,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
 
     return (
         <div className='flex-col mt-2'>
-            <div className='border-2 rounded-3xl border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
+            <div className='border-2 rounded-lg border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
                 <div className='flex mb-2'>
                     <PiIdentificationBadgeDuotone className="text-gray-600 mt-2" size={120} />
                     <div className='flex-col mt-4'>
