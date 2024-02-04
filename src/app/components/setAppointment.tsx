@@ -4,6 +4,9 @@ import { dateData } from "./../page";
 
 export async function setAppointment(patientId: number, dateData: dateData, reason: string, observations?: string) {
     try {
+        if (!navigator.onLine) {
+            throw new Error();
+        }
         let appointmentId = 1;
         const formattedDate = dateData.date.replace(/\//g, '');
         let dbRef = ref(db, '/appointments/' + formattedDate);
@@ -24,7 +27,7 @@ export async function setAppointment(patientId: number, dateData: dateData, reas
             observations: observations
         });
     } catch (error) {
-        console.log(error);
+        return ('error')
     }
 }
 

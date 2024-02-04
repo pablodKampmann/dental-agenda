@@ -1,6 +1,13 @@
 import { getAuth, signOut } from "firebase/auth";
 
 export async function logOut() {
-    const auth = getAuth();
-    await signOut(auth);
+    try {
+        if (!navigator.onLine) {
+            throw new Error();
+        }
+        const auth = getAuth();
+        await signOut(auth);
+    } catch (error) {
+        return ('error')
+    }
 }

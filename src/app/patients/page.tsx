@@ -187,7 +187,6 @@ export default function Patients() {
                                 />
                                 <input
                                     autoComplete="off"
-
                                     type="text"
                                     placeholder="Busca un paciente                              Por:"
                                     className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
@@ -249,10 +248,18 @@ export default function Patients() {
                                                     <p>{patient.dni}</p>
                                                 </td>
                                                 <td className="px-5 whitespace-nowrap text-black">
-                                                    <p>{patient.num}</p>
+                                                    {patient.num ? (
+                                                        <p>{patient.num}</p>
+                                                    ) : (
+                                                        <p>-</p>
+                                                    )}
                                                 </td>
                                                 <td className="px-5 whitespace-nowrap text-black">
-                                                    <p>{patient.email}</p>
+                                                    {patient.email ? (
+                                                        <p>{patient.email}</p>
+                                                    ) : (
+                                                        <p>-</p>
+                                                    )}
                                                 </td>
                                                 <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.insurance}</p>
@@ -311,7 +318,8 @@ export default function Patients() {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

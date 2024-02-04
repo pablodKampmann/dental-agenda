@@ -73,3 +73,11 @@ body {
 .input-phone-number input:focus{
   outline: none !important;
 }
+
+.input-phone-number input{
+  background-color: rgb(209, 213, 219, 0.1) !important;
+}
+
+
+
+

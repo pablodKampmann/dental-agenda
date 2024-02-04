@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { setAppointment } from "./components/setAppointment";
 import { getAppointments } from "./components/getAppointments";
@@ -14,22 +15,35 @@ import { ModalCreatePatient } from './components/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { BiRightArrow, BiLeftArrow } from "react-icons/bi";
+import { BiRightArrow, BiLeftArrow, BiError } from "react-icons/bi";
 import { MdUpdate, MdAddCircleOutline, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { getReasonsOptions } from "./components/getReasonsOptions";
 import { FiEdit } from "react-icons/fi";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/es';
+
 export interface dateData {
   date: string;
   dayComplete: string;
   year: number;
   time: string;
 }
+interface CustomDayjs extends Dayjs {
+  $d: Date;
+}
 
 export default function Page() {
   const router = useRouter()
+  const [calendarValue, setCalendarValue] = React.useState<Dayjs | null>(dayjs(new Date()));
   const [isLoad, setIsLoad] = useState(true);
+  const [isLoadAppoints, setIsLoadAppoints] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [openCalendar, setOpenCalendar] = useState(false);
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
@@ -44,20 +58,16 @@ export default function Page() {
   const [monthName, setMonthName] = useState<any>(null);
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [leaveModal, setLeaveModal] = useState(false);
-  const [hoveredOne, setHoveredOne] = useState(false);
-  const [hoveredTwo, setHoveredTwo] = useState(false);
-  const [hoveredThree, setHoveredThree] = useState(false);
+  const [showResult, setShowResult] = useState<any>(null);
   const [reasonsOptions, setReasonsOptions] = useState<null | any[]>(null);
-  const navigationRef = useRef<any>(null);
+  const confirmRef = useRef<any>(null);
+  const newPatientRef = useRef<any>(null);
 
-
+  //CHECK IF THE USER IS LOGGED IN
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsLoad(false);
-
       } else if (!user) {
         router.push("/notSign");
       }
@@ -66,10 +76,125 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+  //PATIENTS LOGIC
+  useEffect(() => {
+    if (searchContent.length > 0) {
+      Search();
+    }
+    if (searchContent === "") {
+      Get();
+    }
+
+    async function Search() {
+      const patientsFilter = await SearchPatient(selectedField, searchContent)
+      if (patientsFilter.length < 1) {
+        setListPatients('noResult')
+      } else {
+        setListPatients(patientsFilter)
+      }
+    }
+
+    async function Get() {
+      const patients = await GetPatients(1, 20);
+      if (patients === null) {
+        setListPatients('noResult')
+      } else {
+        setListPatients(patients.patients)
+      }
+    }
+  }, [searchContent, selectedField])
+
   useEffect(() => {
     setSearchContent('');
   }, [selectedField]);
 
+  async function updateListPatients() {
+    const patients = await GetPatients(1, 20);
+    if (patients === null) {
+      setListPatients('noResult')
+    } else {
+      setListPatients(patients.patients)
+    }
+  }
+
+  //DATE LOGIC
+  useEffect(() => {
+    const formattedDate = date?.replace(/\//g, '');
+    setIsLoadAppoints(true);
+
+    async function get() {
+      const appointments = await getAppointments(formattedDate)
+      if (appointments) {
+        setIsLoadAppoints(false)
+      }
+      const options = await getReasonsOptions();
+      setReasonsOptions(options);
+      if (appointments === 'vacio') {
+        setAppointments(null);
+      } else {
+        setAppointments(appointments);
+      }
+    }
+
+    get()
+  }, [date]);
+
+  useEffect(() => {
+    const options = { timeZone: 'America/Argentina/Buenos_Aires' };
+    const formattedDate = today.toLocaleDateString('es-AR', options);
+    setDate(formattedDate);
+    let dayName = today.toLocaleDateString('es-AR', { ...options, weekday: 'long' });
+    dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    setDayName(dayName);
+    const dayNum = today.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
+    setDayNum(dayNum);
+    let monthName = today.toLocaleDateString('es-AR', { ...options, month: 'long' });
+    monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    setMonthName(monthName);
+  }, [today]);
+
+  function dayBack() {
+    setOpenCalendar(false);
+    const newDate = new Date(today);
+    newDate.setDate(today.getDate() - 1);
+    setToday(newDate);
+  }
+
+  function dayNext() {
+    setOpenCalendar(false);
+    const newDate = new Date(today);
+    newDate.setDate(today.getDate() + 1);
+    setToday(newDate);
+  }
+
+  function isToday(dateToCheck: Date) {
+    const todayDate = new Date();
+    return (
+      dateToCheck.getDate() === todayDate.getDate() &&
+      dateToCheck.getMonth() === todayDate.getMonth() &&
+      dateToCheck.getFullYear() === todayDate.getFullYear()
+    );
+  }
+
+  function getAge(date: any) {
+    var today = new Date();
+    var parts = date.split("/");
+    var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    var age = today.getFullYear() - birthDate.getFullYear();
+    var m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  useEffect(() => {
+    setOpenCalendar(false);
+    const day = (calendarValue as CustomDayjs)?.$d;
+    setToday(day);
+  }, [calendarValue]);
+
+  //APPOINTMENTS LOGIC
   function handleCliclRow(time: string) {
     if (appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) {
       setShowForm(false);
@@ -94,13 +219,17 @@ export default function Page() {
   }
 
   async function handleSetAppoint(patientId: number, dateData: dateData, reason: string, observations?: string) {
-    setShowSuccess(true);
     setShowForm(false);
     setAppointmentDate(null);
     setPatient(null);
     setReason(null);
     setObservations(null);
-    await setAppointment(patientId, dateData, reason, observations);
+    const result = await setAppointment(patientId, dateData, reason, observations);
+    if (result === 'error') {
+      setShowResult('error');
+    } else {
+      setShowResult('good');
+    }
     const formattedDate = date?.replace(/\//g, '');
     const appointments = await getAppointments(formattedDate)
     if (appointments === 'vacio') {
@@ -110,116 +239,33 @@ export default function Page() {
     }
   }
 
+  //POP-UP MESSAGES
   useEffect(() => {
-    const formattedDate = date?.replace(/\//g, '');
-
-    async function get() {
-      const appointments = await getAppointments(formattedDate)
-      const options = await getReasonsOptions();
-      setReasonsOptions(options);
-      if (appointments === 'vacio') {
-        setAppointments(null);
-      } else {
-        setAppointments(appointments);
-      }
-    }
-
-    get()
-  }, [date]);
-
-
-
-  useEffect(() => {
-    const options = { timeZone: 'America/Argentina/Buenos_Aires' };
-    const formattedDate = today.toLocaleDateString('es-AR', options);
-    setDate(formattedDate);
-    let dayName = today.toLocaleDateString('es-AR', { ...options, weekday: 'long' });
-    dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-    setDayName(dayName);
-    const dayNum = today.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
-    setDayNum(dayNum);
-    let monthName = today.toLocaleDateString('es-AR', { ...options, month: 'long' });
-    monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-    setMonthName(monthName);
-  }, [today]);
-
-  function dayBack() {
-    const newDate = new Date(today);
-    newDate.setDate(today.getDate() - 1);
-    setToday(newDate);
-  }
-
-  function dayNext() {
-    const newDate = new Date(today);
-    newDate.setDate(today.getDate() + 1);
-    setToday(newDate);
-  }
-
-  function isToday(dateToCheck: Date) {
-    const todayDate = new Date();
-    return (
-      dateToCheck.getDate() === todayDate.getDate() &&
-      dateToCheck.getMonth() === todayDate.getMonth() &&
-      dateToCheck.getFullYear() === todayDate.getFullYear()
-    );
-  }
-
-  useEffect(() => {
-    if (searchContent.length > 0) {
-      Search();
-    }
-    if (searchContent === "") {
-      Get();
-    }
-
-    async function Search() {
-      const patientsFilter = await SearchPatient(selectedField, searchContent)
-      if (patientsFilter.length < 1) {
-        setListPatients(null)
-      } else {
-        setListPatients(patientsFilter)
-      }
-    }
-
-    async function Get() {
-      const patients = await GetPatients(1, 20);
-      if (patients === null) {
-        setListPatients('noResult')
-      } else {
-        setListPatients(patients.patients)
-      }
-    }
-  }, [searchContent, selectedField])
-
-  useEffect(() => {
-
     const timeoutId = setTimeout(() => {
-      setShowSuccess(false);
-    }, 5000);
+      setShowResult(null);
+    }, 6000);
 
     return () => clearTimeout(timeoutId);
-  }, [showSuccess]);
+  }, [showResult]);
 
-  function getAge(date: any) {
-    var today = new Date();
-    var parts = date.split("/");
-    var birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    var age = today.getFullYear() - birthDate.getFullYear();
-    var m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  }
-
+  //USER EXPERIENCE
   useEffect(() => {
     if (patient && appointmentDate && reason) {
-      navigationRef.current.scrollIntoView({
+      confirmRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });
     }
   }, [patient, appointmentDate, reason]);
+
+  useEffect(() => {
+    if (newPatientRef.current) {
+      newPatientRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [listPatients]);
 
   return (
     <div className='mt-2 ml-56'>
@@ -236,14 +282,31 @@ export default function Page() {
           <div>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                {/*<ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={showSuccessAlert} /> */}
+                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
               </div>
             )}
-            {showSuccess && (
-              <div className="fixed top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+            {showResult === 'good' && (
+              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
                 <div className='flex justify-start items-center'>
                   <BsClipboardCheck className='text-black' size={36} />
                   <p className='ml-2 text-black font-semibold text-lg select-none'>Turno asignado exitosamente</p>
+                </div>
+              </div>
+            )}
+            {showResult === 'good-patient' && (
+              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+                <div className='flex justify-start items-center'>
+                  <BsClipboardCheck className='text-black' size={36} />
+                  <p className='ml-2 text-black font-semibold text-lg select-none'>Paciente agregado exitosamente</p>
+                </div>
+              </div>
+            )}
+            {showResult === 'error' && (
+              <div className=" fixed shadow-xl top-16 right-0 py-1 pl-1 pr-2 border-2 border-red-900 mt-4 mr-6 rounded-lg bg-red-400 transform animate-move-from-right">
+                <div className='flex justify-start items-center'>
+                  <BiError className='text-black' size={42} />
+                  <p className='ml-1 text-black font-semibold text-lg select-none'>Error:</p>
+                  <p className='ml-1 text-black font-medium text-sm mt-0.5 select-none'>Por favor, verifique su conexión a internet e intente nuevamente.</p>
                 </div>
               </div>
             )}
@@ -251,19 +314,37 @@ export default function Page() {
           <div className='mb-4 flex justify-between items-center'>
             <div className='flex justify-center items-center'>
               {isToday(today) ? (
-                <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 transition duration-150 rounded-lg  py-0.5 mr-2 '>
                   <h1 className='flex font-bold text-lg text-white select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               ) : (
-                <div onClick={() => setToday(new Date())} className='cursor-pointer hover:bg-teal-700 bg-gray-400 border-2 border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
-                  <h1 className='flex font-bold text-lg text-black select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
+                <div onClick={() => { setToday(new Date()); setOpenCalendar(false); }} className='cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-400 border-2  border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                  <h1 className='flex font-bold text-lg  select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               )}
-              <BiLeftArrow onClick={dayBack} size={32} className="hover:text-white hover:bg-teal-600 transition duration-150 hover:scale-110 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
-              <div className='bg-gray-400 border-2 border-gray-600 bg-opacity-30 px-3 rounded-lg  py-0.5 '>
-                <h1 className='flex font-bold text-lg text-black select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
+              <BiLeftArrow onClick={dayBack} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <div className='relative'>
+                <div onClick={() => setOpenCalendar(!openCalendar)} className={`${openCalendar ? 'bg-teal-600 text-white' : 'text-black bg-gray-400 bg-opacity-30'} transition hover:text-white duration-150 hover:bg-teal-600 cursor-pointer  border-2 border-gray-600  px-3 rounded-lg  py-0.5 `}>
+                  <h1 className='flex font-bold text-lg  select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
+                </div>
+                {openCalendar && (
+                  <div className=' w-full select-none absolute bg-white text-black border-2 border-gray-600 rounded-lg top-10 z-10'>
+                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+                      <DemoContainer components={['DateCalendar']}>
+                        <DateCalendar
+                          value={calendarValue}
+                          onChange={(newValue) => setCalendarValue(newValue)}
+                          views={['day', 'year']}
+                        />
+                      </DemoContainer>
+                    </LocalizationProvider>
+                  </div>
+                )}
               </div>
-              <BiRightArrow onClick={dayNext} size={32} className="hover:text-white hover:bg-teal-600 transition duration-150 hover:scale-110 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <BiRightArrow onClick={dayNext} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              {isLoadAppoints && (
+                <ClipLoader className='ml-4' />
+              )}
             </div>
             <button className='shadow-xl mt-2 h-11 bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-b-gray-600 group border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200' onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null); setReason(null) }}>
               {showForm ? (
@@ -274,14 +355,16 @@ export default function Page() {
             </button>
           </div>
           <div className='flex justify-between'>
-            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[520px] w-full border-2 border-gray-600  rounded-lg overflow-y-auto'>
+            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[520px] w-full border-2 border-gray-600  rounded-lg overflow-y-auto relative'>
               <table>
                 <tbody className='text-black '>
                   {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
                     <tr key={time}>
-                      <td className={`text-black select-none cursor-default align-top px-3 translate-y-2 text-xs font-semibold  border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>{time}</td>
+                      <td className={`text-black select-none cursor-default align-top px-3 translate-y-2 text-xs font-semibold  border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>
+                        {time}
+                      </td>
                       <td
-                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-teal-600 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
+                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-teal-600 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                          ${index === array.length - 1 ? '' : 'border-b '}
                          select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
@@ -303,7 +386,7 @@ export default function Page() {
                                     <p className='text-left text-xs font-bold'>
                                       {time}-{newTime}
                                     </p>
-                                    <div className='flex'>
+                                    <div className='flex mt-2'>
                                       <p className='text-left text-sm ml-2'> Paciente:</p>
                                       <p className='text-left text-sm font-semibold ml-1'>
                                         {filteredAppointment.patientData.name}{' '}
@@ -319,7 +402,7 @@ export default function Page() {
                                       <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.num} <br /> {filteredAppointment.patientData.email}</p>
                                     </div>
                                   </div>
-                                  <div className='mt-3'>
+                                  <div className='mt-6'>
                                     <div className='flex'>
                                       <p className='text-left text-sm ml-2'> Razón de turno:</p>
                                       <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.reason}</p>
@@ -355,25 +438,22 @@ export default function Page() {
                     {appointmentDate ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default mt-1 shadow-lg'>
-                          <AiOutlineSchedule size={38} className="text-white ml-2" />
+                          <AiOutlineSchedule size={38} className="text-white " />
                         </div>
-                        <div onClick={() => { setAppointmentDate(null); setHoveredOne(false) }} onMouseEnter={() => setHoveredOne(true)} onMouseLeave={() => setHoveredOne(false)} className='bg-white mt-4 mb-2 mx-4 py-1 transition duration-150 border-2 border-gray-600 rounded-lg flex-col hover:bg-red-500 hover:bg-opacity-10   flex justify-center items-center cursor-pointer'>
-                          {hoveredOne ? (
+                        <div onClick={() => setAppointmentDate(null)} className='group relative hover:bg-red-500 hover:bg-opacity-30 bg-white mt-4 mb-2 mx-4 py-1 transition duration-150 border-2 border-gray-600 rounded-lg flex justify-center items-center cursor-pointer'>
+                          <div className='group-hover:block hidden absolute top-1 left-1/2 transform -translate-x-1/2'>
+                            <ImCancelCircle size={40} className="bg-red text-red-600" />
+                          </div>
+                          <div className='group-hover:text-transparent text-black'>
                             <div className='flex'>
-                              <ImCancelCircle size={40} className=" text-red-600" />
+                              <p className='text-sm  text-center select-none'>Día seleccionado: </p>
+                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
                             </div>
-                          ) : (
-                            <div>
-                              <div className='flex'>
-                                <p className='text-sm text-black text-center select-none'>Día seleccionado: </p>
-                                <p className='ml-1 text-sm text-black text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
-                              </div>
-                              <div className='flex justify-center'>
-                                <p className='text-sm flex-col text-black text-center select-none'>Horario seleccionado: </p>
-                                <p className='ml-1 text-sm text-black text-center font-bold select-none'>{appointmentDate.time} </p>
-                              </div>
+                            <div className='flex justify-center'>
+                              <p className='text-sm flex-col  text-center select-none'>Horario seleccionado: </p>
+                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time} </p>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -383,7 +463,7 @@ export default function Page() {
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona la fecha</h1>
                         </div>
                         <div className='flex-col   border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-2 bg-gray-200 bg-opacity-30 py-1'>
-                          <BsArrowLeftCircle className="m-auto mt-2 mb-1 text-teal-600" size={120} />
+                          <BsArrowLeftCircle className="m-auto mt-2 mb-1 text-black" size={120} />
                           <h1 className='m-auto text-center font-medium text-lg select-none text-black'>SELECCIONA EL DIA Y HORARIO <br /> EN EL CALENDARIO</h1>
                         </div>
                       </div>
@@ -393,7 +473,7 @@ export default function Page() {
                   <div className='border-gray-600 border-b-4 flex-1 p-2'>
                     {patient ? (
                       <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 mt-1 cursor-default shadow-lg'>
-                        <BsPersonCheck size={32} className="ml-2" />
+                        <BsPersonCheck size={32} className="" />
                       </div>
                     ) : (
                       <div>
@@ -419,27 +499,24 @@ export default function Page() {
                         </div>
                       </div>
                     )}
-                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-gray-200 shadow-xl bg-opacity-30 overflow-auto'>
-                      <div className={`${patient ? '' : 'h-40'} `}>
+                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-gray-200 shadow-xl bg-opacity-30 overflow-y-auto'>
+                      <div ref={newPatientRef} className={`${patient ? '' : 'h-40'} `}>
                         {listPatients && typeof listPatients !== 'string' ? (
                           <div>
                             {patient ? (
-                              <div onClick={() => { setPatient(null); setHoveredTwo(false) }} onMouseEnter={() => setHoveredTwo(true)} onMouseLeave={() => setHoveredTwo(false)} className='hover:bg-red-500 hover:bg-opacity-10 bg-white transition duration-150   cursor-pointer  '>
-                                {hoveredTwo ? (
-                                  <div className='flex justify-center items-center'>
-                                    <ImCancelCircle size={44} className=" text-red-600 py-1" />
+                              <div onClick={() => setPatient(null)} className='group relative hover:bg-red-500 hover:bg-opacity-30 bg-white transition duration-150 py-0.5  cursor-pointer  '>
+                                <div className='group-hover:block hidden absolute top-1 left-1/2 transform -translate-x-1/2'>
+                                  <ImCancelCircle size={40} className="bg-red text-red-600" />
+                                </div>
+                                <div className='group-hover:text-transparent text-black'>
+                                  <div className='flex justify-center items-center py-3  '>
+                                    <p className='text-sm  text-center select-none'>Paciente seleccionado: </p>
+                                    <p className='ml-1 text-sm text-center font-bold select-none'>{patient.name} {patient.lastName}</p>
                                   </div>
-                                ) : (
-                                  <div>
-                                    <div className='flex justify-center items-center py-3 bg-white '>
-                                      <p className='text-sm text-black text-center select-none'>Paciente seleccionado: </p>
-                                      <p className='ml-1 text-sm text-black text-center font-bold select-none'>{patient.name} {patient.lastName}</p>
-                                    </div>
-                                  </div>
-                                )}
+                                </div>
                               </div>
                             ) : (
-                              <div>
+                              <div >
                                 {listPatients.map((patient, index) => (
                                   <div key={index} onClick={() => setPatient(patient)} className="p-1 select-none hover:bg-gray-400 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                     <p className='ml-1'>
@@ -481,21 +558,16 @@ export default function Page() {
                     {reason ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
-                          <FaFileMedicalAlt size={28} className="ml-2" />
+                          <FaFileMedicalAlt size={28} className="" />
                         </div>
-                        <div onClick={() => { setReason(null); setHoveredThree(false) }} onMouseEnter={() => setHoveredThree(true)} onMouseLeave={() => setHoveredThree(false)} className='bg-white mt-4 mb-2 mx-4 transition duration-150 border-2 border-gray-600 rounded-lg flex-col hover:bg-red-500 hover:bg-opacity-10    flex justify-center items-center cursor-pointer'>
-                          {hoveredThree ? (
-                            <div className='flex py-1'>
-                              <ImCancelCircle size={36} className=" text-red-600" />
-                            </div>
-                          ) : (
-                            <div>
-                              <div className='flex py-3'>
-                                <p className='text-sm text-black text-center select-none'>Razón: </p>
-                                <p className='ml-1 text-sm text-black text-center font-bold select-none'>{reason}</p>
-                              </div>
-                            </div>
-                          )}
+                        <div onClick={() => setReason(null)} className='group relative py-1 hover:bg-red-500 hover:bg-opacity-30 bg-white mt-4 mb-2 mx-4 transition duration-150 border-2 border-gray-600 rounded-lg flex-col  flex justify-center items-center cursor-pointer'>
+                          <div className='group-hover:block hidden absolute top-1 left-1/2 transform -translate-x-1/2'>
+                            <ImCancelCircle size={40} className="bg-red text-red-600" />
+                          </div>
+                          <div className='group-hover:text-transparent text-black'>
+                            <p className='text-sm  text-center select-none'>Razón: </p>
+                            <p className='ml-1 text-sm  text-center font-bold select-none'>{reason}</p>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -526,7 +598,7 @@ export default function Page() {
                   </div>
 
                   <div className=" flex-1 p-2">
-                    <div ref={navigationRef} className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
+                    <div ref={confirmRef} className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>
                       <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
                     </div>
