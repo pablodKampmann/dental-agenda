@@ -78,6 +78,19 @@ body {
   background-color: rgb(209, 213, 219, 0.1) !important;
 }
 
+.css-1u23akw-MuiButtonBase-root-MuiPickersDay-root.Mui-selected {
+  background-color: rgb(13, 148, 136) !important;
+}
 
+.css-jgls56-MuiButtonBase-root-MuiPickersDay-root.Mui-selected {
+  background-color: rgb(13, 148, 136) !important;
+}
 
+.css-1vooibu-MuiSvgIcon-root {
+  fill: black !important; 
+}
+
+.css-1tkx1wf-MuiSvgIcon-root-MuiPickersCalendarHeader-switchViewIcon {
+  fill: black !important;
+}
 

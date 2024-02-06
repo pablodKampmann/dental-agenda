@@ -62,6 +62,10 @@ export default function Page() {
   const [reasonsOptions, setReasonsOptions] = useState<null | any[]>(null);
   const confirmRef = useRef<any>(null);
   const newPatientRef = useRef<any>(null);
+  const calendarRef = useRef<any>(null);
+  const selectDateRef = useRef<any>(null);
+  const selectPatientRef = useRef<any>(null);
+  const selectReasonRef = useRef<any>(null);
 
   //CHECK IF THE USER IS LOGGED IN
   useEffect(() => {
@@ -250,6 +254,42 @@ export default function Page() {
 
   //USER EXPERIENCE
   useEffect(() => {
+    if (newPatientRef.current) {
+      newPatientRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [listPatients]);
+
+  useEffect(() => {
+    if (selectDateRef.current) {
+      selectDateRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [appointmentDate]);
+
+  useEffect(() => {
+    if (selectPatientRef.current) {
+      selectPatientRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [patient]);
+
+  useEffect(() => {
+    if (selectReasonRef.current) {
+      selectReasonRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [reason]);
+
+  useEffect(() => {
     if (patient && appointmentDate && reason) {
       confirmRef.current.scrollIntoView({
         behavior: 'smooth',
@@ -259,16 +299,19 @@ export default function Page() {
   }, [patient, appointmentDate, reason]);
 
   useEffect(() => {
-    if (newPatientRef.current) {
-      newPatientRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
-    }
-  }, [listPatients]);
+    const handleClickOutside = (event: { target: any; }) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setOpenCalendar(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [calendarRef]);
 
   return (
-    <div className='mt-2 ml-56'>
+    <div className='mt-2 ml-56 h-full'>
       {isLoad ? (
         <div className='fixed inset-0 backdrop-blur-sm ml-56'>
           <div className='fixed inset-0 flex items-center justify-center'>
@@ -278,7 +321,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className='ml-2 mr-2 p-4 mt-16 relative'>
+        <div className='ml-2 mr-2 p-4 mt-16 h-full'>
           <div>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
@@ -318,17 +361,17 @@ export default function Page() {
                   <h1 className='flex font-bold text-lg text-white select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               ) : (
-                <div onClick={() => { setToday(new Date()); setOpenCalendar(false); }} className='cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-400 border-2  border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                <div onClick={() => { setToday(new Date()); setOpenCalendar(false); setCalendarValue(dayjs(new Date())) }} className='cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-400 border-2  border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
                   <h1 className='flex font-bold text-lg  select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               )}
               <BiLeftArrow onClick={dayBack} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
-              <div className='relative'>
+              <div ref={calendarRef} className='relative'>
                 <div onClick={() => setOpenCalendar(!openCalendar)} className={`${openCalendar ? 'bg-teal-600 text-white' : 'text-black bg-gray-400 bg-opacity-30'} transition hover:text-white duration-150 hover:bg-teal-600 cursor-pointer  border-2 border-gray-600  px-3 rounded-lg  py-0.5 `}>
                   <h1 className='flex font-bold text-lg  select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
                 </div>
                 {openCalendar && (
-                  <div className=' w-full select-none absolute bg-white text-black border-2 border-gray-600 rounded-lg top-10 z-10'>
+                  <div className=' select-none absolute bg-white text-black border-2 border-gray-600 rounded-lg top-10 z-10'>
                     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                       <DemoContainer components={['DateCalendar']}>
                         <DateCalendar
@@ -354,8 +397,8 @@ export default function Page() {
               )}
             </button>
           </div>
-          <div className='flex justify-between'>
-            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 h-[520px] w-full border-2 border-gray-600  rounded-lg overflow-y-auto relative'>
+          <div className='flex justify-between h-screen pb-44'>
+            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 w-full border-2 border-gray-600  rounded-lg overflow-y-auto s'>
               <table>
                 <tbody className='text-black '>
                   {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
@@ -364,7 +407,7 @@ export default function Page() {
                         {time}
                       </td>
                       <td
-                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-teal-600 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
+                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-white ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                          ${index === array.length - 1 ? '' : 'border-b '}
                          select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
@@ -431,10 +474,10 @@ export default function Page() {
                 </tbody>
               </table>
             </div>
-            <div className="flex w-[35%] ml-10 h-[520px]">
+            <div className="flex w-[35%] ml-10">
               {showForm ? (
-                <div className='flex-1 flex-col border-2 border-gray-600 rounded-lg shadow-xl h-full bg-gray-400 bg-opacity-30 overflow-y-auto'>
-                  <div className='border-gray-600 border-b-4 flex-1 p-2'>
+                <div className='flex-1 flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-400 bg-opacity-30 overflow-y-auto'>
+                  <div ref={selectDateRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {appointmentDate ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default mt-1 shadow-lg'>
@@ -470,7 +513,7 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div className='border-gray-600 border-b-4 flex-1 p-2'>
+                  <div ref={selectPatientRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {patient ? (
                       <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 mt-1 cursor-default shadow-lg'>
                         <BsPersonCheck size={32} className="" />
@@ -554,7 +597,7 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div className='border-gray-600 border-b-4 flex-1 p-2'>
+                  <div ref={selectReasonRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {reason ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
