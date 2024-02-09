@@ -15,6 +15,8 @@ export async function getAppointments(date: string | null) {
             const patientData = await getPatient(patientId);
             if (patientData) {
                 appointment.patientData = patientData;
+            } else {
+                delete appointments[key];
             }
         }
 

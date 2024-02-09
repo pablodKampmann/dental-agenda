@@ -26,6 +26,7 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
+import { IoTimeOutline } from "react-icons/io5";
 
 export interface dateData {
   date: string;
@@ -56,7 +57,9 @@ export default function Page() {
   const [dayName, setDayName] = useState<any>(null);
   const [dayNum, setDayNum] = useState<any>(null);
   const [monthName, setMonthName] = useState<any>(null);
+  const [alwaysToday, setAlwaysToday] = useState<any>(null);
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
+  const [appointmentHours, setAppointmentHours] = useState<any>(null);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [showResult, setShowResult] = useState<any>(null);
   const [reasonsOptions, setReasonsOptions] = useState<null | any[]>(null);
@@ -66,6 +69,7 @@ export default function Page() {
   const selectDateRef = useRef<any>(null);
   const selectPatientRef = useRef<any>(null);
   const selectReasonRef = useRef<any>(null);
+  const [time, setTime] = useState(getCurrentTime());
 
   //CHECK IF THE USER IS LOGGED IN
   useEffect(() => {
@@ -157,6 +161,19 @@ export default function Page() {
     setMonthName(monthName);
   }, [today]);
 
+  useEffect(() => {
+    const options = { timeZone: 'America/Argentina/Buenos_Aires' };
+    const dateToday = new Date()
+    let dayName = dateToday.toLocaleDateString('es-AR', { ...options, weekday: 'long' });
+    dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    const dayNum = dateToday.toLocaleDateString('es-AR', { ...options, day: 'numeric' });
+    setDayNum(dayNum);
+    let monthName = dateToday.toLocaleDateString('es-AR', { ...options, month: 'long' });
+    monthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    const date = dayName + ' ' + dayNum + ' de ' + monthName
+    setAlwaysToday(date);
+  }, []);
+
   function dayBack() {
     setOpenCalendar(false);
     const newDate = new Date(today);
@@ -198,31 +215,52 @@ export default function Page() {
     setToday(day);
   }, [calendarValue]);
 
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(getCurrentTime());
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    console.log(appointments);
+    
+    return `${hours}:${minutes}`;
+  }
+
   //APPOINTMENTS LOGIC
   function handleCliclRow(time: string) {
-    if (appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) {
-      setShowForm(false);
-      setAppointmentDate(null);
-      setPatient(null);
-      setReason(null);
-      setObservations(null);
-    } else if (appointmentDate) {
-      setShowForm(false);
-      setAppointmentDate(null);
-    } else {
-      const parts = date.split("/");
-      const year = parts[2];
-      setAppointmentDate({
-        date: date,
-        dayComplete: `${dayName} ${dayNum} de ${monthName}`,
-        year: year,
-        time: time
-      });
-      setShowForm(true);
+    if (!isLoadAppoints) {
+      if (appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) {
+        setShowForm(false);
+        setAppointmentDate(null);
+        setPatient(null);
+        setReason(null);
+        setObservations(null);
+      } else if (appointmentDate) {
+        setShowForm(false);
+        setAppointmentDate(null);
+      } else {
+        const parts = date.split("/");
+        const year = parts[2];
+        setAppointmentDate({
+          date: date,
+          dayComplete: `${dayName} ${dayNum} de ${monthName}`,
+          year: year,
+          time: time
+        });
+        setShowForm(true);
+      }
     }
   }
 
   async function handleSetAppoint(patientId: number, dateData: dateData, reason: string, observations?: string) {
+    setIsLoadAppoints(true);
     setShowForm(false);
     setAppointmentDate(null);
     setPatient(null);
@@ -238,13 +276,36 @@ export default function Page() {
     const appointments = await getAppointments(formattedDate)
     if (appointments === 'vacio') {
       setAppointments(null);
+      setIsLoadAppoints(false);
     } else {
+      setIsLoadAppoints(false);
       setAppointments(appointments);
     }
   }
 
-  //POP-UP MESSAGES
   useEffect(() => {
+    if (appointmentDate &&  appointments) {
+      const hour = parseInt(appointmentDate.time.split(':')[0]);
+      const nextHour = hour + 1;
+
+      const isNextHourOccupied = appointments.find((appointment: { time: string; }) => {
+        if (appointment && appointment.time) {
+          const appointmentHour = parseInt(appointment.time.split(':')[0]);
+          return appointmentHour === nextHour;
+        }
+        return false;
+      });
+
+      if (isNextHourOccupied) {
+        console.log("Hay un turno en la hora siguiente.");
+      } else {
+        console.log("No hay turno en la hora siguiente.");
+      }
+    }
+  }, [appointmentDate, appointments]);
+
+   //POP-UP MESSAGES
+   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setShowResult(null);
     }, 6000);
@@ -311,7 +372,7 @@ export default function Page() {
   }, [calendarRef]);
 
   return (
-    <div className='mt-2 ml-56 h-full'>
+    <div className='mt-2 ml-56 ' >
       {isLoad ? (
         <div className='fixed inset-0 backdrop-blur-sm ml-56'>
           <div className='fixed inset-0 flex items-center justify-center'>
@@ -321,7 +382,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className='ml-2 mr-2 p-4 mt-16 h-full'>
+        <div className='ml-2 mr-2 p-4 mt-16'>
           <div>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
@@ -393,17 +454,18 @@ export default function Page() {
               {showForm ? (
                 <p className='text-xl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 group-hover:text-white'><ImCancelCircle size={20} className="mr-2 mt-1 font-semibold" /> Cancelar</p>
               ) : (
-                <p className='text-xl text-black group-hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
+                <p className='md:text-sm lg:text-xl text-black group-hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
               )}
             </button>
           </div>
-          <div className='flex justify-between h-screen pb-44'>
-            <div className='bg-gray-400 bg-opacity-30 shadow-xl flex-1 w-full border-2 border-gray-600  rounded-lg overflow-y-auto s'>
+          <div className='flex justify-between h-screen pb-44  w-full'>
+            <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>A <br /> G <br />E <br />N <br />D <br />A</h1>
+            <div className='bg-gray-400 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
               <table>
                 <tbody className='text-black '>
                   {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
                     <tr key={time}>
-                      <td className={`text-black select-none cursor-default align-top px-3 translate-y-2 text-xs font-semibold  border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>
+                      <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>
                         {time}
                       </td>
                       <td
@@ -474,9 +536,11 @@ export default function Page() {
                 </tbody>
               </table>
             </div>
-            <div className="flex w-[35%] ml-10">
-              {showForm ? (
-                <div className='flex-1 flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-400 bg-opacity-30 overflow-y-auto'>
+
+            {showForm ? (
+              <div className='w-[40%] flex overflow-x-hidden'>
+                <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
+                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Agregar Turno</h1>
                   <div ref={selectDateRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {appointmentDate ? (
                       <div>
@@ -498,6 +562,24 @@ export default function Page() {
                             </div>
                           </div>
                         </div>
+                        <div className='flex select-none mb-2'>
+                          <h1 className='text-black px-4 rounded-lg py-2 bg-white border-2 border-gray-600 ml-4 font-bold'>Duración del turno (horas):</h1>
+                          <select
+                            value={appointmentHours}
+                            onChange={(event) => setAppointmentHours(event.target.value)}
+                            className=" select-none rounded-lg pl-2  text-black border-2 border-gray-600 bg-white flex py-1 ml-2  font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-12"
+                          >
+                            <option value="" selected>
+                              1
+                            </option>
+                            <option  >
+                              2
+                            </option>
+                            <option >
+                              3
+                            </option>
+                          </select>
+                        </div>
                       </div>
                     ) : (
                       <div>
@@ -505,9 +587,9 @@ export default function Page() {
                           <h1 className='font-black	text-2xl text-white mr-2 select-none'>1.</h1>
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona la fecha</h1>
                         </div>
-                        <div className='flex-col   border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-2 bg-gray-200 bg-opacity-30 py-1'>
+                        <div className='flex-col   border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-2 bg-white py-1'>
                           <BsArrowLeftCircle className="m-auto mt-2 mb-1 text-black" size={120} />
-                          <h1 className='m-auto text-center font-medium text-lg select-none text-black'>SELECCIONA EL DIA Y HORARIO <br /> EN EL CALENDARIO</h1>
+                          <h1 className='m-auto text-center font-medium text-lg select-none text-black'>SELECCIONA EL DIA Y HORARIO <br /> EN LA AGENDA</h1>
                         </div>
                       </div>
                     )}
@@ -536,13 +618,13 @@ export default function Page() {
                                 setSearchContent(inputValue);
                               }
                             }}
-                            type="text" placeholder='Busca un paciente' className='select-none focus:border-3 focus:outline-none focus:border-teal-600 rounded-lg text-black h-10 shadow-lg p-2 w-full bg-gray-200 bg-opacity-30 border-2 border-gray-600' />
-                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
-                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
+                            type="text" placeholder='Busca un paciente' className='select-none focus:border-3 focus:outline-none focus:border-teal-600 rounded-lg text-black h-10 shadow-lg p-2 w-full bg-white border-2 border-gray-600' />
+                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
+                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
                         </div>
                       </div>
                     )}
-                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-gray-200 shadow-xl bg-opacity-30 overflow-y-auto'>
+                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-white shadow-xl overflow-y-auto'>
                       <div ref={newPatientRef} className={`${patient ? '' : 'h-40'} `}>
                         {listPatients && typeof listPatients !== 'string' ? (
                           <div>
@@ -561,7 +643,7 @@ export default function Page() {
                             ) : (
                               <div >
                                 {listPatients.map((patient, index) => (
-                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 select-none hover:bg-gray-400 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                     <p className='ml-1'>
                                       {patient.name} {patient.lastName}
                                     </p>
@@ -624,7 +706,7 @@ export default function Page() {
                           <select
                             value={reason}
                             onChange={(event) => setReason(event.target.value)}
-                            className=" select-none rounded-lg text-black border-2 border-gray-600 bg-gray-200 bg-opacity-30 flex py-1 ml-2 font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-full"
+                            className=" select-none rounded-lg text-black border-2 border-gray-600 bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-full"
                           >
                             <option value="" disabled selected>
                               Seleccionar
@@ -679,17 +761,42 @@ export default function Page() {
                       </div>
                     ) : (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
-                        <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-gray-200 bg-opacity-30 w-full p-1 shadow-xl'>
+                        <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1 shadow-xl'>
                           <p className='text-lg font-semibold select-none text-black text-center'>Completa los datos anteriores antes de confirmar el turno</p>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-              ) : (
-                null
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className='w-[30%] h-full flex overflow-x-hidden'>
+                <div className='flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden'>
+                  <div className='w-full  justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg '>
+                    <h1 className='text-center bg-teal-600 rounded-t-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Calendario</h1>
+                    <div className='flex justify-center mb-4'>
+                      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+                        <DemoContainer components={['DateCalendar']}>
+                          <DateCalendar
+                            className='bg-white rounded-lg '
+                            value={calendarValue}
+                            onChange={(newValue) => setCalendarValue(newValue)}
+                            views={['day', 'year']}
+                          />
+                        </DemoContainer>
+                      </LocalizationProvider>
+                    </div>
+                  </div>
+                  <div className='select-none  justify-center mt-4 bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg h-full'>
+                    <h1 className='text-center justify-center flex bg-teal-600 rounded-t-lg text-white font-semibold text-2xl  border-b-2 border-gray-600'>Turnos Restantes</h1>
+                    <div className=' px-2 py-1 bg-white flex'>
+                      <h1 className='text-left text-medium font-medium'>Hoy ({alwaysToday})</h1>
+                      <h1 className='ml-auto text-medium font-medium flex'><IoTimeOutline className="mt-0.5 mr-1" size={20} /> {time}</h1>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div >
         </div >
       )

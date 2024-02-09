@@ -38,7 +38,16 @@ body {
 }
 
 .patient-list-container {
+  overflow-y: hidden;
+}
+
+.bonusBox::-webkit-scrollbar {
+  display: none;
+}
+
+.homePage-list-container {
   overflow: hidden;
+  overflow-y: hidden;
 }
 
 .background-animate {
@@ -65,16 +74,17 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(-360deg);
   }
 }
 
-.input-phone-number input:focus{
+.input-phone-number input:focus {
   outline: none !important;
 }
 
-.input-phone-number input{
+.input-phone-number input {
   background-color: rgb(209, 213, 219, 0.1) !important;
 }
 
@@ -82,15 +92,171 @@ body {
   background-color: rgb(13, 148, 136) !important;
 }
 
+.transition-width {
+  transition: width 0.5s ease; /* Puedes ajustar la duración y la función de tiempo según tus preferencias */
+}
+
+.css-jgls56-MuiButtonBase-root-MuiPickersDay-root {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
+  outline: 0;
+  border: 0;
+  margin: 0;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  vertical-align: middle;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  color: inherit;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.66;
+  letter-spacing: 0.03333em;
+  width: 36px ;
+  height: 36px ;
+  border-radius: 50%;
+  padding: 0;
+  background-color: transparent;
+  -webkit-transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0 2px;
+}
+
 .css-jgls56-MuiButtonBase-root-MuiPickersDay-root.Mui-selected {
   background-color: rgb(13, 148, 136) !important;
 }
 
 .css-1vooibu-MuiSvgIcon-root {
-  fill: black !important; 
+  fill: black !important;
 }
 
 .css-1tkx1wf-MuiSvgIcon-root-MuiPickersCalendarHeader-switchViewIcon {
   fill: black !important;
 }
 
+.css-innj4t-MuiPickersYear-yearButton.Mui-selected {
+  background-color: rgb(13, 148, 136) !important;
+}
+
+.css-1u23akw-MuiButtonBase-root-MuiPickersDay-root:hover {
+  background-color: rgb(13, 148, 136, 0.2) !important;
+}
+
+.css-1u23akw-MuiButtonBase-root-MuiPickersDay-root {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  background-color: transparent;
+  outline: 0;
+  border: 0;
+  margin: 0;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  vertical-align: middle;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  -webkit-text-decoration: none;
+  text-decoration: none;
+  color: inherit;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.66;
+  letter-spacing: 0.03333em;
+  width: 36px ;
+  height: 36px ;
+  border-radius: 50%;
+  padding: 0;
+  background-color: transparent;
+  -webkit-transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0 2px;
+}
+
+.css-1q04gal-MuiDateCalendar-root {
+  overflow: hidden;
+  width: 420px ;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  margin: 0 auto;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+}
+
+
+.css-rhmlg1-MuiTypography-root-MuiDayCalendar-weekDayLabel {
+  margin: 0;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.66;
+  letter-spacing: 0.03333em;
+  width: 44px ;
+  height: 44px ;
+  margin: 0 2px;
+  text-align: center;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.6);
+}
