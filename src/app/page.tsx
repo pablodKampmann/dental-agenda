@@ -59,10 +59,11 @@ export default function Page() {
   const [monthName, setMonthName] = useState<any>(null);
   const [alwaysToday, setAlwaysToday] = useState<any>(null);
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
-  const [appointmentHours, setAppointmentHours] = useState<any>(null);
+  const [appointmentHours, setAppointmentHours] = useState<any>(1);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [showResult, setShowResult] = useState<any>(null);
   const [reasonsOptions, setReasonsOptions] = useState<null | any[]>(null);
+  const [freeSpaces, setFreeSpaces] = useState<any>(null);
   const confirmRef = useRef<any>(null);
   const newPatientRef = useRef<any>(null);
   const calendarRef = useRef<any>(null);
@@ -179,6 +180,8 @@ export default function Page() {
     const newDate = new Date(today);
     newDate.setDate(today.getDate() - 1);
     setToday(newDate);
+    const newDayjsDate = dayjs(calendarValue).subtract(1, 'day');
+    setCalendarValue(newDayjsDate)
   }
 
   function dayNext() {
@@ -186,6 +189,8 @@ export default function Page() {
     const newDate = new Date(today);
     newDate.setDate(today.getDate() + 1);
     setToday(newDate);
+    const newDayjsDate = dayjs(calendarValue).add(1, 'day');
+    setCalendarValue(newDayjsDate)
   }
 
   function isToday(dateToCheck: Date) {
@@ -215,7 +220,6 @@ export default function Page() {
     setToday(day);
   }, [calendarValue]);
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       setTime(getCurrentTime());
@@ -228,23 +232,21 @@ export default function Page() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
-    console.log(appointments);
-    
+    //console.log(appointments);
+
     return `${hours}:${minutes}`;
   }
 
   //APPOINTMENTS LOGIC
   function handleCliclRow(time: string) {
     if (!isLoadAppoints) {
-      if (appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) {
+      if ((appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) || (appointmentDate)) {
         setShowForm(false);
         setAppointmentDate(null);
         setPatient(null);
         setReason(null);
         setObservations(null);
-      } else if (appointmentDate) {
-        setShowForm(false);
-        setAppointmentDate(null);
+        setFreeSpaces(null)
       } else {
         const parts = date.split("/");
         const year = parts[2];
@@ -252,7 +254,7 @@ export default function Page() {
           date: date,
           dayComplete: `${dayName} ${dayNum} de ${monthName}`,
           year: year,
-          time: time
+          time: time,
         });
         setShowForm(true);
       }
@@ -266,6 +268,7 @@ export default function Page() {
     setPatient(null);
     setReason(null);
     setObservations(null);
+    setFreeSpaces(null)
     const result = await setAppointment(patientId, dateData, reason, observations);
     if (result === 'error') {
       setShowResult('error');
@@ -284,28 +287,58 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (appointmentDate &&  appointments) {
+    if (appointmentDate && appointments) {
       const hour = parseInt(appointmentDate.time.split(':')[0]);
       const nextHour = hour + 1;
+      const twoHoursLater = hour + 2;
 
-      const isNextHourOccupied = appointments.find((appointment: { time: string; }) => {
-        if (appointment && appointment.time) {
-          const appointmentHour = parseInt(appointment.time.split(':')[0]);
-          return appointmentHour === nextHour;
-        }
-        return false;
+      const validAppointments = appointments.filter(
+        (appointment: { time: any; }) => appointment && appointment.time
+      );
+
+      const isNextHourOccupied = validAppointments.find((appointment: { time: string; }) => {
+        const appointmentHour = parseInt(appointment.time.split(':')[0]);
+        return appointmentHour === nextHour;
+      });
+
+      const areTwoHoursFree = !validAppointments.find((appointment: { time: string; }) => {
+        const appointmentHour = parseInt(appointment.time.split(':')[0]);
+        return appointmentHour === nextHour || appointmentHour === twoHoursLater;
       });
 
       if (isNextHourOccupied) {
-        console.log("Hay un turno en la hora siguiente.");
+        setFreeSpaces(0)
+      } else if (areTwoHoursFree) {
+        setFreeSpaces(2)
       } else {
-        console.log("No hay turno en la hora siguiente.");
+        setFreeSpaces(1)
       }
     }
   }, [appointmentDate, appointments]);
 
-   //POP-UP MESSAGES
-   useEffect(() => {
+  useEffect(() => {
+    if (appointmentDate) {
+      const hour = parseInt(appointmentDate.time.split(':')[0]);
+      const nextHour = hour + 1;
+      const twoHoursLater = hour + 2;
+      const updatedAppointmentDate = {
+        ...appointmentDate,
+        ...(appointmentHours == 2 ? { time2: (nextHour + ":00") } : {}),
+        ...(appointmentHours == 3 ? { time2: (nextHour + ":00"), time3: (twoHoursLater + ":00") } : {})
+      };
+
+      setAppointmentDate(updatedAppointmentDate)
+    }
+  }, [appointmentHours]);
+
+  useEffect(() => {
+    setAppointmentHours(1);
+    console.log(appointmentDate);
+
+  }, [appointmentDate]);
+
+  //POP-UP MESSAGES
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
       setShowResult(null);
     }, 6000);
@@ -350,11 +383,12 @@ export default function Page() {
     }
   }, [reason]);
 
+
   useEffect(() => {
     if (patient && appointmentDate && reason) {
       confirmRef.current.scrollIntoView({
         behavior: 'smooth',
-        block: 'start',
+        block: 'end',
       });
     }
   }, [patient, appointmentDate, reason]);
@@ -372,7 +406,7 @@ export default function Page() {
   }, [calendarRef]);
 
   return (
-    <div className='mt-2 ml-56 ' >
+    <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
       {isLoad ? (
         <div className='fixed inset-0 backdrop-blur-sm ml-56'>
           <div className='fixed inset-0 flex items-center justify-center'>
@@ -415,7 +449,7 @@ export default function Page() {
               </div>
             )}
           </div>
-          <div className='mb-4 flex justify-between items-center'>
+          <div className='mb-4 flex justify-between items-center '>
             <div className='flex justify-center items-center'>
               {isToday(today) ? (
                 <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 transition duration-150 rounded-lg  py-0.5 mr-2 '>
@@ -458,7 +492,7 @@ export default function Page() {
               )}
             </button>
           </div>
-          <div className='flex justify-between h-screen pb-44  w-full'>
+          <div className='flex justify-between h-screen pb-44 overflow-y-hidden w-full'>
             <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>A <br /> G <br />E <br />N <br />D <br />A</h1>
             <div className='bg-gray-400 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
               <table>
@@ -470,9 +504,11 @@ export default function Page() {
                       </td>
                       <td
                         className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-white ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
-                         ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                         ${index === array.length - 1 ? '' : 'border-b '}
-                         select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
+                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${index === array.length - 1 ? '' : 'border-b '}
+                          select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
                         onClick={() => handleCliclRow(time)}
                       >
                         {appointments &&
@@ -540,7 +576,7 @@ export default function Page() {
             {showForm ? (
               <div className='w-[40%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
-                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Agregar Turno</h1>
+                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold text-2xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
                   <div ref={selectDateRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {appointmentDate ? (
                       <div>
@@ -567,15 +603,13 @@ export default function Page() {
                           <select
                             value={appointmentHours}
                             onChange={(event) => setAppointmentHours(event.target.value)}
-                            className=" select-none rounded-lg pl-2  text-black border-2 border-gray-600 bg-white flex py-1 ml-2  font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-12"
+                            className="select-none rounded-lg pl-2 text-black border-2 border-gray-600 bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-12"
                           >
-                            <option value="" selected>
-                              1
-                            </option>
-                            <option  >
+                            <option value={1}>1</option>
+                            <option value={2} disabled={freeSpaces < 1}>
                               2
                             </option>
-                            <option >
+                            <option value={3} disabled={freeSpaces < 2}>
                               3
                             </option>
                           </select>
@@ -723,12 +757,12 @@ export default function Page() {
                   </div>
 
                   <div className=" flex-1 p-2">
-                    <div ref={confirmRef} className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
+                    <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>
                       <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
                     </div>
                     {patient && appointmentDate && reason ? (
-                      <div className='mt-4 ml-2 mr-2 mb-2 flex'>
+                      <div ref={confirmRef} className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1'>
                           <h1 className='text-xl font-bold text-black select-none text-center'>Resumen: </h1>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>

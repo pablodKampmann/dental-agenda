@@ -108,7 +108,6 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                         </option>
                                         <option value="male">Masculino</option>
                                         <option value="female">Femenino</option>
-                                        <option value="none">No especificado</option>
                                     </select>
                                 </div>
                             </div>

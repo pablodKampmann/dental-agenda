@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
 import { ModalCreatePatient } from './../components/modalCreatePatient'
-import { SuccessPatientAlert } from "./../components/successPatientAlert";
 import { ref, onValue } from "firebase/database";
 import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
@@ -14,6 +13,7 @@ import { TbUserSearch } from 'react-icons/tb';
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
+import { BsClipboardCheck } from "react-icons/bs";
 
 export default function Patients() {
     const router = useRouter()
@@ -47,16 +47,13 @@ export default function Patients() {
         return () => unsubscribe();
     }, [router, listPatients]);
 
-    const showSuccessAlert = () => {
-        setShowSuccess(true);
-        setTimeout(() => {
-            setLeaveModal(true);
-            setTimeout(() => {
-                setShowSuccess(false);
-                setLeaveModal(false);
-            }, 450)
-        }, 5000);
-    }
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setShowSuccess(false);
+        }, 6000);
+
+        return () => clearTimeout(timeoutId);
+    }, [showSuccess]);
 
     function HandleModify() {
         console.log("modificar");
@@ -174,7 +171,7 @@ export default function Patients() {
                     <div>
                         {openModalCreatePatient && (
                             <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                                <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={showSuccessAlert} />
+                                <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={() => setShowSuccess(true)} />
                             </div>
                         )}
                     </div>
@@ -207,9 +204,10 @@ export default function Patients() {
                             </div>
                             <div className='flex justify-end items-center ml-auto'>
                                 {showSuccess && (
-                                    <div className='flex fixed items-end justify-end ml-4 mr-80 transform -translate-y-7'>
-                                        <div className={`${leaveModal ? 'animate-slide-up' : 'animate-slide-down'}`}>
-                                            <SuccessPatientAlert />
+                                    <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+                                        <div className='flex justify-start items-center'>
+                                            <BsClipboardCheck className='text-black' size={36} />
+                                            <p className='ml-2 text-black font-semibold text-lg select-none'>Paciente agregado exitosamente</p>
                                         </div>
                                     </div>
                                 )}
