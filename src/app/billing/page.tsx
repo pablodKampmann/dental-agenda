@@ -36,7 +36,7 @@ export default function Page() {
                 </div>
             ) : (
                 <div className='ml-2 mr-2 p-4 mt-16'>
-                    <h1 className='text-red-500'>Holaaa</h1>
+                    <h1 className='text-red-500'>Holaaaaaa</h1>
                 </div >
             )}
         </div>

@@ -30,7 +30,11 @@ export default function NotSing() {
 
     async function handleSignIn() {
         setLoad(true);
+        console.log("hola");
+        
         const result = await signIn(userName, password)
+        console.log(password);
+        
         if (result !== undefined) {
             setResult(result);
             if (result === 'all-good') {
@@ -99,7 +103,7 @@ export default function NotSing() {
                             </div>
                         </div>
                         <div className='flex justify-center'>
-                            <button onClick={handleSignIn} disabled={error !== ''} type="button" className={`${load ? 'w-12 rounded-full scale-110 flex justify-center' : ' scale-100 w-full rounded-lg'} mt-6 bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium text-md py-2 transition duration-500`}>
+                            <button onClick={handleSignIn}  type="button" className={`${load ? 'w-12 rounded-full scale-110 flex justify-center' : ' scale-100 w-full rounded-lg'} mt-6 bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium text-md py-2 transition duration-500`}>
                                 {load ? (
                                     <div className='flex justify-center'>
                                         <RingLoader color='white' size={30} />

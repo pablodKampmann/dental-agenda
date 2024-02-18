@@ -108,7 +108,7 @@ export default function PatientId() {
           <div className='ml-2 p-4 mt-16 mr-2 relative'>
             {openAlert && (
               <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert id={id} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} />
+                <Alert id={id} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} appointment={null} />
               </div>
             )}
             {patient && (

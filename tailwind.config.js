@@ -19,7 +19,8 @@ module.exports = {
         'move-from-right-form': 'move-from-right-form 0.25s ease-out',
         'move-from-right-form-2': 'move-from-right-form-2 0.25s ease-out',
         'user-menu': 'user-menu 0.1s ease-out',
-        'breathe': 'breathe 1s infinite ease-in-out'
+        'breathe': 'breathe 1s infinite ease-in-out',
+        'modal-appointment': 'modal-appointment 0.2s ease-in',
       },
       keyframes: {
         'slide-down': {
@@ -86,7 +87,21 @@ module.exports = {
           '0%': { opacity: '0.8' },
           '50%': { opacity: '0.3' },
           '100%': { opacity: '0.8' },
-        }
+        },
+        'modal-appointment': {
+          '0%': { opacity: '0.1', transform: 'translateY(-50%)' },
+          '8.33%': { opacity: '0.2', transform: 'translateY(-40%)' },
+          '16.66%': { opacity: '0.3', transform: 'translateY(-30%)' },
+          '25%': { opacity: '0.4', transform: 'translateY(-20%)' },
+          '33.33%': { opacity: '0.5', transform: 'translateY(-10%)' },
+          '41.66%': { opacity: '0.5', transform: 'translateY(0%)' },
+          '50%': { opacity: '0.7', transform: 'translateY(10%)' },
+          '58.33%': { opacity: '0.8', transform: 'translateY(10%)' },
+          '66.66%': { opacity: '1', transform: 'translateY(7%)' },
+          '75%': { opacity: '1', transform: 'translateY(3%)' },
+          '87.5%': { opacity: '1', transform: 'translateY(0%)' },
+          '100%': { opacity: '1', transform: 'translateY(0%)' },
+        },
       },
     },
   },

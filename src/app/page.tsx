@@ -19,7 +19,6 @@ import { BiRightArrow, BiLeftArrow, BiError } from "react-icons/bi";
 import { MdUpdate, MdAddCircleOutline, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { getReasonsOptions } from "./components/getReasonsOptions";
-import { FiEdit } from "react-icons/fi";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -27,12 +26,19 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
 import { IoTimeOutline } from "react-icons/io5";
+import { Alert } from "./components/alert";
+import { TiDocumentDelete } from "react-icons/ti";
 
 export interface dateData {
   date: string;
   dayComplete: string;
   year: number;
   time: string;
+}
+
+export interface Appointment {
+  date: string;
+  id: number;
 }
 interface CustomDayjs extends Dayjs {
   $d: Date;
@@ -45,10 +51,14 @@ export default function Page() {
   const [isLoadAppoints, setIsLoadAppoints] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [openCalendar, setOpenCalendar] = useState(false);
+  const [openModalAppointment, setOpenModalAppointment] = useState(false);
+  const [openAlertMessage, setOpenAlertMessage] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [appointments, setAppointments] = useState<any>(null);
+  const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
   const [reason, setReason] = useState<any>(null);
   const [observations, setObservations] = useState<any>(null);
@@ -132,17 +142,19 @@ export default function Page() {
     setIsLoadAppoints(true);
 
     async function get() {
-      const appointments = await getAppointments(formattedDate)
-      if (appointments) {
-        setIsLoadAppoints(false)
+      let appointments = await getAppointments(formattedDate)
+      if (appointments === 'vacio') {
+        setAppointments(null);
+        setIsLoadAppoints(false);
+      } else {
+        if (!Array.isArray(appointments)) {
+          appointments = Object.values(appointments);
+        }
+        setAppointments(appointments);
+        setIsLoadAppoints(false);
       }
       const options = await getReasonsOptions();
       setReasonsOptions(options);
-      if (appointments === 'vacio') {
-        setAppointments(null);
-      } else {
-        setAppointments(appointments);
-      }
     }
 
     get()
@@ -238,16 +250,27 @@ export default function Page() {
   }
 
   //APPOINTMENTS LOGIC
-  function handleCliclRow(time: string) {
+  function clean() {
+    setShowForm(false);
+    setAppointmentDate(null);
+    setPatient(null);
+    setReason(null);
+    setObservations(null);
+    setFreeSpaces(null)
+  }
+
+  function handleCliclRow(time: string, event: any) {
     if (!isLoadAppoints) {
-      if ((appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) || (appointmentDate)) {
-        setShowForm(false);
-        setAppointmentDate(null);
-        setPatient(null);
-        setReason(null);
-        setObservations(null);
-        setFreeSpaces(null)
+      if (appointments && appointments.some((appointment: { time: string }) => appointment.time === time)) {
+        clean();
+        const appointment = appointments.find((appointment: { time: string; }) => appointment && appointment.time === time);
+        setAppointmentSelect(appointment)
+        setOpenModalAppointment(true);
+        setMousePosition({ x: event.clientX, y: event.clientY });
+      } else if (appointmentDate) {
+        clean();
       } else {
+        setOpenModalAppointment(false);
         const parts = date.split("/");
         const year = parts[2];
         setAppointmentDate({
@@ -263,26 +286,24 @@ export default function Page() {
 
   async function handleSetAppoint(patientId: number, dateData: dateData, reason: string, observations?: string) {
     setIsLoadAppoints(true);
-    setShowForm(false);
-    setAppointmentDate(null);
-    setPatient(null);
-    setReason(null);
-    setObservations(null);
-    setFreeSpaces(null)
+    clean();
     const result = await setAppointment(patientId, dateData, reason, observations);
-    if (result === 'error') {
-      setShowResult('error');
-    } else {
-      setShowResult('good');
-    }
     const formattedDate = date?.replace(/\//g, '');
-    const appointments = await getAppointments(formattedDate)
+    let appointments = await getAppointments(formattedDate)
     if (appointments === 'vacio') {
       setAppointments(null);
       setIsLoadAppoints(false);
     } else {
-      setIsLoadAppoints(false);
+      if (!Array.isArray(appointments)) {
+        appointments = Object.values(appointments);
+      }
       setAppointments(appointments);
+      setIsLoadAppoints(false);
+    }
+    if (result === 'error') {
+      setShowResult('error');
+    } else {
+      setShowResult('good');
     }
   }
 
@@ -333,9 +354,33 @@ export default function Page() {
 
   useEffect(() => {
     setAppointmentHours(1);
-    console.log(appointmentDate);
 
   }, [appointmentDate]);
+
+  async function handleSuccessDeleteAppointment() {
+    const formattedDate = date?.replace(/\//g, '');
+    let appointments = await getAppointments(formattedDate)
+    if (appointments === 'vacio') {
+      setAppointments(null);
+      setIsLoadAppoints(false);
+      setShowResult('good-delete-appointment')
+    } else {
+      if (!Array.isArray(appointments)) {
+        appointments = Object.values(appointments);
+      }
+      setAppointments(appointments);
+      setIsLoadAppoints(false);
+      setShowResult('good-delete-appointment')
+    }
+  }
+
+  function timeCalc(time: string) {
+    const [hoursStr, minutesStr] = time.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const newHours = hours + 1;
+    const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
+    return newTime;
+  }
 
   //POP-UP MESSAGES
   useEffect(() => {
@@ -424,7 +469,7 @@ export default function Page() {
               </div>
             )}
             {showResult === 'good' && (
-              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95  transform animate-move-from-right">
                 <div className='flex justify-start items-center'>
                   <BsClipboardCheck className='text-black' size={36} />
                   <p className='ml-2 text-black font-semibold text-lg select-none'>Turno asignado exitosamente</p>
@@ -432,7 +477,7 @@ export default function Page() {
               </div>
             )}
             {showResult === 'good-patient' && (
-              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 transform animate-move-from-right">
+              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95 transform animate-move-from-right">
                 <div className='flex justify-start items-center'>
                   <BsClipboardCheck className='text-black' size={36} />
                   <p className='ml-2 text-black font-semibold text-lg select-none'>Paciente agregado exitosamente</p>
@@ -440,11 +485,39 @@ export default function Page() {
               </div>
             )}
             {showResult === 'error' && (
-              <div className=" fixed shadow-xl top-16 right-0 py-1 pl-1 pr-2 border-2 border-red-900 mt-4 mr-6 rounded-lg bg-red-400 transform animate-move-from-right">
+              <div className=" fixed shadow-xl top-16 right-0 py-1 pl-1 pr-2 border-2 border-red-900 mt-4 mr-6 rounded-lg bg-red-400 bg-opacity-95 transform animate-move-from-right">
                 <div className='flex justify-start items-center'>
                   <BiError className='text-black' size={42} />
                   <p className='ml-1 text-black font-semibold text-lg select-none'>Error:</p>
                   <p className='ml-1 text-black font-medium text-sm mt-0.5 select-none'>Por favor, verifique su conexión a internet e intente nuevamente.</p>
+                </div>
+              </div>
+            )}
+            {showResult === 'good-delete-appointment' && (
+              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95 transform animate-move-from-right">
+                <div className='flex justify-start items-center'>
+                  <TiDocumentDelete className='text-black' size={36} />
+                  <p className='ml-2 text-black font-semibold text-lg select-none'>El turno a sido eliminado.</p>
+                </div>
+              </div>
+            )}
+            {openAlertMessage && (
+              <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
+                <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas elimanar el turno?'} secondMessage={null} action={'Eliminar Turno'} onCloseModal={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} appointment={appointmentSelect} />
+              </div>
+            )}
+            {openModalAppointment && (
+              <div
+                className='bg-black rounded-xl shadow-xl opacity-90  absolute px-2 py-1 select-none animate-modal-appointment'
+                style={{
+                  left: `${mousePosition.x + 10}px`,
+                  top: `${mousePosition.y}px`
+                }}
+              >
+                <div className='flex-col'>
+                  <h1 className='text-xl font-medium flex justify-center items-center border-b pb-2'>Acciones <ImCancelCircle onClick={() => setOpenModalAppointment(false)} size={24} className="ml-6 mt-1 font-semibold hover:text-teal-500 cursor-pointer duration-150 transform hover:scale-110" /></h1>
+                  <button onClick={() => { setOpenModalAppointment(false); setOpenAlertMessage(true); setShowResult(null) }} className='flex justify-center items-center group hover:text-teal-500'><MdDeleteForever className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1" size={20} />Eliminar </button>
+                  <button className='flex justify-center items-center group hover:text-teal-500'><FaShare className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1" size={20} />Compartir </button>
                 </div>
               </div>
             )}
@@ -503,13 +576,13 @@ export default function Page() {
                         {time}
                       </td>
                       <td
-                        className={`${appointments && appointments.filter((appointment: { time: string; }) => appointment.time === time).length ? 'bg-white ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
+                        className={`${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-white ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
                           ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${index === array.length - 1 ? '' : 'border-b '}
                           select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
-                        onClick={() => handleCliclRow(time)}
+                        onClick={(e) => handleCliclRow(time, e)}
                       >
                         {appointments &&
                           appointments
@@ -521,9 +594,10 @@ export default function Page() {
                               const hours = parseInt(hoursStr, 10);
                               const newHours = hours + 1;
                               const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
+
                               return (
-                                <div className='flex justify-between'>
-                                  <div key={filteredAppointment.id} className='flex-col'>
+                                <div key={filteredAppointment.id} className='flex justify-between' >
+                                  <div className='flex-col'>
                                     <p className='text-left text-xs font-bold'>
                                       {time}-{newTime}
                                     </p>
@@ -543,7 +617,7 @@ export default function Page() {
                                       <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.num} <br /> {filteredAppointment.patientData.email}</p>
                                     </div>
                                   </div>
-                                  <div className='mt-6'>
+                                  <div className='mt-auto'>
                                     <div className='flex'>
                                       <p className='text-left text-sm ml-2'> Razón de turno:</p>
                                       <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.reason}</p>
@@ -558,9 +632,7 @@ export default function Page() {
                                     </div>
                                   </div>
                                   <div className='flex-col my-1'>
-                                    <FaShare className="text-black" size={30} />
-                                    <MdDeleteForever className="text-black flex mt-2 mb-2 mr-1" size={32} />
-                                    <FiEdit className="text-black mt-1" size={30} />
+
                                   </div>
                                 </div>
                               );
@@ -574,9 +646,9 @@ export default function Page() {
             </div>
 
             {showForm ? (
-              <div className='w-[40%] flex overflow-x-hidden'>
+              <div className='w-[35%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
-                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold text-2xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
+                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
                   <div ref={selectDateRef} className='border-gray-600 border-b-4 flex-1 p-2'>
                     {appointmentDate ? (
                       <div>
@@ -594,7 +666,7 @@ export default function Page() {
                             </div>
                             <div className='flex justify-center'>
                               <p className='text-sm flex-col  text-center select-none'>Horario seleccionado: </p>
-                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time} </p>
+                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
                             </div>
                           </div>
                         </div>
@@ -767,7 +839,7 @@ export default function Page() {
                           <h1 className='text-xl font-bold text-black select-none text-center'>Resumen: </h1>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1  text-lg font-bold text-black select-none text-left'>Fecha: </p>
-                            <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}</p>
+                            <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-black text-left select-none'>Paciente: </p>
@@ -788,7 +860,7 @@ export default function Page() {
                               className='resize-none text-black font-medium px-2 py-1 w-full h-20 focus:outline-none text-sm'></textarea>
                           </div>
 
-                          <div autoFocus onClick={() => handleSetAppoint(patient.id, appointmentDate, reason, observations)} className='flex justify-center items-center text-xl font-semibold transition duration-200 text-black  rounded-lg ml-2 mr-2 mb-1 mt-4 p-1 cursor-pointer hover:bg-teal-600 hover:text-white border-gray-600 border-2 bg-white'>
+                          <div autoFocus onClick={() => { handleSetAppoint(patient.id, appointmentDate, reason, observations); setShowResult(null) }} className='flex justify-center items-center text-xl font-semibold transition duration-200 text-black  rounded-lg ml-2 mr-2 mb-1 mt-4 p-1 cursor-pointer hover:bg-teal-600 hover:text-white border-gray-600 border-2 bg-white'>
                             Confirmar
                           </div>
                         </div>
@@ -804,15 +876,15 @@ export default function Page() {
                 </div>
               </div>
             ) : (
-              <div className='w-[30%] h-full flex overflow-x-hidden'>
-                <div className='flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden'>
-                  <div className='w-full  justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg '>
+              <div className='w-[fit] h-full flex overflow-x-hidden '>
+                <div className='flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden '>
+                  <div className='w-full  justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg  shadow-xl'>
                     <h1 className='text-center bg-teal-600 rounded-t-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Calendario</h1>
-                    <div className='flex justify-center mb-4'>
+                    <div className='flex justify-center '>
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                         <DemoContainer components={['DateCalendar']}>
                           <DateCalendar
-                            className='bg-white rounded-lg '
+                            className='bg-gray-100 bg-opacity-30 rounded-lg '
                             value={calendarValue}
                             onChange={(newValue) => setCalendarValue(newValue)}
                             views={['day', 'year']}
@@ -821,7 +893,7 @@ export default function Page() {
                       </LocalizationProvider>
                     </div>
                   </div>
-                  <div className='select-none  justify-center mt-4 bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg h-full'>
+                  <div className='select-none  justify-center mt-4 bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg h-full shadow-xl '>
                     <h1 className='text-center justify-center flex bg-teal-600 rounded-t-lg text-white font-semibold text-2xl  border-b-2 border-gray-600'>Turnos Restantes</h1>
                     <div className=' px-2 py-1 bg-white flex'>
                       <h1 className='text-left text-medium font-medium'>Hoy ({alwaysToday})</h1>

@@ -8,18 +8,17 @@ import { FaUsers, FaTooth, FaDollarSign } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
 import { IoLogOutSharp } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
-import { MdNotificationsActive, MdNotificationsNone } from 'react-icons/md';
+import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { getUser } from "./../components/getUser";
 import { Alert } from "./alert";
-import { PropagateLoader, PulseLoader } from "react-spinners";
+import { PropagateLoader } from "react-spinners";
 
 export function SideBar() {
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [openAlert, setOpenAlert] = useState(false);
     const [openUserMenu, setOpenUserMenu] = useState(false);
-    const [loadOption, setLoadOption] = useState('');
 
     useEffect(() => {
         async function get() {
@@ -34,13 +33,6 @@ export function SideBar() {
         get();
     }, []);
 
-    useEffect(() => {
-
-        if (pathname === loadOption) {
-            setLoadOption('');
-        }
-    }, [loadOption, pathname]);
-
     function handleSignOut() {
         setOpenAlert(true);
     }
@@ -54,7 +46,7 @@ export function SideBar() {
             <div>
                 {openAlert && (
                     <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                        <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} />
+                        <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} appointment={null}/>
                     </div>)}
             </div>
             <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
@@ -97,54 +89,38 @@ export function SideBar() {
             <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-56 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-gradient-to-b from-teal-900 from-90% to-teal-800">
                     <ul className="space-y-2 font-medium">
-                        <Link href="/" prefetch={true} onClick={() => setLoadOption('/')}>
+                        <Link href="/" prefetch={true}>
                             <li>
                                 <button type="button" className={`${pathname === '/' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
                                     <BsFillCalendar2WeekFill size={26} />
-                                    {loadOption === '/' ? (
-                                        <PulseLoader color="white" size={10} className='ml-12' />
-                                    ) : (
-                                        <p className="flex-1 ml-3 select-none">Agenda</p>
-                                    )}
+                                    <p className="flex-1 ml-3 select-none">Agenda</p>
                                 </button>
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-                        <Link href="/patients" prefetch={true} onClick={() => setLoadOption('/patients')}>
+                        <Link href="/patients" prefetch={true}>
                             <li>
                                 <button type="button" className={`${pathname.includes('/patients') ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <FaUsers size={28} />
-                                    {loadOption === '/patients' ? (
-                                        <PulseLoader color="white" size={10} className='ml-12' />
-                                    ) : (
-                                        <p className="flex-1 ml-3 select-none">Pacientes</p>
-                                    )}
+                                    <p className="flex-1 ml-3 select-none">Pacientes</p>
                                 </button>
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-                        <Link href="/chat" prefetch={true} onClick={() => setLoadOption('/chat')}>
+                        <Link href="/chat" prefetch={true}>
                             <li>
                                 <button type="button" className={`${pathname === '/chat' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <IoLogoWhatsapp size={28} />
-                                    {loadOption === '/chat' ? (
-                                        <PulseLoader color="white" size={10} className='ml-12' />
-                                    ) : (
-                                        <p className="flex-1 ml-3 select-none">Mensajeria</p>
-                                    )}
+                                    <p className="flex-1 ml-3 select-none">Mensajeria</p>
                                 </button>
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-                        <Link href="/billing" prefetch={true} onClick={() => setLoadOption('/billing')}>
+                        <Link href="/billing" prefetch={true}>
                             <li>
                                 <button type="button" className={`${pathname === '/billing' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <FaDollarSign size={26} />
-                                    {loadOption === '/billing' ? (
-                                        <PulseLoader color="white" size={10} className='ml-12' />
-                                    ) : (
-                                        <p className="flex-1 ml-3 select-none">Facturación</p>
-                                    )}
+                                    <p className="flex-1 ml-3 select-none">Facturación</p>
                                 </button>
                             </li>
                         </Link>
