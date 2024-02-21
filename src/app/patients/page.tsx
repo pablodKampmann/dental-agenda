@@ -239,27 +239,27 @@ export default function Patients() {
                                                         <p className='ml-1.5 mr-1.5'>{patient.id}</p>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-5 whitespace-nowrap text-black font-semibold">
+                                                <td className="px-5 py-5 whitespace-nowrap text-black">
                                                     <p>{patient.name} {patient.lastName}</p>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black font-semibold">
+                                                <td className="px-5 whitespace-nowrap text-black">
                                                     <p>{patient.dni}</p>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black font-semibold">
+                                                <td className="px-5 whitespace-nowrap text-black">
                                                     {patient.num ? (
                                                         <p>{patient.num}</p>
                                                     ) : (
                                                         <p>-</p>
                                                     )}
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black font-semibold">
+                                                <td className="px-5 whitespace-nowrap text-black ">
                                                     {patient.email ? (
                                                         <p>{patient.email}</p>
                                                     ) : (
                                                         <p>-</p>
                                                     )}
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black font-medium">
+                                                <td className="px-5 whitespace-nowrap text-black ">
                                                     <p>{patient.insurance}</p>
                                                 </td>
                                             </tr>

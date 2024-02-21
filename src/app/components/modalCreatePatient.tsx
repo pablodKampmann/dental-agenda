@@ -58,9 +58,9 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
         <div className="fixed inset-0 flex items-center justify-center mt-12">
             <form onSubmit={HandleSubmit} className="relative py-2 w-[700px] ">
                 <div className="w-full border-4 border-gray-600 relative px-4 py-4 bg-white shadow-xl rounded-xl ">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center ">
                         <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-2xl font-mono">i</div>
-                        <div className="block font-semibold text-xl text-black">
+                        <div className="block font-semibold text-xl text-black ml-3">
                             <h2 className="text-2xl leading-tight select-none">Agregar Paciente</h2>
                             <p className="text-sm  font-normal leading-tight select-none">Por favor, completa los datos del formulario.</p>
                         </div>
@@ -68,7 +68,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                     <div className="pt-2 pb-4">
                         <div className="flex justify-between items-center">
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Nombre</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Nombre</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400 ">
                                     <input
                                         type="text"
@@ -81,7 +84,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Apellido</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Apellido</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400 ">
                                     <input
                                         type="text"
@@ -94,7 +100,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Género</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Género</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400 ">
                                     <select
                                         className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-30 text-black"
@@ -114,7 +123,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                         </div>
                         <div className="flex justify-between items-center mt-2">
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Nacimiento</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Nacimiento</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400">
                                     <LocalizationProvider dateAdapter={AdapterDayjs} >
                                         <DatePicker value={date} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }}
@@ -123,7 +135,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">DNI</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Dni</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400">
                                     <input
                                         type="text"
@@ -160,7 +175,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                         </div>
                         <div className="flex items-center mt-2 ">
                             <div className="flex flex-col w-full mt-1 mx-2">
-                                <label className="text-black select-none text-lg ">Domicilio</label>
+                                <label className="text-black select-none text-lg ml-1">Domicilio</label>
                                 <div className="relative text-gray-400">
                                     <input
                                         type="text"
@@ -172,7 +187,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col w-full mt-1 mx-2">
-                                <label className="text-black select-none text-lg">Correo Electrónico</label>
+                                <label className="text-black select-none text-lg ml-1">Correo Electrónico</label>
                                 <div className="relative text-gray-400">
                                     <input
                                         type="text"
@@ -186,7 +201,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                         </div>
                         <div className="flex justify-between items-center mt-2">
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg">Obra Social</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Obra Social</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400">
                                     {insuranceOptions ? (
                                         <select
@@ -218,7 +236,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black select-none text-lg`}>Plan</label>
+                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>Plan</label>
                                 <div className="relative text-gray-400">
                                     <input type="text"
                                         className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-30 text-black"
@@ -230,7 +248,7 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black select-none text-lg`}>Núm. Afiliado</label>
+                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>Núm. Afiliado</label>
                                 <div className="relative text-gray-400">
                                     <input type="text"
                                         className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-30 text-black"
@@ -255,8 +273,8 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                             )}
                         </button>
                     </div>
-                </div>
-            </form>
-        </div>
+                </div >
+            </form >
+        </div >
     );
 }

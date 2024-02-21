@@ -53,6 +53,7 @@ export default function Page() {
   const [openCalendar, setOpenCalendar] = useState(false);
   const [openModalAppointment, setOpenModalAppointment] = useState(false);
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [selectedField, setSelectedField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
@@ -884,6 +885,7 @@ export default function Page() {
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                         <DemoContainer components={['DateCalendar']}>
                           <DateCalendar
+                            loading={isLoadingCalendar}
                             className='bg-gray-100 bg-opacity-30 rounded-lg '
                             value={calendarValue}
                             onChange={(newValue) => setCalendarValue(newValue)}
