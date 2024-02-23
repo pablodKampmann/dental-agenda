@@ -1,7 +1,7 @@
 import { db } from "../firebase";
 import { ref, set, get, remove } from "firebase/database";
 
-export async function deletePractice(id: number, chapter: string) {
+export async function deletePractice(id: any, chapter: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();

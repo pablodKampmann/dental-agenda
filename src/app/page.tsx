@@ -504,7 +504,7 @@ export default function Page() {
             )}
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas elimanar el turno?'} secondMessage={null} action={'Eliminar Turno'} onCloseModal={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} appointment={appointmentSelect} />
+                <Alert chapterData={null} thirdMessage={null} id={null} chapter={null} firstMessage={'¿Estás seguro/a de que deseas elimanar el turno?'} secondMessage={null} action={'Eliminar Turno'} onCloseModal={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} appointment={appointmentSelect} />
               </div>
             )}
             {openModalAppointment && (

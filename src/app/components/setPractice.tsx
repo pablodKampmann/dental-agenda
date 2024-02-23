@@ -14,6 +14,8 @@ export async function setPractice(id: number, price: number, practiceName: strin
                 name: practiceName,
                 price: price,
             });
+        } else if (snapshot.exists()) {
+            return ('already-exists')
         }
     } catch (error) {
         return ('error')
