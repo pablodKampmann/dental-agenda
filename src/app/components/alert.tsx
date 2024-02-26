@@ -202,11 +202,11 @@ export function Alert({ id, firstMessage, secondMessage, thirdMessage, action, o
                         </div>
                         <h2 className="mt-2 text-lg font-semibold text-gray-800 select-none">Ojo!</h2>
                         <p className="select-none mt-2 text-md text-gray-600 leading-relaxed">{firstMessage}</p>
-                        <div className='flex'>
-                            <AiFillPushpin size={30} className=" text-gray-600" />
+                        <div className='flex justify-center items-center'>
+                            <AiFillPushpin size={24} className=" text-gray-600" />
                             <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"> {secondMessage}</p>
                         </div>
-                        <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"><MdOutlineAttachMoney size={24} /> {thirdMessage}</p>
+                        <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"><IoLogoUsd size={22} /> {thirdMessage}</p>
                     </div>
                     <div className="flex items-center mt-3">
                         <button onClick={handleCloseModal} className="select-none flex-1 px-4 py-2 mr-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-md font-medium rounded-md transition duration-200">
