@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { FaTooth } from "react-icons/fa";
+import { Loading } from "./../components/loading";
 import { getChapter } from "./../components/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
@@ -24,6 +24,7 @@ export default function Page() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const [chapter, setChapter] = useState("chapterI");
+    const [idChapter, setIdChapter] = useState<any>(null);
     const [chapterData, setChapterData] = useState<any>(null);
     const [title, setTitle] = useState<string>('');
     const [id, setId] = useState<any>(null);
@@ -57,8 +58,39 @@ export default function Page() {
     //CHAPTER
 
     useEffect(() => {
+        const romanToDecimal = (roman: string) => {
+            const romanNumeralMap: Record<string, number> = {
+                'I': 1,
+                'V': 5,
+                'X': 10,
+                'L': 50,
+                'C': 100,
+                'D': 500,
+                'M': 1000
+            };
+            let decimal = 0;
+            for (let i = 0; i < roman.length; i++) {
+                const currentCharValue = romanNumeralMap[roman[i]];
+                const nextCharValue = romanNumeralMap[roman[i + 1]];
+                if (nextCharValue && currentCharValue < nextCharValue) {
+                    decimal += nextCharValue - currentCharValue;
+                    i++;
+                } else {
+                    decimal += currentCharValue;
+                }
+            }
+            return decimal;
+        };
+
         setOpenPriceEdit(Array(chapterData?.length).fill(false));
         updatePractices();
+
+        if (chapter) {
+            const restOfChapter = chapter.replace(/^chapter/i, '');
+            const idChapter = romanToDecimal(restOfChapter);
+            const formattedIdChapter = idChapter < 10 ? `0${idChapter}` : idChapter;
+            setIdChapter(formattedIdChapter)
+        }
     }, [chapter]);
 
     //PRACTICES
@@ -126,12 +158,12 @@ export default function Page() {
 
     //PRICE-EDIT
 
-    const togglePriceEdit = (index: any) => {
+    function togglePriceEdit(index: any) {
         cancelEdit();
         const newOpenPriceEdit = [...openPriceEdit];
         newOpenPriceEdit[index] = !newOpenPriceEdit[index];
         setOpenPriceEdit(newOpenPriceEdit);
-    };
+    }
 
     function cancelEdit() {
         setOpenPriceEdit(Array(chapterData?.length).fill(false));
@@ -139,34 +171,36 @@ export default function Page() {
     }
 
     async function handleUpdatePrice(practiceId: number) {
-        const priceFormatted = newPrice.replace(/\./g, '');
-        const priceNumber = parseFloat(priceFormatted);
-        const result = await updatePracticePrice(chapter, practiceId, priceNumber);
-        cancelEdit();
-        if (result !== 'error') {
-            updatePractices();
-            setShowResult('good-price-update')
+        if (newPrice !== null) {
+            const priceFormatted = newPrice.replace(/\./g, '');
+            const priceNumber = parseFloat(priceFormatted);
+            const result = await updatePracticePrice(chapter, practiceId, priceNumber);
+            cancelEdit();
+            if (result !== 'error') {
+                updatePractices();
+                setShowResult('good-price-update')
+            }
+        } else {
+            cancelEdit();
         }
     }
 
     function handleKeyPress(event: any, practiceId: number) {
         if (event.key === 'Enter') {
-            handleUpdatePrice(practiceId);
+            if (newPrice !== null) {
+                handleUpdatePrice(practiceId);
+            } else {
+                cancelEdit();
+            }
         } else if (event.key === 'Escape') {
             cancelEdit();
         }
     }
 
     return (
-        <div className='ml-56 h-screen overflow-hidden flex-1  ' >
+        <div className='ml-56 h-screen overflow-hidden flex-1'>
             {isLoad ? (
-                <div className='fixed inset-0 backdrop-blur-sm ml-56'>
-                    <div className='fixed inset-0 flex items-center justify-center'>
-                        <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
-                            <FaTooth size={100} />
-                        </div>
-                    </div>
-                </div>
+                <Loading />
             ) : (
                 <div className='overflow-hidden mt-2'>
                     {openModalCreatePractice && (
@@ -176,36 +210,34 @@ export default function Page() {
                     )}
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                            <Alert chapterData={null} id={id} appointment={null} chapter={chapter} firstMessage={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondMessage={practiceName} thirdMessage={price} action={'Eliminar Práctica'} onCloseModal={() => setOpenAlert('')} onSuccess={() => { updatePractices(); setShowResult('good-delete-practice') }} />
+                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapter} />
                         </div>
                     )}
                     {openAlert === 'increaseOrDecrease' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             {percentage > 0 ? (
-                                <Alert chapterData={chapterData} id={percentage} appointment={null} chapter={chapter} firstMessage={'¿Estás seguro/a de que deseas aumentar un'} secondMessage={percentageVisible} thirdMessage={null} action={'AumentarDisminuir'} onCloseModal={() => setOpenAlert('')} onSuccess={() => { updatePractices(); setShowResult('good-prices-update') }} />
+                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas aumentar un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapter} />
                             ) : (
-                                <Alert chapterData={chapterData} id={percentage} appointment={null} chapter={chapter} firstMessage={'¿Estás seguro/a de que deseas disminuir un'} secondMessage={percentageVisible} thirdMessage={null} action={'AumentarDisminuir'} onCloseModal={() => setOpenAlert('')} onSuccess={() => { updatePractices(); setShowResult('good-prices-update') }} />
+                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas disminuir un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapter} />
                             )}
                         </div>
                     )}
                     <div className='ml-2 mr-2 p-4 mt-16'>
                         <div className='flex justify-between select-none'>
-                            <div className='flex'>
-                                <div className='flex items-center '>
-                                    <select value={chapter} onChange={(event) => { setChapter(event.target.value); }}
-                                        className='focus:border-teal-600 bg-white cursor-pointer text-lg font-semibold shadow-xl outline-none bg-opacity-30 border-2 uppercase text-black border-gray-600 w-40 py-1.5 rounded-lg'>
-                                        <option value={"chapterI"} selected>Capitulo I</option>
-                                        <option value={"chapterII"} selected>Capitulo II</option>
-                                        <option value={"chapterIII"} selected>Capitulo III</option>
-                                    </select>
-                                    <h1 className='text-black text-xl ml-1 font-bold'>:</h1>
-                                    <h1 className='bg-gray-300 bg-opacity-30 text-black uppercase ml-4 text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg h-12 flex justify-center items-center'>{title}</h1>
-                                    {isLoadData && (
-                                        <ClipLoader className='ml-4' />
-                                    )}
-                                </div>
+                            <div className='flex items-center '>
+                                <select value={chapter} onChange={(event) => { setChapter(event.target.value); }}
+                                    className='focus:border-teal-600 bg-white cursor-pointer text-lg font-semibold shadow-xl outline-none bg-opacity-30 border-2 uppercase text-black border-gray-600 w-40 py-1.5 rounded-lg'>
+                                    <option value={"chapterI"} selected>Capitulo I</option>
+                                    <option value={"chapterII"} selected>Capitulo II</option>
+                                    <option value={"chapterIII"} selected>Capitulo III</option>
+                                </select>
+                                <h1 className='text-black text-xl ml-1 font-bold'>:</h1>
+                                <h1 className='bg-gray-300 bg-opacity-30 text-black uppercase ml-4 text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg h-12 flex justify-center items-center'>{title}</h1>
+                                {isLoadData && (
+                                    <ClipLoader className='ml-4' />
+                                )}
                             </div>
-                            <button onClick={() => setOpenModalCreatePractice(true)} className='hover:bg-teal-600 hover:text-white hover:border-b-gray-600 transition duration-150 text-black cursor-pointer text-lg bg-gray-400 bg-opacity-30 border-2 border-gray-600 px-4 font-medium rounded-xl shadow-md border-b-4 border-b-teal-600 flex justify-center items-center'><HiFolderAdd size={30} className="flex justify-center items-center mr-2" /> Agregar Práctica</button>
+                            <button onClick={() => setOpenModalCreatePractice(true)} className='hover:bg-teal-600 hover:text-white hover:border-b-gray-600 transition duration-150 text-black cursor-pointer text-lg bg-gray-400 bg-opacity-30 border-2 border-gray-600 px-4 font-medium rounded-md shadow-md border-b-4 border-b-teal-600 flex justify-center items-center'><HiFolderAdd size={30} className="flex justify-center items-center mr-2" /> Agregar Práctica</button>
                         </div>
                     </div>
                     {chapterData ? (
@@ -268,7 +300,7 @@ export default function Page() {
                                             <tr key={index} className={`${index === chapterData.length - 1 && billingTagetOverflowActived === false ? 'border-b-2 border-gray-600' : ''} ${index !== chapterData.length - 1 ? 'border-b-2 border-gray-600' : ''}`}>
                                                 <td className="pl-4 px-4   whitespace-nowrap border-r-2 border-gray-600 w-16">
                                                     <div className="text-center  text-white items-center justify-center flex rounded-full w-fit bg-teal-600 text-sm font-semibold">
-                                                        <p className='ml-1.5 mr-1.5'>01.{practice.id}</p>
+                                                        <p className='ml-1.5 mr-1.5'>{idChapter}.{practice.id}</p>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-4 whitespace-normal text-black text-sm border-r-2 border-gray-600">
@@ -298,7 +330,7 @@ export default function Page() {
                                                         </div>
                                                     </td>
                                                 ) : (
-                                                    <td onClick={() => togglePriceEdit(index)} className="px-5 whitespace-nowrap w-auto text-black group flex items-center  hover:bg-teal-600 py-4 cursor-pointer transition duration-150 hover:text-white  justify-between">
+                                                    <td onClick={() => togglePriceEdit(index)} className="px-5 whitespace-nowrap w-auto  text-black group flex items-center  hover:bg-teal-600 py-4 cursor-pointer transition duration-150 hover:text-white  justify-between">
                                                         <p>${formatPrice(practice.price)}</p>
                                                         <FaPen className="group-hover:text-white group-hover:duration-150 ml-2  text-black " />
                                                     </td>
@@ -332,11 +364,11 @@ export default function Page() {
                                 </div>
                             </div>
                         </div>
-                    ) : null
+                    ) :
+                        null
                     }
                 </div >
-            )
-            }
+            )}
         </div >
     )
 }

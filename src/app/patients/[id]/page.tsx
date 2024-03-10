@@ -58,10 +58,6 @@ export default function PatientId() {
     }
   }
 
-  function closeModal() {
-    setOpenAlert(false);
-  }
-
   useEffect(() => {
     async function get() {
       try {
@@ -108,7 +104,7 @@ export default function PatientId() {
           <div className='ml-2 p-4 mt-16 mr-2 relative'>
             {openAlert && (
               <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert thirdMessage={null} chapterData={null} id={id} chapter={null} firstMessage={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondMessage={'Esta accion sera permanente y no se podra volver atras'} action={'Eliminar'} onCloseModal={closeModal} appointment={null} />
+                <Alert onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
               </div>
             )}
             {patient && (

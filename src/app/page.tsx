@@ -10,7 +10,8 @@ import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle, BsClipboardCheck } f
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
-import { FaTooth, FaFileMedicalAlt, FaShare } from "react-icons/fa";
+import { FaFileMedicalAlt, FaShare } from "react-icons/fa";
+import { Loading } from "./components/loading";
 import { ModalCreatePatient } from './components/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
@@ -34,11 +35,6 @@ export interface dateData {
   dayComplete: string;
   year: number;
   time: string;
-}
-
-export interface Appointment {
-  date: string;
-  id: number;
 }
 interface CustomDayjs extends Dayjs {
   $d: Date;
@@ -257,7 +253,8 @@ export default function Page() {
     setPatient(null);
     setReason(null);
     setObservations(null);
-    setFreeSpaces(null)
+    setFreeSpaces(null);
+    setSearchContent('');
   }
 
   function handleCliclRow(time: string, event: any) {
@@ -359,6 +356,8 @@ export default function Page() {
   }, [appointmentDate]);
 
   async function handleSuccessDeleteAppointment() {
+    setOpenAlertMessage(false);
+    setIsLoadAppoints(true);
     const formattedDate = date?.replace(/\//g, '');
     let appointments = await getAppointments(formattedDate)
     if (appointments === 'vacio') {
@@ -454,13 +453,7 @@ export default function Page() {
   return (
     <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
       {isLoad ? (
-        <div className='fixed inset-0 backdrop-blur-sm ml-56'>
-          <div className='fixed inset-0 flex items-center justify-center'>
-            <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
-              <FaTooth size={100} />
-            </div>
-          </div>
-        </div>
+        <Loading />
       ) : (
         <div className='ml-2 mr-2 p-4 mt-16'>
           <div>
@@ -504,7 +497,7 @@ export default function Page() {
             )}
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert chapterData={null} thirdMessage={null} id={null} chapter={null} firstMessage={'¿Estás seguro/a de que deseas elimanar el turno?'} secondMessage={null} action={'Eliminar Turno'} onCloseModal={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} appointment={appointmentSelect} />
+                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
               </div>
             )}
             {openModalAppointment && (

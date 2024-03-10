@@ -94,9 +94,9 @@ export default function NotSing() {
                                 ) : (
                                     <div>
                                         {showPassword ? (
-                                            <MdVisibilityOff onClick={() => setShowPassword(!showPassword)} size={24} className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150" />
-                                        ) : (
                                             <MdVisibility onClick={() => setShowPassword(!showPassword)} size={24} className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150" />
+                                        ) : (
+                                            <MdVisibilityOff onClick={() => setShowPassword(!showPassword)} size={24} className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150" />
                                         )}
                                     </div>
                                 )}
@@ -110,7 +110,7 @@ export default function NotSing() {
                                     </div>
                                 ) : (
                                     <div className='select-none'>
-                                        Continuar
+                                        Acceder
                                     </div>
                                 )}
                             </button>

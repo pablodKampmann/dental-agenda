@@ -12,7 +12,6 @@ import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { getUser } from "./../components/getUser";
 import { Alert } from "./alert";
-import { PropagateLoader } from "react-spinners";
 
 export function SideBar() {
     const pathname = usePathname();
@@ -33,21 +32,14 @@ export function SideBar() {
         get();
     }, []);
 
-    function handleSignOut() {
-        setOpenAlert(true);
-    }
-
-    function closeModal() {
-        setOpenAlert(false);
-    }
-
     return (
         <div>
             <div>
                 {openAlert && (
                     <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                        <Alert id={null} firstMessage={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} secondMessage={null} action={'Cerrar Sesion'} onCloseModal={closeModal} appointment={null}/>
-                    </div>)}
+                        <Alert onCloseAlert={() => setOpenAlert(false)} onSuccess={() => setOpenAlert(false)} action={'Cerrar Sesion'} firstProp={'¿Estás seguro/a de que deseas cerrar la sesion activa?'} />
+                    </div>
+                )}
             </div>
             <nav className="fixed top-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
@@ -72,15 +64,19 @@ export function SideBar() {
                                     {openUserMenu && (
                                         <div className="absolute mt-24 w-full shadow-lg bg-teal-100 transition duration-150 rounded-b-lg border-t-2 border-teal-700 animate-user-menu">
                                             <div className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 select-none flex items-center"><RiUserSettingsFill className="mr-1 text-teal-900" /> Perfil </div>
-                                            <div onClick={handleSignOut} className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 rounded-b-lg select-none flex items-center"><IoLogOutSharp className="mr-1 text-teal-900" />Cerrar Sesión</div>
+                                            <div onClick={() => setOpenAlert(true)} className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 rounded-b-lg select-none flex items-center"><IoLogOutSharp className="mr-1 text-teal-900" />Cerrar Sesión</div>
                                         </div>
                                     )}
                                 </div>
                                 <Image src={`/${user.userName}.jpg`} width={40} height={40} className='rounded-full shadow-2xl select-none' alt="UserPhoto"></Image>
                             </div>
                         ) : (
-                            <div className='flex items-center mb-3 mr-24'>
-                                <PropagateLoader color="white" speedMultiplier={2} />
+                            <div className='flex items-center '>
+                                <div className='flex-col w-52 mr-4'>
+                                    <hr className=' border-2 border-teal-600 rounded-full' />
+                                    <hr className='border-2 mt-4 border-teal-600 rounded-full' />
+                                </div>
+                                <div className='p-3.5 border-4 border-teal-600 rounded-full'></div>
                             </div>
                         )}
                     </div>
@@ -128,7 +124,7 @@ export function SideBar() {
                     </ul>
                     <div className='absolute bottom-0'>
                         <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
-                        <button type="button" onClick={handleSignOut} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
+                        <button type="button" onClick={() => setOpenAlert(true)} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
                             <IoLogOutSharp size={40} className="" />
                             <p className='text-medium font-medium'>Cerrar Sesión</p>
                         </button>

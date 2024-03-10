@@ -12,8 +12,9 @@ import { MdPersonSearch } from 'react-icons/md';
 import { TbUserSearch } from 'react-icons/tb';
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { FaTooth } from "react-icons/fa";
+import { Loading } from "./../components/loading";
 import { BsClipboardCheck } from "react-icons/bs";
+import { IoAddOutline } from "react-icons/io5";
 
 export default function Patients() {
     const router = useRouter()
@@ -27,7 +28,6 @@ export default function Patients() {
     const [selectedField, setSelectedField] = useState('name');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [leaveModal, setLeaveModal] = useState(false);
     const [totalPatients, setTotalPatients] = useState(0);
     const [listPatients, setListPatients] = useState<null | any[]>(null);
     const [searchContent, setSearchContent] = useState('');
@@ -55,26 +55,6 @@ export default function Patients() {
         return () => clearTimeout(timeoutId);
     }, [showSuccess]);
 
-    function HandleModify() {
-        console.log("modificar");
-    }
-
-    function HandleClinicalFile() {
-        console.log("clinica");
-    }
-
-    function HandleHistory() {
-        console.log("historial");
-    }
-
-    function OpenModalCreatePatient() {
-        setOpenModalCreatePatient(true);
-    }
-
-    function CloseModalCreatePatient() {
-        setOpenModalCreatePatient(false);
-    }
-
     useEffect(() => {
         if (page === 1) {
             setDisableBack(true);
@@ -88,12 +68,12 @@ export default function Patients() {
         }
     }, [page, maxPage]);
 
-    function HandleBackPage() {
+    function handleBackPage() {
         setBackPageLoad(true);
         setPage(page - 1)
     }
 
-    function HandleNextPage() {
+    function handleNextPage() {
         setNextPageLoad(true);
         setPage(page + 1);
     }
@@ -159,19 +139,13 @@ export default function Patients() {
     return (
         <div>
             {isLoad ? (
-                <div className='fixed inset-0 backdrop-blur-sm ml-56'>
-                    <div className='fixed inset-0 flex items-center justify-center'>
-                        <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
-                            <FaTooth size={100} />
-                        </div>
-                    </div>
-                </div>
+                <Loading />
             ) : (
                 <div className="p-4 ml-56 mt-2 relative">
                     <div>
                         {openModalCreatePatient && (
                             <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                                <ModalCreatePatient onCloseModal={CloseModalCreatePatient} onSuccess={() => setShowSuccess(true)} />
+                                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => setShowSuccess(true)} />
                             </div>
                         )}
                     </div>
@@ -186,7 +160,7 @@ export default function Patients() {
                                     autoComplete="off"
                                     type="text"
                                     placeholder="Busca un paciente                              Por:"
-                                    className="shadow-lg pl-10 w-96 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
+                                    className="shadow-lg pl-10 w-80 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
                                     name='search'
                                     value={searchContent}
                                     onChange={(e) => {
@@ -199,8 +173,8 @@ export default function Patients() {
                                         }
                                     }}
                                 />
-                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
-                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
+                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>Nombre</button>
+                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>Dni</button>
                             </div>
                             <div className='flex justify-end items-center ml-auto'>
                                 {showSuccess && (
@@ -211,8 +185,9 @@ export default function Patients() {
                                         </div>
                                     </div>
                                 )}
-                                <button onClick={OpenModalCreatePatient} type="button" className="group shadow-xl h-10 text-black bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-teal-500 hover:text-white text-xl font-semibold py-2 px-12 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
-                                    <span className="text-3xl text-black mr-4 group-hover:text-white transition duration-200">+</span> Agregar Paciente
+                                <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-md h-10 text-black bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold pb-1 px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
+                                    <IoAddOutline className="mt-1 mr-2" size={24} />
+                                    Agregar Paciente
                                 </button>
                             </div>
                         </div>
@@ -235,8 +210,8 @@ export default function Patients() {
                                         {listPatients.map((patient, index) => (
                                             <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900  via-teal-700 to-teal-500 background-animate' : 'hover:bg-gray-900 bg-gray-400 hover:bg-opacity-30 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
                                                 <td className="px-5 whitespace-nowrap">
-                                                    <div className="text-center text-white items-center justify-center flex rounded-full w-fit bg-teal-600 text-md font-semibold">
-                                                        <p className='ml-1.5 mr-1.5'>{patient.id}</p>
+                                                    <div className=" text-teal-600 items-center justify-center flex w-fit text-md font-semibold">
+                                                        <p className='mx-1 font-semibold'>{patient.id}</p>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-5 whitespace-nowrap text-black">
@@ -282,7 +257,7 @@ export default function Patients() {
                                 {disableBack ? (
                                     <button disabled className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
                                 ) : (
-                                    <button onClick={HandleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={handleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
                                         {backPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
@@ -293,7 +268,7 @@ export default function Patients() {
                                 {disableNext ? (
                                     <button disabled className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
                                 ) : (
-                                    <button onClick={HandleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
+                                    <button onClick={handleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
                                         {nextPageLoad ? (
                                             <SyncLoader size={8} color="white" />
                                         ) : (
