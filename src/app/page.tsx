@@ -111,7 +111,7 @@ export default function Page() {
     }
 
     async function Get() {
-      const patients = await GetPatients(1, 20);
+      const patients = await GetPatients(20);
       if (patients === null) {
         setListPatients('noResult')
       } else {
@@ -125,7 +125,7 @@ export default function Page() {
   }, [selectedField]);
 
   async function updateListPatients() {
-    const patients = await GetPatients(1, 20);
+    const patients = await GetPatients(20);
     if (patients === null) {
       setListPatients('noResult')
     } else {

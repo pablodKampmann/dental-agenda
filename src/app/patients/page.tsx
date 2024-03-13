@@ -7,32 +7,22 @@ import { ref, onValue } from "firebase/database";
 import { db } from "./../firebase";
 import { GetPatients } from "./../components/getPatients";
 import { SearchPatient } from "./../components/searchPatient";
-import { SyncLoader } from "react-spinners";
-import { MdPersonSearch } from 'react-icons/md';
-import { TbUserSearch } from 'react-icons/tb';
+import { TbUserSearch, TbReload } from 'react-icons/tb';
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Loading } from "./../components/loading";
-import { BsClipboardCheck } from "react-icons/bs";
-import { IoAddOutline } from "react-icons/io5";
+import { BsClipboardCheck, BsPersonFillAdd } from "react-icons/bs";
+import { LuSearchX } from "react-icons/lu";
 
 export default function Patients() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
-    const [page, setPage] = useState(1);
-    const [maxPage, setMaxPage] = useState(Number);
-    const [disableBack, setDisableBack] = useState(false);
-    const [disableNext, setDisableNext] = useState(false);
-    const [showMin, setShowMin] = useState(Number);
-    const [showMax, setShowMax] = useState(Number);
     const [selectedField, setSelectedField] = useState('name');
     const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [totalPatients, setTotalPatients] = useState(0);
     const [listPatients, setListPatients] = useState<null | any[]>(null);
     const [searchContent, setSearchContent] = useState('');
-    const [nextPageLoad, setNextPageLoad] = useState(false);
-    const [backPageLoad, setBackPageLoad] = useState(false);
     const [loadRow, setLoadRow] = useState<number | null>(null);
 
     useEffect(() => {
@@ -56,29 +46,6 @@ export default function Patients() {
     }, [showSuccess]);
 
     useEffect(() => {
-        if (page === 1) {
-            setDisableBack(true);
-        } else {
-            setDisableBack(false);
-        }
-        if (page === maxPage) {
-            setDisableNext(true);
-        } else {
-            setDisableNext(false);
-        }
-    }, [page, maxPage]);
-
-    function handleBackPage() {
-        setBackPageLoad(true);
-        setPage(page - 1)
-    }
-
-    function handleNextPage() {
-        setNextPageLoad(true);
-        setPage(page + 1);
-    }
-
-    useEffect(() => {
         setSearchContent('');
     }, [selectedField]);
 
@@ -96,32 +63,16 @@ export default function Patients() {
         }
 
         async function Get() {
-            const data = await GetPatients(page, 6);
+            const data = await GetPatients(20);
             setListPatients(data.patients);
         }
-    }, [searchContent, page, selectedField])
+    }, [searchContent, selectedField])
 
     useEffect(() => {
         async function Get() {
-            const data = await GetPatients(page, 6);
+            const data = await GetPatients(20);
             setListPatients(data.patients);
             setTotalPatients(data.patientsSize);
-            UpdateData(data.patientsSize);
-            setNextPageLoad(false);
-            setBackPageLoad(false);
-        }
-
-        function UpdateData(patientsSize: any) {
-            const totalPags = Math.ceil(patientsSize / 6);
-            const a = (page - 1) * 6 + 1;
-            const b = page * 6;
-            setMaxPage(totalPags);
-            setShowMin(a);
-            if (b > totalPatients && page > 5) {
-                setShowMax(totalPatients);
-            } else {
-                setShowMax(b);
-            }
         }
 
         const patientsRef = ref(db, "patients");
@@ -130,18 +81,18 @@ export default function Patients() {
         })
 
         return () => unsubscribe();
-    }, [page, totalPatients]);
+    }, [totalPatients]);
 
     function handleGoPatient(patientId: any) {
         router.push(`/patients/${patientId}`);
     }
 
     return (
-        <div>
+        <div className='h-screen overflow-hidden flex-1'>
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className="p-4 ml-56 mt-2 relative">
+                <div className="p-4 ml-56 mt-2 overflow-y-hidden">
                     <div>
                         {openModalCreatePatient && (
                             <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
@@ -149,8 +100,8 @@ export default function Patients() {
                             </div>
                         )}
                     </div>
-                    <div className="mr-2 ml-2 rounded-md mt-16">
-                        <div className="flex flex-row items-center">
+                    <div className="mr-2 ml-2 rounded-md mt-16 overflow-y-hidden">
+                        <div className="flex flex-row items-center select-none">
                             <div className="flex rounded-full relative">
                                 <TbUserSearch
                                     className="absolute mt-2 ml-2 text-teal-600"
@@ -160,7 +111,7 @@ export default function Patients() {
                                     autoComplete="off"
                                     type="text"
                                     placeholder="Busca un paciente                              Por:"
-                                    className="shadow-lg pl-10 w-80 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
+                                    className="shadow-lg pl-10 w-60 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-400 bg-opacity-30 focus:border-3 focus:outline-none focus:border-teal-600 text-black text-lg"
                                     name='search'
                                     value={searchContent}
                                     onChange={(e) => {
@@ -173,8 +124,8 @@ export default function Patients() {
                                         }
                                     }}
                                 />
-                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>Nombre</button>
-                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>Dni</button>
+                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
+                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>DNI</button>
                             </div>
                             <div className='flex justify-end items-center ml-auto'>
                                 {showSuccess && (
@@ -186,18 +137,17 @@ export default function Patients() {
                                     </div>
                                 )}
                                 <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-md h-10 text-black bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold pb-1 px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
-                                    <IoAddOutline className="mt-1 mr-2" size={24} />
+                                    <BsPersonFillAdd className="mt-1 mr-2" size={24} />
                                     Agregar Paciente
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div className="overflow-y-hidden overflow-x-hidden rounded-lg border-2 border-gray-600 ml-2 mr-2 mt-4">
-                        <div className="overflow-x-auto">
-                            <table className="w-full ">
+                    <div className="flex mt-4 h-screen pb-40 overflow-y-hidden w-full ">
+                        <div className="mx-2 rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-400 bg-opacity-30">
+                            <table className="w-full select-none bg-gray-200">
                                 <thead>
                                     <tr className="bg-teal-600 select-none border-b-2 border-gray-600 text-left text-sm font-semibold uppercase tracking-widest text-white">
-                                        <th className="px-5 py-3 ">ID</th>
                                         <th className="px-5 py-3 ">Nombre</th>
                                         <th className="px-5 py-3">Dni</th>
                                         <th className="px-5 py-3">Teléfono</th>
@@ -208,12 +158,7 @@ export default function Patients() {
                                 {listPatients ? (
                                     <tbody className="text-white">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${loadRow === index ? 'bg-gradient-to-r from-teal-900  via-teal-700 to-teal-500 background-animate' : 'hover:bg-gray-900 bg-gray-400 hover:bg-opacity-30 bg-opacity-30'} border-b border-gray-600 text-sm cursor-pointer ml-auto transition duration-75`}>
-                                                <td className="px-5 whitespace-nowrap">
-                                                    <div className=" text-teal-600 items-center justify-center flex w-fit text-md font-semibold">
-                                                        <p className='mx-1 font-semibold'>{patient.id}</p>
-                                                    </div>
-                                                </td>
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${loadRow === index ? 'bg-gradient-to-r from-teal-900  via-teal-700 to-teal-500 background-animate' : 'hover:bg-gray-900 bg-gray-400 hover:bg-opacity-30 bg-opacity-30'} text-sm cursor-pointer ml-auto transition duration-75`}>
                                                 <td className="px-5 py-5 whitespace-nowrap text-black">
                                                     <p>{patient.name} {patient.lastName}</p>
                                                 </td>
@@ -239,55 +184,30 @@ export default function Patients() {
                                                 </td>
                                             </tr>
                                         ))}
+                                        {searchContent === '' ? (
+                                            <tr className='bg-teal-600 hover:bg-opacity-85 transition duration-300 cursor-pointer border-t border-gray-600 group'>
+                                                <td colSpan={5} className=''>
+                                                    <div className="text-xl py-2 font-medium flex justify-center items-center text-black group-hover:text-white transition duration-300 w-full">
+                                                        <p className='flex'>Mostrar más pacientes<TbReload size={26} className="mt-0.5 ml-1" /></p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            <tr className='bg-gray-400 bg-opacity-30 border-t border-b border-gray-600'>
+                                                <td colSpan={5} className=''>
+                                                    <div className="text-xl py-2 font-medium flex justify-center items-center text-black w-full">
+                                                        {listPatients.length > 0 ? (
+                                                            <p className='flex'>Búsqueda completada<TbUserSearch size={26} className="mt-0.5 ml-1" /></p>
+                                                        ) : (
+                                                            <p className='flex'>No hay resultados<LuSearchX size={26} className="mt-0.5 ml-1" /></p>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 ) : null}
                             </table>
-                        </div>
-                        <div className="justify-between flex items-center bg-gray-400 bg-opacity-30 px-5 py-2">
-                            {searchContent ? (
-                                <span className="text-sm text-black mr-20 select-none">
-                                    Filtrando Pacientes...
-                                </span>
-                            ) : (
-                                <span className="text-sm text-black select-none">
-                                    Mostrando {showMin}-{showMax} de {totalPatients}
-                                </span>
-                            )}
-                            <div className='flex mt-2'>
-                                {disableBack ? (
-                                    <button disabled className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Anterior</button>
-                                ) : (
-                                    <button onClick={handleBackPage} disabled={backPageLoad} className="select-none shadow-lg translate-x-6 mr-2 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
-                                        {backPageLoad ? (
-                                            <SyncLoader size={8} color="white" />
-                                        ) : (
-                                            "Anterior"
-                                        )}
-                                    </button>
-                                )}
-                                {disableNext ? (
-                                    <button disabled className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-gray-400 text-white text-md font-semibold ">Siguiente</button>
-                                ) : (
-                                    <button onClick={handleNextPage} disabled={nextPageLoad} className="select-none shadow-lg translate-x-6 h-12 w-24 rounded-full bg-teal-600 hover:bg-teal-500 text-white text-md font-semibold transition duration-200">
-                                        {nextPageLoad ? (
-                                            <SyncLoader size={8} color="white" />
-                                        ) : (
-                                            "Siguiente"
-                                        )}
-                                    </button>
-                                )}
-                                <div className="select-none overflow-hidden h-14 w-14 translate-x-9 translate-y-7 rounded-full bg-teal-600 text-white text-2xl font-bold flex justify-center  ">
-                                    {searchContent ? (
-                                        <span className="">
-                                            <MdPersonSearch className="text-white mr-2 mt-1" size={25} />
-                                        </span>
-                                    ) : (
-                                        <span className="mr-2 mt-1 shadow-lg ">
-                                            {page}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

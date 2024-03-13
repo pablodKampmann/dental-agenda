@@ -1,11 +1,11 @@
 import { db } from "../firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
 
-export async function GetPatients(page: number, patientsPerPage: number) {
+export async function GetPatients(patientsPerPage: number) {
     let patients: any[] = [];
     let patientsSize = 0;
-    const startIdx = (page - 1) * patientsPerPage;
-    const endIdx = startIdx + patientsPerPage;
+    const startIdx = 0;
+    const endIdx = patientsPerPage;
     const dbRef = ref(db, 'patients');
     const queryRef = query(dbRef, orderByChild('timestamp'), limitToLast(endIdx));
     const snapshot = await get(queryRef);
