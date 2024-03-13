@@ -55,6 +55,7 @@ export default function Page() {
         return () => unsubscribe();
     }, [router]);
 
+
     //CHAPTER
 
     useEffect(() => {
@@ -242,7 +243,7 @@ export default function Page() {
                     </div>
                     {chapterData ? (
                         <div className='flex justify-between h-screen pb-44 overflow-y-hidden w-full'>
-                            <div id="billing-target" className='mx-6 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto overflow-x-hidden bg-gray-400 bg-opacity-30'>
+                            <div id="billing-target" className='mx-6 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-400 bg-opacity-30'>
                                 <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600 relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
                                     <h1 >Aranceles </h1>
                                     {showResult === 'good-practice' && (
@@ -288,10 +289,10 @@ export default function Page() {
                                 </div>
                                 <table className="w-full select-none  ">
                                     <thead>
-                                        <tr className={`border-b-2 border-gray-600 bg-white select-none text-left text-xs font-semibold uppercase tracking-widest text-black`}>
-                                            <th className="py-3 pl-8">ID</th>
-                                            <th className="px-1 py-3 pl-5 border-r-2 border-l-2 border-gray-600 ">Nombre de Práctica</th>
-                                            <th className="px-1 pl-5 py-3 w-56">Precio</th>
+                                        <tr className='border-b-2 border-gray-600 bg-white select-none text-left text-xs font-semibold uppercase tracking-widest text-black'>
+                                            <th className="flex justify-center py-3">Número</th>
+                                            <th className="pl-2 border-r-2 border-l-2 border-gray-600 ">Nombre de Práctica</th>
+                                            <th className="pl-5 py-3 w-56">Precio</th>
                                             <th className=" px-1 border-l-2 border-gray-600 py-3">Eliminar</th>
                                         </tr>
                                     </thead>
@@ -303,40 +304,44 @@ export default function Page() {
                                                         <p className='ml-1.5 mr-1.5'>{idChapter}.{practice.id}</p>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-4 whitespace-normal text-black text-sm border-r-2 border-gray-600">
+                                                <td className="px-2 py-4 whitespace-normal text-black text-sm border-r-2 border-gray-600">
                                                     <p>{practice.name}</p>
                                                 </td>
                                                 {openPriceEdit[index] ? (
-                                                    <td className=" whitespace-nowrap w-auto text-black flex items-center px-5 bg-teal-600 transition duration-150 hover:text-white h-fit justify-between">
-                                                        <div className='flex justify-center items-center'>
-                                                            <IoLogoUsd size={24} className="text-black" />
-                                                            <input
-                                                                defaultValue={formatPrice(practice.price)}
-                                                                value={newPrice}
-                                                                onChange={(e) => {
-                                                                    const value = e.target.value.replace(/\D/g, '');
-                                                                    const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                                                                    setNewPrice(formattedValue);
-                                                                }}
-                                                                type='text'
-                                                                autoFocus
-                                                                onKeyDown={(event) => handleKeyPress(event, practice.id)}
-                                                                className='font-semibold w-52 my-4 mr-4 h-7 outline-none text-black bg-white rounded-md resize-none px-2 text-xl bg-transparent flex justify-end'>
-                                                            </input>
-                                                        </div>
-                                                        <div className='flex'>
-                                                            <FaRegCircleCheck size={28} onClick={() => handleUpdatePrice(practice.id)} className=" mr-1 cursor-pointer hover:scale-125 transition duration-150 hover:text-white  text-black " />
-                                                            <FaRegCircleXmark size={28} onClick={cancelEdit} className=" ml-1 cursor-pointer hover:scale-125 transition duration-150 hover:text-white  text-black " />
+                                                    <td className=" whitespace-nowrap w-auto text-black px-2 bg-teal-600 transition duration-150 hover:text-white">
+                                                        <div className='flex justify-between items-center'>
+                                                            <div className='flex justify-center items-center'>
+                                                                <IoLogoUsd size={24} className="text-black" />
+                                                                <input
+                                                                    defaultValue={formatPrice(practice.price)}
+                                                                    value={newPrice}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value.replace(/\D/g, '');
+                                                                        const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                                                        setNewPrice(formattedValue);
+                                                                    }}
+                                                                    type='text'
+                                                                    autoFocus
+                                                                    onKeyDown={(event) => handleKeyPress(event, practice.id)}
+                                                                    className='font-semibold w-52 my-4 mr-4 h-7 outline-none text-black bg-white rounded-md resize-none px-2 text-xl bg-transparent flex justify-end'>
+                                                                </input>
+                                                            </div>
+                                                            <div className='flex'>
+                                                                <FaRegCircleCheck size={28} onClick={() => handleUpdatePrice(practice.id)} className=" mr-1 cursor-pointer hover:scale-125 transition duration-150 hover:text-white  text-black " />
+                                                                <FaRegCircleXmark size={28} onClick={cancelEdit} className=" ml-1 cursor-pointer hover:scale-125 transition duration-150 hover:text-white  text-black " />
+                                                            </div>
                                                         </div>
                                                     </td>
                                                 ) : (
-                                                    <td onClick={() => togglePriceEdit(index)} className="px-5 whitespace-nowrap w-auto  text-black group flex items-center  hover:bg-teal-600 py-4 cursor-pointer transition duration-150 hover:text-white  justify-between">
-                                                        <p>${formatPrice(practice.price)}</p>
-                                                        <FaPen className="group-hover:text-white group-hover:duration-150 ml-2  text-black " />
+                                                    <td onClick={() => togglePriceEdit(index)} className="px-5 whitespace-nowrap w-auto  text-black group  hover:bg-teal-600 py-4 cursor-pointer transition duration-150 hover:text-white">
+                                                        <div className='flex justify-between items-center'>
+                                                            <p>${formatPrice(practice.price)}</p>
+                                                            <FaPen className="group-hover:text-white group-hover:duration-150 ml-2  text-black " />
+                                                        </div>
                                                     </td>
                                                 )}
-                                                <td className=" pl-6 whitespace-nowrap border-l-2 border-gray-600 w-6 text-black">
-                                                    <button onClick={() => { setOpenAlert('delete'); setId(practice.id); setPracticeName(practice.name); setPrice(formatPrice(practice.price)) }}><MdDelete size={24} className="hover:text-red-500 transform hover:scale-125 mt-2 ml-0.5 transition duration-150" /></button>
+                                                <td onClick={() => { setOpenAlert('delete'); setId(practice.id); setPracticeName(practice.name); setPrice(formatPrice(practice.price)) }} className=" pl-6 whitespace-nowrap border-l-2 border-gray-600 w-6 text-black hover:bg-red-700 group cursor-pointer">
+                                                    <button><MdDelete size={24} className="group-hover:scale-125 transform mt-2 ml-0.5 transition duration-150" /></button>
                                                 </td>
                                             </tr>
                                         ))}
