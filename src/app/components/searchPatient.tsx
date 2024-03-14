@@ -11,7 +11,6 @@ export async function SearchPatient(selectedField: string, searchContent: any) {
                 patientsFilter.push(value);
             }
         }
-        console.log(patientsFilter);
     }
     if (selectedField === 'name') {
         const searchContentHarc = searchContent.charAt(0).toUpperCase() + searchContent.slice(1);

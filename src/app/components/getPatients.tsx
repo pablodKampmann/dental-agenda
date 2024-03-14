@@ -1,23 +1,24 @@
 import { db } from "../firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
 
-export async function GetPatients(patientsPerPage: number) {
+export async function GetPatients(quantity: number) {
     let patients: any[] = [];
-    let patientsSize = 0;
+    let full = false;
     const startIdx = 0;
-    const endIdx = patientsPerPage;
+    const endIdx = quantity;
     const dbRef = ref(db, 'patients');
     const queryRef = query(dbRef, orderByChild('timestamp'), limitToLast(endIdx));
     const snapshot = await get(queryRef);
-    const snapshotSize = await get(dbRef);
     if (snapshot.exists()) {
-        patientsSize = snapshotSize.size;
         const patientsData = Object.values(snapshot.val());
         patientsData.reverse();
         patients = patientsData.slice(startIdx, endIdx);
+        if (patients.length < quantity) {
+            full = true;
+        }
     }
     return {
         patients: patients,
-        patientsSize: patientsSize
+        full: full
     };
 }

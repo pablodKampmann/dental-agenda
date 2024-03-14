@@ -157,7 +157,10 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Núm. Teléfono</label>
+                                <div className='flex'>
+                                    <label className="text-black select-none text-lg ml-1">Núm. Teléfono</label>
+                                    <p className='text-red-500 ml-1 text-lg'>*</p>
+                                </div>
                                 <div className="relative text-gray-400">
                                     <PhoneInput
                                         international
