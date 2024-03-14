@@ -2,15 +2,14 @@ import Link from 'next/link'
 import React, { useState, useEffect, useRef } from 'react';
 import { PiIdentificationBadgeDuotone } from 'react-icons/pi';
 import { TbPhone } from 'react-icons/tb';
-import { MdLocationPin } from 'react-icons/md';
+import { MdLocationPin, MdOutlineMailOutline } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
-import { FaHandHoldingMedical, FaFileMedical } from 'react-icons/fa';
-import { AiOutlineFieldNumber, AiFillEdit } from 'react-icons/ai';
 import { HiMiniPencilSquare } from 'react-icons/hi2';
 import { setObservations } from "./../components/setObservations";
 import { getObservations } from "./../components/getObservations";
-import { PulseLoader, GridLoader } from "react-spinners";
 import { usePathname } from 'next/navigation'
+import { FaMale, FaFemale } from "react-icons/fa";
+
 interface ModalSettProps {
     patient: any | null;
 }
@@ -98,52 +97,65 @@ export function PatientRecord({ patient }: ModalSettProps) {
 
     return (
         <div className='flex-col mt-2'>
-            <div className='border-2 rounded-lg border-gray-600 bg-gray-400 bg-opacity-30 shadow-lg'>
-                <div className='flex mb-2'>
-                    <PiIdentificationBadgeDuotone className="text-gray-600 mt-2" size={120} />
-                    <div className='flex-col mt-4'>
+            <div className='flex justify-center items-center py-1.5 border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg'>
+                <PiIdentificationBadgeDuotone className="text-gray-600" size={100} />
+                <div className="flex">
+                    <div className="flex-col">
                         <div className='flex justify-start items-center'>
-                            <div className='bg-teal-600 rounded-full w-8 h-8 flex items-center justify-center'>
-                                <p className='font-bold text-lg text-teal-900'>{patient.id}</p>
+                            <div className='bg-teal-600 rounded-full w-6 h-6 flex items-center justify-center'>
+                                <p className='font-bold text-md text-teal-900'>{patient.id}</p>
                             </div>
-                            <h1 className='ml-2 text-3xl font-bold text-teal-600'>{patient.name} {patient.lastName}</h1>
-                            <p className='ml-2 mt-1 text-md text-black'>Edad: {getAge(patient.birthDate)},</p>
+                            <h1 className='ml-2 text-2xl font-bold text-teal-600'>{patient.name} {patient.lastName}</h1>
+                            <p className='ml-2 mt-1.5 text-sm text-black'>Edad: {getAge(patient.birthDate)},</p>
                             {patient.gender === 'male' ? (
-                                <p className='ml-2 mt-1 text-md text-black'>Género: Hombre</p>
+                                <FaMale className="text-black" size={22} />
                             ) : (
-                                <p className='ml-2 mt-1 text-md text-black'>Género: Mujer</p>
+                                <FaFemale className="text-black" size={22} />
                             )}
                         </div>
-                        <div className='mt-2 flex justify-start items-center'>
-                            <LiaIdCardSolid size={26} className='shadow-2xl text-green-600' />
-                            <p className='ml-1 text-sm text-black'>{patient.dni}</p>
+                        <div className='mt-1 flex justify-start items-center text-sm'>
+                            <LiaIdCardSolid size={26} className=' text-green-600' />
+                            <p className='ml-1 text-black'>{patient.dni}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
-                            <TbPhone size={20} className='ml-2 shadow-2xl text-yellow-500' />
+                            <MdLocationPin size={20} className='ml-2  text-red-600' />
+                            <p className='ml-1 text-black'>{patient.address}</p>
+                        </div>
+                        <div className='mt-1 flex justify-start items-center'>
+                            <TbPhone size={20} className='  text-yellow-500' />
                             <p className='ml-1 text-sm text-black'>{patient.num}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
-                            <MdLocationPin size={20} className='ml-2 shadow-2xl text-red-600' />
-                            <p className='ml-1 text-sm text-black'>{patient.address}</p>
-                        </div>
-                        <div className='mt-2 flex justify-start items-center'>
-                            <FaHandHoldingMedical size={20} className='shadow-2xl text-blue-500' />
-                            <p className='ml-2 text-sm text-black'>{patient.insurance}</p>
-                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
-                            <FaFileMedical size={20} className='ml-2 shadow-2xl text-pink-500' />
-                            {patient.insurance === 'Particular' ? (
-                                <p className='ml-1 text-sm text-black'>-</p>
-                            ) : (
-                                <p className='ml-1 text-sm text-black'>{patient.plan}</p>
-                            )}
-                            <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
-                            <AiOutlineFieldNumber size={28} className='ml-2 shadow-2xl text-purple-400' />
-                            {patient.insurance === 'Particular' ? (
-                                <p className='ml-1 text-sm text-black'>-</p>
-                            ) : (
-                                <p className='ml-1 text-sm text-black'>{patient.affiliateNum}</p>
-                            )}
+                            <MdOutlineMailOutline size={20} className='ml-2  text-blue-500' />
+                            <p className='ml-1 text-sm text-black'>{patient.email}</p>
                         </div>
                     </div>
-                    <div className='flex ml-auto'>
+                    <div className=' flex justify-start items-center'>
+                        <hr className='mr-2 ml-4 border-2 rounded-full border-teal-600 h-20' />
+                        <div className='flex-col'>
+                            <div className='flex justify-start items-center'>
+                                <h2 className='text-black'>Obra social:</h2>
+                                <p className='ml-1 text-sm text-black font-semibold'>{patient.insurance}</p>
+                            </div>
+                            <div className='flex justify-start items-center mt-2'>
+                                <h2 className='text-black'>Plan:</h2>
+                                {patient.insurance === 'Particular' ? (
+                                    <p className='ml-1 text-sm text-black font-semibold'>-</p>
+                                ) : (
+                                    <p className='ml-1 text-sm text-black font-semibold'>{patient.plan}</p>
+                                )}
+                            </div>
+                            <div className='flex justify-start items-center mt-2'>
+                                <h2 className='text-black'>Núm.Afiliado:</h2>
+                                {patient.insurance === 'Particular' ? (
+                                    <p className='ml-1 text-sm text-black font-semibold'>-</p>
+                                ) : (
+                                    <p className='ml-1 text-sm text-black font-semibold'>{patient.affiliateNum}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className='flex ml-auto'>
+                    {/*
                         {loadObservations ? (
                             <div className='flex items-center mr-16 mt-2'>
                                 <GridLoader color='teal' />
@@ -184,34 +196,25 @@ export function PatientRecord({ patient }: ModalSettProps) {
                                 }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-gray-400 bg-opacity-70 text-black p-1 cursor-default border-gray-600 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-600 text-sm'></textarea>
                             </div>
                         )}
-                        <div className='flex-col mt-2'>
-                            <HiMiniPencilSquare className="text-gray-600 ml-auto mr-7 mt-2" size={70} />
-                            <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-2 mr-5 select-none cursor-pointer transition duration-150'>DAR CITA</h1>
+                        */}
+                    <div className='flex justify-center items-center'>
+                        <div className='flex-col mr-4'>
+                            <HiMiniPencilSquare className="text-gray-600 ml-3" size={56} />
+                            <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-1.5 select-none cursor-pointer transition duration-150'>DAR CITA</h1>
                         </div>
                     </div>
                 </div>
             </div>
             <div className='flex justify-center items-center mb-2'>
                 <Link prefetch={true} href={`/patients/${patient.id}/`}>
-                    <button onClick={() => setSelectedField('modify')} className={`${selectedField === 'modify' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-b-2 border-x-2 focus:outline-none border-gray-600 text-md font-semibold rounded-bl-lg transition duration-300 px-3 select-none`}>Modif. Datos</button>
+                    <button onClick={() => setSelectedField('modify')} className={`${selectedField === 'modify' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-b-2 border-x-2 focus:outline-none border-gray-600 text-sm font-semibold rounded-bl-lg transition duration-300 px-3 select-none`}>Modificar Datos</button>
                 </Link>
                 <Link prefetch={true} href={`/patients/${patient.id}/clinicHistory`}>
-                    <button onClick={() => setSelectedField('clinicHistory')} className={`${selectedField === 'clinicHistory' ? 'bg-teal-600 border-gray-200' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black  '} shadow-lg border-x-2 border-b-2 py-1 focus:outline-none border-gray-600 text-md font-semibold transition duration-300 px-3 select-none`}>Historia Clinica</button>
+                    <button onClick={() => setSelectedField('clinicHistory')} className={`${selectedField === 'clinicHistory' ? 'bg-teal-600 border-gray-200' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black  '} shadow-lg border-x-2 border-b-2 py-1 focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Historia Clinica</button>
                 </Link>
-                <Link prefetch={true} href={`/patients/${patient.id}/billing`}>
-                    <button onClick={() => setSelectedField('billing')} className={`${selectedField === 'billing' ? 'bg-teal-600 border-gray-200' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} shadow-lg border-x-2 py-1 border-b-2 focus:outline-none border-gray-600 text-md font-semibold transition duration-300 px-3 select-none`}>Facturación</button>
-                </Link>
+
                 <Link prefetch={true} href={`/patients/${patient.id}/odontogram`}>
-                    <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black'} shadow-lg py-1 border-b-2 border-x-2 focus:outline-none border-gray-600 text-md font-semibold transition duration-300 px-3 select-none`}>Odontograma</button>
-                </Link>
-                <Link prefetch={true} href={`/patients/${patient.id}/rx`}>
-                    <button onClick={() => setSelectedField('rx')} className={`${selectedField === 'rx' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} shadow-lg py-1 border-x-2 border-b-2 focus:outline-none border-gray-600  text-md font-semibold transition duration-300 px-3 select-none`}>Rx y Doc.</button>
-                </Link>
-                <Link prefetch={true} href={`/patients/${patient.id}/recipes`}>
-                    <button onClick={() => setSelectedField('recipes')} className={`${selectedField === 'recipes' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} shadow-lg py-1 border-b-2 border-x-2 focus:outline-none border-gray-600  text-md font-semibold transition duration-300 px-3 select-none`}>Recetas</button>
-                </Link>
-                <Link prefetch={true} href={`/patients/${patient.id}/consents`}>
-                    <button onClick={() => setSelectedField('consents')} className={`${selectedField === 'consents' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-400 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} shadow-lg py-1 border-b-2 border-x-2 focus:outline-none border-gray-600 text-md font-semibold rounded-br-lg transition duration-300 px-3 select-none`}>Consentimientos</button>
+                    <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black'} shadow-lg py-1 border-b-2 border-x-2 rounded-br-lg focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Odontograma</button>
                 </Link>
             </div>
         </div >
