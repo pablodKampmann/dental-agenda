@@ -1,14 +1,12 @@
 import Link from 'next/link'
-import React, { useState, useEffect, useRef } from 'react';
-import { PiIdentificationBadgeDuotone } from 'react-icons/pi';
+import React, { useState, useEffect } from 'react';
 import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin, MdOutlineMailOutline } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
 import { HiMiniPencilSquare } from 'react-icons/hi2';
-import { setObservations } from "./../components/setObservations";
-import { getObservations } from "./../components/getObservations";
 import { usePathname } from 'next/navigation'
 import { FaMale, FaFemale } from "react-icons/fa";
+import { HiOutlineIdentification } from "react-icons/hi";
 
 interface ModalSettProps {
     patient: any | null;
@@ -16,14 +14,7 @@ interface ModalSettProps {
 
 export function PatientRecord({ patient }: ModalSettProps) {
     const [selectedField, setSelectedField] = useState<string | null>(null);
-    const [initialContent, setInitialContent] = useState<string | null>(null);
-    const [observationsContent, setObservationsContent] = useState('');
-    const [saveButton, setSaveButton] = useState(false);
-    const [load, setLoad] = useState(false);
-    const [loadObservations, setLoadObservations] = useState(true);
-    const [showCancel, setShowCancel] = useState(false);
     const pathname = usePathname()
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     function getAge(date: any) {
         var today = new Date();
@@ -63,42 +54,10 @@ export function PatientRecord({ patient }: ModalSettProps) {
         }
     }, [pathname]);
 
-    useEffect(() => {
-        async function get() {
-            const result = await getObservations(patient.id)
-            setObservationsContent(result);
-            setInitialContent(result);
-            setTimeout(() => {
-                setLoadObservations(false);
-
-            }, 1500);
-        }
-
-        get();
-    }, []);
-
-    useEffect(() => {
-        if (initialContent === observationsContent) {
-            setSaveButton(false);
-        } else {
-            setSaveButton(true);
-        }
-    }, [observationsContent]);
-
-    async function handleSetObservations() {
-        setLoad(true);
-        await setObservations(patient.id, observationsContent);
-        setInitialContent(observationsContent);
-        setTimeout(() => {
-            setSaveButton(false);
-            setLoad(false);
-        }, 1000);
-    }
-
     return (
         <div className='flex-col mt-2'>
-            <div className='flex justify-center items-center py-1.5 border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg'>
-                <PiIdentificationBadgeDuotone className="text-gray-600" size={100} />
+            <div className='flex justify-center px-1 items-center border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg'>
+                <HiOutlineIdentification className="text-gray-600 mr-1" size={110} />
                 <div className="flex">
                     <div className="flex-col">
                         <div className='flex justify-start items-center'>
@@ -155,48 +114,6 @@ export function PatientRecord({ patient }: ModalSettProps) {
                     </div>
                 </div>
                 <div className='flex ml-auto'>
-                    {/*
-                        {loadObservations ? (
-                            <div className='flex items-center mr-16 mt-2'>
-                                <GridLoader color='teal' />
-                            </div>
-                        ) : (
-                            <div className='flex mr-3 mt-3 mb-1 justify-between'>
-                                <div>
-                                    <div className='flex justify-center mr-3 border-black border-b-2 border-t-2 rounded-md px-1 py-0.5 h-fit mt-3.5'>
-                                        <AiFillEdit className="mt-0.5 text-black" size={18} />
-                                        <h1 className='ml-1 select-none text-sm text-black font-medium'>OBSERVACIONES:</h1>
-                                    </div>
-                                    {saveButton ? (
-                                        <div className='flex justify-center items-center mt-4 mr-1.5'>
-                                            <button onClick={handleSetObservations} className='select-none p-2 rounded-xl text-teal-900 text-medium hover:scale-110 transition duration-150 font-medium bg-gradient-to-r from-teal-100 border-2 border-gray-600 border-opacity-50 mr-1 via-teal-600 to-gray-100 background-animate'>
-                                                {load ? (
-                                                    <div className='flex justify-center items-center py-0.5 px-1'>
-                                                        <PulseLoader size={14} color='white' />
-                                                    </div>
-                                                ) : (
-                                                    "Guardar Cambios"
-                                                )}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className='flex justify-center items-center mt-4 mr-1.5'>
-                                            {showCancel ? (
-                                                <button onClick={() => setShowCancel(false)} className='select-none p-2 rounded-xl text-teal-900 text-medium hover:scale-110 transition duration-150 font-medium bg-gradient-to-r from-teal-100 via-teal-500 to-teal-100 background-animate'>Cancelar</button>
-                                            ) : (
-                                                <button disabled className='select-none p-2 rounded-xl text-white text-medium bg-gray-500 bg-opacity-40 text-opacity-10 font-medium'>Guardar Cambios</button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <textarea ref={textareaRef} onKeyDown={(event) => {
-                                    if (event.key === "Escape") {
-                                        textareaRef.current?.blur();
-                                    };
-                                }} value={observationsContent} onBlur={() => setShowCancel(false)} onFocus={() => setShowCancel(true)} onChange={(e) => setObservationsContent(e.target.value)} placeholder='Vacío' className='resize-none bg-gray-400 bg-opacity-70 text-black p-1 cursor-default border-gray-600 border-2 w-68 h-full rounded-xl focus:outline-none focus:border-teal-600 text-sm'></textarea>
-                            </div>
-                        )}
-                        */}
                     <div className='flex justify-center items-center'>
                         <div className='flex-col mr-4'>
                             <HiMiniPencilSquare className="text-gray-600 ml-3" size={56} />
@@ -212,7 +129,6 @@ export function PatientRecord({ patient }: ModalSettProps) {
                 <Link prefetch={true} href={`/patients/${patient.id}/clinicHistory`}>
                     <button onClick={() => setSelectedField('clinicHistory')} className={`${selectedField === 'clinicHistory' ? 'bg-teal-600 border-gray-200' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black  '} shadow-lg border-x-2 border-b-2 py-1 focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Historia Clinica</button>
                 </Link>
-
                 <Link prefetch={true} href={`/patients/${patient.id}/odontogram`}>
                     <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black'} shadow-lg py-1 border-b-2 border-x-2 rounded-br-lg focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Odontograma</button>
                 </Link>

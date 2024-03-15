@@ -38,7 +38,6 @@ export default function PatientId() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [openInfo, setOpenInfo] = useState(false);
   const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
-  const [selectedDate, setSelectedDate] = useState(dayjs(patient?.birthDate, 'DD/MM/YYYY'));
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
 
@@ -46,7 +45,8 @@ export default function PatientId() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && patient) {
         setIsLoad(false);
-        setSelectedDate(dayjs(patient.birthDate, 'DD/MM/YYYY'));
+        const date = dayjs(patient.birthDate, "DD/MM/YYYY");
+        setDateFormatted(date)
       } else if (!user) {
         router.push("/notSign");
       }
@@ -56,8 +56,6 @@ export default function PatientId() {
   }, [router, patient]);
 
   async function submitChanges(changes: string, table: string, category: string) {
-    console.log();
-    
     setLoadingCategory(category);
     setRowModify('');
     setHovered('')
@@ -88,18 +86,10 @@ export default function PatientId() {
     if (date) {
       const formattedDate = dayjs(date.$d);
       const formattedDateString = formattedDate.format('DD/MM/YYYY');
-      setDateFormatted(formattedDateString)      
+      setChanges(formattedDateString)
     }
 
   }, [date]);
-
-  useEffect(() => {
-    if (patient) {
-      const dateFormatted = dayjs(patient.birthDate, "DD/MM/YYYY");
-      //setChanges(dateFormatted)
-    }
-
-  }, [patient]);
 
   useEffect(() => {
     async function get() {
@@ -131,8 +121,6 @@ export default function PatientId() {
       setRowModify('');
     }
   }
-
-
 
   if (id !== null) {
     return (
@@ -264,16 +252,11 @@ export default function PatientId() {
                         }} onMouseEnter={() => setHovered('birthDate')} onMouseLeave={() => setHovered('')} className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === 'birthDate' || rowModify === 'birthDate' ? '' : 'border-transparent'} ${rowModify === 'birthDate' ? 'border-teal-600' : ''}`}>
                           <h1 className='text-md text-black font-semibold'>Nacimiento:</h1>
                           {rowModify === 'birthDate' ? (
-                            <div>
-                              {/**
-                              <input type="datetime" onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'basic')} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.birthDate} className="rounded-md text-black bg-teal-600 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
-                               */}
-                              <div className="relative text-gray-400 ml-2 mr-2">
-                                <LocalizationProvider dateAdapter={AdapterDayjs} >
-                                  <DatePicker value={date} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }}
-                                    className="  px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-30 text-black" />
-                                </LocalizationProvider>
-                              </div>
+                            <div className="relative text-gray-400 ml-2 mr-2" onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'basic')}>
+                              <LocalizationProvider dateAdapter={AdapterDayjs}  >
+                                <DatePicker defaultValue={dateFormatted} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }}
+                                  className="  px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-teal-600 bg-opacity-20 text-black" />
+                              </LocalizationProvider>
                             </div>
                           ) : (
                             <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.birthDate}</p>
