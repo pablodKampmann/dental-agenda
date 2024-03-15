@@ -57,12 +57,12 @@ export function PatientRecord({ patient }: ModalSettProps) {
     return (
         <div className='flex-col mt-2'>
             <div className='flex justify-center px-1 items-center border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg'>
-                <HiOutlineIdentification className="text-gray-600 mr-1" size={110} />
+                <HiOutlineIdentification className="text-teal-600 mr-1" size={110} />
                 <div className="flex">
                     <div className="flex-col">
                         <div className='flex justify-start items-center'>
                             <div className='bg-teal-600 rounded-full w-6 h-6 flex items-center justify-center'>
-                                <p className='font-bold text-md text-teal-900'>{patient.id}</p>
+                                <p className='font-bold text-sm text-teal-950'>{patient.id}</p>
                             </div>
                             <h1 className='ml-2 text-2xl font-bold text-teal-600'>{patient.name} {patient.lastName}</h1>
                             <p className='ml-2 mt-1.5 text-sm text-black'>Edad: {getAge(patient.birthDate)},</p>

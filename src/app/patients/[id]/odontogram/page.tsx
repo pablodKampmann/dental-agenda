@@ -8,6 +8,7 @@ import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patientRecord";
+import Image from 'next/image'
 
 export default function Odontogram() {
     const router = useRouter()
@@ -57,17 +58,17 @@ export default function Odontogram() {
                 ) : (
                     <div className='ml-2 p-4 mt-16 mr-2 relative'>
                         <PatientRecord patient={patient} />
-
-                        <div className="border-4 border-teal-500 mt-8 rounded-3xl ml-1 mr-1 bg-teal-700">
-                            <div className="bg-whte py-8 px-20 rounded-3xl flex justify-center items-center">
-                                <div className="flex items-center justify-center w-full">
-                                    <polygon points="0,0 	20,0 	15,5 	5,5" fill="white" stroke="white" stroke-width="0.5" id="T" opacity="1"></polygon>
-                                    <polygon points="5,15 	15,15 	20,20 	0,20" fill="white" stroke="white" stroke-width="0.5" id="B" opacity="1"></polygon>
-                                    <polygon points="15,5 	20,0 	20,20 	15,15" fill="white" stroke="white" stroke-width="0.5" id="R" opacity="1"></polygon>
-                                    <polygon points="0,0 	5,5 	5,15 	0,20" fill="white" stroke="white" stroke-width="0.5" id="L" opacity="1"></polygon>
-                                    <polygon points="5,5 	15,5 	15,15 	5,15" fill="white" stroke="white" stroke-width="0.5" id="C" opacity="1"></polygon>
-                                    <text x="6" y="30" stroke="navy" fill="navy" stroke-width="0.1" className="font-size: 6pt;font-weight:normal">18</text>
-                                </div>
+                        <div className="justify-center items-center border-2 select-none mt-8 border-gray-600 rounded-lg shadow-lg">
+                            <h1 className="bg-teal-600 text-xl text-center rounded-t-md border-b-2 border-gray-600">ODONTOGRAMA</h1>
+                            <div className="p-2">
+                                <Image
+                                    src="/46cd610bbe30d71e851afa6c9a9f2e8a.svg"
+                                    width={40}
+                                    height={40}
+                                    alt="Picture of the author"
+                                    quality={100}
+                                    className="hover:bg-teal-300 hover:bg-opacity-30 cursor-pointer"
+                                />
                             </div>
                         </div>
                     </div>
