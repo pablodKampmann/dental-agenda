@@ -37,6 +37,11 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
         Get()
     }, [])
 
+    useEffect(() => {
+        console.log(date);
+        
+    }, [date])
+
     async function HandleSubmit(e: any) {
         e.preventDefault();
         setLoading(true);
