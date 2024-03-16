@@ -147,7 +147,7 @@ export default function PatientId() {
                   ) : null}
                 </div>
                 <div className='flex'>
-                  <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg w-1/2 relative'>
+                  <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-1/2 relative'>
                     <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
                       {loadingCategory === 'basic' ? (
                         <div>
@@ -303,7 +303,7 @@ export default function PatientId() {
                     </div>
                   </div>
                   <div className='w-1/2'>
-                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg w-full relative'>
+                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-full relative'>
                       <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
                         {loadingCategory === 'contact' ? (
                           <div>
@@ -366,7 +366,7 @@ export default function PatientId() {
                         </div>
                       </div>
                     </div>
-                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg w-full mt-4 relative'>
+                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-full mt-4 relative'>
                       <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
                         {loadingCategory === 'medic' ? (
                           <div>
@@ -473,7 +473,7 @@ export default function PatientId() {
                   </div>
                 </div>
                 <div className="flex justify-center">
-                  <div onClick={() => setOpenAlert(true)} className='select-none mt-4 border-2 rounded-lg border-red-600 bg-gray-200 bg-opacity-30 shadow-lg w-full relative text-center transition duration-200 cursor-pointer hover:text-white hover:bg-red-900 border-opacity-30 hover:bg-opacity-70 px-2 py-1 text-black text-xl font-medium'>
+                  <div onClick={() => setOpenAlert(true)} className='select-none mt-4 border-2 rounded-lg border-red-600 bg-gray-300 bg-opacity-30 shadow-lg w-full relative text-center transition duration-200 cursor-pointer hover:text-white hover:bg-red-900 border-opacity-30 hover:bg-opacity-70 px-2 py-1 text-black text-xl font-medium'>
                     Eliminar Paciente Permanentemente
                   </div>
                 </div>

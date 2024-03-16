@@ -56,7 +56,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
 
     return (
         <div className='flex-col mt-2'>
-            <div className='flex justify-center px-1 items-center border-2 rounded-lg border-gray-600 bg-gray-200 bg-opacity-30 shadow-lg'>
+            <div className='flex justify-center px-1 items-center border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg'>
                 <HiOutlineIdentification className="text-teal-600 mr-1" size={110} />
                 <div className="flex">
                     <div className="flex-col">
@@ -124,13 +124,13 @@ export function PatientRecord({ patient }: ModalSettProps) {
             </div>
             <div className='flex justify-center items-center mb-2'>
                 <Link prefetch={true} href={`/patients/${patient.id}/`}>
-                    <button onClick={() => setSelectedField('modify')} className={`${selectedField === 'modify' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-b-2 border-x-2 focus:outline-none border-gray-600 text-sm font-semibold rounded-bl-lg transition duration-300 px-3 select-none`}>Modificar Datos</button>
+                    <button onClick={() => setSelectedField('modify')} className={`${selectedField === 'modify' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-b-2 border-x-2 focus:outline-none border-gray-600 text-sm font-semibold rounded-bl-lg transition duration-300 px-3 select-none`}>Modificar Datos</button>
                 </Link>
                 <Link prefetch={true} href={`/patients/${patient.id}/clinicHistory`}>
-                    <button onClick={() => setSelectedField('clinicHistory')} className={`${selectedField === 'clinicHistory' ? 'bg-teal-600 border-gray-200' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black  '} shadow-lg border-x-2 border-b-2 py-1 focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Historia Clinica</button>
+                    <button onClick={() => setSelectedField('clinicHistory')} className={`${selectedField === 'clinicHistory' ? 'bg-teal-600 border-gray-200' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black  '} shadow-lg border-x-2 border-b-2 py-1 focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Historia Clinica</button>
                 </Link>
                 <Link prefetch={true} href={`/patients/${patient.id}/odontogram`}>
-                    <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black'} shadow-lg py-1 border-b-2 border-x-2 rounded-br-lg focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Odontograma</button>
+                    <button onClick={() => setSelectedField('odontogram')} className={`${selectedField === 'odontogram' ? 'bg-teal-600 border-gray-200 ' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black'} shadow-lg py-1 border-b-2 border-x-2 rounded-br-lg focus:outline-none border-gray-600 text-sm font-semibold transition duration-300 px-3 select-none`}>Odontograma</button>
                 </Link>
             </div>
         </div >

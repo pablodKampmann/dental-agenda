@@ -117,7 +117,7 @@ export default function Patients() {
                                     autoComplete="off"
                                     type="text"
                                     placeholder="Busca un paciente           Por:"
-                                    className="shadow-lg pl-10 w-60 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-200 bg-opacity-30 focus:border-3 focus:outline-none text-black text-sm"
+                                    className="shadow-lg pl-10 w-60 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-300 bg-opacity-30 focus:border-3 focus:outline-none text-black text-sm"
                                     name='search'
                                     value={searchContent}
                                     onChange={(e) => {
@@ -130,8 +130,8 @@ export default function Patients() {
                                         }
                                     }}
                                 />
-                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
-                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-200 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>DNI</button>
+                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
+                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>DNI</button>
                                 {loadRow !== null ? (
                                     <div className='ml-4 flex justify-center items-center'>
                                         <ClipLoader size={28} />
@@ -143,7 +143,7 @@ export default function Patients() {
                                 )}
                             </div>
                             <div className='flex justify-end items-center ml-auto'>
-                                <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-lg h-10 text-black bg-gray-200 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
+                                <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
                                     <BsPersonFillAdd className=" mr-2" size={24} />
                                     Agregar Paciente
                                 </button>
@@ -151,7 +151,7 @@ export default function Patients() {
                         </div>
                     </div>
                     <div className="flex mt-6 h-screen pb-44  overflow-y-hidden w-full ">
-                        <div className="mx-2 rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-200 bg-opacity-30 overflow-x-hidden shadow-lg">
+                        <div className="mx-2 rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg">
                             <table className="w-full select-none ">
                                 <thead className='relative'>
                                     {showSuccess && (
@@ -171,9 +171,9 @@ export default function Patients() {
                                     </tr>
                                 </thead>
                                 {listPatients ? (
-                                    <tbody className="text-white bg-transparent ">
+                                    <tbody className="text-white  ">
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${loadRow === index ? 'bg-teal-600' : 'hover:bg-gray-900 bg-gray-200 hover:bg-opacity-30 bg-opacity-30'} text-sm cursor-pointer ml-auto transition duration-75`}>
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${loadRow === index ? 'bg-teal-600' : 'hover:bg-gray-900 hover:bg-opacity-30 bg-opacity-30'} text-sm cursor-pointer ml-auto transition duration-75`}>
                                                 <td className="px-5 py-5 whitespace-nowrap text-black">
                                                     <p>{patient.name} {patient.lastName}</p>
                                                 </td>

@@ -16,7 +16,7 @@ import { ModalCreatePatient } from './components/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { BiRightArrow, BiLeftArrow, BiError } from "react-icons/bi";
+import { BiRightArrow, BiLeftArrow, BiError, BiSolidBookAdd } from "react-icons/bi";
 import { MdUpdate, MdAddCircleOutline, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { getReasonsOptions } from "./components/getReasonsOptions";
@@ -456,7 +456,7 @@ export default function Page() {
         <Loading />
       ) : (
         <div className='ml-2 mr-2 p-4 mt-16'>
-          <div>
+          <div className='mt-2'>
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
@@ -516,21 +516,21 @@ export default function Page() {
               </div>
             )}
           </div>
-          <div className='mb-4 flex justify-between items-center '>
+          <div className='mb-6 flex justify-between items-center '>
             <div className='flex justify-center items-center'>
               {isToday(today) ? (
                 <div className=' border-2 bg-teal-600 border-gray-600 pr-2 pl-1 transition duration-150 rounded-lg  py-0.5 mr-2 '>
                   <h1 className='flex font-bold text-lg text-white select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               ) : (
-                <div onClick={() => { setToday(new Date()); setOpenCalendar(false); setCalendarValue(dayjs(new Date())) }} className='cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-400 border-2  border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
+                <div onClick={() => { setToday(new Date()); setOpenCalendar(false); setCalendarValue(dayjs(new Date())) }} className='cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-300 border-2  border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg  py-0.5 mr-2 '>
                   <h1 className='flex font-bold text-lg  select-none '><MdUpdate size={24} className="mt-0.5 mr-2" />HOY</h1>
                 </div>
               )}
-              <BiLeftArrow onClick={dayBack} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer mr-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <BiLeftArrow onClick={dayBack} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer mr-2 bg-gray-300 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
               <div ref={calendarRef} className='relative'>
-                <div onClick={() => setOpenCalendar(!openCalendar)} className={`${openCalendar ? 'bg-teal-600 text-white' : 'text-black bg-gray-400 bg-opacity-30'} transition hover:text-white duration-150 hover:bg-teal-600 cursor-pointer  border-2 border-gray-600  px-3 rounded-lg  py-0.5 `}>
-                  <h1 className='flex font-bold text-lg  select-none'><BsCalendar2Date size={20} className="mt-1 mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
+                <div onClick={() => setOpenCalendar(!openCalendar)} className={`${openCalendar ? 'bg-teal-600 text-white' : 'text-black bg-gray-300 bg-opacity-30'} transition hover:text-white duration-150 hover:bg-teal-600 cursor-pointer   border-2 border-gray-600  px-3 rounded-lg  `}>
+                  <h1 className='flex justify-center items-center font-semibold text-md h-8  select-none'><BsCalendar2Date size={20} className=" mr-2" /> {dayName} {dayNum} de {monthName} ({date})</h1>
                 </div>
                 {openCalendar && (
                   <div className=' select-none absolute bg-white text-black border-2 border-gray-600 rounded-lg top-10 z-10'>
@@ -546,22 +546,25 @@ export default function Page() {
                   </div>
                 )}
               </div>
-              <BiRightArrow onClick={dayNext} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer ml-2 bg-gray-400 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
+              <BiRightArrow onClick={dayNext} size={34} className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer ml-2 bg-gray-300 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1" />
               {isLoadAppoints && (
                 <ClipLoader className='ml-4' />
               )}
             </div>
-            <button className='shadow-xl mt-2 h-11 bg-gray-400 bg-opacity-30 hover:bg-teal-600 hover:border-b-gray-600 group border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200' onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null); setReason(null) }}>
+            <button onClick={() => { setShowForm(!showForm); setPatient(null); setSearchContent(''); setAppointmentDate(null); setReason(null) }} type="button" className="shadow-lg h-10 group text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
               {showForm ? (
                 <p className='text-xl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 group-hover:text-white'><ImCancelCircle size={20} className="mr-2 mt-1 font-semibold" /> Cancelar</p>
               ) : (
-                <p className='md:text-sm lg:text-xl text-black group-hover:text-white font-semibold first-letter:transition duration-200 text-center flex px-4 select-none'><MdAddCircleOutline size={24} className="mr-2 mt-0.5 font-semibold" /> Agregar Turno</p>
+                <div className='flex'>
+                  <BiSolidBookAdd className=" mr-2 mt-1" size={24} />
+                  Agregar Turno
+                </div>
               )}
             </button>
           </div>
           <div className='flex justify-between h-screen pb-44 overflow-y-hidden w-full'>
             <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>A <br /> G <br />E <br />N <br />D <br />A</h1>
-            <div className='bg-gray-400 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
+            <div className='bg-gray-300 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
               <table>
                 <tbody className='text-black '>
                   {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
@@ -570,10 +573,10 @@ export default function Page() {
                         {time}
                       </td>
                       <td
-                        className={`${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-white ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
-                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                          ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                          ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-400 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                        className={`${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-teal-600 bg-opacity-20 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
+                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${index === array.length - 1 ? '' : 'border-b '}
                           select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
                         onClick={(e) => handleCliclRow(time, e)}
@@ -872,14 +875,14 @@ export default function Page() {
             ) : (
               <div className='w-[fit] h-full flex overflow-x-hidden '>
                 <div className='flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden '>
-                  <div className='w-full  justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg  shadow-xl'>
+                  <div className='w-full  justify-center flex flex-col select-none bg-gray-200 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg  shadow-xl'>
                     <h1 className='text-center bg-teal-600 rounded-t-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Calendario</h1>
                     <div className='flex justify-center '>
                       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
                         <DemoContainer components={['DateCalendar']}>
                           <DateCalendar
                             loading={isLoadingCalendar}
-                            className='bg-gray-100 bg-opacity-30 rounded-lg '
+                            className='bg-transparent rounded-lg '
                             value={calendarValue}
                             onChange={(newValue) => setCalendarValue(newValue)}
                             views={['day', 'year']}

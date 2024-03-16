@@ -227,25 +227,25 @@ export default function Page() {
                         <div className='flex justify-between select-none'>
                             <div className='flex items-center '>
                                 <select value={chapter} onChange={(event) => { setChapter(event.target.value); }}
-                                    className=' bg-gray-200 bg-opacity-30 h-10 cursor-pointer text-lg font-semibold shadow-lg outline-none border-2 uppercase text-black border-gray-600 w-40 py-1.5 rounded-lg'>
+                                    className=' bg-gray-300 bg-opacity-30 h-10 cursor-pointer text-lg font-semibold shadow-lg outline-none border-2 uppercase text-black border-gray-600 w-40 py-1.5 rounded-lg'>
                                     <option value={"chapterI"} selected>Capitulo I</option>
                                     <option value={"chapterII"} selected>Capitulo II</option>
                                     <option value={"chapterIII"} selected>Capitulo III</option>
                                 </select>
                                 <h1 className='text-black text-xl ml-1 font-bold'>:</h1>
-                                <h1 className='bg-gray-200 bg-opacity-30 h-10 text-black uppercase ml-4 text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>{title}</h1>
+                                <h1 className='bg-gray-300 bg-opacity-30 h-10 text-black uppercase ml-4 text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>{title}</h1>
                                 {isLoadData && (
                                     <ClipLoader className='ml-4' />
                                 )}
                             </div>
-                            <button onClick={() => setOpenModalCreatePractice(true)} className="shadow-lg h-10 text-black bg-gray-200 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
+                            <button onClick={() => setOpenModalCreatePractice(true)} className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
                                 <HiFolderAdd className="mr-2" size={28}/>Agregar Práctica
                             </button>
                         </div>
                     </div>
                     {chapterData ? (
                         <div className='flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full'>
-                            <div id="billing-target" className='mx-6 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-200 bg-opacity-30 overflow-x-hidden shadow-lg'>
+                            <div id="billing-target" className='mx-6 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
                                 <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600 relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
                                     <h1 >Aranceles </h1>
                                     {showResult === 'good-practice' && (
@@ -350,7 +350,7 @@ export default function Page() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className='text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-200 bg-opacity-30'>
+                            <div className='text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-300 bg-opacity-30'>
                                 <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
                                 <div className='flex font-medium transition'>
                                     <button onClick={() => handleIncreaseOrDecrease(0.05, '+5%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>

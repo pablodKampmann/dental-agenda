@@ -8,7 +8,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from 'dayjs';
 import { ClipLoader } from "react-spinners";
-
 interface ModalSettProps {
     onCloseModal: () => void;
     onSuccess: () => void;

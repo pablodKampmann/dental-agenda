@@ -23,14 +23,14 @@ export function SideBar() {
         async function get() {
             try {
                 const user = await getUser();
-                setUser(user);
+                setUser(user);                
             } catch (error) {
                 console.log(error);
             }
         }
 
         get();
-    }, []);
+    }, [pathname]);
 
     return (
         <div>
