@@ -18,7 +18,7 @@ import { MdMailOutline } from "react-icons/md";
 import { PiDownload } from "react-icons/pi";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { TbMessageShare } from "react-icons/tb";
-import { createAppointmentPDF } from "./../components/createAppointmentPDF"
+import { createAppointmentPDF } from "../components/createAppointmentPDF";
 
 export default function Messenger() {
     const router = useRouter()
@@ -112,7 +112,7 @@ export default function Messenger() {
 
 
     function createPdf() {
-        createAppointmentPDF(appointmentSelected, patientSelected);
+        //createAppointmentPDF(appointmentSelected, patientSelected);
     }
 
     function sendWhatsApp() {
@@ -367,8 +367,8 @@ export default function Messenger() {
                                             <MdMailOutline size={34} className=" text-white group-hover:scale-125 transition duration-150 " />
                                         </div>
                                     </div>
-                                    <p onClick={createPdf} className='mt-2 font-medium underline'>Descargar PDF:</p>
-                                    <div className=' cursor-pointer hover:bg-white border border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
+                                    <p className='mt-2 font-medium underline'>Descargar PDF:</p>
+                                    <div onClick={createPdf} className=' cursor-pointer hover:bg-white border border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
                                         <PiDownload size={34} className=" group-hover:scale-125 transition duration-150 " />
                                     </div>
                                 </div>

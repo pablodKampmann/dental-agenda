@@ -1,7 +1,9 @@
 import jsPDFInvoiceTemplate, { OutputType } from "jspdf-invoice-template";
 
 export function createAppointmentPDF(appointment, patient) {
-    var props = {
+    const pdfObject = jsPDFInvoiceTemplate(props); 
+
+    const props = {
         outputType: OutputType.Save,
         returnJsPDFDocObject: true,
         fileName: `Recordatorio_Turno_${appointment.date}_${patient.name}${patient.lastName}`,
@@ -118,7 +120,5 @@ export function createAppointmentPDF(appointment, patient) {
         pageLabel: "Page ",
     };
 
-    const pdfObject = jsPDFInvoiceTemplate(props);
     return pdfObject;
 }
-
