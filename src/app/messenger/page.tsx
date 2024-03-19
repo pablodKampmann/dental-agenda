@@ -18,6 +18,7 @@ import { MdMailOutline } from "react-icons/md";
 import { PiDownload } from "react-icons/pi";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { TbMessageShare } from "react-icons/tb";
+import { createAppointmentPDF } from "./../components/createAppointmentPDF"
 
 export default function Messenger() {
     const router = useRouter()
@@ -111,11 +112,10 @@ export default function Messenger() {
 
 
     function createPdf() {
-        //createAppointmentPDF(appointmentSelected, patientSelected);
+        createAppointmentPDF(appointmentSelected, patientSelected);
     }
 
     function sendWhatsApp() {
-        /*
         const message = `Estimado/a ${patientSelected.name} ${patientSelected.lastName},
 
         Este es un recordatorio de tu próximo turno en Consultorio Odontológico Dra. Karina Alvarez:
@@ -139,7 +139,7 @@ export default function Messenger() {
         const cleanedPhoneNumber = patientSelected.num.replace(/\s/g, '');
         const whatsappLink = `https://wa.me/${cleanedPhoneNumber}?text=${encodedMessage}`;
 
-        window.open(whatsappLink);*/
+        window.open(whatsappLink);
     }
 
     return (
