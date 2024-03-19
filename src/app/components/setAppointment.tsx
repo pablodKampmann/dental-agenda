@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { ref, set, get } from "firebase/database";
+import { ref, set, get, push } from "firebase/database";
 import { dateData } from "./../page";
 
 export async function setAppointment(patientId: number, dateData: dateData, reason: string, observations?: string) {
@@ -26,6 +26,8 @@ export async function setAppointment(patientId: number, dateData: dateData, reas
             reason: reason,
             observations: observations
         });
+        dbRef = ref(db, '/patients/' + `/${patientId}/` + 'appointments/');
+        await push(dbRef, formattedDate)
     } catch (error) {
         return ('error')
     }

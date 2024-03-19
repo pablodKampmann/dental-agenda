@@ -103,9 +103,9 @@ export function SideBar() {
                             </li>
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-                        <Link href="/chat" prefetch={true}>
+                        <Link href="/messenger" prefetch={true}>
                             <li>
-                                <button type="button" className={`${pathname === '/chat' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
+                                <button type="button" className={`${pathname === '/messenger' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100 mt-2`}>
                                     <IoLogoWhatsapp size={28} />
                                     <p className="flex-1 ml-3 select-none">Mensajeria</p>
                                 </button>
@@ -124,7 +124,7 @@ export function SideBar() {
                     </ul>
                     <div className='absolute bottom-0'>
                         <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
-                        <button type="button" onClick={() => setOpenAlert(true)} className='flex py-0.5 justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
+                        <button type="button" onClick={() => setOpenAlert(!openAlert)} className='flex py-0.5 select-none justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
                             <IoLogOutSharp size={40} className="" />
                             <p className='text-medium font-medium'>Cerrar Sesión</p>
                         </button>
