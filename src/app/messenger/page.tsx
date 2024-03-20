@@ -18,7 +18,7 @@ import { MdMailOutline } from "react-icons/md";
 import { PiDownload } from "react-icons/pi";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { TbMessageShare } from "react-icons/tb";
-import { createAppointmentPDF } from "../components/createAppointmentPDF";
+import { createAppointmentPDF } from "./../components/createAppointmentPDF";
 
 export default function Messenger() {
     const router = useRouter()
@@ -91,8 +91,6 @@ export default function Messenger() {
                 setIsLoadPatient(false);
                 setPatientSelected(patientResult)
                 const patientAppointments = await getPatientAppointments(patientResult.id);
-                console.log(patientAppointments);
-                
                 if (patientAppointments) {
                     setIsLoadAppointments(false);
                     setPatientAppointments(patientAppointments)
@@ -123,12 +121,13 @@ export default function Messenger() {
     }
 
 
-    function createPdf() {
-        //createAppointmentPDF(appointmentSelected, patientSelected);
+    function handleCreateReminderPdf() {
+        createAppointmentPDF(appointmentSelected, patientSelected);
     }
 
-    function sendWhatsApp() {
-        const message = `Estimado/a ${patientSelected.name} ${patientSelected.lastName},
+    function handleSendReminderWhatsApp() {
+        if (patientSelected && patientSelected.num) {
+            const message = `Estimado/a ${patientSelected.name} ${patientSelected.lastName},
 
         Este es un recordatorio de tu próximo turno en Consultorio Odontológico Dra. Karina Alvarez:
 
@@ -147,12 +146,42 @@ export default function Messenger() {
         Atentamente,
         Consultorio Odontológico Dra. Karina Alvarez`;
 
-        const encodedMessage = encodeURIComponent(message);
-        const cleanedPhoneNumber = patientSelected.num.replace(/\s/g, '');
-        const whatsappLink = `https://wa.me/${cleanedPhoneNumber}?text=${encodedMessage}`;
+            const encodedMessage = encodeURIComponent(message);
+            const cleanedPhoneNumber = patientSelected.num.replace(/\s/g, '');
+            const whatsappLink = `https://wa.me/${cleanedPhoneNumber}?text=${encodedMessage}`;
 
-        window.open(whatsappLink);
+            window.open(whatsappLink);
+        }
     }
+
+    function handleSendReminderEmail() {
+        if (patientSelected && patientSelected.email) {
+            const subject = encodeURIComponent("Recordatorio de turno");
+            const body = encodeURIComponent(`Estimado/a ${patientSelected.name} ${patientSelected.lastName},
+    
+    Este es un recordatorio de tu próximo turno en Consultorio Odontológico Dra. Karina Alvarez:
+    
+    - Fecha y hora del turno: ${appointmentSelected.dayComplete} ${appointmentSelected.year}, a las ${appointmentSelected.time}
+    - Razón de la cita: ${appointmentSelected.reason}
+    
+    Por favor, no olvides traer tu documento de identidad y los detalles de tu obra social.
+    
+    Dirección:
+    Consultorio Odontológico Dra. Karina Alvarez
+    Argentina, Mar del Plata, 11 de Septiembre 4075
+    (+54) 2234 37-8249
+    
+    ¡Esperamos verte pronto!
+    
+    Atentamente,
+    Consultorio Odontológico Dra. Karina Alvarez`);
+
+            const emailLink = `mailto:${patientSelected.email}?subject=${subject}&body=${body}`;
+
+            window.open(emailLink);
+        }
+    }
+
 
     function handleSetAction(button: string) {
         if (action === button) {
@@ -236,8 +265,8 @@ export default function Messenger() {
                                 )}
                             </div>
                             <div className="flex mt-4 h-screen pb-[360px] overflow-y-hidden w-full ">
-                                <div className="rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-white overflow-x-hidden ">
-                                    <table className="w-full select-none ">
+                                <div className="rounded-lg w-full h-full border-2 border-gray-600 overflow-y-auto bg-white overflow-x-hidden ">
+                                    <table className="w-full h-full select-none ">
                                         <thead className='relative'>
                                             <tr className="bg-gray-600 bg-opacity-20  select-none border-b-2 border-gray-600 text-left text-xs text-gray-900">
                                                 <th className="py-1 pl-1 ">Nombre</th>
@@ -245,7 +274,7 @@ export default function Messenger() {
                                                 <th className=""></th>
                                             </tr>
                                         </thead>
-                                        {listPatients && (
+                                        {listPatients ? (
                                             <tbody className="text-white  ">
                                                 {listPatients.map((patient, index) => (
                                                     <tr onClick={() => handleSetPatient(patient.id)} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${patientSelected && patient.id === patientSelected.id ? 'bg-teal-600 ' : 'hover:bg-gray-900 hover:bg-opacity-10'}  bg-opacity-30 text-xs cursor-pointer ml-auto transition duration-75`}>
@@ -270,14 +299,14 @@ export default function Messenger() {
                                                 ))}
                                                 {searchContent !== '' && listPatients.length > 0 && (
                                                     <tr className='text-center text-xs font-semibold border-t border-b border-gray-600 bg-transparent group text-black'>
-                                                        <td colSpan={5}>
+                                                        <td colSpan={3}>
                                                             Número de pacientes: {listPatients.length}
                                                         </td>
                                                     </tr>
                                                 )}
                                                 {searchContent !== '' && listPatients.length < 1 && (
                                                     <tr className='bg-gray-400 bg-opacity-30 border-t border-b border-gray-600'>
-                                                        <td colSpan={5} className=''>
+                                                        <td colSpan={3} className=''>
                                                             <div className="text-xl py-2 font-medium flex justify-center items-center text-black w-full">
                                                                 <p className='flex'>No hay resultados<LuSearchX size={26} className="mt-0.5 ml-1" /></p>
                                                             </div>
@@ -285,6 +314,12 @@ export default function Messenger() {
                                                     </tr>
                                                 )}
                                             </tbody>
+                                        ) : (
+                                            <td colSpan={3}>
+                                                <div className='flex justify-center items-center w-full h-full'>
+                                                    <ClipLoader size={44} />
+                                                </div>
+                                            </td>
                                         )}
                                     </table>
                                 </div>
@@ -371,11 +406,11 @@ export default function Messenger() {
                                 </div>
                             )}
                         </div>
-                        <div className={`${appointmentSelected ? 'opacity-100 animate-forms-from-right' : 'opacity-0'} ml-8 transition-opacity duration-[500ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
+                        <div className={`${appointmentSelected && patientSelected ? 'opacity-100 animate-forms-from-right' : 'opacity-0'} ml-8 transition-opacity duration-[500ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
                             <div className='bg-teal-600 rounded-br-lg rounded-bl-lg px-4 shadow-lg py-1 text-lg font-semibold border-b-2 border-r-2 border-l-2 border-gray-600'>
                                 3. Finalizar
                             </div>
-                            {appointmentSelected && (
+                            {appointmentSelected && patientSelected && (
                                 <div className=' text-black'>
                                     <p className=' mt-2 font-medium underline'>Comentarios (opcional):</p>
                                     <div className='border-2 relative bg-white  shadow-lg p-1 text-sm font-semibold border-gray-600 rounded-lg mt-2 '>
@@ -383,15 +418,15 @@ export default function Messenger() {
                                     </div>
                                     <p className='mt-2 font-medium underline'>Compartir vía:</p>
                                     <div className='flex'>
-                                        <div onClick={sendWhatsApp} className='cursor-pointer bg-green-500 hover:bg-opacity-50 border border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
+                                        <div onClick={handleSendReminderWhatsApp} className={`${patientSelected.num ? 'cursor-pointer bg-green-500 hover:bg-opacity-50 group' : ' bg-gray-500 bg-opacity-50'} border border-gray-300 transition duration-150  shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center`}>
                                             <FaWhatsapp size={34} className=" text-white group-hover:scale-125 transition duration-150 mb-0.5 ml-0.5" />
                                         </div>
-                                        <div className='cursor-pointer ml-4 hover:bg-opacity-70 border bg-red-800 border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
+                                        <div onClick={handleSendReminderEmail} className={`${patientSelected.email ? 'cursor-pointer bg-red-800  hover:bg-opacity-70 group' : ' bg-gray-500 bg-opacity-50'}  ml-4  border  border-gray-300 transition duration-150  shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center`}>
                                             <MdMailOutline size={34} className=" text-white group-hover:scale-125 transition duration-150 " />
                                         </div>
                                     </div>
                                     <p className='mt-2 font-medium underline'>Descargar PDF:</p>
-                                    <div onClick={createPdf} className=' cursor-pointer hover:bg-white border border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
+                                    <div onClick={handleCreateReminderPdf} className=' cursor-pointer hover:bg-white border border-gray-300 transition duration-150 group shadow-lg rounded-full w-14 mt-3 h-14 flex justify-center items-center'>
                                         <PiDownload size={34} className=" group-hover:scale-125 transition duration-150 " />
                                     </div>
                                 </div>

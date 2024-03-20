@@ -1,8 +1,6 @@
 import jsPDFInvoiceTemplate, { OutputType } from "jspdf-invoice-template";
 
-export function createAppointmentPDF(appointment, patient) {
-    const pdfObject = jsPDFInvoiceTemplate(props); 
-
+export const createAppointmentPDF = (function createAppointmentPDF(appointment, patient) {
     const props = {
         outputType: OutputType.Save,
         returnJsPDFDocObject: true,
@@ -34,9 +32,9 @@ export function createAppointmentPDF(appointment, patient) {
             name: "Consultorio Odontológico Dra. Karina Alvarez",
             address: "Argentina, Mar del Plata, 11 de Septiembre 4075",
             phone: "(+54) 2234 37-8249",
-            email: "email@example.com",
-            email_1: "info@example.al",
-            website: "www.example.al",
+            email: "karina91009@hotmail.com",
+            email_1: "karina91009alvarez@gmail.com",
+            // website: "www.example.al",
         },
         contact: {
             label: "Recordatorio emitido para:",
@@ -47,44 +45,39 @@ export function createAppointmentPDF(appointment, patient) {
             ...(patient.email && { email: patient.email }),
         },
         invoice: {
-            label: "Invoice #: ",
-            num: 19,
-            invDate: "Payment Date: 01/01/2021 18:12",
-            invGenDate: "Invoice Date: 02/02/2021 10:17",
+            label: "Turno ",
+            num: "Asignado",
+            invDate: null,
+            invGenDate: null,
             headerBorder: false,
             tableBodyBorder: false,
             header: [
                 {
-                    title: "#",
+                    title: "Mensaje",
                     style: {
-                        width: 10
+                        width: 400,
                     }
                 },
-                {
-                    title: "Title",
-                    style: {
-                        width: 30
-                    }
-                },
-                {
-                    title: "Description",
-                    style: {
-                        width: 80
-                    }
-                },
-                { title: "Price" },
-                { title: "Quantity" },
-                { title: "Unit" },
-                { title: "Total" }
             ],
-            table: Array.from(Array(10), (item, index) => ([
-                index + 1,
-                "There are many variations ",
-                "Lorem Ipsum is simply dummy text dummy text ",
-                200.5,
-                4.5,
-                "m2",
-                400.5
+            table: Array.from(Array(1), (item, index) => ([
+                `Estimado/a ${patient.name} ${patient.lastName},
+
+        Este es un recordatorio de tu próximo turno en Consultorio Odontológico Dra. Karina Alvarez:
+
+        - Fecha y hora del turno: ${appointment.dayComplete} ${appointment.year}, a las ${appointment.time}
+        - Razón de la cita: ${appointment.reason}
+
+        Por favor, no olvides traer tu documento de identidad y los detalles de tu obra social.
+
+        Dirección:
+        Consultorio Odontológico Dra. Karina Alvarez
+        Argentina, Mar del Plata, 11 de Septiembre 4075
+        (+54) 2234 37-8249
+
+        ¡Esperamos verte pronto!
+
+        Atentamente,
+        Consultorio Odontológico Dra. Karina Alvarez`,
             ])),
             additionalRows: [{
                 col1: 'Total:',
@@ -120,5 +113,6 @@ export function createAppointmentPDF(appointment, patient) {
         pageLabel: "Page ",
     };
 
+    const pdfObject = jsPDFInvoiceTemplate(props);
     return pdfObject;
-}
+})();
