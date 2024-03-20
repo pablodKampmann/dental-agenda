@@ -24,7 +24,7 @@ export default function Messenger() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const [isLoadPatient, setIsLoadPatient] = useState(false);
-    const [isLoadAppointments, setIsLoadAppointments] = useState(false);
+    const [isLoadAppointments, setIsLoadAppointments] = useState(true);
     const [action, setAction] = useState<string>('');
     const [patientSelected, setPatientSelected] = useState<any>(null);
     const [patientAppointments, setPatientAppointments] = useState<null | any[]>(null);
@@ -77,23 +77,35 @@ export default function Messenger() {
     }, [searchContent, selectedField]);
 
     async function handleSetPatient(patientId: number) {
-        setIsLoadAppointments(true);
-        reset();
-        const patientResult = await getPatient(patientId);
-        if (patientResult) {
-            setIsLoadPatient(false);
-            setPatientSelected(patientResult)
-            const patientAppointments = await getPatientAppointments(patientResult.id);
-            if (patientAppointments) {
-                setIsLoadAppointments(false);
-                setPatientAppointments(patientAppointments)
-            } else {
-                setIsLoadAppointments(false);
+        if (patientSelected && patientSelected.id === patientId) {
+            setPatientSelected(null);
+            setIsLoad(false);
+            setSearchContent('')
+        } else {
+            setPatientAppointments(null);
+            setAppointmentSelected(null);
+            setIsLoadPatient(true)
+            setIsLoadAppointments(true);
+            const patientResult = await getPatient(patientId);
+            if (patientResult) {
+                setIsLoadPatient(false);
+                setPatientSelected(patientResult)
+                const patientAppointments = await getPatientAppointments(patientResult.id);
+                console.log(patientAppointments);
+                
+                if (patientAppointments) {
+                    setIsLoadAppointments(false);
+                    setPatientAppointments(patientAppointments)
+                } else {
+                    setIsLoadAppointments(false);
+                }
             }
         }
     }
 
-    function reset() {
+    function resetAll() {
+        setPatientSelected(null);
+        setAppointmentSelected(null);
         setPatientAppointments(null);
         setAppointmentSelected(null);
     }
@@ -142,6 +154,15 @@ export default function Messenger() {
         window.open(whatsappLink);
     }
 
+    function handleSetAction(button: string) {
+        if (action === button) {
+            resetAll();
+            setAction('');
+        } else {
+            setAction(button)
+        }
+    }
+
     return (
         <div className='ml-56 overflow-hidden  h-screen flex-1 '>
             {isLoad ? (
@@ -149,21 +170,21 @@ export default function Messenger() {
             ) : (
                 <div className='p-6 mt-16  overflow-y-hidden'>
                     <div className="flex select-none">
-                        <div onClick={() => setAction('contactPatient')} className={`${action !== '' && action !== 'contactPatient' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'contactPatient' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2 w-1/2 rounded-lg  `}>
+                        <div onClick={() => handleSetAction('contactPatient')} className={`${action !== '' && action !== 'contactPatient' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'contactPatient' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2 w-1/2 rounded-lg  `}>
                             <div className={`${action === 'contactPatient' ? 'text-white scale-105' : 'text-gray-500'} flex justify-center items-center group-hover:text-white  text-xl font-bold group-hover:scale-105 duration-300 tracking-tight uppercase`}>
                                 Contactar Paciente
                                 <BsChatSquareText className="ml-4" size={44} />
                             </div>
                             <FaWhatsapp size={20} className={`${action === 'contactPatient' ? 'text-green-400 scale-125 right-2 bottom-2' : 'text-transparent right-1 bottom-1'} absolute group-hover:scale-125 group-hover:right-2 group-hover:bottom-2 duration-300   group-hover:text-green-400 `} />
                         </div>
-                        <div onClick={() => setAction('notifyTurn')} className={`${action !== '' && action !== 'notifyTurn' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'notifyTurn' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2 ml-4 mr-4 w-1/2 rounded-lg  `}>
+                        <div onClick={() => handleSetAction('notifyTurn')} className={`${action !== '' && action !== 'notifyTurn' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'notifyTurn' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2 ml-4 mr-4 w-1/2 rounded-lg  `}>
                             <div className={`${action === 'notifyTurn' ? 'text-white scale-105' : 'text-gray-500'} flex justify-center items-center group-hover:text-white  text-xl font-bold group-hover:scale-105 duration-300 tracking-tight uppercase`}>
                                 Recordar Turno
                                 <AiOutlineNotification className="ml-4" size={44} />
                             </div>
                             <FaWhatsapp size={20} className={`${action === 'notifyTurn' ? 'text-green-400 scale-125 right-2 bottom-2' : 'text-transparent right-1 bottom-1'} absolute group-hover:scale-125 group-hover:right-2 group-hover:bottom-2 duration-300   group-hover:text-green-400 `} />
                         </div>
-                        <div onClick={() => setAction('sendBill')} className={`${action !== '' && action !== 'sendBill' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'sendBill' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2  w-1/2 rounded-lg  `}>
+                        <div onClick={() => handleSetAction('sendBill')} className={`${action !== '' && action !== 'sendBill' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'sendBill' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2  w-1/2 rounded-lg  `}>
                             <div className={`${action === 'sendBill' ? 'text-white scale-105' : 'text-gray-500'} flex justify-center items-center group-hover:text-white  text-xl font-bold group-hover:scale-105 duration-300 tracking-tight uppercase`}>
                                 Enviar Factura
                                 <LiaMoneyCheckAltSolid className="ml-4" size={44} />
@@ -180,7 +201,7 @@ export default function Messenger() {
                         </div>
                     )}
                     <div className='h-screen pb-56 flex mt-8  select-none' >
-                        <div className={`${action ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[800ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
+                        <div className={`${action ? 'opacity-100 animate-forms-from-right' : 'opacity-0'} transition-opacity duration-[500ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
                             <div className='bg-teal-600 rounded-br-lg rounded-bl-lg px-4 shadow-lg py-1 text-lg font-semibold border-b-2 border-r-2 border-l-2 border-gray-600'>
                                 1. Selecciona un paciente
                             </div>
@@ -227,7 +248,7 @@ export default function Messenger() {
                                         {listPatients && (
                                             <tbody className="text-white  ">
                                                 {listPatients.map((patient, index) => (
-                                                    <tr onClick={() => { handleSetPatient(patient.id); setIsLoadPatient(true) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${patientSelected && patient.id === patientSelected.id ? 'bg-teal-600 ' : 'hover:bg-gray-900 hover:bg-opacity-10'}  bg-opacity-30 text-xs cursor-pointer ml-auto transition duration-75`}>
+                                                    <tr onClick={() => handleSetPatient(patient.id)} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${patientSelected && patient.id === patientSelected.id ? 'bg-teal-600 ' : 'hover:bg-gray-900 hover:bg-opacity-10'}  bg-opacity-30 text-xs cursor-pointer ml-auto transition duration-75`}>
                                                         <td className="pl-1 py-3 whitespace-nowrap text-black">
                                                             <p>{patient.name} {patient.lastName}</p>
                                                         </td>
@@ -269,7 +290,7 @@ export default function Messenger() {
                                 </div>
                             </div>
                         </div>
-                        <div className={`${patientSelected ? 'opacity-100' : 'opacity-0'} ml-8 transition-opacity duration-[800ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
+                        <div className={`${patientSelected && action === 'notifyTurn' ? 'opacity-100 animate-forms-from-right' : 'opacity-0'} ml-8  transition-opacity duration-[500ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
                             <div className='bg-teal-600 rounded-br-lg rounded-bl-lg px-4 shadow-lg py-1 text-lg font-semibold border-b-2 border-r-2 border-l-2 border-gray-600'>
                                 2. Selecciona el turno del paciente
                             </div>
@@ -315,11 +336,11 @@ export default function Messenger() {
                                         )}
                                     </div>
                                     <p className='text-black mt-2 font-medium underline'>Turnos del Paciente:</p>
-                                    <div className='flex h-screen pb-[540px]  overflow-y-hidden w-full'>
-                                        <div className='border-2 w-full overflow-y-auto relative bg-white text-sm border-gray-600 rounded-lg mt-2 text-black'>
-                                            <table className="w-full select-none ">
-                                                {!isLoadAppointments && patientAppointments ? (
-                                                    <tbody className="text-white">
+                                    <div className='flex h-screen pb-[545px] w-full overflow-y-hidden '>
+                                        <div className='border-2 w-full h-full overflow-y-auto bg-white text-sm border-gray-600 rounded-lg mt-2 text-black'>
+                                            {!isLoadAppointments && patientAppointments && patientAppointments.length > 0 ? (
+                                                <table className="select-none w-full">
+                                                    <tbody className="text-white h-fit">
                                                         {patientAppointments.map((appointment, index) => (
                                                             <tr onClick={() => setAppointmentSelected(appointment)} key={index} className={`${appointmentSelected && appointment.id === appointmentSelected.id && appointment.time === appointmentSelected.time && appointment.date === appointmentSelected.date ? 'bg-teal-600' : 'hover:bg-gray-900 hover:bg-opacity-10'}  bg-opacity-30 text-xs cursor-pointer ml-auto transition duration-75`}>
                                                                 <td className="px-2 py-3 whitespace-nowrap text-black">
@@ -333,24 +354,26 @@ export default function Messenger() {
                                                             </tr>
                                                         ))}
                                                     </tbody>
-                                                ) : (
-                                                    <div>
+                                                </table>
+                                            ) : (
+                                                <table className="select-none w-full h-full ">
+                                                    <tbody className='flex justify-center items-center h-full'>
                                                         {appointmentSelected === null && !isLoadAppointments ? (
-                                                            <p className='absolute text-black text-center w-52 right-20 top-16'>No se han registrado turnos para este paciente.</p>
+                                                            <p className='text-black text-center w-60'>No se han registrado turnos para este paciente.</p>
                                                         ) : (
-                                                            <ClipLoader className='absolute top-16 mt-1.5 right-40' size={44} color='black' />
+                                                            <ClipLoader className='' size={44} color='black' />
                                                         )}
-                                                    </div>
-                                                )}
-                                            </table>
+                                                    </tbody>
+                                                </table>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </div>
-                        <div className={`${appointmentSelected ? 'opacity-100' : 'opacity-0'} ml-8 transition-opacity duration-[800ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
+                        <div className={`${appointmentSelected ? 'opacity-100 animate-forms-from-right' : 'opacity-0'} ml-8 transition-opacity duration-[500ms] bg-gray-300 bg-opacity-30 w-1/3 px-4 overflow-x-hidden rounded-lg border-2 border-gray-600 shadow-lg   overflow-y-hidden`} >
                             <div className='bg-teal-600 rounded-br-lg rounded-bl-lg px-4 shadow-lg py-1 text-lg font-semibold border-b-2 border-r-2 border-l-2 border-gray-600'>
-                                3. Enviar archivo
+                                3. Finalizar
                             </div>
                             {appointmentSelected && (
                                 <div className=' text-black'>
