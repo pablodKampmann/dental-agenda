@@ -122,7 +122,7 @@ export default function Messenger() {
 
 
     function handleCreateReminderPdf() {
-        createAppointmentPDF(appointmentSelected, patientSelected);
+        //createAppointmentPDF(appointmentSelected, patientSelected);
     }
 
     function handleSendReminderWhatsApp() {
