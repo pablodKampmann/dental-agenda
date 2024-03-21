@@ -90,7 +90,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                 price: roundedPrice
             };
         });
-
+        
         const result = await updateChapterPrices(updatedChapterData, fifthProp);
         if (result === 'error') {
             setLoading(false);

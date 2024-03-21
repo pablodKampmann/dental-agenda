@@ -23,10 +23,9 @@ import { updatePracticePrice } from "./../components/updatePracticePrice";
 export default function Page() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
-    const [chapter, setChapter] = useState("chapterI");
-    const [idChapter, setIdChapter] = useState<any>(null);
+    const [chapterName, setChapterName] = useState("CONSULTAS");
     const [chapterData, setChapterData] = useState<any>(null);
-    const [title, setTitle] = useState<string>('');
+    const [chapterNum, setChapterNum] = useState<any>('');
     const [id, setId] = useState<any>(null);
     const [price, setPrice] = useState<any>(null);
     const [percentage, setPercentage] = useState<any>(null);
@@ -47,6 +46,7 @@ export default function Page() {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setIsLoad(false);
+                updatePractices();
             } else if (!user) {
                 router.push("/notSign");
             }
@@ -59,6 +59,11 @@ export default function Page() {
     //CHAPTER
 
     useEffect(() => {
+        setOpenPriceEdit(Array(chapterData?.length).fill(false));
+        updatePractices();
+    }, [chapterName]);
+
+    function formattedIdFromRoman(numberInRoman: string) {
         const romanToDecimal = (roman: string) => {
             const romanNumeralMap: Record<string, number> = {
                 'I': 1,
@@ -83,29 +88,22 @@ export default function Page() {
             return decimal;
         };
 
-        setOpenPriceEdit(Array(chapterData?.length).fill(false));
-        updatePractices();
+        const decimalValue = romanToDecimal(numberInRoman);
+        const formattedDecimal = decimalValue < 10 ? `0${decimalValue}` : `${decimalValue}`;
 
-        if (chapter) {
-            const restOfChapter = chapter.replace(/^chapter/i, '');
-            const idChapter = romanToDecimal(restOfChapter);
-            const formattedIdChapter = idChapter < 10 ? `0${idChapter}` : idChapter;
-            setIdChapter(formattedIdChapter)
-        }
-    }, [chapter]);
+        return formattedDecimal;
+    }
 
     //PRACTICES
 
     async function updatePractices() {
         setIsLoadData(true);
-        const { data, practice } = await getChapter(chapter)
-        if (data && practice) {
+        const { data, chapterNum } = await getChapter(chapterName)
+        if (data && chapterNum) {
             const filteredData = data.filter(item => !Object.values(item).every(value => value === undefined));
             setChapterData(filteredData);
-            setTitle(practice);
-            if (data && practice) {
-                setIsLoadData(false);
-            }
+            setChapterNum(chapterNum);
+            setIsLoadData(false);
         }
     }
 
@@ -146,7 +144,7 @@ export default function Page() {
             }
         }
 
-    }, [isLoadData, chapter]);
+    }, [isLoadData, chapterName]);
 
     useEffect(() => {
         if (billingTargetRef.current) {
@@ -175,7 +173,7 @@ export default function Page() {
         if (newPrice !== null) {
             const priceFormatted = newPrice.replace(/\./g, '');
             const priceNumber = parseFloat(priceFormatted);
-            const result = await updatePracticePrice(chapter, practiceId, priceNumber);
+            const result = await updatePracticePrice(chapterName, practiceId, priceNumber);
             cancelEdit();
             if (result !== 'error') {
                 updatePractices();
@@ -206,40 +204,38 @@ export default function Page() {
                 <div className='overflow-hidden mt-2'>
                     {openModalCreatePractice && (
                         <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                            <ModalCreatePractice chapter={chapter} onCloseModal={() => setOpenModalCreatePractice(false)} onSuccess={() => { setShowResult('good-practice'); updatePractices() }} />
+                            <ModalCreatePractice chapterNum={chapterNum} chapterId={formattedIdFromRoman(chapterNum)} chapter={chapterName} onCloseModal={() => setOpenModalCreatePractice(false)} onSuccess={() => { setShowResult('good-practice'); updatePractices() }} />
                         </div>
                     )}
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapter} />
+                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
                         </div>
                     )}
                     {openAlert === 'increaseOrDecrease' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             {percentage > 0 ? (
-                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas aumentar un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapter} />
+                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas aumentar un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapterName} />
                             ) : (
-                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas disminuir un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapter} />
+                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas disminuir un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapterName} />
                             )}
                         </div>
                     )}
                     <div className='ml-2 mr-2 p-4 mt-16'>
                         <div className='flex justify-between select-none'>
                             <div className='flex items-center '>
-                                <select value={chapter} onChange={(event) => { setChapter(event.target.value); }}
-                                    className=' bg-gray-300 bg-opacity-30 h-10 cursor-pointer text-lg font-semibold shadow-lg outline-none border-2 uppercase text-black border-gray-600 w-40 py-1.5 rounded-lg'>
-                                    <option value={"chapterI"} selected>Capitulo I</option>
-                                    <option value={"chapterII"} selected>Capitulo II</option>
-                                    <option value={"chapterIII"} selected>Capitulo III</option>
+                                <select value={chapterName} onChange={(event) => { setChapterName(event.target.value); }}
+                                    className=' bg-gray-300 bg-opacity-30 h-10 outline-none text-black text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>
+                                    <option value={"CONSULTAS"} selected>CONSULTAS</option>
+                                    <option value={"OPERATORIA DENTAL"} selected>OPERATORIA DENTAL</option>
+                                    <option value={"ENDODONCIA"} selected>ENDODONCIA</option>
                                 </select>
-                                <h1 className='text-black text-xl ml-1 font-bold'>:</h1>
-                                <h1 className='bg-gray-300 bg-opacity-30 h-10 text-black uppercase ml-4 text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>{title}</h1>
                                 {isLoadData && (
                                     <ClipLoader className='ml-4' />
                                 )}
                             </div>
                             <button onClick={() => setOpenModalCreatePractice(true)} className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
-                                <HiFolderAdd className="mr-2" size={28}/>Agregar Práctica
+                                <HiFolderAdd className="mr-2" size={28} />Agregar Práctica
                             </button>
                         </div>
                     </div>
@@ -303,7 +299,7 @@ export default function Page() {
                                             <tr key={index} className={`${index === chapterData.length - 1 && billingTagetOverflowActived === false ? 'border-b-2 border-gray-600' : ''} ${index !== chapterData.length - 1 ? 'border-b-2 border-gray-600' : ''}`}>
                                                 <td className="pl-4 px-4   whitespace-nowrap border-r-2 border-gray-600 w-16">
                                                     <div className="text-center  text-white items-center justify-center flex rounded-full w-fit bg-teal-600 text-sm font-semibold">
-                                                        <p className='ml-1.5 mr-1.5'>{idChapter}.{practice.id}</p>
+                                                        <p className='ml-1.5 mr-1.5'>{formattedIdFromRoman(chapterNum)}.{practice.id}</p>
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-4 whitespace-normal text-black text-sm border-r-2 border-gray-600">

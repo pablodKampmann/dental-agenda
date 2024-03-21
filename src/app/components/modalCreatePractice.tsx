@@ -6,16 +6,16 @@ interface ModalSettProps {
     onCloseModal: () => void;
     onSuccess: () => void;
     chapter: string | '';
+    chapterId: string;
+    chapterNum: string;
 }
 
-export function ModalCreatePractice({ onCloseModal, onSuccess, chapter }: ModalSettProps) {
+export function ModalCreatePractice({ onCloseModal, onSuccess, chapter, chapterId, chapterNum }: ModalSettProps) {
     const [id, setId] = useState<any>(null);
     const [price, setPrice] = useState<any>(null);
     const [practiceName, setPracticeName] = useState("");
     const [loading, setLoading] = useState(false);
     const [alreadyExists, setAlreadyExists] = useState(false);
-    const [chapterFormatted, setChapterFormatted] = useState('');
-    const [idChapter, setIdChapter] = useState<any>(null);
 
     async function HandleSubmit(e: any) {
         e.preventDefault();
@@ -39,44 +39,8 @@ export function ModalCreatePractice({ onCloseModal, onSuccess, chapter }: ModalS
     }
 
     useEffect(() => {
-        const romanToDecimal = (roman: string) => {
-            const romanNumeralMap: Record<string, number> = {
-                'I': 1,
-                'V': 5,
-                'X': 10,
-                'L': 50,
-                'C': 100,
-                'D': 500,
-                'M': 1000
-            };
-            let decimal = 0;
-            for (let i = 0; i < roman.length; i++) {
-                const currentCharValue = romanNumeralMap[roman[i]];
-                const nextCharValue = romanNumeralMap[roman[i + 1]];
-                if (nextCharValue && currentCharValue < nextCharValue) {
-                    decimal += nextCharValue - currentCharValue;
-                    i++;
-                } else {
-                    decimal += currentCharValue;
-                }
-            }
-            return decimal;
-        };
-
-        const capitalizeFirstLetter = (string: string) => {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        };
-
         if (chapter) {
-            const translatedChapter = "Capítulo";
-            const chapterNumberMatch = chapter.match(/\d+$/);
-            const chapterNumber = chapterNumberMatch ? chapterNumberMatch[0] : '';
-            const restOfChapter = chapter.replace(/^chapter/i, '');
-            const chapterFormatted = `${translatedChapter} ${capitalizeFirstLetter(chapterNumber)}${restOfChapter}`;
-            setChapterFormatted(chapterFormatted);
-            const idChapter = romanToDecimal(restOfChapter);
-            const formattedIdChapter = idChapter < 10 ? `0${idChapter}` : idChapter;
-            setIdChapter(formattedIdChapter)
+           
         }
     }, [chapter]);
 
@@ -95,10 +59,8 @@ export function ModalCreatePractice({ onCloseModal, onSuccess, chapter }: ModalS
                     <div className="flex items-center ">
                         <div className="select-none h-16 w-16 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-4xl font-mono">i</div>
                         <div className="block font-semibold text-xl text-black ml-3">
-                            <h2 className="text-2xl leading-tight select-none">Agregar Práctica</h2>
-                            <h2 className="text-2xl leading-tight select-none">{chapterFormatted}</h2>
-
-                            <p className="text-sm  font-normal leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                            <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapter})</h2>
+                            <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
                         </div>
                     </div>
                     <div className="pt-2 pb-4">
@@ -114,7 +76,7 @@ export function ModalCreatePractice({ onCloseModal, onSuccess, chapter }: ModalS
                                 </div>
                                 <div className='flex justify-center items-center'>
                                     <p className='text-black ml-1 bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
-                                        {idChapter}.
+                                        {chapterId}.
                                     </p>
                                     <div className="relative text-gray-400 ">
                                         <input
