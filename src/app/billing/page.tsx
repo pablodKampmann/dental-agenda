@@ -19,10 +19,14 @@ import { IoLogoUsd } from "react-icons/io5";
 import { RiAlertFill } from "react-icons/ri";
 import { FaRegCircleCheck, FaRegCircleXmark } from "react-icons/fa6";
 import { updatePracticePrice } from "./../components/updatePracticePrice";
+import { setPractice } from "./../components/setPractice";
+import { ImCancelCircle } from "react-icons/im";
 
 export default function Page() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [alreadyExists, setAlreadyExists] = useState(false);
     const [chapterName, setChapterName] = useState("CONSULTAS");
     const [chapterData, setChapterData] = useState<any>(null);
     const [chapterNum, setChapterNum] = useState<any>('');
@@ -33,7 +37,7 @@ export default function Page() {
     const [practiceName, setPracticeName] = useState<any>(null);
     const [isLoadData, setIsLoadData] = useState(true);
     const [openPriceEdit, setOpenPriceEdit] = useState(Array(chapterData?.length).fill(false));
-    const [openModalCreatePractice, setOpenModalCreatePractice] = useState(false);
+    const [openCreatePractice, setOpenCreatePractice] = useState(false);
     const [showResult, setShowResult] = useState<any>(null);
     const [openAlert, setOpenAlert] = useState('');
     const [billingTagetOverflowActived, setBillingTagetOverflowActived] = useState(false);
@@ -196,17 +200,33 @@ export default function Page() {
         }
     }
 
+    async function HandleSubmit(e: any) {
+        e.preventDefault();
+        setLoading(true);
+        const priceFormatted = price.replace(/\./g, '');
+        const priceNumber = parseFloat(priceFormatted);
+        const result = await setPractice(id, priceNumber, practiceName, chapterName);
+        if (result !== 'error') {
+            if (result === 'already-exists') {
+                setLoading(false);
+                setAlreadyExists(true);
+            } else {
+                setOpenCreatePractice(false);
+                setId(null);
+                setPrice(null);
+                setPracticeName(null);
+                setShowResult('good-practice');
+                updatePractices();
+            }
+        }
+    }
+
     return (
         <div className='ml-56 h-screen overflow-hidden flex-1'>
             {isLoad ? (
                 <Loading />
             ) : (
                 <div className='overflow-hidden mt-2'>
-                    {openModalCreatePractice && (
-                        <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                            <ModalCreatePractice chapterNum={chapterNum} chapterId={formattedIdFromRoman(chapterNum)} chapter={chapterName} onCloseModal={() => setOpenModalCreatePractice(false)} onSuccess={() => { setShowResult('good-practice'); updatePractices() }} />
-                        </div>
-                    )}
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
@@ -225,23 +245,40 @@ export default function Page() {
                         <div className='flex justify-between select-none'>
                             <div className='flex items-center '>
                                 <select value={chapterName} onChange={(event) => { setChapterName(event.target.value); }}
-                                    className=' bg-gray-300 bg-opacity-30 h-10 outline-none text-black text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>
+                                    className=' bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>
                                     <option value={"CONSULTAS"} selected>CONSULTAS</option>
                                     <option value={"OPERATORIA DENTAL"} selected>OPERATORIA DENTAL</option>
                                     <option value={"ENDODONCIA"} selected>ENDODONCIA</option>
+                                    <option value={"PRÓTESIS"} selected>PRÓTESIS</option>
+                                    <option value={"ODONTOLOGÍA PREVENTIVA"} selected>ODONTOLOGÍA PREVENTIVA</option>
+                                    <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} selected>ORTODONCIA Y ORTOPEDIA FUNCIONAL</option>
+                                    <option value={"ODONTOPEDIATRÍA"} selected>ODONTOPEDIATRÍA</option>
+                                    <option value={"PERIODONCIA"} selected>PERIODONCIA</option>
+                                    <option value={"RADIOLOGÍA"} selected>RADIOLOGÍA</option>
+                                    <option value={"CIRUGÍA"} selected>CIRUGÍA</option>
                                 </select>
                                 {isLoadData && (
                                     <ClipLoader className='ml-4' />
                                 )}
                             </div>
-                            <button onClick={() => setOpenModalCreatePractice(true)} className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
-                                <HiFolderAdd className="mr-2" size={28} />Agregar Práctica
+                            <button onClick={() => {
+                                setOpenCreatePractice(!openCreatePractice); setId(null); setPrice(null); setPracticeName(null); setLoading(false);
+                            }} className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
+                                {openCreatePractice ? (
+                                    <div className='flex justify-center items-center'>
+                                        <ImCancelCircle className="mr-2" size={24} />Cancelar
+                                    </div>
+                                ) : (
+                                    <div className='flex justify-center items-center'>
+                                        <HiFolderAdd className="mr-2" size={28} />Agregar Práctica
+                                    </div>
+                                )}
                             </button>
                         </div>
                     </div>
                     {chapterData ? (
                         <div className='flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full'>
-                            <div id="billing-target" className='mx-6 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
+                            <div id="billing-target" className='mx-6 mr-8 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
                                 <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600 relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
                                     <h1 >Aranceles </h1>
                                     {showResult === 'good-practice' && (
@@ -346,26 +383,123 @@ export default function Page() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className='text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-300 bg-opacity-30'>
-                                <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
-                                <div className='flex font-medium transition'>
-                                    <button onClick={() => handleIncreaseOrDecrease(0.05, '+5%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
-                                    <button onClick={() => handleIncreaseOrDecrease(0.1, '+10%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
+
+                            {openCreatePractice ? (
+                                <form onSubmit={HandleSubmit} className="relative w-[400px] mr-6 animate-move-from-right-form">
+                                    <div className="w-full  border-2 border-gray-600 relative px-4 py-4 bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
+                                        <div className="flex items-center ">
+                                            <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
+                                            <div className="block font-semibold text-xl text-black ml-3">
+                                                <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
+                                                <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                                            </div>
+                                        </div>
+                                        <div className="pt-2 pb-4">
+                                            <div className='flex justify-between '>
+                                                <div className="flex flex-col mt-1 w-36 mx-2">
+                                                    <div className='flex select-none'>
+                                                        <label className="text-black select-none text-lg ml-2">Id</label>
+                                                        {alreadyExists && (
+                                                            <div className='animate-alredy-exists bg-red-500 ml-6 rounded-lg px-1 text-sm text-center flex h-6 items-center'>
+                                                                Ocupado
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className='flex justify-center items-center'>
+                                                        <p className='text-black  bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
+                                                            {formattedIdFromRoman(chapterNum)}.
+                                                        </p>
+                                                        <div className="relative text-gray-400 ">
+                                                            <input
+                                                                placeholder='08'
+                                                                type="text"
+                                                                className={`${alreadyExists ? 'bg-red-500 bg-opacity-70' : ''} h-10 px-3  select-none py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none bg-white text-black `}
+                                                                required
+                                                                name='id'
+                                                                value={id}
+                                                                onChange={(e) => setId(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col mt-1 w-full mx-2">
+                                                    <div className='flex'>
+                                                        <label className="text-black select-none text-lg ml-2">Precio</label>
+                                                    </div>
+                                                    <div className='flex justify-center items-center'>
+                                                        <p className='text-black ml-1 bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
+                                                            $
+                                                        </p>
+                                                        <div className="relative text-gray-400 w-full ">
+                                                            <input
+                                                                placeholder='56.235'
+                                                                type="text"
+                                                                className="h-10 px-3 py-2 w-full border focus:ring-gray-500  select-none focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none bg-white text-black"
+                                                                required
+                                                                name='price'
+                                                                value={price}
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value.replace(/\D/g, '');
+                                                                    const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                                                    setPrice(formattedValue);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col mt-2 w-full pr-4 mx-2">
+                                                <div className='flex'>
+                                                    <label className="text-black select-none text-lg ml-1">Nombre de práctica</label>
+                                                </div>
+                                                <div className="relative text-gray-400 ">
+                                                    <input
+                                                        type="text"
+                                                        className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-white text-black"
+                                                        required
+                                                        name='lastName'
+                                                        value={practiceName}
+                                                        onChange={(e) => setPracticeName(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 flex justify-center items-center select-none text-base">
+                                            <button type="button" onClick={() => setOpenCreatePractice(false)} className="bg-red-900 hover:text-lg h-12 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white mx-2  rounded-md focus:outline-none transition duration-200">CANCELAR</button>
+                                            <button type="submit" className="bg-teal-600 hover:bg-teal-500 font-semibold hover:text-lg flex justify-center h-12  items-center w-full text-teal-950 hover:text-white mx-2 rounded-md focus:outline-none transition duration-200">
+                                                {loading ? (
+                                                    <div className='flex justify-center items-center '>
+                                                        <ClipLoader className='' color="white" size={24} />
+                                                    </div>
+                                                ) : (
+                                                    'CREAR'
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div >
+                                </form >
+                            ) : (
+                                <div className='animate-move-from-right-form text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-300 bg-opacity-30'>
+                                    <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
+                                    <div className='flex font-medium transition'>
+                                        <button onClick={() => handleIncreaseOrDecrease(0.05, '+5%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
+                                        <button onClick={() => handleIncreaseOrDecrease(0.1, '+10%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
+                                    </div>
+                                    <div className='flex font-medium transition'>
+                                        <button onClick={() => handleIncreaseOrDecrease(0.15, '+15%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
+                                        <button onClick={() => handleIncreaseOrDecrease(0.2, '+20%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
+                                    </div>
+                                    <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
+                                    <div className='flex font-medium transition'>
+                                        <button onClick={() => handleIncreaseOrDecrease(-0.05, '-5%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
+                                        <button onClick={() => handleIncreaseOrDecrease(-0.1, '-10%')} className='hover:bg-red-800 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
+                                    </div>
+                                    <div className='flex font-medium transition'>
+                                        <button onClick={() => handleIncreaseOrDecrease(-0.15, '-15%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
+                                        <button onClick={() => handleIncreaseOrDecrease(-0.2, '-20%')} className='hover:bg-red-800 w-1/2  duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
+                                    </div>
                                 </div>
-                                <div className='flex font-medium transition'>
-                                    <button onClick={() => handleIncreaseOrDecrease(0.15, '+15%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
-                                    <button onClick={() => handleIncreaseOrDecrease(0.2, '+20%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
-                                </div>
-                                <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
-                                <div className='flex font-medium transition'>
-                                    <button onClick={() => handleIncreaseOrDecrease(-0.05, '-5%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
-                                    <button onClick={() => handleIncreaseOrDecrease(-0.1, '-10%')} className='hover:bg-red-800 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
-                                </div>
-                                <div className='flex font-medium transition'>
-                                    <button onClick={() => handleIncreaseOrDecrease(-0.15, '-15%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
-                                    <button onClick={() => handleIncreaseOrDecrease(-0.2, '-20%')} className='hover:bg-red-800 w-1/2  duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     ) :
                         null
