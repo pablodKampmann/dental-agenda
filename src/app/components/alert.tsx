@@ -8,7 +8,6 @@ import { FaUser } from "react-icons/fa";
 import { IoTimeSharp, IoLogoUsd } from "react-icons/io5";
 import { AiFillPushpin } from "react-icons/ai";
 import { deletePractice } from "./deletePractice";
-import { updateChapterPrices } from "./../components/updateChapterPrices";
 import { logOut } from "./../components/logOut";
 interface ModalSettProps {
     onCloseAlert?: () => void;
@@ -70,28 +69,6 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
     async function handleDeletePractice() {
         setLoading(true);
         const result = await deletePractice(fourthProp, fifthProp);
-        if (result === 'error') {
-            setLoading(false);
-        } else {
-            if (onSuccess) {
-                onSuccess();
-            }
-        }
-    }
-
-    async function handleIncreaseOrDecreasePrice() {
-        setLoading(true);
-
-        const updatedChapterData = thirdProp.map((chapter: { price: number; }) => {
-            const newPrice = (chapter.price + (chapter.price * fourthProp));
-            const roundedPrice = Math.round(newPrice);
-            return {
-                ...chapter,
-                price: roundedPrice
-            };
-        });
-        
-        const result = await updateChapterPrices(updatedChapterData, fifthProp);
         if (result === 'error') {
             setLoading(false);
         } else {
@@ -207,11 +184,11 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                         </div>
                         <h2 className="mt-2 text-lg font-semibold text-gray-800 select-none">Ojo!</h2>
                         <p className="select-none mt-2 text-md text-gray-600 leading-relaxed">{firstProp}</p>
-                        <div className='flex justify-center items-center'>
-                            <AiFillPushpin size={24} className=" text-gray-600" />
-                            <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"> {secondProp}</p>
+                        <div className='flex mt-1 justify-center items-center'>
+                            <AiFillPushpin size={24} className=" text-gray-600 mr-2" />
+                            <p className="select-none font-bold text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"> {secondProp}</p>
                         </div>
-                        <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"><IoLogoUsd size={22} /> {thirdProp}</p>
+                        <p className="select-none font-bold mt-1 text-md text-gray-600 long-message leading-relaxed flex justify-center items-center"><IoLogoUsd size={22} /> {thirdProp}</p>
                     </div>
                     <div className="flex items-center mt-3">
                         <button onClick={handleCloseAlert} className="select-none flex-1 px-4 py-2 mr-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-md font-medium rounded-md transition duration-200">
@@ -224,38 +201,6 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                                 </div>
                             ) : (
                                 action
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    } else if (action === 'AumentarDisminuir') {
-        return (
-            <div className="fixed inset-0 mt-8 flex items-center justify-center">
-                <div className="flex flex-col p-6 rounded-lg shadow-xl bg-white border-4  border-gray-600">
-                    <div className="flex flex-col items-center text-center ">
-                        <div className="p-3 bg-gray-700 rounded-full">
-                            <IoLogoUsd className='' size={40} />
-                        </div>
-                        <h2 className="mt-2 text-lg font-semibold text-gray-800 select-none">Ojo!</h2>
-                        <div className='flex justify-center mt-2 items-center'>
-                            <p className="select-none  text-md text-gray-600 leading-relaxed">{firstProp}</p>
-                            <p className='text-gray-800 font-bold text-lg ml-1 select-none'>{secondProp} </p>
-                        </div>
-                        <p className='select-none text-md ml-1 text-gray-600 leading-relaxed'>el valor de todas las prácticas del capítulo?</p>
-                    </div>
-                    <div className="flex items-center mt-3">
-                        <button onClick={handleCloseAlert} className="select-none flex-1 px-4 py-2 mr-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-md font-medium rounded-md transition duration-200">
-                            Cancelar
-                        </button>
-                        <button onClick={handleIncreaseOrDecreasePrice} className="select-none flex-1 px-4 py-2 ml-1 bg-teal-600 hover:bg-teal-700 text-white text-md font-medium rounded-md transition duration-200">
-                            {loading ? (
-                                <div className='flex justify-center items-center py-0.5'>
-                                    <ClipLoader className='' color="white" size={20} />
-                                </div>
-                            ) : (
-                                'Aceptar'
                             )}
                         </button>
                     </div>

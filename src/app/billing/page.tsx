@@ -11,7 +11,6 @@ import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
 import { MdDelete } from "react-icons/md";
 import { FaPen } from "react-icons/fa";
-import { ModalCreatePractice } from "./../components/modalCreatePractice";
 import { Alert } from "./../components/alert";
 import { TiDocumentDelete } from "react-icons/ti";
 import { BsClipboardCheck } from "react-icons/bs";
@@ -21,11 +20,14 @@ import { FaRegCircleCheck, FaRegCircleXmark } from "react-icons/fa6";
 import { updatePracticePrice } from "./../components/updatePracticePrice";
 import { setPractice } from "./../components/setPractice";
 import { ImCancelCircle } from "react-icons/im";
+import { updateChapterPrices } from "./../components/updateChapterPrices";
+import { PiSealWarningThin } from "react-icons/pi";
 
 export default function Page() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
     const [alreadyExists, setAlreadyExists] = useState(false);
     const [chapterName, setChapterName] = useState("CONSULTAS");
     const [chapterData, setChapterData] = useState<any>(null);
@@ -38,6 +40,7 @@ export default function Page() {
     const [isLoadData, setIsLoadData] = useState(true);
     const [openPriceEdit, setOpenPriceEdit] = useState(Array(chapterData?.length).fill(false));
     const [openCreatePractice, setOpenCreatePractice] = useState(false);
+    const [openFormPercentages, setOpenFormPercentages] = useState(false);
     const [showResult, setShowResult] = useState<any>(null);
     const [openAlert, setOpenAlert] = useState('');
     const [billingTagetOverflowActived, setBillingTagetOverflowActived] = useState(false);
@@ -113,15 +116,38 @@ export default function Page() {
 
     //PERCENTAGES-FUNCTIONS
 
-    function handleIncreaseOrDecrease(percentage: number, percentageVisible: string) {
+    async function handleIncreaseOrDecrease() {
         if (chapterData.length > 0) {
-            setOpenAlert('increaseOrDecrease');
-            setPercentage(percentage);
-            setPercentageVisible(percentageVisible);
-        } else {
-            setShowResult('no-practices')
+            setLoadingIncreaseOrDecrease(!loadingIncreaseOrDecrease);
+
+            const updatedChapterData = chapterData.map((chapter: { price: number; }) => {
+                const newPrice = (chapter.price + (chapter.price * percentage));
+                const roundedPrice = Math.round(newPrice);
+                return {
+                    ...chapter,
+                    price: roundedPrice
+                };
+            });
+
+            const result = await updateChapterPrices(updatedChapterData, chapterName);
+            if (result === 'error') {
+                setLoadingIncreaseOrDecrease(false);
+            } else {
+                updatePractices();
+                setOpenFormPercentages(false)
+                setLoadingIncreaseOrDecrease(false)
+                setShowResult('good-prices-update')
+            }
         }
     }
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setAlreadyExists(false);
+        }, 6000);
+
+        return () => clearTimeout(timeoutId);
+    }, [alreadyExists]);
 
     //POP-UP MESSAGES
 
@@ -226,19 +252,10 @@ export default function Page() {
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className='overflow-hidden mt-2'>
+                <div className='h-full mt-2'>
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
-                        </div>
-                    )}
-                    {openAlert === 'increaseOrDecrease' && (
-                        <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                            {percentage > 0 ? (
-                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas aumentar un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapterName} />
-                            ) : (
-                                <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-prices-update') }} action={'AumentarDisminuir'} firstProp={'¿Estás seguro/a de que deseas disminuir un'} secondProp={percentageVisible} thirdProp={chapterData} fourthProp={percentage} fifthProp={chapterName} />
-                            )}
                         </div>
                     )}
                     <div className='ml-2 mr-2 p-4 mt-16'>
@@ -262,7 +279,7 @@ export default function Page() {
                                 )}
                             </div>
                             <button onClick={() => {
-                                setOpenCreatePractice(!openCreatePractice); setId(null); setPrice(null); setPracticeName(null); setLoading(false);
+                                setOpenCreatePractice(!openCreatePractice); setId(null); setPrice(null); setOpenFormPercentages(false); setPracticeName(null); setLoading(false);
                             }} className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
                                 {openCreatePractice ? (
                                     <div className='flex justify-center items-center'>
@@ -278,8 +295,8 @@ export default function Page() {
                     </div>
                     {chapterData ? (
                         <div className='flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full'>
-                            <div id="billing-target" className='mx-6 mr-8 rounded-lg w-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
-                                <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600 relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
+                            <div id="billing-target" className='mx-6 mr-8 rounded-lg w-full h-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
+                                <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600  relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
                                     <h1 >Aranceles </h1>
                                     {showResult === 'good-practice' && (
                                         <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right ">
@@ -400,7 +417,7 @@ export default function Page() {
                                                     <div className='flex select-none'>
                                                         <label className="text-black select-none text-lg ml-2">Id</label>
                                                         {alreadyExists && (
-                                                            <div className='animate-alredy-exists bg-red-500 ml-6 rounded-lg px-1 text-sm text-center flex h-6 items-center'>
+                                                            <div className='animate-alredy-exists bg-red-500 ml-3 rounded-lg px-1 text-sm text-center flex h-6 items-center'>
                                                                 Ocupado
                                                             </div>
                                                         )}
@@ -413,7 +430,7 @@ export default function Page() {
                                                             <input
                                                                 placeholder='08'
                                                                 type="text"
-                                                                className={`${alreadyExists ? 'bg-red-500 bg-opacity-70' : ''} h-10 px-3  select-none py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none bg-white text-black `}
+                                                                className={`${alreadyExists ? 'bg-red-500 bg-opacity-70' : 'bg-white'} h-10 px-3  select-none py-2 w-16 border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none  text-black `}
                                                                 required
                                                                 name='id'
                                                                 value={id}
@@ -480,24 +497,49 @@ export default function Page() {
                                 </form >
                             ) : (
                                 <div className='animate-move-from-right-form text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-300 bg-opacity-30'>
-                                    <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
-                                    <div className='flex font-medium transition'>
-                                        <button onClick={() => handleIncreaseOrDecrease(0.05, '+5%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
-                                        <button onClick={() => handleIncreaseOrDecrease(0.1, '+10%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
-                                    </div>
-                                    <div className='flex font-medium transition'>
-                                        <button onClick={() => handleIncreaseOrDecrease(0.15, '+15%')} className='hover:bg-teal-600 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
-                                        <button onClick={() => handleIncreaseOrDecrease(0.2, '+20%')} className='hover:bg-teal-600 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
-                                    </div>
-                                    <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
-                                    <div className='flex font-medium transition'>
-                                        <button onClick={() => handleIncreaseOrDecrease(-0.05, '-5%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
-                                        <button onClick={() => handleIncreaseOrDecrease(-0.1, '-10%')} className='hover:bg-red-800 w-1/2 duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
-                                    </div>
-                                    <div className='flex font-medium transition'>
-                                        <button onClick={() => handleIncreaseOrDecrease(-0.15, '-15%')} className='hover:bg-red-800 w-1/2 duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
-                                        <button onClick={() => handleIncreaseOrDecrease(-0.2, '-20%')} className='hover:bg-red-800 w-1/2  duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
-                                    </div>
+                                    {openFormPercentages ? (
+                                        <div className=' flex  p-4 pt-6 flex-col justify-center items-center'>
+                                            <PiSealWarningThin className="text-gray-600" size={80} />
+                                            {percentage > 0 ? (
+                                                <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas aumentar un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                            ) : (
+                                                <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas disminuir un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                            )}
+                                            <div className='flex mt-16 text-xl font-medium w-full'>
+                                                <button onClick={() => setOpenFormPercentages(false)} className='mr-1.5 py-1 bg-red-600 hover:bg-opacity-70 hover:transition hover:duration-250 hover:text-gray-100 text-red-900 bg-opacity-50 rounded-lg w-full shadow-lg'>NO</button>
+                                                <button onClick={handleIncreaseOrDecrease} className='ml-1.5 py-1 bg-teal-600 hover:bg-opacity-70 hover:transition hover:duration-200 hover:text-gray-100 text-teal-900 bg-opacity-50 rounded-lg w-full shadow-lg'>
+                                                    {loadingIncreaseOrDecrease ? (
+                                                        <div className='flex justify-center items-center py-0.5'>
+                                                            <ClipLoader color="white" size={20} />
+                                                        </div>
+                                                    ) : (
+                                                        "SI"
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
+                                            <div className='flex font-medium transition'>
+                                                <button onClick={() => { setPercentageVisible('+5%'); setPercentage(0.05); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
+                                                <button onClick={() => { setPercentageVisible('+10%'); setPercentage(0.1); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
+                                            </div>
+                                            <div className='flex font-medium transition'>
+                                                <button onClick={() => { setPercentageVisible('+15%'); setPercentage(0.15); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
+                                                <button onClick={() => { setPercentageVisible('+20%'); setPercentage(0.2); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
+                                            </div>
+                                            <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
+                                            <div className='flex font-medium transition'>
+                                                <button onClick={() => { setPercentageVisible('-5%'); setPercentage(-0.05); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
+                                                <button onClick={() => { setPercentageVisible('-10%'); setPercentage(-0.1); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
+                                            </div>
+                                            <div className='flex font-medium transition'>
+                                                <button onClick={() => { setPercentageVisible('-15%'); setPercentage(-0.15); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
+                                                <button onClick={() => { setPercentageVisible('-20%'); setPercentage(-0.2); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2  hover:duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -505,7 +547,8 @@ export default function Page() {
                         null
                     }
                 </div >
-            )}
+            )
+            }
         </div >
     )
 }

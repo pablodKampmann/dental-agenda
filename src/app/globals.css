@@ -25,13 +25,13 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(209, 213, 219, 0.7);
+  background: rgb(209, 213, 219);
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(112, 145, 145);
+  background: rgb(5, 54, 50);
   border-radius: 5px;
 }
 
