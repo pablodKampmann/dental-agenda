@@ -108,6 +108,14 @@ export default function Page() {
         const { data, chapterNum } = await getChapter(chapterName)
         if (data && chapterNum) {
             const filteredData = data.filter(item => !Object.values(item).every(value => value === undefined));
+            filteredData.sort((a, b) => {
+                if (a.id && b.id) {
+                    return parseInt(a.id) - parseInt(b.id);
+                }
+                return 0;
+            });
+            console.log(filteredData);
+
             setChapterData(filteredData);
             setChapterNum(chapterNum);
             setIsLoadData(false);
@@ -248,11 +256,11 @@ export default function Page() {
     }
 
     return (
-        <div className='ml-56 h-screen overflow-hidden flex-1'>
+        <div className='ml-56  h-screen overflow-hidden flex-1'>
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className='h-full mt-2'>
+                <div className='h-full py-2'>
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
@@ -402,144 +410,148 @@ export default function Page() {
                             </div>
 
                             {openCreatePractice ? (
-                                <form onSubmit={HandleSubmit} className="relative w-[400px] mr-6 animate-move-from-right-form">
-                                    <div className="w-full  border-2 border-gray-600 relative px-4 py-4 bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
-                                        <div className="flex items-center ">
-                                            <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
-                                            <div className="block font-semibold text-xl text-black ml-3">
-                                                <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
-                                                <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                                <div className='overflow-hidden'>
+                                    <form onSubmit={HandleSubmit} className="relative w-[400px] mr-6 animate-move-from-right-form">
+                                        <div className="w-full  border-2 border-gray-600 relative px-4 py-4 bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
+                                            <div className="flex items-center ">
+                                                <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
+                                                <div className="block font-semibold text-xl text-black ml-3">
+                                                    <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
+                                                    <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="pt-2 pb-4">
-                                            <div className='flex justify-between '>
-                                                <div className="flex flex-col mt-1 w-36 mx-2">
-                                                    <div className='flex select-none'>
-                                                        <label className="text-black select-none text-lg ml-2">Id</label>
-                                                        {alreadyExists && (
-                                                            <div className='animate-alredy-exists bg-red-500 ml-3 rounded-lg px-1 text-sm text-center flex h-6 items-center'>
-                                                                Ocupado
+                                            <div className="pt-2 pb-4">
+                                                <div className='flex justify-between '>
+                                                    <div className="flex flex-col mt-1 w-36 mx-2">
+                                                        <div className='flex select-none'>
+                                                            <label className="text-black select-none text-lg ">Núm.</label>
+                                                            {alreadyExists && (
+                                                                <div className='animate-alredy-exists bg-red-500  rounded-lg px-1 text-xs text-center flex h-6 items-center'>
+                                                                    Ocupado
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className='flex justify-center items-center'>
+                                                            <p className='text-black  bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
+                                                                {formattedIdFromRoman(chapterNum)}.
+                                                            </p>
+                                                            <div className="relative text-gray-400 ">
+                                                                <input
+                                                                    placeholder='08'
+                                                                    type="text"
+                                                                    className={`${alreadyExists ? 'bg-red-500 bg-opacity-70' : 'bg-white'} h-10 px-3  select-none py-2 w-16 border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none  text-black `}
+                                                                    required
+                                                                    name='id'
+                                                                    value={id}
+                                                                    onChange={(e) => setId(e.target.value)}
+                                                                />
                                                             </div>
-                                                        )}
+                                                        </div>
                                                     </div>
-                                                    <div className='flex justify-center items-center'>
-                                                        <p className='text-black  bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
-                                                            {formattedIdFromRoman(chapterNum)}.
-                                                        </p>
-                                                        <div className="relative text-gray-400 ">
-                                                            <input
-                                                                placeholder='08'
-                                                                type="text"
-                                                                className={`${alreadyExists ? 'bg-red-500 bg-opacity-70' : 'bg-white'} h-10 px-3  select-none py-2 w-16 border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none  text-black `}
-                                                                required
-                                                                name='id'
-                                                                value={id}
-                                                                onChange={(e) => setId(e.target.value)}
-                                                            />
+                                                    <div className="flex flex-col mt-1 w-full mx-2">
+                                                        <div className='flex'>
+                                                            <label className="text-black select-none text-lg ml-2">Precio</label>
+                                                        </div>
+                                                        <div className='flex justify-center items-center'>
+                                                            <p className='text-black ml-1 bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
+                                                                $
+                                                            </p>
+                                                            <div className="relative text-gray-400 w-full ">
+                                                                <input
+                                                                    placeholder='56.235'
+                                                                    type="text"
+                                                                    className="h-10 px-3 py-2 w-full border focus:ring-gray-500  select-none focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none bg-white text-black"
+                                                                    required
+                                                                    name='price'
+                                                                    value={price}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value.replace(/\D/g, '');
+                                                                        const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                                                        setPrice(formattedValue);
+                                                                    }}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col mt-1 w-full mx-2">
+                                                <div className="flex flex-col mt-2 w-full pr-4 mx-2">
                                                     <div className='flex'>
-                                                        <label className="text-black select-none text-lg ml-2">Precio</label>
+                                                        <label className="text-black select-none text-lg ml-1">Nombre de práctica</label>
                                                     </div>
-                                                    <div className='flex justify-center items-center'>
-                                                        <p className='text-black ml-1 bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none'>
-                                                            $
-                                                        </p>
-                                                        <div className="relative text-gray-400 w-full ">
-                                                            <input
-                                                                placeholder='56.235'
-                                                                type="text"
-                                                                className="h-10 px-3 py-2 w-full border focus:ring-gray-500  select-none focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none bg-white text-black"
-                                                                required
-                                                                name='price'
-                                                                value={price}
-                                                                onChange={(e) => {
-                                                                    const value = e.target.value.replace(/\D/g, '');
-                                                                    const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                                                                    setPrice(formattedValue);
-                                                                }}
-                                                            />
-                                                        </div>
+                                                    <div className="relative text-gray-400 ">
+                                                        <input
+                                                            type="text"
+                                                            className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-white text-black"
+                                                            required
+                                                            name='lastName'
+                                                            value={practiceName}
+                                                            onChange={(e) => setPracticeName(e.target.value)}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col mt-2 w-full pr-4 mx-2">
-                                                <div className='flex'>
-                                                    <label className="text-black select-none text-lg ml-1">Nombre de práctica</label>
-                                                </div>
-                                                <div className="relative text-gray-400 ">
-                                                    <input
-                                                        type="text"
-                                                        className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-white text-black"
-                                                        required
-                                                        name='lastName'
-                                                        value={practiceName}
-                                                        onChange={(e) => setPracticeName(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-2 flex justify-center items-center select-none text-base">
-                                            <button type="button" onClick={() => setOpenCreatePractice(false)} className="bg-red-900 hover:text-lg h-12 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white mx-2  rounded-md focus:outline-none transition duration-200">CANCELAR</button>
-                                            <button type="submit" className="bg-teal-600 hover:bg-teal-500 font-semibold hover:text-lg flex justify-center h-12  items-center w-full text-teal-950 hover:text-white mx-2 rounded-md focus:outline-none transition duration-200">
-                                                {loading ? (
-                                                    <div className='flex justify-center items-center '>
-                                                        <ClipLoader className='' color="white" size={24} />
-                                                    </div>
-                                                ) : (
-                                                    'CREAR'
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div >
-                                </form >
-                            ) : (
-                                <div className='animate-move-from-right-form text-black border-2 h-fit border-gray-600 ml-auto mr-6 shadow-lg rounded-lg w-1/6 select-none bg-gray-300 bg-opacity-30'>
-                                    {openFormPercentages ? (
-                                        <div className=' flex  p-4 pt-6 flex-col justify-center items-center'>
-                                            <PiSealWarningThin className="text-gray-600" size={80} />
-                                            {percentage > 0 ? (
-                                                <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas aumentar un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
-                                            ) : (
-                                                <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas disminuir un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
-                                            )}
-                                            <div className='flex mt-16 text-xl font-medium w-full'>
-                                                <button onClick={() => setOpenFormPercentages(false)} className='mr-1.5 py-1 bg-red-600 hover:bg-opacity-70 hover:transition hover:duration-250 hover:text-gray-100 text-red-900 bg-opacity-50 rounded-lg w-full shadow-lg'>NO</button>
-                                                <button onClick={handleIncreaseOrDecrease} className='ml-1.5 py-1 bg-teal-600 hover:bg-opacity-70 hover:transition hover:duration-200 hover:text-gray-100 text-teal-900 bg-opacity-50 rounded-lg w-full shadow-lg'>
-                                                    {loadingIncreaseOrDecrease ? (
-                                                        <div className='flex justify-center items-center py-0.5'>
-                                                            <ClipLoader color="white" size={20} />
+                                            <div className="mt-2 flex justify-center items-center select-none text-base">
+                                                <button type="button" onClick={() => setOpenCreatePractice(false)} className="bg-red-900 hover:text-lg h-12 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white mx-2  rounded-md focus:outline-none transition duration-200">CANCELAR</button>
+                                                <button type="submit" className="bg-teal-600 hover:bg-teal-500 font-semibold hover:text-lg flex justify-center h-12  items-center w-full text-teal-950 hover:text-white mx-2 rounded-md focus:outline-none transition duration-200">
+                                                    {loading ? (
+                                                        <div className='flex justify-center items-center '>
+                                                            <ClipLoader className='' color="white" size={24} />
                                                         </div>
                                                     ) : (
-                                                        "SI"
+                                                        'CREAR'
                                                     )}
                                                 </button>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
-                                            <div className='flex font-medium transition'>
-                                                <button onClick={() => { setPercentageVisible('+5%'); setPercentage(0.05); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
-                                                <button onClick={() => { setPercentageVisible('+10%'); setPercentage(0.1); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
+                                        </div >
+                                    </form >
+                                </div>
+                            ) : (
+                                <div className='overflow-hidden  w-1/5'>
+                                    <div className={`${openFormPercentages ? 'h-fit' : 'h-fit'} animate-move-from-right-form transition-all text-black border-2 duration-500 ease border-gray-600 ml-auto mr-6 shadow-lg rounded-lg  select-none bg-gray-300 bg-opacity-30`}>
+                                        {openFormPercentages ? (
+                                            <div className=' flex  p-4 pt-6 flex-col justify-center items-center'>
+                                                <PiSealWarningThin className="text-gray-600" size={80} />
+                                                {percentage > 0 ? (
+                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas aumentar un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                                ) : (
+                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas disminuir un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                                )}
+                                                <div className='flex mt-16 text-xl font-medium w-full'>
+                                                    <button onClick={() => setOpenFormPercentages(false)} className='mr-1.5 py-1 bg-red-600 hover:bg-opacity-70 hover:transition hover:duration-250 hover:text-gray-100 text-red-900 bg-opacity-50 rounded-lg w-full shadow-lg'>NO</button>
+                                                    <button onClick={handleIncreaseOrDecrease} className='ml-1.5 py-1 bg-teal-600 hover:bg-opacity-70 hover:transition hover:duration-200 hover:text-gray-100 text-teal-900 bg-opacity-50 rounded-lg w-full shadow-lg'>
+                                                        {loadingIncreaseOrDecrease ? (
+                                                            <div className='flex justify-center items-center py-0.5'>
+                                                                <ClipLoader color="white" size={20} />
+                                                            </div>
+                                                        ) : (
+                                                            "SI"
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className='flex font-medium transition'>
-                                                <button onClick={() => { setPercentageVisible('+15%'); setPercentage(0.15); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
-                                                <button onClick={() => { setPercentageVisible('+20%'); setPercentage(0.2); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
+                                        ) : (
+                                            <div>
+                                                <h1 className='flex justify-center items-center bg-teal-600 px-1 text-center  text-white font-semibold text-xl py-2 border-b-2 border-gray-600 rounded-t-md'>AUMENTAR TODO</h1>
+                                                <div className='flex font-medium transition'>
+                                                    <button onClick={() => { setPercentageVisible('+5%'); setPercentage(0.05); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+5%</button>
+                                                    <button onClick={() => { setPercentageVisible('+10%'); setPercentage(0.1); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+10%</button>
+                                                </div>
+                                                <div className='flex font-medium transition'>
+                                                    <button onClick={() => { setPercentageVisible('+15%'); setPercentage(0.15); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>+15%</button>
+                                                    <button onClick={() => { setPercentageVisible('+20%'); setPercentage(0.2); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
+                                                </div>
+                                                <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
+                                                <div className='flex font-medium transition'>
+                                                    <button onClick={() => { setPercentageVisible('-5%'); setPercentage(-0.05); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
+                                                    <button onClick={() => { setPercentageVisible('-10%'); setPercentage(-0.1); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
+                                                </div>
+                                                <div className='flex font-medium transition'>
+                                                    <button onClick={() => { setPercentageVisible('-15%'); setPercentage(-0.15); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
+                                                    <button onClick={() => { setPercentageVisible('-20%'); setPercentage(-0.2); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2  hover:duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
+                                                </div>
                                             </div>
-                                            <h1 className='flex justify-center items-center bg-teal-600 text-center px-1  text-white font-semibold text-xl py-2 border-b-2 border-gray-600'>DISMINUIR TODO</h1>
-                                            <div className='flex font-medium transition'>
-                                                <button onClick={() => { setPercentageVisible('-5%'); setPercentage(-0.05); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 border-b-2 border-gray-600'>-5%</button>
-                                                <button onClick={() => { setPercentageVisible('-10%'); setPercentage(-0.1); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>-10%</button>
-                                            </div>
-                                            <div className='flex font-medium transition'>
-                                                <button onClick={() => { setPercentageVisible('-15%'); setPercentage(-0.15); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2 hover:duration-150 border-r-2 py-2 rounded-bl-md border-gray-600'>-15%</button>
-                                                <button onClick={() => { setPercentageVisible('-20%'); setPercentage(-0.2); setOpenFormPercentages(true); }} className='hover:bg-red-800 w-1/2  hover:duration-150 py-2 rounded-br-md border-gray-600'>-20%</button>
-                                            </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
