@@ -1,12 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link'
 import { FaUsers, FaTooth, FaDollarSign } from 'react-icons/fa';
 import { BsFillCalendar2WeekFill } from 'react-icons/bs';
-import { IoLogOutSharp } from 'react-icons/io5';
+import { IoLogOutSharp, IoSettingsOutline } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
 import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
@@ -15,6 +15,7 @@ import { Alert } from "./alert";
 
 export function SideBar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [openAlert, setOpenAlert] = useState(false);
     const [openUserMenu, setOpenUserMenu] = useState(false);
@@ -23,7 +24,7 @@ export function SideBar() {
         async function get() {
             try {
                 const user = await getUser();
-                setUser(user);                
+                setUser(user);
             } catch (error) {
                 console.log(error);
             }
@@ -63,7 +64,7 @@ export function SideBar() {
                                     )}
                                     {openUserMenu && (
                                         <div className="absolute mt-24 w-full shadow-lg bg-teal-100 transition duration-150 rounded-b-lg border-t-2 border-teal-700 animate-user-menu">
-                                            <div className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 select-none flex items-center"><RiUserSettingsFill className="mr-1 text-teal-900" /> Perfil </div>
+                                            <div onClick={() => router.push('/config')} className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 select-none flex items-center"><RiUserSettingsFill className="mr-1 text-teal-900" /> Perfil </div>
                                             <div onClick={() => setOpenAlert(true)} className="px-3 py-1 border text-teal-900 border-teal-700 hover:bg-teal-300 rounded-b-lg select-none flex items-center"><IoLogOutSharp className="mr-1 text-teal-900" />Cerrar Sesión</div>
                                         </div>
                                     )}
@@ -123,11 +124,16 @@ export function SideBar() {
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     </ul>
                     <div className='absolute bottom-0'>
-                        <hr className="border-teal-700 border-2 rounded-full w-full ml-2 mb-2" />
-                        <button type="button" onClick={() => setOpenAlert(!openAlert)} className='flex py-0.5 select-none justify-center items-center hover:scale-110 hover:border-teal-600 duration-100 ml-4 ease-in-out border-2 rounded-xl px-2 mb-3 hover:bg-teal-700'>
-                            <IoLogOutSharp size={40} className="" />
-                            <p className='text-medium font-medium'>Cerrar Sesión</p>
-                        </button>
+                        <hr className="border-teal-700 border-2 rounded-full w-full mb-2" />
+                        <div className='flex mb-3'>
+                            <button onClick={() => setOpenAlert(!openAlert)} className='flex text-sm font-medium p-1 select-none mr-1 justify-center items-center hover:scale-105 hover:border-teal-600 duration-100 border-2 rounded-xl hover:bg-teal-700'>
+                                <IoLogOutSharp size={34} className="" />
+                                <p>Cerrar Sesión</p>
+                            </button>
+                            <button onClick={() => router.push('/config')} className={`${pathname === '/config' ? 'bg-teal-400 bg-opacity-40 border-teal-700 ' : ''} flex ml-2 p-1 select-none justify-center  items-center hover:scale-105 hover:border-teal-600 duration-100  border-2 rounded-xl hover:bg-teal-700`}>
+                                <IoSettingsOutline size={34} className="" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </aside>

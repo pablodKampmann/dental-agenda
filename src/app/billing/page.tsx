@@ -270,7 +270,7 @@ export default function Page() {
                         <div className='flex justify-between select-none'>
                             <div className='flex items-center '>
                                 <select value={chapterName} onChange={(event) => { setChapterName(event.target.value); }}
-                                    className=' bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-t-4 px-4 border-b-4 border-teal-600 rounded-2xl shadow-lg  flex justify-center items-center'>
+                                    className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white hover:border-y-2 border-x-2 border-x-gray-600 border-x-transparent transition duration-300 bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-y-4 px-4  border-teal-600 rounded-3xl shadow-lg  flex justify-center items-center'>
                                     <option value={"CONSULTAS"} selected>CONSULTAS</option>
                                     <option value={"OPERATORIA DENTAL"} selected>OPERATORIA DENTAL</option>
                                     <option value={"ENDODONCIA"} selected>ENDODONCIA</option>
@@ -412,15 +412,18 @@ export default function Page() {
                             {openCreatePractice ? (
                                 <div className='overflow-hidden'>
                                     <form onSubmit={HandleSubmit} className="relative w-[400px] mr-6 animate-move-from-right-form">
-                                        <div className="w-full  border-2 border-gray-600 relative px-4 py-4 bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
-                                            <div className="flex items-center ">
-                                                <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
-                                                <div className="block font-semibold text-xl text-black ml-3">
-                                                    <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
-                                                    <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                                        <div className="w-full border-2 border-gray-600 relative  bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
+                                            <div className="flex-col items-center ">
+                                                <h1 className='bg-teal-600 rounded-t-md py-1 px-2 text-center text-3xl select-none font-medium border-b-2 border-gray-600'>Agregar Práctica</h1>
+                                                <div className='flex py-4 px-4'>
+                                                    <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
+                                                    <div className="block font-semibold text-xl text-black ml-3">
+                                                        <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
+                                                        <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="pt-2 pb-4">
+                                            <div className=" pb-4 px-4">
                                                 <div className='flex justify-between '>
                                                     <div className="flex flex-col mt-1 w-36 mx-2">
                                                         <div className='flex select-none'>
@@ -490,7 +493,7 @@ export default function Page() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="mt-2 flex justify-center items-center select-none text-base">
+                                            <div className="mt-2 px-4 pb-4 flex justify-center items-center select-none text-base">
                                                 <button type="button" onClick={() => setOpenCreatePractice(false)} className="bg-red-900 hover:text-lg h-12 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white mx-2  rounded-md focus:outline-none transition duration-200">CANCELAR</button>
                                                 <button type="submit" className="bg-teal-600 hover:bg-teal-500 font-semibold hover:text-lg flex justify-center h-12  items-center w-full text-teal-950 hover:text-white mx-2 rounded-md focus:outline-none transition duration-200">
                                                     {loading ? (
