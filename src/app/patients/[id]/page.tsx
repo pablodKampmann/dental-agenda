@@ -22,9 +22,11 @@ import dayjs from 'dayjs';
 import { Loading } from "./../../components/loading";
 import { MoonLoader } from "react-spinners";
 import { FaCheck } from "react-icons/fa6";
+import { getUser } from "./../../components/getUser";
 
 export default function PatientId() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null);
   const [isLoad, setIsLoad] = useState(true);
   const [loadingCategory, setLoadingCategory] = useState('');
   const [check, setCheck] = useState(false);
@@ -41,16 +43,23 @@ export default function PatientId() {
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
 
+  //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && patient) {
-        setIsLoad(false);
-        const date = dayjs(patient.birthDate, "DD/MM/YYYY");
-        setDateFormatted(date)
+        handleGetUser();
       } else if (!user) {
         router.push("/notSign");
       }
     });
+
+    async function handleGetUser() {
+      const user = await getUser();
+      setUser(user);
+      const date = dayjs(patient.birthDate, "DD/MM/YYYY");
+      setDateFormatted(date)
+      setIsLoad(false);
+    }
 
     return () => unsubscribe();
   }, [router, patient]);
@@ -131,7 +140,7 @@ export default function PatientId() {
           <div className='ml-2 p-4 mt-16 mr-2 relative'>
             {openAlert && (
               <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
+                <Alert clinicId={user.clinicId} onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
               </div>
             )}
             {patient && (

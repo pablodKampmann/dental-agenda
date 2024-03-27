@@ -22,10 +22,12 @@ import { setPractice } from "./../components/setPractice";
 import { ImCancelCircle } from "react-icons/im";
 import { updateChapterPrices } from "./../components/updateChapterPrices";
 import { PiSealWarningThin } from "react-icons/pi";
+import { getUser } from "./../components/getUser";
 
 export default function Page() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
+    const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
     const [alreadyExists, setAlreadyExists] = useState(false);
@@ -47,17 +49,21 @@ export default function Page() {
     const [newPrice, setNewPrice] = useState<any>(null);
     const billingTargetRef = useRef<any>(null);
 
-    //CHECK IF THE USER IS LOGGED IN
-
+    //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                setIsLoad(false);
-                updatePractices();
+                handleGetUser();
             } else if (!user) {
                 router.push("/notSign");
             }
         });
+
+        async function handleGetUser() {
+            const user = await getUser();
+            setUser(user);
+            setIsLoad(false);
+        }
 
         return () => unsubscribe();
     }, [router]);
@@ -263,7 +269,7 @@ export default function Page() {
                 <div className='h-full py-2'>
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
+                            <Alert clinicId={user.clinicId} onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
                         </div>
                     )}
                     <div className='ml-2 mr-2 p-4 mt-16'>

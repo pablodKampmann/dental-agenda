@@ -10,6 +10,7 @@ import { AiFillPushpin } from "react-icons/ai";
 import { deletePractice } from "./deletePractice";
 import { logOut } from "./../components/logOut";
 interface ModalSettProps {
+    clinicId?: string | null;
     onCloseAlert?: () => void;
     onSuccess?: () => void;
     action?: string | null;
@@ -20,7 +21,7 @@ interface ModalSettProps {
     fifthProp?: any | null
 }
 
-export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp }: ModalSettProps) {
+export function Alert({ clinicId, onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp }: ModalSettProps) {
     const [loading, setLoading] = useState(false);
 
     function handleCloseAlert() {
@@ -43,7 +44,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
 
     async function handleDeletePatient() {
         setLoading(true);
-        const result = await deletePatient(thirdProp);
+        const result = await deletePatient(clinicId ,thirdProp);
         if (result === 'error') {
             setLoading(false);
         } else {
@@ -56,7 +57,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
     async function handleDeleteAppointment() {
         setLoading(true);
         const dateUpdate = secondProp.date.replace(/\//g, '');
-        const result = await deleteAppointment(secondProp.id, dateUpdate)
+        const result = await deleteAppointment(clinicId, secondProp.id, dateUpdate)
         if (result === 'error') {
             setLoading(false);
         } else {
@@ -68,7 +69,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
 
     async function handleDeletePractice() {
         setLoading(true);
-        const result = await deletePractice(fourthProp, fifthProp);
+        const result = await deletePractice(clinicId, fourthProp, fifthProp);
         if (result === 'error') {
             setLoading(false);
         } else {

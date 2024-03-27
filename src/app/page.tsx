@@ -29,7 +29,7 @@ import 'dayjs/locale/es';
 import { IoTimeOutline } from "react-icons/io5";
 import { Alert } from "./components/alert";
 import { TiDocumentDelete } from "react-icons/ti";
-
+import { getUser } from "./components/getUser";
 export interface dateData {
   date: string;
   dayComplete: string;
@@ -42,6 +42,7 @@ interface CustomDayjs extends Dayjs {
 
 export default function Page() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null);
   const [calendarValue, setCalendarValue] = React.useState<Dayjs | null>(dayjs(new Date()));
   const [isLoad, setIsLoad] = useState(true);
   const [isLoadAppoints, setIsLoadAppoints] = useState(false);
@@ -79,15 +80,21 @@ export default function Page() {
   const selectReasonRef = useRef<any>(null);
   const [time, setTime] = useState(getCurrentTime());
 
-  //CHECK IF THE USER IS LOGGED IN
+  //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setIsLoad(false);
+        handleGetUser();
       } else if (!user) {
         router.push("/notSign");
       }
     });
+
+    async function handleGetUser() {
+      const user = await getUser();
+      setUser(user);
+      setIsLoad(false);
+    }
 
     return () => unsubscribe();
   }, [router]);
@@ -139,7 +146,7 @@ export default function Page() {
     setIsLoadAppoints(true);
 
     async function get() {
-      let appointments = await getAppointments(formattedDate)
+      let appointments = await getAppointments(user.clinicId ,formattedDate)
       if (appointments === 'vacio') {
         setAppointments(null);
         setIsLoadAppoints(false);
@@ -287,7 +294,7 @@ export default function Page() {
     clean();
     const result = await setAppointment(patientId, dateData, reason, observations);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
+    let appointments = await getAppointments(user.clinicId ,formattedDate)
     if (appointments === 'vacio') {
       setAppointments(null);
       setIsLoadAppoints(false);
@@ -359,7 +366,7 @@ export default function Page() {
     setOpenAlertMessage(false);
     setIsLoadAppoints(true);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
+    let appointments = await getAppointments(user.clinicId ,formattedDate)
     if (appointments === 'vacio') {
       setAppointments(null);
       setIsLoadAppoints(false);
@@ -497,7 +504,7 @@ export default function Page() {
             )}
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
+                <Alert clinicId={user.clinicId} onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
               </div>
             )}
             {openModalAppointment && (

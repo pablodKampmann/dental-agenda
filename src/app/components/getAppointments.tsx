@@ -2,8 +2,8 @@ import { db } from "../firebase";
 import { get, ref } from "firebase/database";
 import { getPatient } from "./getPatient";
 
-export async function getAppointments(date: string | null) {
-    const dbRef = ref(db, `appointments/${date}`);
+export async function getAppointments(clinicId: string, date: string | null) {
+    const dbRef = ref(db, `clinics/${clinicId}/appointments/${date}`);
     const snapshot = await get(dbRef);
     if (snapshot.exists()) {
         const appointments = snapshot.val();

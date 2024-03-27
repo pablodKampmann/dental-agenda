@@ -10,6 +10,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { getUser } from "./../components/getUser";
 import { MdModeEditOutline, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
+import { setOptions } from "./../components/setOptions[TEMP]";
 
 export default function Page() {
     const router = useRouter()
@@ -42,13 +43,15 @@ export default function Page() {
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className='ml-2 mr-2 p-4 h-screen flex justify-center items-center'>
-                    <div className=' bg-white  w-full h-fit  shadow-lg border-2 border-gray-600 rounded-lg mx-52 relative my-16 text-black'>
-                        <h1 className='bg-gradient-to-r from-teal-500 via-emerald-700 to-emerald-800 select-none text-2xl tracking-wide py-3 pl-48 text-white font-medium rounded-t-md'>{user.displayName}</h1>
+                <div className=' h-screen'>
+                    <div className=' bg-white w-full h-fit rounded-lg relative mt-16 text-black'>
+                        <h1 className='bg-gradient-to-r from-teal-800 via-teal-700 to-teal-300 select-none text-2xl tracking-wide py-5 pl-48 text-white font-medium rounded-t-md'>{user.displayName} (Admin)</h1>
+                        <h1 onClick={() => setOptions(user.clinicId)} className='bg-black cursor-pointer p-4'>NOIDWNIWDQNIOWNDQ</h1>
                         <div className='pl-44 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={() => setSelectedField('pros')} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
-                            <button onClick={() => setSelectedField('config')} className={`${selectedField === 'config' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración adicional</button>
+                            <button onClick={() => setSelectedField('config')} className={`${selectedField === 'config' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración del Consultorio</button>
+                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estadísticas</button>
                         </div>
                         <div className='absolute top-8 left-3 mb-8 group'>
                             <Image src={`/${user.userName}.jpg`} width={150} height={150} className='  rounded-full border-4  border-white shadow-2xl select-none transition duration-300 group-hover:cursor-pointer group-hover:blur-[2px]' alt="UserPhoto"></Image>
@@ -60,7 +63,6 @@ export default function Page() {
                                     <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
                                     <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre visible: <span className='ml-1 font-semibold flex justify-center items-center'>{user.displayName} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Email: <span className='ml-1 font-semibold flex justify-center items-center'>{user.email} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre del consultorio: <span className='ml-1 font-semibold flex justify-center items-center'>{user.clinicName} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-96 " />
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
                                     {showUserName ? (
@@ -69,9 +71,34 @@ export default function Page() {
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     )}
                                     <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <hr className="border-black border border-dashed  w-96 " />
+                                    <h1 className=' mt-2 text-base font-bold tracking-wide'>Preferencias de interfaz:</h1>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Idioma: <span className='ml-1 font-semibold flex justify-center items-center'>spanish<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+
+                                </div>
+                            )}
+                            {selectedField === 'pros' && (
+                                <div className='text-sm'>
+                                    <h1 className=' text-base font-bold tracking-wide'>Lista de profesionales:</h1>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre Completo: <span className='ml-1 font-semibold flex justify-center items-center'>Karina Álvarez <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                </div>
+                            )}
+                            {selectedField === 'config' && (
+                                <div className='text-sm'>
+                                    <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre: <span className='ml-1 font-semibold flex justify-center items-center'>{user.clinicName} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>País: <span className='ml-1 font-semibold flex justify-center items-center'>Argentina <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Dirección: <span className='ml-1 font-semibold flex justify-center items-center'>11 de Septiembre 4075 <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Horarios de atención: <span className='ml-1 font-semibold flex justify-center items-center'> 6:00 - 18:00 <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <hr className="border-black border border-dashed  w-96 " />
+                                    <h1 className=' mt-2 text-base font-bold tracking-wide'>Contacto:</h1>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto: <span className='ml-1 font-semibold flex justify-center items-center'>+54 3413466408  <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto auxiliar: <span className='ml-1 font-semibold flex justify-center items-center'> +54 15484848468 <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Correo electronico: <span className='ml-1 font-semibold flex justify-center items-center'> consultorio@gmail.com <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                 </div>
                             )}
                         </div>
+
                     </div >
                 </div >
             )
