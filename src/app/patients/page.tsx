@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
-import { ModalCreatePatient } from './../components/modalCreatePatient'
-import { GetPatients } from "./../components/getPatients";
-import { SearchPatient } from "./../components/searchPatient";
+import { ModalCreatePatient } from '../components/style/modalCreatePatient'
+import { GetPatients } from "../components/patients/getPatients";
+import { SearchPatient } from "../components/patients/searchPatient";
 import { TbUserSearch, TbReload } from 'react-icons/tb';
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "./../components/loading";
+import { Loading } from "../components/style/loading";
 import { BsClipboardCheck, BsPersonFillAdd } from "react-icons/bs";
 import { LuSearchX } from "react-icons/lu";
 import { BounceLoader, ClipLoader } from "react-spinners";

@@ -1,28 +1,28 @@
 'use client'
 
-import { getPatient } from "../../components/getPatient";
+import { getPatient } from "../../components/patients/getPatient";
 import React, { useState, useEffect, useRef } from 'react';
 import { TbPencilCog } from 'react-icons/tb';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill, BsFillCheckCircleFill } from 'react-icons/bs';
-import { updatePatient } from "../../components/updatePatient";
+import { updatePatient } from "../../components/patients/updatePatient";
 import { BiPlusMedical } from 'react-icons/bi';
-import { Alert } from "../../components/alert";
+import { Alert } from "../../components/style/alert";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { PatientRecord } from "./../../components/patientRecord";
-import { getInsuranceOptions } from "../../components/getInsuranceOpt";
+import { PatientRecord } from "../../components/style/patientRecord";
+import { getInsuranceOptions } from "../../components/options/getInsuranceOpt";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from 'dayjs';
-import { Loading } from "./../../components/loading";
+import { Loading } from "../../components/style/loading";
 import { MoonLoader } from "react-spinners";
 import { FaCheck } from "react-icons/fa6";
-import { getUser } from "./../../components/getUser";
+import { getUser } from "../../components/auth/getUser";
 
 export default function PatientId() {
   const router = useRouter()

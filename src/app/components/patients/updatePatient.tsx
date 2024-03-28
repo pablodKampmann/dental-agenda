@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { update, ref, get } from "firebase/database";
 
 export async function updatePatient(changes: string, table: string, id: string | null) {

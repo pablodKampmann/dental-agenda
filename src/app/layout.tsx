@@ -2,7 +2,7 @@ import './globals.css'
 import React from 'react';
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { SideBar } from './components/sideBar'
+import { SideBar } from './components/style/sideBar'
 
 const font = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {

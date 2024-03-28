@@ -1,16 +1,15 @@
 import { MdPersonRemoveAlt1 } from 'react-icons/md';
 import { FaRunning } from 'react-icons/fa';
-import { deletePatient } from "./deletePatient";
+import { deletePatient } from "../patients/deletePatient";
 import { ClipLoader } from "react-spinners";
 import React, { useState } from 'react';
-import { deleteAppointment } from "./deleteAppointment";
+import { deleteAppointment } from "../appointments/deleteAppointment";
 import { FaUser } from "react-icons/fa";
 import { IoTimeSharp, IoLogoUsd } from "react-icons/io5";
 import { AiFillPushpin } from "react-icons/ai";
-import { deletePractice } from "./deletePractice";
-import { logOut } from "./../components/logOut";
+import { deletePractice } from "../practices/deletePractice";
+import { logOut } from "../auth/logOut";
 interface ModalSettProps {
-    clinicId?: string | null;
     onCloseAlert?: () => void;
     onSuccess?: () => void;
     action?: string | null;
@@ -21,7 +20,7 @@ interface ModalSettProps {
     fifthProp?: any | null
 }
 
-export function Alert({ clinicId, onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp }: ModalSettProps) {
+export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp }: ModalSettProps) {
     const [loading, setLoading] = useState(false);
 
     function handleCloseAlert() {
@@ -44,7 +43,7 @@ export function Alert({ clinicId, onCloseAlert, onSuccess, action, firstProp, se
 
     async function handleDeletePatient() {
         setLoading(true);
-        const result = await deletePatient(clinicId ,thirdProp);
+        const result = await deletePatient(thirdProp);
         if (result === 'error') {
             setLoading(false);
         } else {
@@ -57,7 +56,7 @@ export function Alert({ clinicId, onCloseAlert, onSuccess, action, firstProp, se
     async function handleDeleteAppointment() {
         setLoading(true);
         const dateUpdate = secondProp.date.replace(/\//g, '');
-        const result = await deleteAppointment(clinicId, secondProp.id, dateUpdate)
+        const result = await deleteAppointment(secondProp.id, dateUpdate)
         if (result === 'error') {
             setLoading(false);
         } else {
@@ -69,7 +68,7 @@ export function Alert({ clinicId, onCloseAlert, onSuccess, action, firstProp, se
 
     async function handleDeletePractice() {
         setLoading(true);
-        const result = await deletePractice(clinicId, fourthProp, fifthProp);
+        const result = await deletePractice(fourthProp, fifthProp);
         if (result === 'error') {
             setLoading(false);
         } else {

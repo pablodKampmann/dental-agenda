@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getInsuranceOptions } from "./getInsuranceOpt";
-import { SetPatients } from "./../components/setPatients";
+import { getInsuranceOptions } from "../options/getInsuranceOpt";
+import { SetPatients } from "../patients/setPatients";
 import PhoneInput, { formatPhoneNumberIntl } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";

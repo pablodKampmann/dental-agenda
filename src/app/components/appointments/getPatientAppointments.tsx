@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { get, ref } from "firebase/database";
 
 export async function getPatientAppointments(patientId: string | number | null) {
@@ -7,7 +7,6 @@ export async function getPatientAppointments(patientId: string | number | null) 
     let appointments: any[] = [];
     if (snapshot.exists()) {
         const result = snapshot.val();
-    
         for (const key in result) {
             if (result.hasOwnProperty(key)) {
                 const fecha = result[key];

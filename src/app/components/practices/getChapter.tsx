@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { get, ref } from "firebase/database";
 
 export async function getChapter(name: string) {

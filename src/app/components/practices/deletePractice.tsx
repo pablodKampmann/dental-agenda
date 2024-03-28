@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { ref, set, get, remove } from "firebase/database";
 
 export async function deletePractice(clinicId: any, id: any, chapter: string) {

@@ -1,6 +1,6 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { get, ref } from "firebase/database";
-import { getPatient } from "./getPatient";
+import { getPatient } from "../patients/getPatient";
 
 export async function getAppointments(clinicId: string, date: string | null) {
     const dbRef = ref(db, `clinics/${clinicId}/appointments/${date}`);

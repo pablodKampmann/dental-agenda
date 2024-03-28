@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { ref, get, query, orderByChild, startAt, endAt } from "firebase/database";
 
 export async function SearchPatient(selectedField: string, searchContent: any) {

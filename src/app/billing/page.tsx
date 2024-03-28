@@ -5,24 +5,24 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "./../components/loading";
-import { getChapter } from "./../components/getChapter";
+import { Loading } from "../components/style/loading";
+import { getChapter } from "../components/practices/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
 import { MdDelete } from "react-icons/md";
 import { FaPen } from "react-icons/fa";
-import { Alert } from "./../components/alert";
+import { Alert } from "../components/style/alert";
 import { TiDocumentDelete } from "react-icons/ti";
 import { BsClipboardCheck } from "react-icons/bs";
 import { IoLogoUsd } from "react-icons/io5";
 import { RiAlertFill } from "react-icons/ri";
 import { FaRegCircleCheck, FaRegCircleXmark } from "react-icons/fa6";
-import { updatePracticePrice } from "./../components/updatePracticePrice";
-import { setPractice } from "./../components/setPractice";
+import { updatePracticePrice } from "../components/practices/updatePracticePrice";
+import { setPractice } from "../components/practices/setPractice";
 import { ImCancelCircle } from "react-icons/im";
-import { updateChapterPrices } from "./../components/updateChapterPrices";
+import { updateChapterPrices } from "../components/practices/updateChapterPrices";
 import { PiSealWarningThin } from "react-icons/pi";
-import { getUser } from "./../components/getUser";
+import { getUser } from "../components/auth/getUser";
 
 export default function Page() {
     const router = useRouter()

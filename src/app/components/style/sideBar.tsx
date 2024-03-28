@@ -10,7 +10,7 @@ import { IoLogOutSharp, IoSettingsOutline } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
 import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
-import { getUser } from "./../components/getUser";
+import { getUser } from "../auth/getUser";
 import { Alert } from "./alert";
 
 export function SideBar() {

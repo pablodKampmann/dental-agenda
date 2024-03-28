@@ -1,6 +1,6 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { ref, set, get, push } from "firebase/database";
-import { dateData } from "./../page";
+import { dateData } from "../../page";
 
 export async function setAppointment(patientId: number, dateData: dateData, reason: string, observations?: string) {
     try {

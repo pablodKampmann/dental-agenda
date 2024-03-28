@@ -3,11 +3,11 @@
 import Image from 'next/image'
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Loading } from "../components/loading";
+import { Loading } from "../components/style/loading";
 import { useRouter } from 'next/navigation'
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUser } from "./../components/getUser";
+import { getUser } from "../components/auth/getUser";
 import { MdModeEditOutline, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
 import { setOptions } from "./../components/setOptions[TEMP]";
@@ -45,19 +45,19 @@ export default function Page() {
             ) : (
                 <div className=' h-screen'>
                     <div className=' bg-white w-full h-fit rounded-lg relative mt-16 text-black'>
-                        <h1 className='bg-gradient-to-r from-teal-800 via-teal-700 to-teal-300 select-none text-2xl tracking-wide py-5 pl-48 text-white font-medium rounded-t-md'>{user.displayName} (Admin)</h1>
-                        <h1 onClick={() => setOptions(user.clinicId)} className='bg-black cursor-pointer p-4'>NOIDWNIWDQNIOWNDQ</h1>
-                        <div className='pl-44 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
+                        <h1 className='bg-gradient-to-r from-teal-800 via-teal-700 to-teal-300 select-none text-2xl tracking-wide py-5 pl-56 text-white font-medium rounded-t-md'>{user.displayName} (El verdadero Admin)</h1>
+                       {/*  <h1 onClick={() => setOptions(user.clinicId)} className='bg-black cursor-pointer p-4'>NOIDWNIWDQNIOWNDQ</h1>
+                       */} <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={() => setSelectedField('pros')} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
                             <button onClick={() => setSelectedField('config')} className={`${selectedField === 'config' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración del Consultorio</button>
                             <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estadísticas</button>
                         </div>
-                        <div className='absolute top-8 left-3 mb-8 group'>
-                            <Image src={`/${user.userName}.jpg`} width={150} height={150} className='  rounded-full border-4  border-white shadow-2xl select-none transition duration-300 group-hover:cursor-pointer group-hover:blur-[2px]' alt="UserPhoto"></Image>
+                        <div className='absolute top-8 left-8 mb-8 group'>
+                            <Image src={`/${user.userName}.jpg`} width={160} height={160} className='  rounded-full border-4  border-white shadow-2xl select-none transition duration-300 group-hover:cursor-pointer group-hover:blur-[2px]' alt="UserPhoto"></Image>
                             <div className='absolute top-12 left-[50px] justify-center flex group-hover:opacity-100 opacity-0'><MdModeEditOutline className="cursor-pointer text-white" size={50} /></div>
                         </div>
-                        <div className='ml-48 mt-4'>
+                        <div className='ml-56 mt-4'>
                             {selectedField === 'profile' && (
                                 <div className='text-sm'>
                                     <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>

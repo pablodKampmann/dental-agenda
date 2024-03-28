@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { ref, set, get } from "firebase/database";
 
 export async function SetPatients(name: any, lastName: any, gender: any, date: any, dni: any, num: any, address: any, email: any, insurance: any, plan: any, affiliate: any) {

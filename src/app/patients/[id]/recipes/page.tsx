@@ -1,14 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { getPatient } from "../../../components/getPatient";
+import { getPatient } from "../../../components/patients/getPatient";
 import React, { useState, useEffect } from 'react';
 import { auth } from "../../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { PatientRecord } from "./../../../components/patientRecord";
+import { PatientRecord } from "../../../components/style/patientRecord";
 
 export default function Recipes() {
     const router = useRouter()
