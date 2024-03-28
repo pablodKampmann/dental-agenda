@@ -19,7 +19,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { BiRightArrow, BiLeftArrow, BiError, BiSolidBookAdd } from "react-icons/bi";
 import { MdUpdate, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
-import { getReasonsOptions } from "./components/options/getReasonsOptions";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -112,10 +111,10 @@ export default function Page() {
 
     async function Get() {
       const patients = await GetPatients(20);
-      if (patients === null) {
-        setListPatients('noResult')
-      } else {
+      if (patients) {
         setListPatients(patients.patients)
+      } else {
+        setListPatients('noResult')
       }
     }
   }, [searchContent, selectedField])
@@ -126,10 +125,10 @@ export default function Page() {
 
   async function updateListPatients() {
     const patients = await GetPatients(20);
-    if (patients === null) {
-      setListPatients('noResult')
-    } else {
+    if (patients) {
       setListPatients(patients.patients)
+    } else {
+      setListPatients('noResult')
     }
   }
 
@@ -150,8 +149,8 @@ export default function Page() {
         setAppointments(appointments);
         setIsLoadAppoints(false);
       }
-      const options = await getReasonsOptions();
-      setReasonsOptions(options);
+      //const options = await getReasonsOptions();
+      //setReasonsOptions(options);
     }
 
     get()
@@ -285,7 +284,7 @@ export default function Page() {
   async function handleSetAppoint(patientId: number, dateData: dateData, reason: string, observations?: string) {
     setIsLoadAppoints(true);
     clean();
-    const result = await setAppointment(patientId, dateData, reason, observations);
+    const result = await setAppointment(patientId, dateData, observations);
     const formattedDate = date?.replace(/\//g, '');
     let appointments = await getAppointments(formattedDate)
     if (appointments === 'vacio') {
@@ -830,7 +829,7 @@ export default function Page() {
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>
                       <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
                     </div>
-                    {patient && appointmentDate && reason ? (
+                    {patient && appointmentDate ? (
                       <div ref={confirmRef} className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1'>
                           <h1 className='text-xl font-bold text-black select-none text-center'>Resumen: </h1>

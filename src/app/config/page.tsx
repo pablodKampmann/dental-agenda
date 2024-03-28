@@ -30,7 +30,7 @@ export default function Page() {
         });
 
         async function handleGetUser() {
-            const user = await getUser();
+            const user = await getUser(false);
             setUser(user);
             setIsLoad(false);
         }

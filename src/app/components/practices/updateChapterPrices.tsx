@@ -1,12 +1,14 @@
 import { db } from "../../firebase";
 import { set, ref, get } from "firebase/database";
+import { getUser } from "./../auth/getUser";
 
 export async function updateChapterPrices(updatedChapterData: any, chapter: any) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
-            const dbRef = ref(db, "/priceTariffs/" + chapter + "/");
+            const clinicId = await getUser(true);
+            const dbRef = ref(db, `/clinics/${clinicId}/priceTariffs/${chapter}/`);
             const snapshot = await get(dbRef);
             if (snapshot.exists()) {
                 const snapshotVal = snapshot.val();
@@ -14,7 +16,7 @@ export async function updateChapterPrices(updatedChapterData: any, chapter: any)
                     const chapterData = snapshotVal[key];
                     const updatedData = updatedChapterData.find((data: any) => data.id === chapterData.id);
                     if (updatedData) {
-                        await set(ref(db, `/priceTariffs/${chapter}/${key}/price`), updatedData.price);
+                        await set(ref(db, `/clinics/${clinicId}/priceTariffs/${chapter}/${key}/price`), updatedData.price);
                     }
                 }
             }

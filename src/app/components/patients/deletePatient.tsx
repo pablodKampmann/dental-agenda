@@ -1,12 +1,13 @@
 import { db } from "../../firebase";
 import { ref, remove, get } from "firebase/database";
-
-export async function deletePatient(clinicId: any, id: string | null) {
+import { getUser } from "./../auth/getUser";
+export async function deletePatient(id: string | null) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
-            const dbRef = ref(db, 'clinics' + clinicId + '/patients/' + id);
+            const clinicId = await getUser(true);
+            const dbRef = ref(db, `/clinics/${clinicId}/patients/${id}`);
             const snapshot = await get(dbRef);
             if (snapshot.exists()) {
                 await remove(dbRef);

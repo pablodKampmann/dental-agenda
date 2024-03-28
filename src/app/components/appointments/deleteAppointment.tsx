@@ -8,7 +8,7 @@ export async function deleteAppointment(id: number, date: string) {
             throw new Error();
         } else {
             const clinicId = await getUser(true)            
-            const dbRef = ref(db, '/clinics/' + clinicId + '/appointments/' + date + '/' + id + '/');
+            const dbRef = ref(db, `/clinics/${clinicId}/appointments/${date}/${id}/`);
             const snapshot = await get(dbRef);
             if (snapshot.exists()) {
                 await remove(dbRef);

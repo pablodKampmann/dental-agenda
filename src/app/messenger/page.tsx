@@ -48,7 +48,9 @@ export default function Messenger() {
     //GET PATIENTS LOGIC
     async function getPatients(quantity: number) {
         const data = await GetPatients(quantity);
-        setListPatients(data.patients);
+        if (data) {
+            setListPatients(data.patients)
+        }
     }
 
     //SEARCH PATIENTS LOGIC
@@ -91,7 +93,7 @@ export default function Messenger() {
                 setIsLoadPatient(false);
                 setPatientSelected(patientResult)
                 const patientAppointments = await getPatientAppointments(patientResult.id);
-                if (patientAppointments) {
+                if (patientAppointments !== 'error') {
                     setIsLoadAppointments(false);
                     setPatientAppointments(patientAppointments)
                 } else {

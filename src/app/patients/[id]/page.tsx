@@ -54,7 +54,7 @@ export default function PatientId() {
     });
 
     async function handleGetUser() {
-      const user = await getUser();
+      const user = await getUser(false);
       setUser(user);
       const date = dayjs(patient.birthDate, "DD/MM/YYYY");
       setDateFormatted(date)
@@ -106,7 +106,9 @@ export default function PatientId() {
         const data = await getPatient(id);
         setPatient(data);
         const options = await getInsuranceOptions();
-        setInsuranceOptions(options);
+        if (options !== 'error') {
+          setInsuranceOptions(options);
+        }
       } catch (error) {
         console.error(error);
       }
@@ -140,7 +142,7 @@ export default function PatientId() {
           <div className='ml-2 p-4 mt-16 mr-2 relative'>
             {openAlert && (
               <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert clinicId={user.clinicId} onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
+                <Alert onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
               </div>
             )}
             {patient && (

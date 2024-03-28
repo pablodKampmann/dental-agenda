@@ -1,12 +1,14 @@
 import { db } from "../../firebase";
 import { ref, set, get } from "firebase/database";
+import { getUser } from "./../auth/getUser";
 
 export async function setPractice(id: number, price: number, practiceName: string, chapter: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         }
-        const dbRef = ref(db, '/priceTariffs/' + chapter + '/' + id);
+        const clinicId = await getUser(true);
+        const dbRef = ref(db, `/clinics/${clinicId}/priceTariffs/${chapter}/${id}/`);
         const snapshot = await get(dbRef);
         if (!snapshot.exists()) {
             await set(dbRef, {

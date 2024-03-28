@@ -23,7 +23,7 @@ export function SideBar() {
     useEffect(() => {
         async function get() {
             try {
-                const user = await getUser();
+                const user = await getUser(false);
                 setUser(user);
             } catch (error) {
                 console.log(error);

@@ -31,15 +31,13 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
     useEffect(() => {
         async function Get() {
             const options = await getInsuranceOptions();
-            setInsuranceOptions(options);
+            if (options !== 'error') {
+                setInsuranceOptions(options);
+            }
         }
+
         Get()
     }, [])
-
-    useEffect(() => {
-        console.log(date);
-        
-    }, [date])
 
     async function HandleSubmit(e: any) {
         e.preventDefault();

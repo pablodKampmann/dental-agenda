@@ -1,8 +1,10 @@
 import { db } from "../../firebase";
 import { ref, get, query, orderByChild, startAt, endAt } from "firebase/database";
+import { getUser } from "./../auth/getUser";
 
 export async function SearchPatient(selectedField: string, searchContent: any) {
-    const dbRef = ref(db, 'patients');
+    const clinicId = await getUser(true)
+    const dbRef = ref(db, `/clinics/${clinicId}/patients/`);
     const patientsFilter: any[] = [];
     function check(data: any) {
         for (const value of data) {

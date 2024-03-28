@@ -41,8 +41,10 @@ export default function Patients() {
     //GET PATIENTS LOGIC
     async function getPatients(quantity: number) {
         const data = await GetPatients(quantity);
-        setIsListPatientsComplete(data.full);
-        setListPatients(data.patients);
+        if (data) {
+            setIsListPatientsComplete(data.full);
+            setListPatients(data.patients);
+        }
         setLoadMorePatientsButtom(false);
     }
 
