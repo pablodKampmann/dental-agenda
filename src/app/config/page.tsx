@@ -28,10 +28,10 @@ export default function Page() {
     const [pros, setPros] = useState<null | any[]>(null);
     const [editRow, setEditRow] = useState<string>('');
     const [changes, setChanges] = useState<any>(null);
-    const [loadingEditRow, setLoadingEditRow] = useState(false);
+    const [loadingImage, setLoadingImage] = useState(true);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const [reloadImage, setReloadImage] = useState(Date.now());
-
+    
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -71,7 +71,6 @@ export default function Page() {
         if (!pros) {
             setLoadingGet(true);
             const result = await getClinicData(user.clinicId, 'pros');
-            console.log(result);
             if (result !== 'error') {
                 setPros(result);
                 setLoadingGet(false);
@@ -85,12 +84,12 @@ export default function Page() {
         e.stopPropagation();
         setEditRow('');
         if (changes !== null) {
-            setLoadingEditRow(true);
+            setLoadingGet(true);
             const result = await setRowChanges(table, changes, userUid)
             if (result !== 'error') {
                 const user = await getUser(false);
                 setUser(user);
-                setLoadingEditRow(false);
+                setLoadingGet(false);
                 setChanges(null);
             }
         }
@@ -110,12 +109,12 @@ export default function Page() {
     }
 
     async function handleChangePicture(e: any) {
-        setLoadingEditRow(true);
-        const file = e.target.files[0];
-        if (file) {
+        if (e.target.files[0]) {
+            setLoadingImage(true);
+            const file = e.target.files[0];
             const result = await changeImage(userUid, file);
             if (result !== 'error') {
-                setLoadingEditRow(false);
+                setLoadingImage(false);
                 setReloadImage(Date.now());
             }
         }
@@ -141,8 +140,8 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingEditRow ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full border-4 border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
-                            {loadingEditRow ? (
+                            <Image unoptimized = {true} quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
+                            {loadingImage ? (
                                 <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='white' size={126} /></div>
                             ) : (
                                 <div className='absolute top-12 left-[50px] justify-center flex group-hover:opacity-100 opacity-0'><MdModeEditOutline className="cursor-pointer text-white" size={50} /></div>
@@ -183,8 +182,14 @@ export default function Page() {
                             {selectedField === 'pros' && loadingGet === false && pros && (
                                 <div className='text-sm'>
                                     <h1 className=' text-base font-bold tracking-wide'>Lista de profesionales:</h1>
-                                    {pros.map((professional) => (
-                                        <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre Completo: <span className='ml-1 font-semibold flex justify-center items-center'>{professional} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    {pros.map((professional, index) => (
+                                        <div key={index} className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>
+                                            Nombre Completo:
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>
+                                                {professional}
+                                                <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} />
+                                            </span>
+                                        </div>
                                     ))}
                                 </div>
                             )}

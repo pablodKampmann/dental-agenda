@@ -6,6 +6,6 @@ export async function setOptions(clinicId: any) {
 /*
     await push(dbRef, {
         nameComplete: 'Nombre Apellido 2'
-    })/*
+    })*/
 }
 
