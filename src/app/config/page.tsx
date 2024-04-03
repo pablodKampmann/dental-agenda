@@ -14,6 +14,7 @@ import { getClinicData } from "../components/config/getClinicData";
 import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../components/config/setRowChanges";
+import { changeImage } from "./../components/config/changeImage";
 
 export default function Page() {
     const router = useRouter()
@@ -29,14 +30,12 @@ export default function Page() {
     const [changes, setChanges] = useState<any>(null);
     const [loadingEditRow, setLoadingEditRow] = useState(false);
     const imageInputRef = useRef<HTMLInputElement>(null);
-    const [selectedImage, setSelectedImage] = useState<any>(null);
+    const [reloadImage, setReloadImage] = useState(Date.now());
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log(user);
-
                 setUserUid(user.uid);
                 handleGetUser();
             } else if (!user) {
@@ -47,8 +46,6 @@ export default function Page() {
         async function handleGetUser() {
             const user = await getUser(false);
             setUser(user);
-            console.log(user);
-
             setIsLoad(false);
         }
 
@@ -112,21 +109,17 @@ export default function Page() {
         }
     }
 
-    function handleChangePicture(e: any) {
+    async function handleChangePicture(e: any) {
+        setLoadingEditRow(true);
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setSelectedImage(reader.result); // Guardamos la URL de la imagen en el estado
-            };
-            reader.readAsDataURL(file);
+            const result = await changeImage(userUid, file);
+            if (result !== 'error') {
+                setLoadingEditRow(false);
+                setReloadImage(Date.now());
+            }
         }
     }
-
-    useEffect(() => {
-        //        console.log(selectedImage);
-
-    }, [selectedImage]);
 
     return (
         <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
@@ -148,7 +141,7 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image src={user.photoURL} width={160} height={160} className={`${loadingEditRow ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full border-4 border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
+                            <Image src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingEditRow ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full border-4 border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
                             {loadingEditRow ? (
                                 <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='white' size={126} /></div>
                             ) : (

@@ -298,7 +298,6 @@ export default function Page() {
                                     </div>
                                 )}
                             </button>
-                            <button onClick={() => setOpenPercentageEdit('')} className='bg-red-500'>iopinofeinoewinoeion</button>
                         </div>
                     </div>
                     {chapterData ? (
@@ -544,31 +543,20 @@ export default function Page() {
                                                     <button onClick={() => { setPercentageVisible('+20%'); setPercentage(0.2); setOpenFormPercentages(true); }} className='hover:bg-teal-600 w-1/2 hover:duration-150 border-b-2 py-2 border-gray-600'>+20%</button>
                                                 </div>
                                                 {openPercentageEdit === 'increase' ? (
-                                                    <input 
-                                                    value={percentageEditValue} 
-                                                    className='flex justify-center items-center focus:outline-none bg-transparent h-12 text-center text-lg font-medium' 
-                                                    placeholder='18%' 
-                                                    type="text"
-                                                    pattern="[0-9]*"  // Solo permite números
-                                                    onChange={(event) => {
-                                                        const inputValue = event.target.value;
-                                                        // Si el usuario está borrando y el valor actual no tiene números, establece el valor como vacío
-                                                        if (inputValue === '' || (inputValue.endsWith('%') && inputValue.replace(/\D/g, '') === '')) {
-                                                            setPercentageEditValue('');
-                                                            return;
-                                                        }
-                                                        // Si el último carácter es "%" y el valor no es numérico, elimina el último carácter
-                                                        if (inputValue.endsWith('%') && isNaN(inputValue.slice(0, -1))) {
-                                                            setPercentageEditValue(inputValue.slice(0, -1));
-                                                            return;
-                                                        }
-                                                        // Elimina caracteres no numéricos
-                                                        const numericValue = inputValue.replace(/\D/g, '');
-                                                        const valueWithPercentage = numericValue + '%';
-                                                        setPercentageEditValue(valueWithPercentage);
-                                                    }} 
-                                                />
-                                                
+                                                    <input
+                                                        value={percentageEditValue}
+                                                        className='flex w-full justify-center border-b-2 border-gray-600 items-center focus:outline-none bg-transparent h-12 text-center text-lg font-medium'
+                                                        placeholder='X%'
+                                                        type="text"
+                                                        pattern="[0-9]*"  // Solo permite números
+                                                        onChange={(event) => {
+                                                            const inputValue = event.target.value;
+                                                            const numericValue = inputValue.replace(/\D/g, '');
+                                                            const valueWithPercentage = numericValue + '%';
+                                                            setPercentageEditValue(valueWithPercentage);
+                                                        }}
+                                                    />
+
                                                 ) : (
                                                     <button onClick={() => { setOpenPercentageEdit('increase') }} className='font-medium hover:bg-teal-600 w-full hover:duration-150 border-b-2 py-2 border-gray-600'>Personalizar +X%</button>
                                                 )}
