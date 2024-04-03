@@ -69,7 +69,7 @@ export function SideBar() {
                                         </div>
                                     )}
                                 </div>
-                                <Image src={`/${user.userName}.jpg`} width={40} height={40} className='rounded-full shadow-2xl select-none' alt="UserPhoto"></Image>
+                                <Image src={user.photoURL} width={40} height={40} className='rounded-full shadow-2xl select-none' alt="UserPhoto"></Image>
                             </div>
                         ) : (
                             <div className='flex items-center '>
@@ -84,8 +84,8 @@ export function SideBar() {
                 </div>
             </nav>
             <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-56 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	" aria-label="Sidebar">
-                <div className="h-full px-3 pb-4 overflow-y-auto bg-gradient-to-b from-teal-900 from-90% to-teal-800">
-                    <ul className="space-y-2 font-medium">
+                <div className="h-full pb-4 overflow-y-auto bg-gradient-to-b from-teal-900 from-80% to-teal-800">
+                    <ul className="space-y-2 mx-3 font-medium">
                         <Link href="/" prefetch={true}>
                             <li>
                                 <button type="button" className={`${pathname === '/' ? 'bg-teal-400 bg-opacity-40 text-white' : ''} flex text-left items-center p-2 rounded-lg hover:bg-teal-600 w-full transition duration-100`}>
@@ -123,16 +123,18 @@ export function SideBar() {
                         </Link>
                         <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     </ul>
-                    <div className='absolute bottom-0'>
-                        <hr className="border-teal-700 border-2 rounded-full w-full mb-2" />
-                        <div className='flex mb-3'>
-                            <button onClick={() => setOpenAlert(!openAlert)} className='flex text-sm font-medium p-1 select-none mr-1 justify-center items-center hover:scale-105 hover:border-teal-600 duration-100 border-2 rounded-xl hover:bg-teal-700'>
-                                <IoLogOutSharp size={34} className="" />
+                    <div className='absolute bottom-0   w-full'>
+                        <hr className="border-teal-700 border-2 mx-3 rounded-full mb-2" />
+                        <div className='flex mb-3 mx-3.5 '>
+                            <button onClick={() => setOpenAlert(!openAlert)} className='flex text-sm font-medium px-1 select-none mr-1 justify-center items-center hover:scale-105 hover:border-teal-600 duration-100 border-2 rounded-xl hover:bg-teal-700'>
+                                <IoLogOutSharp size={28} className="" />
                                 <p>Cerrar Sesión</p>
                             </button>
-                            <button onClick={() => router.push('/config')} className={`${pathname === '/config' ? 'bg-teal-400 bg-opacity-40 border-teal-700 ' : ''} flex ml-2 p-1 select-none justify-center  items-center hover:scale-105 hover:border-teal-600 duration-100  border-2 rounded-xl hover:bg-teal-700`}>
-                                <IoSettingsOutline size={34} className="" />
-                            </button>
+                            <Link href="/config" prefetch={true}>
+                                <button className={`${pathname === '/config' ? 'bg-teal-400 bg-opacity-40 border-teal-700 ' : ''} flex ml-2 p-1 select-none justify-center  items-center hover:scale-105 hover:border-teal-600 duration-100  border-2 rounded-xl hover:bg-teal-700`}>
+                                    <IoSettingsOutline size={34} className="" />
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

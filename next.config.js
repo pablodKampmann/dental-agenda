@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: { domains: ['flowbite.com'], },
-}
+    images: {
+        domains: ['flowbite.com', 'firebasestorage.googleapis.com'],
+    },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
