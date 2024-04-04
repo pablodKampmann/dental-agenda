@@ -69,7 +69,9 @@ export function SideBar() {
                                         </div>
                                     )}
                                 </div>
-                                <Image unoptimized = {true} quality={100} priority={true} src={user.photoURL} width={40} height={40} className='rounded-full object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto"></Image>
+                                <Link href={'/config'}>
+                                    <Image  quality={100} priority={true} src={user.photoURL} width={40} height={40} className='rounded-full cursor-pointer object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto"></Image>
+                                </Link>
                             </div>
                         ) : (
                             <div className='flex items-center '>

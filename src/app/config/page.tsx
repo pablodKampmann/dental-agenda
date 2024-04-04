@@ -15,6 +15,7 @@ import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../components/config/setRowChanges";
 import { changeImage } from "./../components/config/changeImage";
+import { RxUpdate } from "react-icons/rx";
 
 export default function Page() {
     const router = useRouter()
@@ -114,7 +115,6 @@ export default function Page() {
             const file = e.target.files[0];
             const result = await changeImage(userUid, file);
             if (result !== 'error') {
-                setLoadingImage(false);
                 setReloadImage(Date.now());
             }
         }
@@ -128,9 +128,9 @@ export default function Page() {
                 <div className=' h-screen'>
                     <div className=' bg-white w-full h-fit rounded-lg relative mt-16 text-black'>
                         {loadingGet ? (
-                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-5 text-2xl tracking-wide  pl-56 text-white font-medium rounded-t-md '>{user.displayName} <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
+                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-4 text-3xl tracking-wide  pl-56 text-white font-bold rounded-t-md '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
                         ) : (
-                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-5 text-2xl tracking-wide  pl-56 text-white font-medium rounded-t-md '>{user.displayName}</h1>
+                            <h1 className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-4 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
                         )}
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
@@ -140,11 +140,11 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image unoptimized = {true} quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
+                            <Image  quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
                             {loadingImage ? (
                                 <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='white' size={126} /></div>
                             ) : (
-                                <div className='absolute top-12 left-[50px] justify-center flex group-hover:opacity-100 opacity-0'><MdModeEditOutline className="cursor-pointer text-white" size={50} /></div>
+                                <div className='absolute top-[47px] left-[48px] justify-center flex group-hover:opacity-100 opacity-0'><RxUpdate className="cursor-pointer text-white text-opacity-40" size={64} /></div>
                             )}
                         </div>
                         <div className='ml-56 mt-4'>
@@ -152,7 +152,7 @@ export default function Page() {
                                 <div className='text-base'>
                                     <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
 
-                                    <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-150 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
+                                    <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
                                         {editRow === 'displayName' ? (
                                             <div className='flex justify-center items-center'>
                                                 <input onKeyDown={(e: any) => handleKeyPress(e, 'displayName', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.displayName} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' />
