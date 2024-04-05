@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getUser } from "../components/auth/getUser";
-import { MdModeEditOutline, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
 import { getClinicData } from "../components/config/getClinicData";
 import { ScaleLoader, MoonLoader } from "react-spinners";
@@ -16,6 +16,7 @@ import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../components/config/setRowChanges";
 import { changeImage } from "./../components/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
+import { updateUserEmail } from "../components/config/updateUserEmail";
 
 export default function Page() {
     const router = useRouter()
@@ -32,7 +33,9 @@ export default function Page() {
     const [loadingImage, setLoadingImage] = useState(true);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const [reloadImage, setReloadImage] = useState(Date.now());
-    
+    const [openInputCredential, setOpenInputCredential] = useState(false);
+    const [userCredential, setUserCredential] = useState<string>('');
+
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -84,30 +87,57 @@ export default function Page() {
     async function handleEditRow(e: any, table: string, changes: any) {
         e.stopPropagation();
         setEditRow('');
+
         if (changes !== null) {
             setLoadingGet(true);
-            const result = await setRowChanges(table, changes, userUid)
-            if (result !== 'error') {
-                const user = await getUser(false);
-                setUser(user);
-                setLoadingGet(false);
-                setChanges(null);
+            let result;
+            switch (table) {
+                case 'displayName':
+                    result = await setRowChanges(table, changes, userUid)
+                    if (result !== 'error') {
+                        const user = await getUser(false);
+                        setUser(user);
+                    }
+                    break;
+                case 'email':
+                    setOpenInputCredential(true);
+
+                    /*
+                        result = await updateUserEmail(table, changes, userUid, userCredential)
+                        console.log(result);
+                        if (result !== 'error') {
+                            const user = await getUser(false);
+                            setUser(user);
+                        }*/
+                    break;
+                default:
+                    break;
             }
+
+            setLoadingGet(false);
+            setChanges(null);
         }
     }
 
     function handleCanceEditRow(e: any) {
         e.stopPropagation();
         setEditRow('')
+        setChanges(null);
     }
 
     function handleKeyPress(e: any, table: string, changes: any) {
         if (e.key === 'Enter') {
             handleEditRow(e, table, changes);
         } else if (e.key === 'Escape') {
+            setChanges(null);
             setEditRow('');
+            if (table === 'email') {
+                setOpenInputCredential(false);
+            }
         }
     }
+
+    //IMAGE FUNCTIONS
 
     async function handleChangePicture(e: any) {
         if (e.target.files[0]) {
@@ -140,9 +170,9 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image  quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
+                            <Image quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full bg-white object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
                             {loadingImage ? (
-                                <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='white' size={126} /></div>
+                                <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='#042f2e' size={126} /></div>
                             ) : (
                                 <div className='absolute top-[47px] left-[48px] justify-center flex group-hover:opacity-100 opacity-0'><RxUpdate className="cursor-pointer text-white text-opacity-40" size={64} /></div>
                             )}
@@ -151,7 +181,7 @@ export default function Page() {
                             {selectedField === 'profile' && (
                                 <div className='text-base'>
                                     <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
-
+                                    {/* 1 */}
                                     <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
                                         {editRow === 'displayName' ? (
                                             <div className='flex justify-center items-center'>
@@ -163,8 +193,23 @@ export default function Page() {
                                             <span className='ml-1 font-semibold flex justify-center items-center'>{user.displayName} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                         )}
                                     </div>
-
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Email: <span className='ml-1 font-semibold flex justify-center items-center'>{user.email} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    {/* 2 */}
+                                    <div onClick={() => setEditRow('email')} className={`${editRow === 'email' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Email:
+                                        {editRow === 'email' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => { handleCanceEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'email', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{user.email}<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    {openInputCredential && (
+                                        <div className='mb-2 mt-1 py-1.5 px-1 transition duration-75  rounded-lg  w-fit flex'>Ingresa su contraseña:
+                                            <input className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
+                                        </div>
+                                    )}
                                     <hr className="border-black border border-dashed  w-96 " />
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
                                     {showUserName ? (
