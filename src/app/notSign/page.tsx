@@ -30,10 +30,7 @@ export default function NotSing() {
 
     async function handleSignIn() {
         setLoad(true);
-        console.log("hola");
-        
         const result = await signIn(userName, password)
-        console.log(password);
         
         if (result !== undefined) {
             setResult(result);

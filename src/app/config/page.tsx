@@ -86,7 +86,6 @@ export default function Page() {
 
     async function handleEditRow(e: any, table: string, changes: any) {
         e.stopPropagation();
-        setEditRow('');
 
         if (changes !== null) {
             setLoadingGet(true);
@@ -99,42 +98,57 @@ export default function Page() {
                         setUser(user);
                     }
                     break;
-                case 'email':
-                    setOpenInputCredential(true);
-
-                    /*
-                        result = await updateUserEmail(table, changes, userUid, userCredential)
-                        console.log(result);
-                        if (result !== 'error') {
-                            const user = await getUser(false);
-                            setUser(user);
-                        }*/
-                    break;
                 default:
                     break;
             }
-
-            setLoadingGet(false);
-            setChanges(null);
         }
+        reset();
     }
 
-    function handleCanceEditRow(e: any) {
+    function handleCancelEditRow(e: any) {
         e.stopPropagation();
-        setEditRow('')
-        setChanges(null);
+        reset();
     }
 
     function handleKeyPress(e: any, table: string, changes: any) {
-        if (e.key === 'Enter') {
-            handleEditRow(e, table, changes);
-        } else if (e.key === 'Escape') {
-            setChanges(null);
-            setEditRow('');
-            if (table === 'email') {
+        if (table === 'email') {
+            if (e.key === 'Enter' && changes !== null) {
+                if (openInputCredential === true) {
+                    handleChangeEmail(e, table, changes);
+                } else {
+                    setOpenInputCredential(true);
+                }
+            } else if (e.key === 'Escape') {
+                reset();
                 setOpenInputCredential(false);
             }
+        } else {
+            if (e.key === 'Enter') {
+                handleEditRow(e, table, changes);
+            } else if (e.key === 'Escape') {
+                reset();
+            }
         }
+    }
+
+    async function handleChangeEmail(e: any, table: string, changes: any) {
+        e.stopPropagation();
+        if (changes !== null) {
+            setLoadingGet(true);
+            const result = await updateUserEmail(table, changes, userUid, userCredential)
+            if (result !== 'error') {
+                const user = await getUser(false);
+                setUser(user);
+            }
+        }
+        reset();
+        setOpenInputCredential(false);
+    }
+
+    function reset() {
+        setEditRow('');
+        setLoadingGet(false);
+        setChanges(null);
     }
 
     //IMAGE FUNCTIONS
@@ -185,8 +199,8 @@ export default function Page() {
                                     <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
                                         {editRow === 'displayName' ? (
                                             <div className='flex justify-center items-center'>
-                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'displayName', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.displayName} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' />
-                                                <FaCircleXmark onClick={(e: any) => handleCanceEditRow(e)} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'displayName', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.displayName} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
                                                 <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'displayName', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
                                             </div>
                                         ) : (
@@ -197,19 +211,22 @@ export default function Page() {
                                     <div onClick={() => setEditRow('email')} className={`${editRow === 'email' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Email:
                                         {editRow === 'email' ? (
                                             <div className='flex justify-center items-center'>
-                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' />
-                                                <FaCircleXmark onClick={(e: any) => { handleCanceEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
-                                                <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'email', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => { if (changes !== null) { setOpenInputCredential(true) } else { handleCancelEditRow(e); setOpenInputCredential(false) } }} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
                                             </div>
                                         ) : (
                                             <span className='ml-1 font-semibold flex justify-center items-center'>{user.email}<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                         )}
                                     </div>
                                     {openInputCredential && (
-                                        <div className='mb-2 mt-1 py-1.5 px-1 transition duration-75  rounded-lg  w-fit flex'>Ingresa su contraseña:
-                                            <input className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
+                                        <div className='mb-2 py-1.5 px-1 transition duration-75 text-sm font-bold  rounded-lg  w-fit flex'>Ingresa su contraseña para confirmar:
+                                            <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
+                                            <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                            <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
                                         </div>
                                     )}
+                                    {/* 3 */}
                                     <hr className="border-black border border-dashed  w-96 " />
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
                                     {showUserName ? (
