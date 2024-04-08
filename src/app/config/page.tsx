@@ -17,6 +17,7 @@ import { setRowChanges } from "../components/config/setRowChanges";
 import { changeImage } from "./../components/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
 import { updateUserEmail } from "../components/config/updateUserEmail";
+import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 export default function Page() {
     const router = useRouter()
@@ -172,9 +173,9 @@ export default function Page() {
                 <div className=' h-screen'>
                     <div className=' bg-white w-full h-fit rounded-lg relative mt-16 text-black'>
                         {loadingGet ? (
-                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-4 text-3xl tracking-wide  pl-56 text-white font-bold rounded-t-md '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
+                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold rounded-t-md '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
                         ) : (
-                            <h1 className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-4 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
+                            <h1 className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
                         )}
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
@@ -208,26 +209,37 @@ export default function Page() {
                                         )}
                                     </div>
                                     {/* 2 */}
-                                    <div onClick={() => setEditRow('email')} className={`${editRow === 'email' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Email:
-                                        {editRow === 'email' ? (
-                                            <div className='flex justify-center items-center'>
-                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
-                                                <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
-                                                <FaCircleCheck onClick={(e: any) => { if (changes !== null) { setOpenInputCredential(true) } else { handleCancelEditRow(e); setOpenInputCredential(false) } }} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                    <div className={`${openInputCredential ? ' bg-teal-800 px-3 py-1 my-1' : ''} w-fit  rounded-lg`}>
+                                        <div onClick={() => setEditRow('email')} className={`${editRow === 'email' ? 'border-teal-600' : 'hover:border-black border-transparent'} ${openInputCredential ? 'bg-emerald-400' : 'border-2 border-dashed'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75   group  rounded-lg  w-fit flex`}>Email:
+                                            {editRow === 'email' ? (
+                                                <div className='flex justify-center items-center'>
+                                                    <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
+                                                    {openInputCredential ? (
+                                                        <div>
+                                                            <IoMdCheckmarkCircleOutline className='text-emerald-900' size={24} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className='flex justify-center items-center'>
+                                                            <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                            <FaCircleCheck onClick={(e: any) => { if (changes !== null) { setOpenInputCredential(true) } else { handleCancelEditRow(e); setOpenInputCredential(false) } }} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                                        </div>
+                                                    )}
+
+                                                </div>
+                                            ) : (
+                                                <span className='ml-1 font-semibold flex justify-center items-center'>{user.email}<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                            )}
+                                        </div>
+                                        {openInputCredential && (
+                                            <div className='py-1.5 px-1 transition duration-75 text-sm font-bold  rounded-lg text-white  w-fit flex'>Ingresa su contraseña para confirmar:
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
+                                                <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1 cursor-pointer   hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 cursor-pointer hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
                                             </div>
-                                        ) : (
-                                            <span className='ml-1 font-semibold flex justify-center items-center'>{user.email}<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                         )}
                                     </div>
-                                    {openInputCredential && (
-                                        <div className='mb-2 py-1.5 px-1 transition duration-75 text-sm font-bold  rounded-lg  w-fit flex'>Ingresa su contraseña para confirmar:
-                                            <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
-                                            <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
-                                            <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
-                                        </div>
-                                    )}
                                     {/* 3 */}
-                                    <hr className="border-black border border-dashed  w-96 " />
+                                    <hr className="border-black border border-dashed  w-96 mt-2 " />
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
                                     {showUserName ? (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{user.userName} <MdVisibility onClick={() => setShowUserName(false)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
