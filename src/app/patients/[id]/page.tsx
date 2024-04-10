@@ -13,7 +13,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { PatientRecord } from "../../components/style/patientRecord";
+import { PatientRecord } from "../../components/patients/patientRecord";
 import { getInsuranceOptions } from "../../components/options/getInsuranceOpt";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";

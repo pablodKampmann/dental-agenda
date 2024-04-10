@@ -18,6 +18,7 @@ import { changeImage } from "./../components/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
 import { updateUserEmail } from "../components/config/updateUserEmail";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import { RiErrorWarningLine } from "react-icons/ri";
 
 export default function Page() {
     const router = useRouter()
@@ -36,6 +37,7 @@ export default function Page() {
     const [reloadImage, setReloadImage] = useState(Date.now());
     const [openInputCredential, setOpenInputCredential] = useState(false);
     const [userCredential, setUserCredential] = useState<string>('');
+    const [showAlert, setShowAlert] = useState<string>('');
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -85,8 +87,18 @@ export default function Page() {
 
     //FUNCTIONS EDIT ROW
 
+    function reset() {
+        setEditRow('');
+        setLoadingGet(false);
+        setChanges(null);
+        if (openInputCredential) {
+            setOpenInputCredential(false);
+        }
+    }
+
     async function handleEditRow(e: any, table: string, changes: any) {
         e.stopPropagation();
+        reset();
 
         if (changes !== null) {
             setLoadingGet(true);
@@ -103,6 +115,7 @@ export default function Page() {
                     break;
             }
         }
+
         reset();
     }
 
@@ -112,45 +125,62 @@ export default function Page() {
     }
 
     function handleKeyPress(e: any, table: string, changes: any) {
-        if (table === 'email') {
-            if (e.key === 'Enter' && changes !== null) {
+        if (e.key === 'Escape') {
+            reset();
+        } else if (e.key === 'Enter' && changes !== null) {
+            if (table === 'email') {
                 if (openInputCredential === true) {
                     handleChangeEmail(e, table, changes);
                 } else {
                     setOpenInputCredential(true);
                 }
-            } else if (e.key === 'Escape') {
-                reset();
-                setOpenInputCredential(false);
-            }
-        } else {
-            if (e.key === 'Enter') {
+            } else {
                 handleEditRow(e, table, changes);
-            } else if (e.key === 'Escape') {
-                reset();
             }
         }
     }
 
+
+
+    //FUNCTIONS CHANGE EMAIL
+
     async function handleChangeEmail(e: any, table: string, changes: any) {
         e.stopPropagation();
+        reset();
+
         if (changes !== null) {
             setLoadingGet(true);
-            const result = await updateUserEmail(table, changes, userUid, userCredential)
-            if (result !== 'error') {
+            const result = await updateUserEmail(table, changes, userUid, userCredential) as { message: string };
+            if (result) {
+                if (result.message === 'Firebase: Error (auth/wrong-password).') {
+                    setShowAlert('wrong-password');
+                } else if (result.message === 'Firebase: Error (auth/invalid-email).') {
+                    setShowAlert('invalid-email');
+                }
+            } else {
                 const user = await getUser(false);
                 setUser(user);
             }
         }
+
         reset();
-        setOpenInputCredential(false);
     }
 
-    function reset() {
-        setEditRow('');
-        setLoadingGet(false);
-        setChanges(null);
-    }
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setShowAlert('');
+        }, 4000);
+
+        return () => clearTimeout(timeoutId);
+    }, [showAlert]);
+
+
+
+    useEffect(() => {
+        if (openInputCredential) {
+            setOpenInputCredential(false);
+        }
+    }, [editRow]);
 
     //IMAGE FUNCTIONS
 
@@ -175,7 +205,7 @@ export default function Page() {
                         {loadingGet ? (
                             <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold rounded-t-md '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
                         ) : (
-                            <h1 className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
+                            <h1 onClick={() => setShowAlert('wrong-password')} className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
                         )}
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
@@ -209,8 +239,8 @@ export default function Page() {
                                         )}
                                     </div>
                                     {/* 2 */}
-                                    <div className={`${openInputCredential ? ' bg-teal-800 px-3 py-1 my-1' : ''} w-fit  rounded-lg`}>
-                                        <div onClick={() => setEditRow('email')} className={`${editRow === 'email' ? 'border-teal-600' : 'hover:border-black border-transparent'} ${openInputCredential ? 'bg-emerald-400' : 'border-2 border-dashed'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75   group  rounded-lg  w-fit flex`}>Email:
+                                    <div className={`${openInputCredential ? ' bg-teal-800 px-3 py-2 mb-4' : ''} w-fit relative rounded-lg`}>
+                                        <div onClick={() => setEditRow('email')} className={`${editRow === 'email' && openInputCredential === false ? 'border-teal-600' : 'border-transparent '} ${openInputCredential ? 'bg-emerald-400' : 'hover:border-black'} ${showAlert === 'wrong-password' || showAlert === 'invalid-email' ? 'border-red-500 border-2 border-dashed bg-red-500 bg-opacity-50 p-4' : 'border-2 border-dashed   group cursor-pointer'} mb-2  mt-1 py-1.5 px-1  transition duration-75     rounded-lg  w-fit flex`}>Email:
                                             {editRow === 'email' ? (
                                                 <div className='flex justify-center items-center'>
                                                     <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
@@ -224,17 +254,26 @@ export default function Page() {
                                                             <FaCircleCheck onClick={(e: any) => { if (changes !== null) { setOpenInputCredential(true) } else { handleCancelEditRow(e); setOpenInputCredential(false) } }} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
                                                         </div>
                                                     )}
-
                                                 </div>
                                             ) : (
                                                 <span className='ml-1 font-semibold flex justify-center items-center'>{user.email}<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                             )}
                                         </div>
+                                        {showAlert === 'wrong-password' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[320px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Contraseña Incorrecta.
+                                            </div>
+                                        )}
+                                        {showAlert === 'invalid-email' && (
+                                            <div className='bg-red-800 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[290px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Email invalido.
+                                            </div>
+                                        )}
                                         {openInputCredential && (
-                                            <div className='py-1.5 px-1 transition duration-75 text-sm font-bold  rounded-lg text-white  w-fit flex'>Ingresa su contraseña para confirmar:
-                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg pl-1 font-semibold' type="password" />
-                                                <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1 cursor-pointer   hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
-                                                <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 cursor-pointer hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                            <div className='py-1.5 px-1 transition duration-75 text-sm font-bold bg-transparent rounded-lg text-white  w-fit flex'>Confirma los cambios con tu contraseña:
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-emerald-400 bg-opacity-70 mx-2 rounded-lg px-2 font-semibold' type="password" />
+                                                <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1 cursor-pointer   hover:scale-110 transition duration-150 hover:text-red-700" size={26} />
+                                                <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 cursor-pointer hover:scale-110 transition duration-150 hover:text-teal-600" size={26} />
                                             </div>
                                         )}
                                     </div>

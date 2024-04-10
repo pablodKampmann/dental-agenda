@@ -25,7 +25,7 @@ export async function updateUserEmail(table: string, changes: any, id: string, u
             throw new Error();
         }
     } catch (error) {
-        return 'error'
+        return error;
     }
 }
 

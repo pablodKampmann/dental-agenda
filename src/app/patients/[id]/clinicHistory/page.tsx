@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import { PatientRecord } from "../../../components/style/patientRecord";
+import { PatientRecord } from "../../../components/patients/patientRecord";
 
 export default function ClinicHistory() {
     const router = useRouter()
