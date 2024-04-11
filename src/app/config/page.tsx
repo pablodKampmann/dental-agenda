@@ -111,6 +111,13 @@ export default function Page() {
                         setUser(user);
                     }
                     break;
+                case 'language':
+                    result = await setRowChanges(table, changes, userUid)
+                    if (result !== 'error') {
+                        const user = await getUser(false);
+                        setUser(user);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -227,12 +234,12 @@ export default function Page() {
                                 <div className='text-base'>
                                     <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
                                     {/* 1 */}
-                                    <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
+                                    <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
                                         {editRow === 'displayName' ? (
                                             <div className='flex justify-center items-center'>
-                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'displayName', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.displayName} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
-                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
-                                                <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'displayName', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                                <input onKeyDown={(e: any) => handleKeyPress(e, 'displayName', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.displayName} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1  text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'displayName', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
                                             </div>
                                         ) : (
                                             <span className='ml-1 font-semibold flex justify-center items-center'>{user.displayName} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
@@ -240,10 +247,10 @@ export default function Page() {
                                     </div>
                                     {/* 2 */}
                                     <div className={`${openInputCredential ? ' bg-teal-800 px-3 py-2 mb-4' : ''} w-fit relative rounded-lg`}>
-                                        <div onClick={() => setEditRow('email')} className={`${editRow === 'email' && openInputCredential === false ? 'border-teal-600' : 'border-transparent '} ${openInputCredential ? 'bg-emerald-400' : 'hover:border-black'} ${showAlert === 'wrong-password' || showAlert === 'invalid-email' ? 'border-red-500 border-2 border-dashed bg-red-500 bg-opacity-50 p-4' : 'border-2 border-dashed   group cursor-pointer'} mb-2  mt-1 py-1.5 px-1  transition duration-75     rounded-lg  w-fit flex`}>Email:
+                                        <div onClick={() => setEditRow('email')} className={`${editRow === 'email' && openInputCredential === false ? 'border-emerald-500' : 'border-transparent cursor-pointer'} ${openInputCredential ? 'bg-emerald-400' : 'hover:border-black'} ${showAlert === 'wrong-password' || showAlert === 'invalid-email' ? 'border-red-500 border-2 border-dashed bg-red-500 bg-opacity-50 p-4' : 'border-2 border-dashed   group '} mb-2  mt-1 py-1.5 px-1  transition duration-75     rounded-lg  w-fit flex`}>Email:
                                             {editRow === 'email' ? (
                                                 <div className='flex justify-center items-center'>
-                                                    <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-teal-600 bg-opacity-20 mx-2 rounded-lg px-1 font-semibold' />
+                                                    <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={user.email} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
                                                     {openInputCredential ? (
                                                         <div>
                                                             <IoMdCheckmarkCircleOutline className='text-emerald-900' size={24} />
@@ -260,12 +267,12 @@ export default function Page() {
                                             )}
                                         </div>
                                         {showAlert === 'wrong-password' && (
-                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[320px] top-0'>
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
                                                 <RiErrorWarningLine className='mr-1' size={22} /> Contraseña Incorrecta.
                                             </div>
                                         )}
                                         {showAlert === 'invalid-email' && (
-                                            <div className='bg-red-800 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[290px] top-0'>
+                                            <div className='bg-red-800 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
                                                 <RiErrorWarningLine className='mr-1' size={22} /> Email invalido.
                                             </div>
                                         )}
@@ -277,18 +284,33 @@ export default function Page() {
                                             </div>
                                         )}
                                     </div>
-                                    {/* 3 */}
                                     <hr className="border-black border border-dashed  w-96 mt-2 " />
+                                    {/* 3 */}
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
                                     {showUserName ? (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{user.userName} <MdVisibility onClick={() => setShowUserName(false)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     ) : (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     )}
+                                    {/* 3 */}
                                     <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-96 " />
+                                    {/* 5 */}
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Preferencias de interfaz:</h1>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Idioma: <span className='ml-1 font-semibold flex justify-center items-center'>spanish<TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div onClick={() => setEditRow('language')} className={`${editRow === 'language' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Idioma:
+                                        {editRow === 'language' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <select defaultValue={user.language} onKeyDown={(e: any) => handleKeyPress(e, 'language', changes)} onChange={(e) => setChanges(e.target.value)} className='focus:outline-none w-fit bg-teal-600 hover:bg-opacity-50 transition duration-150 bg-opacity-20 mx-2 pr-8 rounded-lg px-1 font-semibold'>
+                                                    <option value={"spanish"}>spanish</option>
+                                                    <option value={"english"}>english</option>
+                                                </select>
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1  text-teal-950 hover:scale-110 transition duration-150 hover:text-red-700" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditRow(e, 'language', changes)} className="ml-1 text-teal-950 hover:scale-110 transition duration-150 hover:text-teal-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{user.language} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
 
                                 </div>
                             )}
