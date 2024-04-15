@@ -28,6 +28,7 @@ import 'dayjs/locale/es';
 import { IoTimeOutline } from "react-icons/io5";
 import { Alert } from "./components/style/alert";
 import { TiDocumentDelete } from "react-icons/ti";
+import { getChapter } from "./components/practices/getChapter";
 
 export interface dateData {
   date: string;
@@ -50,7 +51,7 @@ export default function Page() {
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [selectedField, setSelectedField] = useState('name');
+  const [Field, setField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [appointments, setAppointments] = useState<any>(null);
@@ -77,6 +78,8 @@ export default function Page() {
   const selectPatientRef = useRef<any>(null);
   const selectReasonRef = useRef<any>(null);
   const [time, setTime] = useState(getCurrentTime());
+  const [chapterName, setChapterName] = useState<string>('');
+  const [chapterData, setChapterData] = useState<any>(null);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function Page() {
     }
 
     async function Search() {
-      const patientsFilter = await SearchPatient(selectedField, searchContent)
+      const patientsFilter = await SearchPatient(Field, searchContent)
       if (patientsFilter.length < 1) {
         setListPatients('noResult')
       } else {
@@ -117,11 +120,11 @@ export default function Page() {
         setListPatients('noResult')
       }
     }
-  }, [searchContent, selectedField])
+  }, [searchContent, Field])
 
   useEffect(() => {
     setSearchContent('');
-  }, [selectedField]);
+  }, [Field]);
 
   async function updateListPatients() {
     const patients = await GetPatients(20);
@@ -449,6 +452,36 @@ export default function Page() {
     };
   }, [calendarRef]);
 
+
+  useEffect(() => {
+    async function getChapterData() {
+      //setIsLoadData(true);
+      const { data, chapterNum } = await getChapter(chapterName)
+      if (data && chapterNum) {
+        const filteredData = data.filter(item => !Object.values(item).every(value => value === undefined));
+        filteredData.sort((a, b) => {
+          if (a.id && b.id) {
+            return parseInt(a.id) - parseInt(b.id);
+          }
+          return 0;
+        });
+        setChapterData(filteredData);
+        console.log(filteredData);
+
+        // setChapterNum(chapterNum);
+        // setIsLoadData(false);
+      }
+    }
+
+    if (chapterName !== '') {
+      getChapterData();
+    }
+  }, [chapterName]);
+
+  function formatPrice(price: number) {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
   return (
     <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
       {isLoad ? (
@@ -713,7 +746,7 @@ export default function Page() {
                             value={searchContent}
                             onChange={(e) => {
                               const inputValue = e.target.value;
-                              if (selectedField === 'dni') {
+                              if (Field === 'dni') {
                                 const numericValue = inputValue.replace(/[^0-9]/g, '');
                                 setSearchContent(numericValue);
                               } else {
@@ -721,8 +754,8 @@ export default function Page() {
                               }
                             }}
                             type="text" placeholder='Busca un paciente' className='select-none focus:border-3 focus:outline-none focus:border-teal-600 rounded-lg text-black h-10 shadow-lg p-2 w-full bg-white border-2 border-gray-600' />
-                          <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
-                          <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
+                          <button onClick={() => setField('dni')} className={`${Field === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>DNI</button>
+                          <button onClick={() => setField('name')} className={`${Field === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-white hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
                         </div>
                       </div>
                     )}
@@ -803,27 +836,34 @@ export default function Page() {
                           <h1 className='font-black	text-2xl text-white mr-2 select-none'>3.</h1>
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Motivo del turno</h1>
                         </div>
-                        <div className='mx-2 mt-4 mb-2 px-2 flex'>
+                        <div className='mx-2 mt-4 mb-4 px-2 flex justify-center items-center'>
                           <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>Razón:</h1>
-                          <select
-                            value={reason}
-                            onChange={(event) => setReason(event.target.value)}
-                            className=" select-none rounded-lg text-black border-2 border-gray-600 bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-full"
-                          >
-                            <option value="" disabled selected>
-                              Seleccionar
-                            </option>
-                            {reasonsOptions?.map((reason, index) => (
-                              <option key={index} value={reason}>
-                                {reason}
-                              </option>
-                            ))}
+                          <select value={chapterName} onChange={(e) => setChapterName(e.target.value)}
+                            className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white  transition duration-300 bg-white bg-opacity-30 w-full py-1 ml-2  outline-none text-black text-lg font-bold border-2 px-1  border-teal-600 rounded-lg shadow-lg  flex justify-center items-center'>
+                            <option selected>Seleccionar</option>
+                            <option value={"CONSULTAS"} >CONSULTAS</option>
+                            <option value={"OPERATORIA DENTAL"} >OPERATORIA DENTAL</option>
+                            <option value={"ENDODONCIA"} >ENDODONCIA</option>
+                            <option value={"PRÓTESIS"} >PRÓTESIS</option>
+                            <option value={"ODONTOLOGÍA PREVENTIVA"} >ODONTOLOGÍA PREVENTIVA</option>
+                            <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} >ORTODONCIA Y ORTOPEDIA FUNCIONAL</option>
+                            <option value={"ODONTOPEDIATRÍA"} >ODONTOPEDIATRÍA</option>
+                            <option value={"PERIODONCIA"} >PERIODONCIA</option>
+                            <option value={"RADIOLOGÍA"} >RADIOLOGÍA</option>
+                            <option value={"CIRUGÍA"} >CIRUGÍA</option>
                           </select>
                         </div>
+                        {chapterName !== '' && chapterData && (
+                          <div className='border-gray-600 bg-white text-black border-2  mt-4 select-none mx-3 rounded-lg '>
+                            {/* Mapear todas las opciones */}
+                            {chapterData.map((practice, index) => (
+                              <div className={`${index === 0 ? 'rounded-t-md' : ''} ${index === chapterData.length - 1 ? 'rounded-b-md border-none' : ''} cursor-pointer border-b-2 hover:bg-teal-600 border-gray-600 py-1 px-1.5`} key={index} value={practice.id}>{practice.name}<span className=' ml-auto flex font-bold'>${formatPrice(practice.price)}</span> </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-
                   <div className=" flex-1 p-2">
                     <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>

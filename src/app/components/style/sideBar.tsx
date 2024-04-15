@@ -12,26 +12,49 @@ import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
 import { getUser } from "../auth/getUser";
 import { Alert } from "./alert";
+import { db, auth } from "./../../firebase";
+import { get, ref, onValue } from "firebase/database";
+import { onAuthStateChanged } from "firebase/auth";
 
 export function SideBar() {
     const pathname = usePathname();
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
+    const [userUid, setUserUid] = useState<string>('');
     const [openAlert, setOpenAlert] = useState(false);
     const [openUserMenu, setOpenUserMenu] = useState(false);
+    const [reloadImage, setReloadImage] = useState(Date.now());
 
     useEffect(() => {
-        async function get() {
-            try {
-                const user = await getUser(false);
-                setUser(user);
-            } catch (error) {
-                console.log(error);
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUserUid(user.uid);
+                handleGetUser();
+            } else if (!user) {
+                router.push("/notSign");
             }
+        });
+
+        async function handleGetUser() {
+            const user = await getUser(false);
+            setUser(user);
         }
 
-        get();
-    }, [pathname]);
+        return () => unsubscribe();
+    }, [router]);
+
+    useEffect(() => {
+        async function reloadImage() {
+            setReloadImage(Date.now());            
+        }
+
+        const photoUserRef = ref(db, '/admins/' + userUid + '/isPhotoUpdate/');
+        const unsubscribe = onValue(photoUserRef, async () => {
+            await reloadImage();
+        })
+
+        return () => unsubscribe();
+    }, [user]);
 
     return (
         <div>
@@ -70,7 +93,7 @@ export function SideBar() {
                                     )}
                                 </div>
                                 <Link href={'/config'}>
-                                    <Image  quality={100} priority={true} src={user.photoURL} width={40} height={40} className='rounded-full cursor-pointer object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto"></Image>
+                                    <Image src={`${user.photoURL}?${reloadImage}`} quality={100} priority={true} width={40} height={40} className='rounded-full cursor-pointer object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto"></Image>
                                 </Link>
                             </div>
                         ) : (

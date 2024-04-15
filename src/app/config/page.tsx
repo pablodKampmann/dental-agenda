@@ -275,7 +275,7 @@ export default function Page() {
                                             <div className='bg-red-800 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
                                                 <RiErrorWarningLine className='mr-1' size={22} /> Email invalido.
                                             </div>
-                                        )}
+                                        )}  
                                         {openInputCredential && (
                                             <div className='py-1.5 px-1 transition duration-75 text-sm font-bold bg-transparent rounded-lg text-white  w-fit flex'>Confirma los cambios con tu contraseña:
                                                 <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-emerald-400 bg-opacity-70 mx-2 rounded-lg px-2 font-semibold' type="password" />
@@ -292,7 +292,7 @@ export default function Page() {
                                     ) : (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     )}
-                                    {/* 3 */}
+                                    {/* 4 */}
                                     <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-[400px] " />
                                     {/* 5 */}

@@ -113,8 +113,6 @@ export default function Page() {
                 }
                 return 0;
             });
-            console.log(filteredData);
-
             setChapterData(filteredData);
             setChapterNum(chapterNum);
             setIsLoadData(false);
