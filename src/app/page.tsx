@@ -16,7 +16,7 @@ import { ModalCreatePatient } from './components/style/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { BiRightArrow, BiLeftArrow, BiError, BiSolidBookAdd } from "react-icons/bi";
+import { BiRightArrow, BiLeftArrow, BiError, BiSolidBookAdd, BiSolidBellRing } from "react-icons/bi";
 import { MdUpdate, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -466,7 +466,6 @@ export default function Page() {
           return 0;
         });
         setChapterData(filteredData);
-        console.log(filteredData);
 
         // setChapterNum(chapterNum);
         // setIsLoadData(false);
@@ -544,6 +543,7 @@ export default function Page() {
                   <h1 className='text-xl font-medium flex justify-center items-center border-b pb-2'>Acciones <ImCancelCircle onClick={() => setOpenModalAppointment(false)} size={24} className="ml-6 mt-1 font-semibold hover:text-teal-500 cursor-pointer duration-150 transform hover:scale-110" /></h1>
                   <button onClick={() => { setOpenModalAppointment(false); setOpenAlertMessage(true); setShowResult(null) }} className='flex justify-center items-center group hover:text-teal-500'><MdDeleteForever className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1" size={20} />Eliminar </button>
                   <button className='flex justify-center items-center group hover:text-teal-500'><FaShare className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1" size={20} />Compartir </button>
+                  <button className='flex justify-center items-center group hover:text-teal-500'><BiSolidBellRing className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1" size={20} />Recordar Turno </button>
                 </div>
               </div>
             )}
@@ -606,7 +606,7 @@ export default function Page() {
                       </td>
                       <td
                         className={`${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-teal-600 bg-opacity-20 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
-                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
+                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-teal-600 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
                           ${index === array.length - 1 ? '' : 'border-b '}
@@ -623,7 +623,6 @@ export default function Page() {
                               const hours = parseInt(hoursStr, 10);
                               const newHours = hours + 1;
                               const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
-
                               return (
                                 <div key={filteredAppointment.id} className='flex justify-between' >
                                   <div className='flex-col'>
@@ -660,9 +659,6 @@ export default function Page() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className='flex-col my-1'>
-
-                                  </div>
                                 </div>
                               );
                             })
@@ -674,11 +670,17 @@ export default function Page() {
               </table>
             </div>
 
+
+
+
+            {/* FORMULARIO PARA AGREGAR TURNO */}
             {showForm ? (
               <div className='w-[35%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
                   <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
-                  <div ref={selectDateRef} className='border-gray-600 border-b-4 flex-1 p-2'>
+
+                  {/* 1. SELECCIONAR FECHA */}
+                  <div ref={selectDateRef} className={` border-gray-600 border-b-4 flex-1 p-2`}>
                     {appointmentDate ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default mt-1 shadow-lg'>
@@ -730,7 +732,9 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div ref={selectPatientRef} className='border-gray-600 border-b-4 flex-1 p-2'>
+                  {/* 2. SELECCIONAR PACIENTE */}
+
+                  <div ref={selectPatientRef} className={`${appointmentDate ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] border-gray-600 border-b-4 flex-1 p-2`}>
                     {patient ? (
                       <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 mt-1 cursor-default shadow-lg'>
                         <BsPersonCheck size={32} className="" />
@@ -814,7 +818,10 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div ref={selectReasonRef} className='border-gray-600 border-b-4 flex-1 p-2'>
+
+                  {/* 3. SELECCIONAR RAZON */}
+
+                  <div ref={selectReasonRef} className={`${appointmentDate && patient ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] border-gray-600 border-b-4 flex-1 p-2`}>
                     {reason ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
@@ -834,11 +841,11 @@ export default function Page() {
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                           <h1 className='font-black	text-2xl text-white mr-2 select-none'>3.</h1>
-                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Motivo del turno</h1>
+                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Motivo del turno (OPCIONAL)</h1>
                         </div>
                         <div className='mx-2 mt-4 mb-4 px-2 flex justify-center items-center'>
                           <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>Razón:</h1>
-                          <select value={chapterName} onChange={(e) => setChapterName(e.target.value)}
+                          <select defaultValue={'CONSULTAS'} value={chapterName} onChange={(e) => setChapterName(e.target.value)}
                             className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white  transition duration-300 bg-white bg-opacity-30 w-full py-1 ml-2  outline-none text-black text-lg font-bold border-2 px-1  border-teal-600 rounded-lg shadow-lg  flex justify-center items-center'>
                             <option selected>Seleccionar</option>
                             <option value={"CONSULTAS"} >CONSULTAS</option>
@@ -854,17 +861,28 @@ export default function Page() {
                           </select>
                         </div>
                         {chapterName !== '' && chapterData && (
-                          <div className='border-gray-600 bg-white text-black border-2  mt-4 select-none mx-3 rounded-lg '>
-                            {/* Mapear todas las opciones */}
-                            {chapterData.map((practice, index) => (
-                              <div className={`${index === 0 ? 'rounded-t-md' : ''} ${index === chapterData.length - 1 ? 'rounded-b-md border-none' : ''} cursor-pointer border-b-2 hover:bg-teal-600 border-gray-600 py-1 px-1.5`} key={index} value={practice.id}>{practice.name}<span className=' ml-auto flex font-bold'>${formatPrice(practice.price)}</span> </div>
-                            ))}
+                          <div className='border-gray-600 bg-white text-black text-sm border-2 mb-2  mt-4 select-none mx-3 rounded-lg '>
+                            {chapterData.length > 0 ? (
+                              <div>
+                                {chapterData.map((practice: { id: number, name: string, price: number }, index: number) => (
+                                  <div onClick={() => setReason(practice.name)} className={`${index === 0 ? 'rounded-t-md' : ''} ${index === chapterData.length - 1 ? 'rounded-b-md border-none' : ''} cursor-pointer border-b-2 hover:bg-teal-600 border-gray-600 py-1 px-1.5`} key={index}>{practice.name}<span className=' ml-auto flex font-bold'>${formatPrice(practice.price)}</span> </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className='flex justify-center items-center py-1 text-base bg-red-500 rounded-md font-medium bg-opacity-30'>
+                                No hay prácticas en este Capítulo
+                              </div>
+                            )}
+
                           </div>
                         )}
                       </div>
                     )}
                   </div>
-                  <div className=" flex-1 p-2">
+
+                  {/* 4. CONFIRMAR TURNO */}
+
+                  <div className={`${appointmentDate && patient ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] flex-1 p-2`}>
                     <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>
                       <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
@@ -887,8 +905,11 @@ export default function Page() {
                             )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
-                            <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: </p>
-                            <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>{reason}</p>
+                            {reason ? (
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: <br /><span className=' mb-1 text-sm text-black text-left font-bold'>{reason}</span></p>
+                            ) : (
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: -</p>
+                            )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-black select-none text-left'>Observaciones (opcional): </p>
@@ -904,11 +925,13 @@ export default function Page() {
                     ) : (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1 shadow-xl'>
-                          <p className='text-lg font-semibold select-none text-black text-center'>Completa los datos anteriores antes de confirmar el turno</p>
+                          <p className='text-lg font-semibold select-none text-black text-center'>Completa los pasos obligatorios antes de confirmar el turno</p>
                         </div>
                       </div>
                     )}
                   </div>
+
+
                 </div>
               </div>
             ) : (
