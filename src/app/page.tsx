@@ -57,7 +57,7 @@ export default function Page() {
   const [appointments, setAppointments] = useState<any>(null);
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
-  const [reason, setReason] = useState<any>(null);
+  //const [reason, setReason] = useState<any>(null);
   const [observations, setObservations] = useState<any>(null);
   const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
@@ -80,6 +80,9 @@ export default function Page() {
   const [time, setTime] = useState(getCurrentTime());
   const [chapterName, setChapterName] = useState<string>('');
   const [chapterData, setChapterData] = useState<any>(null);
+
+
+  const [tuVieja, setTuVieja] = useState<any>(null);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
@@ -253,7 +256,7 @@ export default function Page() {
     setShowForm(false);
     setAppointmentDate(null);
     setPatient(null);
-    setReason(null);
+    //setReason(null);
     setObservations(null);
     setFreeSpaces(null);
     setSearchContent('');
@@ -421,14 +424,14 @@ export default function Page() {
     }
   }, [patient]);
 
-  useEffect(() => {
+/*  useEffect(() => {
     if (selectReasonRef.current) {
       selectReasonRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
       });
     }
-  }, [reason]);
+  }, [reason]);*/
 
 
   useEffect(() => {
@@ -465,6 +468,8 @@ export default function Page() {
           }
           return 0;
         });
+        console.log(filteredData);
+
         setChapterData(filteredData);
 
         // setChapterNum(chapterNum);
@@ -686,7 +691,7 @@ export default function Page() {
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default mt-1 shadow-lg'>
                           <AiOutlineSchedule size={38} className="text-white " />
                         </div>
-                        <div onClick={() => setAppointmentDate(null)} className='group relative hover:bg-red-500 hover:bg-opacity-30 bg-white mt-4 mb-2 mx-4 py-1 transition duration-150 border-2 border-gray-600 rounded-lg flex justify-center items-center cursor-pointer'>
+                        <div onClick={() => setAppointmentDate(null)} className='group relative hover:bg-red-500 hover:bg-opacity-30 bg-white mt-4 mb-3 mx-4 py-1 transition duration-150 border-2 border-gray-600 rounded-lg flex justify-center items-center cursor-pointer'>
                           <div className='group-hover:block hidden absolute top-1 left-1/2 transform -translate-x-1/2'>
                             <ImCancelCircle size={40} className="bg-red text-red-600" />
                           </div>
@@ -701,21 +706,28 @@ export default function Page() {
                             </div>
                           </div>
                         </div>
-                        <div className='flex select-none mb-2'>
-                          <h1 className='text-black px-4 rounded-lg py-2 bg-white border-2 border-gray-600 ml-4 font-bold'>Duración del turno (horas):</h1>
-                          <select
-                            value={appointmentHours}
-                            onChange={(event) => setAppointmentHours(event.target.value)}
-                            className="select-none rounded-lg pl-2 text-black border-2 border-gray-600 bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none focus:text-black text-lg w-12"
-                          >
-                            <option value={1}>1</option>
-                            <option value={2} disabled={freeSpaces < 1}>
-                              2
-                            </option>
-                            <option value={3} disabled={freeSpaces < 2}>
-                              3
-                            </option>
-                          </select>
+                        <div className='flex-col select-none mx-4 mb-2'>
+                          <div className='w-full space-x-2  h-2 mb-3  flex justify-center items-center'>
+                            <div className='bg-teal-950 bg-opacity-90 h-1 rounded-full w-1/2'></div>
+                            <div className='bg-teal-950  bg-opacity-90 rounded-full h-2 w-2'></div>
+                            <div className='bg-teal-950 bg-opacity-90 h-1 w-1/2 rounded-full'></div>
+                          </div>
+                          <div className='flex'>
+                            <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>Duración del turno (horas):</h1>
+                            <select
+                              value={appointmentHours}
+                              onChange={(event) => setAppointmentHours(event.target.value)}
+                              className="select-none rounded-lg pl-2 text-black border-2 border-teal-600 cursor-pointer hover:bg-teal-600 hover:border-gray-600 transition duration-150 hover:text-white bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none  text-lg w-fit"
+                            >
+                              <option value={1}>1 Hora</option>
+                              <option value={2} disabled={freeSpaces < 1}>
+                                2 Horas
+                              </option>
+                              <option value={3} disabled={freeSpaces < 2}>
+                                3 Horas
+                              </option>
+                            </select>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -782,7 +794,7 @@ export default function Page() {
                             ) : (
                               <div >
                                 {listPatients.map((patient, index) => (
-                                  <div key={index} onClick={() => setPatient(patient)} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                  <div key={index} onClick={() => { setPatient(patient); console.log(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                     <p className='ml-1'>
                                       {patient.name} {patient.lastName}
                                     </p>
@@ -865,7 +877,7 @@ export default function Page() {
                             {chapterData.length > 0 ? (
                               <div>
                                 {chapterData.map((practice: { id: number, name: string, price: number }, index: number) => (
-                                  <div onClick={() => setReason(practice.name)} className={`${index === 0 ? 'rounded-t-md' : ''} ${index === chapterData.length - 1 ? 'rounded-b-md border-none' : ''} cursor-pointer border-b-2 hover:bg-teal-600 border-gray-600 py-1 px-1.5`} key={index}>{practice.name}<span className=' ml-auto flex font-bold'>${formatPrice(practice.price)}</span> </div>
+                                  <div onClick={() => handleSetReason(practice.id)} className={`${index === 0 ? 'rounded-t-md' : ''} ${index === chapterData.length - 1 ? 'rounded-b-md border-none' : ''} cursor-pointer border-b-2 hover:bg-teal-600 border-gray-600 py-1 px-1.5`} key={index}>{practice.name}<span className=' ml-auto flex font-bold'>${formatPrice(practice.price)}</span> </div>
                                 ))}
                               </div>
                             ) : (
