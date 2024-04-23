@@ -77,7 +77,7 @@ export function SideBar() {
                         </div>
                         {user ? (
                             <div className="flex items-center ">
-                                <MdNotificationsNone size={32} className="mr-3" />
+                                <MdNotificationsNone size={32} className="mr-3 bg-white rounded-full bg-opacity-10 hover:bg-opacity-20 transition duration-300 cursor-pointer p-0.5" />
                                 <div onClick={() => setOpenUserMenu(!openUserMenu)} className={`${openUserMenu ? 'rounded-t-2xl bg-teal-500 text-teal-900' : 'border-b-2 rounded-full '} flex justify-center relative items-center mr-2 cursor-pointer hover:bg-teal-500 transition duration-150 py-1 hover:text-teal-900 shadow-xl border-t-2 border-teal-700`}>
                                     <p className='ml-3 text-base font-medium select-none'>{user.displayName}</p>
                                     {openUserMenu ? (
