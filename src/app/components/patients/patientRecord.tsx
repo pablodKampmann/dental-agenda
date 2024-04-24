@@ -77,14 +77,22 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             <p className='ml-1 text-black'>{patient.dni}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <MdLocationPin size={20} className='ml-2  text-red-600' />
-                            <p className='ml-1 text-black'>{patient.address}</p>
+                            {patient.address ? (
+                                <p className='ml-1 text-black'>{patient.address}</p>
+                            ) : (
+                                <p className='ml-1 text-black'>-</p>
+                            )}
                         </div>
                         <div className='mt-1 flex justify-start items-center'>
                             <TbPhone size={20} className='  text-yellow-500' />
                             <p className='ml-1 text-sm text-black'>{patient.num}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <MdOutlineMailOutline size={20} className='ml-2  text-blue-500' />
-                            <p className='ml-1 text-sm text-black'>{patient.email}</p>
+                            {patient.address ? (
+                                <p className='ml-1 text-sm text-black'>{patient.email}</p>
+                            ) : (
+                                <p className='ml-1 text-black'>-</p>
+                            )}
                         </div>
                     </div>
                     <div className=' flex justify-start items-center'>
@@ -96,7 +104,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             </div>
                             <div className='flex justify-start items-center mt-2'>
                                 <h2 className='text-black'>Plan:</h2>
-                                {patient.insurance === 'Particular' ? (
+                                {patient.insurance === 'Particular' || !patient.plan ? (
                                     <p className='ml-1 text-sm text-black font-semibold'>-</p>
                                 ) : (
                                     <p className='ml-1 text-sm text-black font-semibold'>{patient.plan}</p>
@@ -104,7 +112,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             </div>
                             <div className='flex justify-start items-center mt-2'>
                                 <h2 className='text-black'>Núm.Afiliado:</h2>
-                                {patient.insurance === 'Particular' ? (
+                                {patient.insurance === 'Particular' || !patient.affiliateNum ? (
                                     <p className='ml-1 text-sm text-black font-semibold'>-</p>
                                 ) : (
                                     <p className='ml-1 text-sm text-black font-semibold'>{patient.affiliateNum}</p>

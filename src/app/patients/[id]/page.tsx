@@ -245,7 +245,13 @@ export default function PatientId() {
                           {rowModify === 'address' ? (
                             <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'basic')} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.address} className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                           ) : (
-                            <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.address}</p>
+                            <div>
+                              {patient.address ? (
+                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.address}</p>
+                              ) : (
+                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                              )}
+                            </div>
                           )}
                           <div className='ml-auto'>
                             {hovered === 'address' && rowModify !== 'address' && <TbPencilCog size={26} className="text-gray-600" />}
@@ -362,7 +368,13 @@ export default function PatientId() {
                               {rowModify === 'email' ? (
                                 <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'contact')} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.email} className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-16 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                               ) : (
-                                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.email}</p>
+                                <div>
+                                  {patient.address ? (
+                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.email}</p>
+                                  ) : (
+                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                  )}
+                                </div>
                               )}
                               <div className='ml-auto'>
                                 {hovered === 'email' && rowModify !== 'email' && <TbPencilCog size={26} className="text-gray-600" />}
@@ -444,7 +456,13 @@ export default function PatientId() {
                                   {rowModify === 'plan' ? (
                                     <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'medic')} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.plan} className="rounded-md text-black bg-opacity-20 pl-1 bg-teal-600 flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                                   ) : (
-                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.plan}</p>
+                                    <div>
+                                      {patient.plan ? (
+                                        <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.plan}</p>
+                                      ) : (
+                                        <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                      )}
+                                    </div>
                                   )}
                                   <div className='ml-auto'>
                                     {hovered === 'plan' && rowModify !== 'plan' && <TbPencilCog size={26} className="text-gray-600" />}
@@ -464,7 +482,13 @@ export default function PatientId() {
                                   {rowModify === 'affiliateNum' ? (
                                     <textarea onKeyDown={(event) => handleKeyPress(event, changes, rowModify, 'medic')} ref={textareaRef} onMouseEnter={handleTextArea} onBlur={handleTextArea} autoFocus defaultValue={patient.affiliateNum} className="rounded-md bg-opacity-20 pl-1 text-black bg-teal-600  flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4" onChange={(event) => setChanges(event.target.value)} />
                                   ) : (
-                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.affiliateNum}</p>
+                                    <div>
+                                      {patient.affiliateNum ? (
+                                        <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.affiliateNum}</p>
+                                      ) : (
+                                        <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                      )}
+                                    </div>
                                   )}
                                   <div className='ml-auto'>
                                     {hovered === 'affiliateNum' && rowModify !== 'affiliateNum' && <TbPencilCog size={26} className="text-gray-600" />}
