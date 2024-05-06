@@ -222,7 +222,7 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full bg-white object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" />
+                            <Image quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full bg-white object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='/>
                             {loadingImage ? (
                                 <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='#042f2e' size={126} /></div>
                             ) : (

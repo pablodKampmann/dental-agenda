@@ -43,9 +43,10 @@ export function SideBar() {
         return () => unsubscribe();
     }, [router]);
 
+
     useEffect(() => {
         async function reloadImage() {
-            setReloadImage(Date.now());            
+            setReloadImage(Date.now());
         }
 
         const photoUserRef = ref(db, '/admins/' + userUid + '/isPhotoUpdate/');
@@ -93,7 +94,7 @@ export function SideBar() {
                                     )}
                                 </div>
                                 <Link href={'/config'}>
-                                    <Image src={`${user.photoURL}?${reloadImage}`} quality={100} priority={true} width={40} height={40} className='rounded-full cursor-pointer object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto"></Image>
+                                    <Image src={`${user.photoURL}?${reloadImage}`} quality={100} priority={true} width={40} height={40} className='rounded-full cursor-pointer object-cover	 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='></Image>
                                 </Link>
                             </div>
                         ) : (

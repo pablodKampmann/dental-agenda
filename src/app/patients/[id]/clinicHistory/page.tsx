@@ -1,14 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import { getPatient } from "../../../components/patients/getPatient";
 import React, { useState, useEffect } from 'react';
 import { auth } from "../../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "../../../components/patients/patientRecord";
+import { Loading } from "./../../../components/style/loading";
 
 export default function ClinicHistory() {
     const router = useRouter()
@@ -44,24 +43,17 @@ export default function ClinicHistory() {
     }, [id]);
 
     if (id !== null) {
-
         return (
-            <div className='ml-56 mt-2'>
+            <div className='ml-56'>
                 {isLoad ? (
-                    <div className='fixed inset-0 backdrop-blur-sm ml-56'>
-                        <div className='fixed inset-0 flex items-center justify-center'>
-                            <div className='bg-teal-900 py-10 px-10 rounded-full shadow-xl animate-spin'>
-                                <FaTooth size={100} />
-                            </div>
-                        </div>
-                    </div>
+                    <Loading />
                 ) : (
                     <div className='ml-2 p-4 mt-16 mr-2 relative'>
                         <PatientRecord patient={patient} />
-
                         <p>hola</p>
                     </div>
                 )}
+
             </div>
         );
     }
