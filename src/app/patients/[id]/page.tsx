@@ -370,9 +370,9 @@ export default function PatientId() {
                               ) : (
                                 <div>
                                   {patient.address ? (
-                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{patient.email}</p>
+                                    <p className='ml-2 text-gray-700 text-lg w-fit overflow-auto'>{patient.email}</p>
                                   ) : (
-                                    <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
+                                    <p className='ml-2 text-gray-700 text-lg w-fit overflow-auto'>-</p>
                                   )}
                                 </div>
                               )}

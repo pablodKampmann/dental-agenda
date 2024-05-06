@@ -267,7 +267,7 @@ export default function Page() {
                         <div className='flex justify-between select-none'>
                             <div className='flex items-center '>
                                 <select value={chapterName} onChange={(event) => { setChapterName(event.target.value); }}
-                                    className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white hover:border-y-2 border-x-2 border-x-gray-600 border-x-transparent transition duration-300 bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-y-4 px-4  border-teal-600 rounded-3xl shadow-lg  flex justify-center items-center'>
+                                    className='cursor-pointer  hover:border-gray-600 hover:border-y-2 border-x-2 border-x-gray-600 border-x-transparent transition duration-300 bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-y-4 px-4  border-teal-600 rounded-3xl shadow-lg  flex justify-center items-center'>
                                     <option value={"CONSULTAS"} selected>CONSULTAS</option>
                                     <option value={"OPERATORIA DENTAL"} selected>OPERATORIA DENTAL</option>
                                     <option value={"ENDODONCIA"} selected>ENDODONCIA</option>
@@ -302,7 +302,7 @@ export default function Page() {
                         <div className='flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full'>
                             <div id="billing-target" className='mx-6 mr-8 rounded-lg w-full h-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
                                 <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600  relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
-                                    <h1 >Aranceles (Capítulo {chapterNum})</h1>
+                                    <h1 >Aranceles <span className=' text-white font-black text-xl'>(Capítulo {chapterNum})</span></h1>
                                     {showResult === 'good-practice' && (
                                         <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right ">
                                             <div className='flex justify-start items-center'>

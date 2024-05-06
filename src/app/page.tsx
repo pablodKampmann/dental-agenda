@@ -680,7 +680,7 @@ export default function Page() {
             {showForm ? (
               <div className='w-[35%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
-                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
+                  <h1 className='text-center bg-teal-600 rounded-tl-md text-white font-semibold pb-1 py-1 text-2xl border-b-2 border-gray-600 select-none'>Nuevo Turno</h1>
 
                   {/* 1. SELECCIONAR FECHA */}
                   <div ref={selectDateRef} className={` border-gray-600 border-b-4 flex-1 p-2`}>
@@ -743,7 +743,7 @@ export default function Page() {
 
                   {/* 2. SELECCIONAR PACIENTE */}
 
-                  <div ref={selectPatientRef} className={`${appointmentDate ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] border-gray-600 border-b-4 flex justify-center items-center flex-col p-2`}>
+                  <div ref={selectPatientRef} className={` duration-[500ms] border-gray-600 border-b-4 flex justify-center items-center flex-col p-2`}>
                     {patient ? (
                       <div className=' flex items-center justify-center bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
                         <BsPersonCheck size={34} className="text-emerald-500" />
@@ -752,8 +752,8 @@ export default function Page() {
                       </div>
                     ) : (
                       <div>
-                        <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
-                          <h1 className='font-black	text-2xl text-white mr-2 select-none'>2.</h1>
+                        <div className='flex items-center justify-center bg-white border-2 border-gray-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
+                          <h1 className='font-black	text-2xl text-black mr-2 select-none'>2.</h1>
                           <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona el paciente</h1>
                         </div>
                         <div className='mt-4 mx-4 flex'>
@@ -825,7 +825,7 @@ export default function Page() {
 
                   {/* 3. SELECCIONAR RAZON */}
 
-                  <div ref={selectReasonRef} className={`${appointmentDate && patient ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] border-gray-600 border-b-4 flex-1 p-2`}>
+                  <div ref={selectReasonRef} className={`duration-[500ms] border-gray-600 border-b-4 flex-1 p-2`}>
                     {reason ? (
                       <div>
                         <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
@@ -886,7 +886,7 @@ export default function Page() {
 
                   {/* 4. CONFIRMAR TURNO */}
 
-                  <div className={`${appointmentDate && patient ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[500ms] flex-1 p-2`}>
+                  <div className={`duration-[500ms] flex-1 p-2`}>
                     <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
                       <h1 className='font-black	text-2xl text-white mr-2 select-none'>4.</h1>
                       <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Confirmar turno</h1>
