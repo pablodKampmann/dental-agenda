@@ -680,25 +680,28 @@ export default function Page() {
             {showForm ? (
               <div className='w-[35%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
-                  <h1 className='text-center bg-teal-600 rounded-tl-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
+                  <h1 className='text-center bg-teal-600 rounded-md-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
 
                   {/* 1. SELECCIONAR FECHA */}
                   <div ref={selectDateRef} className={` border-gray-600 border-b-4 flex-1 p-2`}>
                     {appointmentDate ? (
-                      <div className='flex justify-center items-center flex-col'>
-                        <div className=' flex items-center justify-center bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
-                          <AiOutlineSchedule size={36} className="text-emerald-500" />
-                          <div className='mx-2 h-[70%] w-1 rounded-full bg-white'></div>
-                          <FaRegTrashCan onClick={() => setAppointmentDate(null)} size={28} className='text-red-700  cursor-pointer hover:scale-110 transition duration-150' />
+                      <div className='flex  items-center px-2 w-full flex-col'>
+                        <div className='flex justify-between '>
+                          <div className=' flex mr-auto items-center  text-black font-bold bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
+                            HORARIO ASIGNADO
+                          </div>
+                          <div className=' flex ml-auto  items-center  bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
+                            <FaRegTrashCan onClick={() => setAppointmentDate(null)} size={28} className='text-red-700  cursor-pointer hover:scale-110 transition duration-150' />
+                          </div>
                         </div>
-                        <div className='  border-emerald-500  hover:bg-opacity-50 bg-white mt-4 mb-3 mx-4 py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
+                        <div className=' border-emerald-500 w-full hover:bg-opacity-50 bg-white mt-4 mb-3  py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
                           <div className='group-hover:text-transparent text-black'>
-                            <div className='flex'>
-                              <p className='text-sm  text-center select-none'>Día seleccionado: </p>
+                            <div className=''>
+                              <p className='text-sm  text-center select-none whitespace-nowrap	'>Día seleccionado: </p>
                               <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
                             </div>
-                            <div className='flex justify-center'>
-                              <p className='text-sm flex-col  text-center select-none'>Horario seleccionado: </p>
+                            <div className=''>
+                              <p className='text-sm flex-col  text-center select-none whitespace-nowrap'>Horario seleccionado: </p>
                               <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
                             </div>
                           </div>
