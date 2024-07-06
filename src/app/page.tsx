@@ -2,17 +2,17 @@
 
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { setAppointment } from "./components/appointments/setAppointment";
-import { getAppointments } from "./components/appointments/getAppointments";
-import { SearchPatient } from "./components/patients/searchPatient";
-import { GetPatients } from "./components/patients/getPatients"
+import { setAppointment } from "./../components/appointments/setAppointment";
+import { getAppointments } from "./../components/appointments/getAppointments";
+import { SearchPatient } from "./../components/patients/db/searchPatient";
+import { GetPatients } from "./../components/patients/db/getPatients"
 import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle, BsClipboardCheck } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
 import { FaFileMedicalAlt, FaShare } from "react-icons/fa";
-import { Loading } from "./components/style/loading";
-import { ModalCreatePatient } from './components/style/modalCreatePatient'
+import { Loading } from "./../components/general/loading";
+import { ModalCreatePatient } from './../components/general/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -26,9 +26,9 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
 import { IoTimeOutline } from "react-icons/io5";
-import { Alert } from "./components/style/alert";
+import { Alert } from "./../components/general/alert";
 import { TiDocumentDelete } from "react-icons/ti";
-import { getChapter } from "./components/practices/getChapter";
+import { getChapter } from "./../components/practices/getChapter";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 export interface dateData {

@@ -1,8 +1,8 @@
 import './globals.css'
-import React from 'react';
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { SideBar } from './components/style/sideBar'
+import { SideBar } from './../components/general/sideBar'
+import { getUserAuth } from "./../components/auth/getUserAuth";
 
 const font = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
@@ -10,20 +10,22 @@ export const metadata: Metadata = {
   description: '...',
 }
 
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
 
-
-
+  const userAuth = await getUserAuth();
+  console.log(userAuth);
+  console.log("putos");
+  
+  
   return (
     <html lang="en">
       <body className={`bg-white ${font.className}`}>
         <div>
-          <SideBar></SideBar>
+          <SideBar />
           {children}
         </div>
       </body>

@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
-import { ModalCreatePatient } from '../components/style/modalCreatePatient'
-import { GetPatients } from "../components/patients/getPatients";
-import { SearchPatient } from "../components/patients/searchPatient";
+import { ModalCreatePatient } from './../../components/general/modalCreatePatient'
+import { GetPatients } from "./../../components/patients/db/getPatients";
+import { SearchPatient } from "./../../components/patients/db/searchPatient";
 import { TbUserSearch, TbReload } from 'react-icons/tb';
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "../components/style/loading";
+import { Loading } from "./../../components/general/loading";
 import { BsClipboardCheck, BsPersonFillAdd } from "react-icons/bs";
 import { LuSearchX } from "react-icons/lu";
 import { BounceLoader, ClipLoader } from "react-spinners";
@@ -25,18 +25,11 @@ export default function Patients() {
     const [isListPatientsComplete, setIsListPatientsComplete] = useState(false);
     const [loadMorePatientsButtom, setLoadMorePatientsButtom] = useState(false);
 
-    //CHECK IF THE USER IS LOGGED IN
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user && listPatients) {
-                setIsLoad(false);
-            } else if (!user) {
-                router.push("/notSign");
-            }
-        });
-
-        return () => unsubscribe();
-    }, [router, listPatients]);
+        if (listPatients) {
+            setIsLoad(false);
+        }
+    }, [listPatients]);
 
     //GET PATIENTS LOGIC
     async function getPatients(quantity: number) {

@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { Loading } from "../components/style/loading";
+import { Loading } from "../components/general/loading";
 import { useRouter } from 'next/navigation'
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";

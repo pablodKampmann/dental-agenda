@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "../components/style/loading";
+import { Loading } from "../components/general/loading";
 import { getChapter } from "../components/practices/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
