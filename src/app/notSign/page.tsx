@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import { RingLoader } from "react-spinners";
 import { BiSolidLogInCircle } from 'react-icons/bi';
-import { signIn } from "../components/auth/signIn";
+import { signIn } from "./../../components/auth/signIn";
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { RiAlertFill } from 'react-icons/ri';
 

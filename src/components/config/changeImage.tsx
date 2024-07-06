@@ -17,11 +17,13 @@ export async function changeImage(userUid: string, file: File) {
         if (!navigator.onLine) {
             throw new Error();
         }
+        console.log("oinqfi");
+
         const storageRef = ref(storage, `/userImages/${userUid}.jpg`);
         await uploadBytes(storageRef, file);
-        const dbRef = databaseRef(db, `/admins/${userUid}/isPhotoUpdate`);
+        const dbRef = databaseRef(db, `/admins/${userUid}/isPhotoUpdate`);        
         const snapshot = await get(dbRef);
-        if (snapshot.exists()) {
+        if (snapshot) {            
             const randomString = generateRandomString();
             set(dbRef, randomString)
         }
