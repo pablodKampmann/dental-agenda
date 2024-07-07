@@ -14,7 +14,7 @@ import { checkRoutine } from "./../../hooks/checkRoutine";
 import { db } from "./../../app/firebase";
 import { ref, onValue } from "firebase/database";
 //import toast, { Toaster } from 'react-hot-toast';
-//import { DialogAlert } from "./dialogAlert";
+import { DialogAlert } from "./alertDialog";
 
 export function SideBar() {
     const pathname = usePathname();
@@ -43,7 +43,7 @@ export function SideBar() {
 
     return (
         <div>
-           {/*  <Toaster
+            {/*  <Toaster
                 toastOptions={{
                     success: {
                         className: 'border-2 border-green-500 p-4 rounded-md',
@@ -58,7 +58,7 @@ export function SideBar() {
                         <span className="ml-3 text-2xl">Admin</span>
                         <span className="bg-teal-600 px-1 rounded-lg ml-1 text-lg">PANEL</span>
                     </div>
-                    {/*<DialogAlert />*/}
+                    <DialogAlert />
                     {data ? (
                         <div className="flex items-center">
                             <MdNotificationsNone size={36} className="mr-3 bg-white rounded-full bg-opacity-15 hover:bg-opacity-20 transition duration-150 cursor-pointer p-1" />
