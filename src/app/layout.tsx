@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { SideBar } from './../components/general/sideBar'
+import { Navigation } from '../components/general/navigation/navigation'
 import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +30,7 @@ export default async function RootLayout({
         )}
       >
         <div>
-          <SideBar />
+          <Navigation />
           {children}
         </div>
       </body>

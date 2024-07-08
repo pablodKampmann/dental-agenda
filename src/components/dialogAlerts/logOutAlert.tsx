@@ -9,14 +9,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { logOut } from "../auth/logOut";
-import { FaRunning } from 'react-icons/fa';
-
+import { useMediaQuery } from "./../../hooks/useMediaQuery";
 interface props {
   open: boolean;
   setOpen: (value: boolean) => void;
 }
 
 export function LogOutAlert({ open, setOpen }: props) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   async function handleLogOut() {
     const result = await logOut();
@@ -27,25 +27,39 @@ export function LogOutAlert({ open, setOpen }: props) {
     }
   }
 
-  return (
-    <div>
-      <div className="desktop-layout">
-        <AlertDialog open={open}>
-          <AlertDialogContent className="text-black border-2 border-red-950">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="relative">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
-              <AlertDialogDescription className="w-[80%] pl-2">
-                Deberás volver a ingresar tus credenciales para acceder nuevamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="focus:outline-none rounded-xl" onClick={() => setOpen(false)}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction className="bg-red-900 rounded-xl focus:outline-none hover:bg-red-800" onClick={() => { handleLogOut(); setOpen(false); }}>Continuar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-     
-    </div>
-  )
+  if (isDesktop) {
+    return (
+      <AlertDialog open={open}>
+        <AlertDialogContent className="text-black border-2 border-black">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="relative">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogDescription className="w-[80%] pl-2">
+              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="focus:outline-none outline-none rounded-xl shadow-lg" onClick={() => setOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-900 rounded-xl focus:outline-none outline-none shadow-xl hover:bg-red-800" onClick={() => { handleLogOut(); setOpen(false); }}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  } else {
+    return (
+      <AlertDialog open={open}>
+        <AlertDialogContent className="text-black border-2 border-red-950">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="relative">¿Estás seguro(aaaaaaaaaaa) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogDescription className="w-[80%] pl-2">
+              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="focus:outline-none rounded-xl" onClick={() => setOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-900 rounded-xl focus:outline-none hover:bg-red-800" onClick={() => { handleLogOut(); setOpen(false); }}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
 }
