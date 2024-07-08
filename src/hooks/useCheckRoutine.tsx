@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getUser } from "./../components/auth/getUser";
+import { getUser } from "../components/auth/getUser";
 
-export function checkRoutine(getOnlyClinicId: boolean) {
+export function useCheckRoutine(getOnlyClinicId: boolean) {
     const [value, setValue] = useState<any>(null);
 
     useEffect(() => {

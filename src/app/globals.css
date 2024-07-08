@@ -89,6 +89,8 @@
   }
 }
 
+
+
 body {
   color: rgb(var(--foreground-rgb));
 }
@@ -220,3 +222,24 @@ input[type=number] {
 .css-15a0tn7:hover {
   background-color: rgb(13, 148, 136) !important;
 }
+
+.mobile-layout {
+  display: none;
+}
+
+.desktop-layout {
+  display: none;
+}
+
+@media only screen and (max-width: 768px) {
+  .mobile-layout {
+    display: block;
+  }
+}
+
+@media only screen and (min-width: 769px) {
+  .desktop-layout {
+    display: block;
+  }
+}
+

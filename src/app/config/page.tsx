@@ -3,20 +3,20 @@
 import Image from 'next/image'
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { Loading } from "../components/general/loading";
+import { Loading } from "../../components/general/loading";
 import { useRouter } from 'next/navigation'
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUser } from "../components/auth/getUser";
+import { getUser } from "../../components/auth/getUser";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
-import { getClinicData } from "../components/config/getClinicData";
+import { getClinicData } from "../../components/config/getClinicData";
 import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
-import { setRowChanges } from "../components/config/setRowChanges";
-import { changeImage } from "./../components/config/changeImage";
+import { setRowChanges } from "../../components/config/setRowChanges";
+import { changeImage } from "../../components/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
-import { updateUserEmail } from "../components/config/updateUserEmail";
+import { updateUserEmail } from "../../components/config/updateUserEmail";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { RiErrorWarningLine } from "react-icons/ri";
 

@@ -12,6 +12,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: 'Admin Panel',
   description: '...',
+  
 }
 
 export default async function RootLayout({

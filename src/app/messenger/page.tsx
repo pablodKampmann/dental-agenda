@@ -4,21 +4,21 @@ import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "../components/general/loading";
+import { Loading } from "./../../components/general/loading";
 import { BsChatSquareText } from "react-icons/bs";
 import { AiOutlineNotification } from "react-icons/ai";
 import { FaWhatsapp, FaMale, FaFemale } from "react-icons/fa";
-import { GetPatients } from "../components/patients/db/getPatients";
-import { SearchPatient } from "../components/patients/db/searchPatient";
+import { GetPatients } from "./../../components/patients/db/getPatients";
+import { SearchPatient } from "./../../components/patients/db/searchPatient";
 import { BounceLoader, ClipLoader } from "react-spinners";
 import { LuSearchX } from "react-icons/lu";
-import { getPatient } from "../components/patients/db/getPatient";
-import { getPatientAppointments } from "../components/appointments/getPatientAppointments";
+import { getPatient } from "./../../components/patients/db/getPatient";
+import { getPatientAppointments } from "./../../components/appointments/getPatientAppointments";
 import { MdMailOutline } from "react-icons/md";
 import { PiDownload } from "react-icons/pi";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { TbMessageShare } from "react-icons/tb";
-import { createAppointmentPDF } from "../components/general/createAppointmentPDF";
+import { createAppointmentPDF } from "./../../components/general/createAppointmentPDF";
 
 export default function Messenger() {
     const router = useRouter()
