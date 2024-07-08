@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
-import { ModalCreatePatient } from './../../components/general/modalCreatePatient'
+import { ModalCreatePatient } from './../../components/patients/ui/modalCreatePatient'
 import { GetPatients } from "./../../components/patients/db/getPatients";
 import { SearchPatient } from "./../../components/patients/db/searchPatient";
 import { TbUserSearch, TbReload } from 'react-icons/tb';
@@ -93,15 +93,15 @@ export default function Patients() {
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className="p-4  ml-56 mt-2 overflow-y-hidden">
+                <div className="p-4 overflow-y-hidden">
                     <div>
                         {openModalCreatePatient && (
-                            <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
+                            <div className="fixed inset-0 backdrop-blur-sm z-10">
                                 <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowSuccess(true); getPatients(10) }} />
                             </div>
                         )}
                     </div>
-                    <div className="mr-2 ml-2 rounded-md mt-16">
+                    <div className=" rounded-md">
                         <div className="flex flex-row items-center select-none">
                             <div className="flex rounded-full relative">
                                 <TbUserSearch
@@ -146,7 +146,7 @@ export default function Patients() {
                         </div>
                     </div>
                     <div className="flex mt-6 h-screen pb-44  overflow-y-hidden w-full ">
-                        <div className="mx-2 rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg">
+                        <div className=" rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg">
                             <table className="w-full select-none ">
                                 <thead className='relative'>
                                     {showSuccess && (

@@ -12,7 +12,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: 'Admin Panel',
   description: '...',
-  
+
 }
 
 export default async function RootLayout({
@@ -21,17 +21,19 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
 
-  return (  
+  return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-white text-white bg-background font-sans antialiased",
+          "min-h-screen  text-white bg-background font-sans antialiased",
           fontSans.variable
         )}
       >
-        <div>
+        <div className='w-full h-screen overflow-y-hidden'>
           <Navigation />
-          {children}
+          <div className='mt-[68px] sm:ml-56'>
+            {children}
+          </div>
         </div>
       </body>
     </html>

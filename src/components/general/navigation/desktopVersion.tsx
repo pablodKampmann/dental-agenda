@@ -10,13 +10,16 @@ import { RiUserSettingsFill } from 'react-icons/ri';
 import { useCheckRoutine } from "../../../hooks/useCheckRoutine";
 import { useReloadPhotoURL } from "../../../hooks/useReloadPhotoURL";
 //import toast, { Toaster } from 'react-hot-toast';
-import { LogOutAlert } from '../../dialogAlerts/logOutAlert';
 import { BsCalendar2WeekFill } from "react-icons/bs";
 //import { PiCloudCheckFill } from "react-icons/pi";
 
-export function DesktopVersion() {
+interface props {
+    openLogOutAlert: boolean;
+    setOpenLogOutAlert: (value: boolean) => void;
+}
+
+export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
     const pathname = usePathname();
-    const [openLogOutAlert, setOpenLogOutAlert] = useState(false);
     const [openUserMenu, setOpenUserMenu] = useState(false);
     const data = useCheckRoutine(false);
     const reloadImage = useReloadPhotoURL(data?.userUid);
@@ -31,10 +34,8 @@ export function DesktopVersion() {
                     },
                 }}
             />*/}
-            {openLogOutAlert && (
-                <LogOutAlert open={openLogOutAlert} setOpen={setOpenLogOutAlert} />
-            )}
-            <div className="fixed top-0 left-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
+
+            <div className="fixed top-0 h-18 left-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
                 <div className="flex px-3 py-3 items-center justify-between">
                     <div className="flex items-center ml-1 select-none mt-1 mb-1 font-bold ">
                         <FaTooth size={30} />
@@ -60,7 +61,7 @@ export function DesktopVersion() {
                                 )}
                             </div>
                             <Link className='focus:outline-none' href={'/config'}>
-                                <Image src={`${data.photoURL}?${reloadImage}`} quality={100} priority={true} width={1920} height={1080} className='rounded-full  cursor-pointer object-cover hover:border-opacity-70 border-2 border-white  border-opacity-5 transition duration-150 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='></Image>
+                                <Image src={`${data.photoURL}?${reloadImage}`} quality={100} priority={true} width={200} height={200} className='rounded-full  cursor-pointer object-cover hover:border-opacity-70 border-2 border-white  border-opacity-5 transition duration-150 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='></Image>
                             </Link>
                         </div>
                     ) : (
