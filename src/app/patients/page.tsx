@@ -6,8 +6,6 @@ import { ModalCreatePatient } from './../../components/patients/ui/modalCreatePa
 import { GetPatients } from "./../../components/patients/db/getPatients";
 import { SearchPatient } from "./../../components/patients/db/searchPatient";
 import { TbUserSearch, TbReload } from 'react-icons/tb';
-import { auth } from "./../firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { Loading } from "./../../components/general/loading";
 import { BsClipboardCheck, BsPersonFillAdd } from "react-icons/bs";
 import { LuSearchX } from "react-icons/lu";
@@ -23,7 +21,7 @@ export default function Patients() {
     const [searchContent, setSearchContent] = useState('');
     const [loadRow, setLoadRow] = useState<number | null>(null);
     const [isListPatientsComplete, setIsListPatientsComplete] = useState(false);
-    const [loadMorePatientsButtom, setLoadMorePatientsButtom] = useState(false);
+    const [loadMorePatientsButtom, setLoadMorePatientsButtom] = useState(true);
 
     useEffect(() => {
         if (listPatients) {
@@ -89,30 +87,31 @@ export default function Patients() {
 
 
     return (
-        <div className='h-screen overflow-hidden flex-1'>
+        <div className='h-screen p-4 w-full overflow-hidden'>
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className="p-4 overflow-y-hidden">
-                    <div>
-                        {openModalCreatePatient && (
-                            <div className="fixed inset-0 backdrop-blur-sm z-10">
-                                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowSuccess(true); getPatients(10) }} />
-                            </div>
-                        )}
-                    </div>
-                    <div className=" rounded-md">
-                        <div className="flex flex-row items-center select-none">
-                            <div className="flex rounded-full relative">
+                <div className='w-full h-screen'>
+
+                    {/* FALTA REPASAR */}
+                    {openModalCreatePatient && (
+                        <div className="fixed inset-0 backdrop-blur-sm z-10">
+                            <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowSuccess(true); getPatients(10) }} />
+                        </div>
+                    )}
+
+                    <div className="flex h-10">
+                        <div className="flex">
+                            <div className='rounded-xl  flex justify-between h-full border-2 border-gray-600 '>
                                 <TbUserSearch
-                                    className="absolute mt-2 ml-2 text-teal-600"
+                                    className="text-teal-600 bg-transparent mt-1 mx-1"
                                     size={24}
                                 />
                                 <input
                                     autoComplete="off"
                                     type="text"
-                                    placeholder="Busca un paciente           Por:"
-                                    className="shadow-lg pl-10 w-60 md:w-100 h-10 rounded-lg border-2 border-gray-600 font-semibold bg-gray-300 bg-opacity-30 focus:border-3 focus:outline-none text-black text-sm"
+                                    placeholder="Busca un paciente                      Por:"
+                                    className="pl-1 w-60 h-full bg-transparent rounded-r-md  font-semibold focus:outline-none text-black text-sm"
                                     name='search'
                                     value={searchContent}
                                     onChange={(e) => {
@@ -125,30 +124,31 @@ export default function Patients() {
                                         }
                                     }}
                                 />
-                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg ml-4 border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-l-lg transition duration-300 px-3 select-none w-24`}>NOMBRE</button>
-                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 border-gray-200 text-white' : 'bg-gray-300 bg-opacity-30 hover:bg-teal-900 hover:text-white text-black '} py-1 shadow-lg border-2 focus:outline-none border-gray-600 text-md font-semibold rounded-r-lg transition duration-300 px-3 select-none w-16`}>DNI</button>
-                                {loadRow !== null ? (
-                                    <div className='ml-4 flex justify-center items-center'>
-                                        <ClipLoader size={28} />
-                                    </div>
-                                ) : (
-                                    <div className={`${searchContent !== '' ? 'opacity-100' : 'opacity-0'} duration-1000 transition-opacity ml-4 flex justify-center items-center`}>
-                                        <BounceLoader speedMultiplier={1.8} color='rgb(15 118 110)' size={30} />
-                                    </div>
-                                )}
                             </div>
-                            <div className='flex justify-end items-center ml-auto'>
-                                <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200">
-                                    <BsPersonFillAdd className=" mr-2" size={24} />
-                                    Agregar Paciente
-                                </button>
+                            <div className='h-full text-sm font-semibold flex w-fit ml-2 px-3 select-none text-black '>
+                                <button onClick={() => setSelectedField('name')} className={`${selectedField === 'name' ? 'bg-teal-600  text-white' : 'bg-white  hover:bg-teal-800 hover:text-white  '}  h-full  border-y-2 border-l-2 focus:outline-none border-gray-600 transition duration-150  rounded-l-lg w-24`}>NOMBRE</button>
+                                <div className='h-full w-0.5 bg-gray-600'></div>
+                                <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 text-white' : ' hover:bg-teal-800 bg-white hover:text-white  '} h-full border-y-2 border-r-2 focus:outline-none border-gray-600 transition duration-150  rounded-r-lg  w-16`}>DNI</button>
                             </div>
+                            {loadRow !== null || searchContent !== '' && (
+                                <div className='ml-2 flex justify-center items-center'>
+                                    <ClipLoader speedMultiplier={1.7} color='rgb(15 118 110)' size={30} />
+                                </div>
+                            )}
                         </div>
+                        <button onClick={() => setOpenModalCreatePatient(true)} type="button" className="shadow-lg h-full  ml-auto text-black hover:bg-teal-600 hover:border-gray-600 hover:text-white text-lg font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-xl flex items-center justify-center transition duration-150">
+                            <BsPersonFillAdd className="mr-2" size={24} />
+                            Agregar Paciente
+                        </button>
                     </div>
-                    <div className="flex mt-6 h-screen pb-44  overflow-y-hidden w-full ">
-                        <div className=" rounded-lg w-full border-2 border-gray-600 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg">
-                            <table className="w-full select-none ">
-                                <thead className='relative'>
+
+
+
+                    <div className="flex mt-4 h-screen pb-40 overflow-y-hidden w-full ">
+                        <div className=" rounded-xl w-full border-2 border-gray-600 overflow-y-auto overflow-x-hidden shadow-lg">
+                            <table className="w-full h-full select-none ">
+                                <thead>
+                                    {/* 
                                     {showSuccess && (
                                         <div className="absolute right-0 py-1.5 px-4 border-2 border-gray-600 rounded-l-md bg-emerald-400 transform animate-messagge-from-right">
                                             <div className='flex justify-start items-center text-black'>
@@ -156,62 +156,62 @@ export default function Patients() {
                                                 <p className='ml-2 font-semibold text-md select-none'>Paciente agregado exitosamente</p>
                                             </div>
                                         </div>
-                                    )}
-                                    <tr className="bg-teal-600  select-none border-b-2 border-gray-600 text-left text-sm font-semibold uppercase tracking-widest text-white">
-                                        <th className="px-5 py-3 ">Nombre</th>
-                                        <th className="px-5 py-3">Dni</th>
-                                        <th className="px-5 py-3">Teléfono</th>
-                                        <th className="px-5 py-3">Correo</th>
-                                        <th className="px-5 py-3">Obra Social</th>
+                                    )}*/}
+                                    <tr className="bg-teal-600 h-10 select-none border-b-2 border-gray-600  text-left text-sm font-semibold uppercase tracking-widest text-white">
+                                        <th className='pl-5'>Nombre</th>
+                                        <th className='pl-5'>Dni</th>
+                                        <th className='pl-5'>Teléfono</th>
+                                        <th className='pl-5'>Correo</th>
+                                        <th className='pl-5'>Obra Social</th>
                                     </tr>
                                 </thead>
                                 {listPatients ? (
-                                    <tbody className="text-white  ">
+                                    <tbody>
                                         {listPatients.map((patient, index) => (
-                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${loadRow === index ? 'bg-teal-600' : 'hover:bg-gray-900 hover:bg-opacity-30 bg-opacity-30'} text-sm cursor-pointer ml-auto transition duration-75`}>
-                                                <td className="px-5 py-5 whitespace-nowrap text-black">
+                                            <tr onClick={() => { handleGoPatient(patient.id); setLoadRow(index) }} key={index} className={`${index !== listPatients.length - 1 ? 'border-b border-gray-600' : ''} ${loadRow === index ? 'bg-teal-600' : 'hover:bg-gray-900 hover:bg-opacity-30 bg-opacity-30'} text-sm h-14 whitespace-nowrap text-nowrap text-black cursor-pointer ml-auto transition duration-150`}>
+                                                <td className="pl-5">
                                                     <p>{patient.name} {patient.lastName}</p>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black">
+                                                <td className="pl-5">
                                                     <p>{patient.dni}</p>
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black">
+                                                <td className="pl-5">
                                                     {patient.num ? (
                                                         <p>{patient.num}</p>
                                                     ) : (
                                                         <p>-</p>
                                                     )}
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black ">
+                                                <td className="pl-5">
                                                     {patient.email ? (
                                                         <p>{patient.email}</p>
                                                     ) : (
                                                         <p>-</p>
                                                     )}
                                                 </td>
-                                                <td className="px-5 whitespace-nowrap text-black ">
+                                                <td className="pl-5 ">
                                                     <p>{patient.insurance}</p>
                                                 </td>
                                             </tr>
                                         ))}
-                                        <tr className='text-center text-xs font-semibold border-t border-gray-600 bg-transparent group text-black'>
+                                        <tr className='text-center text-xs  h-6 font-semibold border-t border-gray-600 bg-transparent group text-black'>
                                             <td colSpan={5}>
                                                 Número de pacientes: {listPatients.length}
                                             </td>
                                         </tr>
                                         {searchContent === '' ? (
-                                            <tr onClick={loadMorePatients} className={`${isListPatientsComplete !== true ? 'bg-teal-600 hover:bg-opacity-85 transition duration-300 cursor-pointer group' : 'bg-gray-400 bg-opacity-30 '} border-t border-gray-600 `}>
+                                            <tr onClick={loadMorePatients} className={`${isListPatientsComplete !== true ? 'bg-teal-600 hover:bg-opacity-85 transition duration-150 cursor-pointer group' : 'bg-teal-600 '} border-t-2 border-gray-600 `}>
                                                 <td colSpan={5} className=''>
                                                     {loadMorePatientsButtom ? (
                                                         <div className='flex justify-center items-center'>
-                                                            <ClipLoader size={28} className="my-2" color='white' />
+                                                            <ClipLoader speedMultiplier={1.7} color='rgb(15 118 110)' size={30} />
                                                         </div>
                                                     ) : (
-                                                        <div className="text-xl py-2 font-medium flex justify-center items-center text-black group-hover:text-white transition duration-300 w-full">
+                                                        <div className="text-xl py-2 font-medium flex justify-center items-center text-white w-full">
                                                             {isListPatientsComplete !== true ? (
-                                                                <p className='flex'>Mostrar más pacientes<TbReload size={26} className="mt-0.5 ml-1" /></p>
+                                                                <p className='flex justify-center items-center'>Mostrar más pacientes<TbReload size={26} className="ml-1" /></p>
                                                             ) : (
-                                                                <p className='flex'>Carga de pacientes completa</p>
+                                                                <p>Carga de pacientes completa</p>
                                                             )}
                                                         </div>
                                                     )}

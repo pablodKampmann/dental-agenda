@@ -96,13 +96,13 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(209, 213, 219);
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  background: rgba(13, 148, 136, 0.1);
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
 ::-webkit-scrollbar-thumb {

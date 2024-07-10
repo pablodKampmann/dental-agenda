@@ -77,7 +77,7 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
                 </div>
             </div>
 
-            {openSideBar && <div className="fixed top-0 left-0 w-full h-full bg-black opacity-60 z-50"></div>}
+            {openSideBar && <div className="fixed top-0 left-0 w-full h-full bg-black opacity-70 z-50"></div>}
 
             <div ref={sidebarRef} className={`fixed  top-0 left-0 z-50 h-full  transition-all duration-150  border-r-4 border-teal-700 ${openSideBar ? ' translate-x-fit w-[60%]' : '-translate-x-full'}   bg-teal-900	`} aria-label="Sidebar">
                 <div className="h-full   font-medium overflow-y-auto tracking-tight">
