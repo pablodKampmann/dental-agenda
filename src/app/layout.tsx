@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { SideBar } from './../components/general/sideBar'
+import { Navigation } from '../components/general/navigation/navigation'
 import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 
@@ -12,7 +12,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: 'Admin Panel',
   description: '...',
-  
+
 }
 
 export default async function RootLayout({
@@ -29,9 +29,11 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <div>
-          <SideBar />
-          {children}
+        <div className='w-full h-screen overflow-y-hidden'>
+          <Navigation />
+          <div className='mt-[68px] sm:ml-56'>
+            {children}
+          </div>
         </div>
       </body>
     </html>

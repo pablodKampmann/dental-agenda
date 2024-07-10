@@ -18,7 +18,7 @@ import { MdMailOutline } from "react-icons/md";
 import { PiDownload } from "react-icons/pi";
 import { LiaMoneyCheckAltSolid } from "react-icons/lia";
 import { TbMessageShare } from "react-icons/tb";
-import { createAppointmentPDF } from "./../../components/general/createAppointmentPDF";
+import { createAppointmentPDF } from "../../components/appointments/createAppointmentPDF";
 
 export default function Messenger() {
     const router = useRouter()

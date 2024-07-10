@@ -12,7 +12,7 @@ import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
 import { FaFileMedicalAlt, FaShare } from "react-icons/fa";
 import { Loading } from "./../components/general/loading";
-import { ModalCreatePatient } from './../components/general/modalCreatePatient'
+import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatient'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";

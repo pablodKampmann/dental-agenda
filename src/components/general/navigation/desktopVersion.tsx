@@ -1,46 +1,29 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation'
+import React, { useState } from 'react';
 import { FaUsers, FaTooth, FaDollarSign } from 'react-icons/fa';
 import { IoLogOutSharp, IoSettingsOutline } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
 import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
-import { useCheckRoutine } from "./../../hooks/useCheckRoutine";
-import { db } from "./../../app/firebase";
-import { ref, onValue } from "firebase/database";
+import { useCheckRoutine } from "../../../hooks/useCheckRoutine";
+import { useReloadPhotoURL } from "../../../hooks/useReloadPhotoURL";
 //import toast, { Toaster } from 'react-hot-toast';
-import { LogOutAlert } from '../dialogAlerts/logOutAlert';
 import { BsCalendar2WeekFill } from "react-icons/bs";
-import { ImPushpin } from "react-icons/im";
+//import { PiCloudCheckFill } from "react-icons/pi";
 
-export function SideBar() {
+interface props {
+    openLogOutAlert: boolean;
+    setOpenLogOutAlert: (value: boolean) => void;
+}
+
+export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
     const pathname = usePathname();
-    const router = useRouter();
-    const [openLogOutAlert, setOpenLogOutAlert] = useState(false);
     const [openUserMenu, setOpenUserMenu] = useState(false);
-    const [reloadImage, setReloadImage] = useState(Date.now());
     const data = useCheckRoutine(false);
+    const reloadImage = useReloadPhotoURL(data?.userUid);
     //const notify = () => toast.success('Successfully toasted!');
-
-    {/* UPDATE LINK PHOTOURL */ }
-    useEffect(() => {
-        const reloadImage = async () => {
-            setReloadImage(Date.now());
-        };
-
-        if (data) {
-            const photoUserRef = ref(db, '/admins/' + data.userUid + '/isPhotoUpdate/');
-            const unsubscribe = onValue(photoUserRef, async () => {
-                await reloadImage();
-            });
-
-            return () => unsubscribe();
-        }
-    }, [data]);
 
     return (
         <div>
@@ -51,10 +34,8 @@ export function SideBar() {
                     },
                 }}
             />*/}
-            {openLogOutAlert && (
-                <LogOutAlert open={openLogOutAlert} setOpen={setOpenLogOutAlert} />
-            )}
-            <div className="fixed top-0 left-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
+
+            <div className="fixed top-0 h-18 left-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
                 <div className="flex px-3 py-3 items-center justify-between">
                     <div className="flex items-center ml-1 select-none mt-1 mb-1 font-bold ">
                         <FaTooth size={30} />
@@ -70,7 +51,7 @@ export function SideBar() {
                                     <>
                                         <IoMdArrowDropup size={24} />
                                         <div className="absolute top-8 w-56   shadow-lg border-t  border-b-2 border-opacity-70 bg-teal-950  text-white border-white border-x-2  transition duration-150 rounded-b-xl   animate-user-menu">
-                                            <div onClick={() => router.push('/config')} className="px-3 bg-white hover:bg-opacity-20    bg-opacity-10 py-1 select-none flex items-center"><RiUserSettingsFill className="mr-1 " /> Configuración </div>
+                                            <Link href='/config' className="px-3 bg-white hover:bg-opacity-20    bg-opacity-10 py-1 select-none flex items-center"><RiUserSettingsFill className="mr-1 " /> Configuración </Link>
                                             <div className='w-full h-[1px] bg-white bg-opacity-70'></div>
                                             <div onClick={() => setOpenLogOutAlert(true)} className="px-3 py-1  bg-white bg-opacity-10  hover:bg-opacity-20 rounded-b-xl select-none flex items-center"><IoLogOutSharp className="mr-1" />Cerrar Sesión</div>
                                         </div>
@@ -80,7 +61,7 @@ export function SideBar() {
                                 )}
                             </div>
                             <Link className='focus:outline-none' href={'/config'}>
-                                <Image src={`${data.photoURL}?${reloadImage}`} quality={100} priority={true} width={1920} height={1080} className='rounded-full  cursor-pointer object-cover hover:border-opacity-70 border-2 border-white  border-opacity-5 transition duration-150 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='></Image>
+                                <Image src={`${data.photoURL}?${reloadImage}`} quality={100} priority={true} width={200} height={200} className='rounded-full  cursor-pointer object-cover hover:border-opacity-70 border-2 border-white  border-opacity-5 transition duration-150 h-[40px] w-[40px] shadow-2xl select-none' alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='></Image>
                             </Link>
                         </div>
                     ) : (
@@ -100,33 +81,21 @@ export function SideBar() {
                     <Link href="/" prefetch={true} className={`${pathname === '/' ? 'bg-teal-950  ' : 'bg-white bg-opacity-5 hover:bg-opacity-10 '} flex border-2   border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}>
                         <BsCalendar2WeekFill size={22} />
                         <p className="flex-1 ml-3 select-none">Agenda</p>
-                        {pathname === '/' && (
-                            <ImPushpin size={14} />
-                        )}
                     </Link>
                     <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     <Link href="/patients" prefetch={true} className={`${pathname.includes('/patients') ? 'bg-teal-950  ' : 'bg-white bg-opacity-5 hover:bg-opacity-10 '} flex border-2 border-transparent hover:border-white  hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}>
                         <FaUsers size={26} />
                         <p className="flex-1 ml-3 select-none">Pacientes</p>
-                        {pathname === '/patients' && (
-                            <ImPushpin size={14} />
-                        )}
                     </Link>
                     <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     <Link href="/messenger" prefetch={true} className={`${pathname === '/messenger' ? 'bg-teal-950  ' : 'bg-white bg-opacity-5 hover:bg-opacity-10 '} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}>
                         <IoLogoWhatsapp size={26} />
                         <p className="flex-1 ml-3 select-none">Mensajeria</p>
-                        {pathname === '/messenger' && (
-                            <ImPushpin size={14} />
-                        )}
                     </Link>
                     <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                     <Link href="/billing" prefetch={true} className={`${pathname === '/billing' ? 'bg-teal-950  ' : 'bg-white bg-opacity-5 hover:bg-opacity-10 '} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}>
                         <FaDollarSign size={26} />
                         <p className="flex-1 ml-3 select-none">Facturación</p>
-                        {pathname === '/billing' && (
-                            <ImPushpin size={14} />
-                        )}
                     </Link>
                     <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
                 </div>
