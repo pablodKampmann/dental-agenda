@@ -11,12 +11,18 @@ import { FirstCard } from "./firstCard";
 import { SecondCard } from "./secondCard";
 import { ThirdCard } from "./thirdCard";
 import { useState } from "react";
+
 interface props {
     setOpen: (value: boolean) => void;
 }
 
 export function CarouselFormCreatePatient({ setOpen }: props) {
-    const cards = [<FirstCard />, <SecondCard />, <ThirdCard />];
+    const cards = [
+        <FirstCard key="first" />,
+        <SecondCard key="second" />,
+        <ThirdCard key="third" />
+    ];
+
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handleNextClick = () => {
