@@ -8,7 +8,7 @@ import { Loading } from "./../../components/general/loading";
 import { BsChatSquareText } from "react-icons/bs";
 import { AiOutlineNotification } from "react-icons/ai";
 import { FaWhatsapp, FaMale, FaFemale } from "react-icons/fa";
-import { GetPatients } from "./../../components/patients/db/getPatients";
+import { getPatients } from "./../../components/patients/db/getPatients";
 import { SearchPatient } from "./../../components/patients/db/searchPatient";
 import { BounceLoader, ClipLoader } from "react-spinners";
 import { LuSearchX } from "react-icons/lu";
@@ -46,8 +46,8 @@ export default function Messenger() {
     }, [router]);
 
     //GET PATIENTS LOGIC
-    async function getPatients(quantity: number) {
-        const data = await GetPatients(quantity);
+    async function handleGetPatients(quantity: number) {
+        const data = await getPatients(quantity);
         if (data) {
             setListPatients(data.patients)
         }
@@ -62,7 +62,7 @@ export default function Messenger() {
         let isCancelled = false;
 
         if (searchContent.length < 1) {
-            getPatients(14);
+            handleGetPatients(14);
         } else {
             const searchPatients = async () => {
                 const patientsFilter = await SearchPatient(selectedField, searchContent);
