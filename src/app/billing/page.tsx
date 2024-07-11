@@ -1,5 +1,5 @@
 'use client'
-
+import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
@@ -258,6 +258,7 @@ export default function Page() {
                 <Loading />
             ) : (
                 <div className='h-full py-2'>
+                    <ModalCreatePatient />
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                             <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
