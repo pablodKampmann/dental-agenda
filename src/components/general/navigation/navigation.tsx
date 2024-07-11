@@ -21,9 +21,7 @@ export function Navigation() {
 
     return (
         <div>
-            {openLogOutAlert && (
-                <LogOutAlert open={openLogOutAlert} setOpen={setOpenLogOutAlert} />
-            )}
+            <LogOutAlert open={openLogOutAlert} setOpen={setOpenLogOutAlert} />
             {isMobile ? (
                 <MobileVersion openLogOutAlert={openLogOutAlert} setOpenLogOutAlert={setOpenLogOutAlert} />
             ) : (

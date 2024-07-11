@@ -8,12 +8,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from 'dayjs';
 import { ClipLoader } from "react-spinners";
-interface ModalSettProps {
-    onCloseModal: () => void;
-    onSuccess: () => void;
-}
 
-export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) {
+export function ModalCreatePatient() {
     const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
     const [name, setName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -47,17 +43,17 @@ export function ModalCreatePatient({ onCloseModal, onSuccess }: ModalSettProps) 
         const newNum = formatPhoneNumberIntl(num);
         const result = await SetPatients(name, lastName, gender, formattedDateString, dni, newNum, address, email, insurance, plan, affiliate);
         if (result !== 'error') {
-            onCloseModal();
-            onSuccess();
+            //onCloseModal();
+            //onSuccess();
         }
     }
 
     function HandleCloseModal() {
-        onCloseModal();
+        //onCloseModal();
     }
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center mt-12">
+        <div className="fixed inset-0 z-50 flex items-center justify-center mt-12">
             <form onSubmit={HandleSubmit} className="relative py-2 w-[700px] ">
                 <div className="w-full border-4 border-gray-600 relative px-4 py-4 bg-white shadow-xl rounded-xl ">
                     <div className="flex items-center ">

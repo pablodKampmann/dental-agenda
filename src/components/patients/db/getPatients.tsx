@@ -2,14 +2,14 @@ import { db } from "./../../../app/firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
 import { getUser } from "../../auth/getUser";
 
-export async function GetPatients(quantity: number) {
+export async function getPatients(quantity: number) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
             const clinicId = await getUser(true)
             let patients: any[] = [];
-            let full = false;
+            let isFull = false;
             const startIdx = 0;
             const endIdx = quantity;
             const dbRef = ref(db, `/clinics/${clinicId}/patients/`);
@@ -20,12 +20,12 @@ export async function GetPatients(quantity: number) {
                 patientsData.reverse();
                 patients = patientsData.slice(startIdx, endIdx);
                 if (patients.length < quantity) {
-                    full = true;
+                    isFull = true;
                 }
             }
             return {
                 patients: patients,
-                full: full
+                isFull: isFull
             };
         }
     } catch (error) {
