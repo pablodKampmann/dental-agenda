@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { setAppointment } from "./../components/appointments/setAppointment";
 import { getAppointments } from "./../components/appointments/getAppointments";
 import { SearchPatient } from "./../components/patients/db/searchPatient";
-import { GetPatients } from "./../components/patients/db/getPatients"
+import { getPatients } from "./../components/patients/db/getPatients"
 import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle, BsClipboardCheck } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
@@ -114,7 +114,7 @@ export default function Page() {
     }
 
     async function Get() {
-      const patients = await GetPatients(20);
+      const patients = await getPatients(20);
       if (patients) {
         setListPatients(patients.patients)
       } else {
@@ -128,7 +128,7 @@ export default function Page() {
   }, [Field]);
 
   async function updateListPatients() {
-    const patients = await GetPatients(20);
+    const patients = await getPatients(20);
     if (patients) {
       setListPatients(patients.patients)
     } else {
@@ -491,11 +491,12 @@ export default function Page() {
       ) : (
         <div className='ml-2 mr-2 p-4 mt-16'>
           <div className='mt-2'>
+            {/** 
             {openModalCreatePatient && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
               </div>
-            )}
+            )}*/}
             {showResult === 'good' && (
               <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95  transform animate-move-from-right">
                 <div className='flex justify-start items-center'>
