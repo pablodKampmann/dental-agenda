@@ -25,6 +25,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.10",
+    "embla-carousel-react": "^8.1.6",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
     "firebase": "^10.1.0",
