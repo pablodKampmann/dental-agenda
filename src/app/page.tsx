@@ -79,7 +79,7 @@ export default function Page() {
   const selectPatientRef = useRef<any>(null);
   const selectReasonRef = useRef<any>(null);
   const [time, setTime] = useState(getCurrentTime());
-  const [chapterName, setChapterName] = useState<string>('');
+  const [chapterName, setChapterName] = useState<string>('Consultas');
   const [chapterData, setChapterData] = useState<any>(null);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
@@ -485,11 +485,11 @@ export default function Page() {
   }
 
   return (
-    <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
+    <div className=' h-screen overflow-y-hidden flex-1 ' >
       {isLoad ? (
         <Loading />
       ) : (
-        <div className='ml-2 mr-2 p-4 mt-16'>
+        <div className='ml-4 mr-2 p-4 '>
           <div className='mt-2'>
             {/** 
             {openModalCreatePatient && (
@@ -598,6 +598,7 @@ export default function Page() {
               )}
             </button>
           </div>
+          {/* TABLA DE TURNOS */}
           <div className='flex justify-between h-screen pb-44 overflow-y-hidden w-full'>
             <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>A <br /> G <br />E <br />N <br />D <br />A</h1>
             <div className='bg-gray-300 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
@@ -609,12 +610,14 @@ export default function Page() {
                         {time}
                       </td>
                       <td
-                        className={`${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-teal-600 bg-opacity-20 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8 '}
-                          ${appointmentDate && appointmentDate.time === time && appointmentDate.date === date ? 'bg-teal-600 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                          ${appointmentDate && appointmentDate.time2 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                          ${appointmentDate && appointmentDate.time3 === time && appointmentDate.date === date ? 'bg-gray-300 animate-breathe' : 'hover:bg-gray-900 hover:bg-opacity-30'} 
-                          ${index === array.length - 1 ? '' : 'border-b '}
-                          select-none w-full border-gray-600  text-center cursor-pointer items-center transition duration-200`}
+                        className={`
+    ${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-teal-600 bg-opacity-20 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8'}
+    ${appointmentDate && appointmentDate.date === date && (appointmentDate.time === time || appointmentDate.time2 === time || appointmentDate.time3 === time)
+                            ? `animate-breathe ${appointmentDate.time === time ? 'bg-teal-600' : 'bg-gray-300'}`
+                            : 'hover:bg-gray-900 hover:bg-opacity-30'
+                          }
+    ${index === array.length - 1 ? '' : 'border-b'}
+    select-none w-full border-gray-600 text-center cursor-pointer items-center`}
                         onClick={(e) => handleCliclRow(time, e)}
                       >
                         {appointments &&
@@ -682,44 +685,45 @@ export default function Page() {
               <div className='w-[35%] flex overflow-x-hidden'>
                 <div className='flex-1 ml-10 overflow-x-hidden flex-col border-2 border-gray-600 rounded-lg shadow-xl bg-gray-300 bg-opacity-30 overflow-y-auto animate-move-from-right-form'>
                   <h1 className='text-center bg-teal-600 rounded-md-lg text-white font-semibold pb-1 py-1 text-3xl border-b-2 border-gray-600 select-none'>Agregar Turno</h1>
-                  <h1 className='text-center bg-teal-600 rounded-tl-md text-white font-semibold pb-1 py-1 text-2xl border-b-2 border-gray-600 select-none'>Nuevo Turno</h1>
-
+                  <div className='flex items-center mx-5 justify-center bg-white border-2 border-gray-600 rounded-xl h-10 cursor-default shadow-lg mt-4'>
+                    <h1 className='font-black	text-2xl text-black mr-4 select-none'>1.</h1>
+                    <h1 className='text-xl font-bold text-black text-center cursor-default mt-1 select-none'>Selecciona el horario</h1>
+                  </div>
                   {/* 1. SELECCIONAR FECHA */}
-                  <div ref={selectDateRef} className={` border-gray-600 border-b-4 flex-1 p-2`}>
+                  <div ref={selectDateRef} className={` border-gray-600 border-b-4 flex-1 `}>
                     {appointmentDate ? (
-                      <div className='flex  items-center px-2 w-full flex-col'>
-                        <div className='flex justify-between '>
-                          <div className=' flex mr-auto items-center  text-black font-bold bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
-                            HORARIO ASIGNADO
+                      <div className='flex  items-center px-5  w-full flex-col'>
+
+                        <div className='flex justify-between items-center w-full mx-6'>
+                          <div className=' border-gray-600 w-full hover:bg-opacity-50 bg-white mt-4 mb-3  py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
+                            <div className='group-hover:text-transparent text-black'>
+                              <div className=''>
+                                <p className='text-sm  text-center select-none whitespace-nowrap	'>Día seleccionado: </p>
+                                <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
+                              </div>
+                              <div className=''>
+                                <p className='text-sm flex-col  text-center select-none whitespace-nowrap'>Horario seleccionado: </p>
+                                <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
+                              </div>
+                            </div>
                           </div>
-                          <div className=' flex ml-auto  items-center  bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
+                          <div className=' flex ml-4 items-center  bg-white rounded-2xl h-12 border-2 border-gray-600 px-3 cursor-default mt-1 shadow-lg'>
                             <FaRegTrashCan onClick={() => setAppointmentDate(null)} size={28} className='text-red-700  cursor-pointer hover:scale-110 transition duration-150' />
                           </div>
                         </div>
-                        <div className=' border-emerald-500 w-full hover:bg-opacity-50 bg-white mt-4 mb-3  py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
-                          <div className='group-hover:text-transparent text-black'>
-                            <div className=''>
-                              <p className='text-sm  text-center select-none whitespace-nowrap	'>Día seleccionado: </p>
-                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
-                            </div>
-                            <div className=''>
-                              <p className='text-sm flex-col  text-center select-none whitespace-nowrap'>Horario seleccionado: </p>
-                              <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className='flex-col select-none mx-4 mb-2'>
-                          <div className='w-full space-x-2  h-2 mb-3  flex justify-center items-center'>
+
+                        <div className='flex-col select-none w-full   mb-2'>
+                          <div className='w-full space-x-2  h-6 mb-2  flex justify-center items-center'>
                             <div className='bg-black bg-opacity-90 h-1 rounded-full w-1/2'></div>
                             <div className='bg-black  bg-opacity-90 rounded-full h-2 w-2'></div>
                             <div className='bg-black bg-opacity-90 h-1 w-1/2 rounded-full'></div>
                           </div>
-                          <div className='flex'>
+                          <div className='flex justify-center'>
                             <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>Duración del turno (horas):</h1>
                             <select
                               value={appointmentHours}
                               onChange={(event) => setAppointmentHours(event.target.value)}
-                              className="select-none rounded-lg pl-2 text-black border-2 border-teal-600 cursor-pointer hover:bg-teal-600 hover:border-gray-600 transition duration-150 hover:text-white bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none  text-lg w-fit"
+                              className="select-none rounded-lg pl-2 text-black border-2 border-gray-600 cursor-pointer hover:bg-teal-600 hover:border-gray-600 transition duration-150 hover:text-white bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none  text-lg w-fit"
                             >
                               <option value={1}>1 Hora</option>
                               <option value={2} disabled={freeSpaces < 1}>
@@ -734,11 +738,8 @@ export default function Page() {
                       </div>
                     ) : (
                       <div>
-                        <div className='flex items-center justify-center bg-teal-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
-                          <h1 className='font-black	text-2xl text-white mr-2 select-none'>1.</h1>
-                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona la fecha</h1>
-                        </div>
-                        <div className='flex-col   border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-2 bg-white py-1'>
+
+                        <div className='flex-col   border-2 border-gray-600 rounded-lg shadow-xl mx-4 mt-4 mb-4 bg-white py-1'>
                           <BsArrowLeftCircle className="m-auto mt-2 mb-1 text-black" size={120} />
                           <h1 className='m-auto text-center font-medium text-lg select-none text-black'>SELECCIONA EL DIA Y HORARIO <br /> EN LA AGENDA</h1>
                         </div>
@@ -749,19 +750,18 @@ export default function Page() {
                   {/* 2. SELECCIONAR PACIENTE */}
 
                   <div ref={selectPatientRef} className={` duration-[500ms] border-gray-600 border-b-4 flex justify-center items-center flex-col p-2`}>
-                    {patient ? (
-                      <div className=' flex items-center justify-center bg-white rounded-2xl h-12 border-2 border-emerald-500 px-3 cursor-default mt-1 shadow-lg'>
-                        <BsPersonCheck size={34} className="text-emerald-500" />
-                        <div className='mx-2 h-[70%] w-1 rounded-full bg-white'></div>
-                        <FaRegTrashCan onClick={() => setAppointmentDate(null)} size={28} className='text-red-700  cursor-pointer hover:scale-110 transition duration-150' />
+                    <div className='w-full '>
+                      <div className='flex items-center justify-center bg-white border-2 border-gray-600 rounded-xl h-10 cursor-default shadow-lg mt-2 mx-3'>
+                        <h1 className='font-black	text-2xl text-black mr-4 select-none'>2.</h1>
+                        <h1 className='text-xl font-bold text-black text-center cursor-default mt-1 select-none'>Selecciona el paciente</h1>
                       </div>
+                    </div>
+                    {patient ? (
+                      null
                     ) : (
-                      <div>
-                        <div className='flex items-center justify-center bg-white border-2 border-gray-600 rounded-xl h-10 cursor-default shadow-lg mt-1'>
-                          <h1 className='font-black	text-2xl text-black mr-2 select-none'>2.</h1>
-                          <h1 className='text-xl font-bold text-white text-center cursor-default mt-1 select-none'>Selecciona el paciente</h1>
-                        </div>
-                        <div className='mt-4 mx-4 flex'>
+                      <div className='w-full px-3'>
+
+                        <div className='mt-4   flex'>
                           <input name='search'
                             value={searchContent}
                             onChange={(e) => {
@@ -779,42 +779,50 @@ export default function Page() {
                         </div>
                       </div>
                     )}
-                    <div className='mt-4 ml-4 mr-4 mb-2 border-2 border-gray-600 rounded-lg bg-white shadow-xl overflow-y-auto'>
-                      <div ref={newPatientRef} className={`${patient ? '' : 'h-40'} `}>
-                        {listPatients && typeof listPatients !== 'string' ? (
-                          <div>
-                            {patient ? (
-                              <div onClick={() => setPatient(null)} className=' text-black w-full  hover:bg-gray-300 hover:bg-opacity-30 bg-white transition duration-150 py-0.5 border-emerald-500 '>
-                                <p className='text-sm  text-center select-none'>Paciente seleccionado: </p>
-                                <p className='ml-1 text-sm text-center font-bold select-none'>{patient.name} {patient.lastName}</p>
-                              </div>
-                            ) : (
-                              <div >
-                                {listPatients.map((patient, index) => (
-                                  <div key={index} onClick={() => { setPatient(patient); console.log(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
-                                    <p className='ml-1'>
-                                      {patient.name} {patient.lastName}
-                                    </p>
-                                    <p className='mr-1'>
-                                      {patient.dni}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="ml-2 p-1">
-                            {listPatients === 'noResult' ? (
-                              <p>Sin resultados...</p>
-                            ) : (
-                              <div className='flex justify-center items-center mt-14 mb-14'>
-                                <ClipLoader color='rgb(20 184 166)' size={36} />
-                              </div>
-                            )}
-                          </div>
-                        )}
+                    <div className={`w-full px-3 ${patient ? 'flex justify-center' : ''}`}>
+                      <div className='mt-4  mb-2 w-full border-2 border-gray-600 rounded-lg bg-white shadow-xl overflow-y-auto'>
+                        <div ref={newPatientRef} className={`${patient ? '' : 'h-40'} `}>
+                          {listPatients && typeof listPatients !== 'string' ? (
+                            <div>
+                              {patient ? (
+                                <div className=' text-black w-full  hover:bg-gray-300 hover:bg-opacity-30 bg-white transition duration-150 py-0.5  '>
+                                  <p className='text-sm  text-center select-none'>Paciente seleccionado: </p>
+                                  <p className='ml-1 text-sm text-center font-bold select-none'>{patient.name} {patient.lastName}</p>
+                                </div>
+
+                              ) : (
+                                <div >
+                                  {listPatients.map((patient, index) => (
+                                    <div key={index} onClick={() => { setPatient(patient); console.log(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                      <p className='ml-1'>
+                                        {patient.name} {patient.lastName}
+                                      </p>
+                                      <p className='mr-1'>
+                                        {patient.dni}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="ml-2 p-1">
+                              {listPatients === 'noResult' ? (
+                                <p>Sin resultados...</p>
+                              ) : (
+                                <div className='flex justify-center items-center mt-14 mb-14'>
+                                  <ClipLoader color='rgb(20 184 166)' size={36} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      {patient && (
+                        <div className=' flex ml-4  items-center  bg-white rounded-2xl h-12 border-2 border-gray-600 px-3 cursor-default mt-4 shadow-lg'>
+                          <FaRegTrashCan onClick={() => setPatient(null)} size={28} className='text-red-700  cursor-pointer hover:scale-110 transition duration-150' />
+                        </div>
+                      )}
                     </div>
                     {!patient && (
                       <div className='flex ml-1'>
@@ -854,9 +862,9 @@ export default function Page() {
                         </div>
                         <div className='mx-2 mt-4 mb-4 px-2 flex justify-center items-center'>
                           <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>Razón:</h1>
-                          <select defaultValue={'CONSULTAS'} value={chapterName} onChange={(e) => setChapterName(e.target.value)}
+                          <select value={chapterName} onChange={(e) => setChapterName(e.target.value)}
                             className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white  transition duration-300 bg-white bg-opacity-30 w-full py-1 ml-2  outline-none text-black text-lg font-bold border-2 px-1  border-teal-600 rounded-lg shadow-lg  flex justify-center items-center'>
-                            <option selected>Seleccionar</option>
+                            <option>Seleccionar</option>
                             <option value={"CONSULTAS"} >CONSULTAS</option>
                             <option value={"OPERATORIA DENTAL"} >OPERATORIA DENTAL</option>
                             <option value={"ENDODONCIA"} >ENDODONCIA</option>

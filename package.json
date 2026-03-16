@@ -33,7 +33,7 @@
     "jspdf-invoice-template": "^1.4.3",
     "jspdf-invoice-template-nodejs": "^1.4.30",
     "lucide-react": "^0.400.0",
-    "next": "^14.2.4",
+    "next": "^16.1.6",
     "react": "18.2.0",
     "react-calendar": "^4.6.0",
     "react-dom": "18.2.0",

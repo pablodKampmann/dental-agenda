@@ -82,7 +82,7 @@ const config = {
         'move-from-right-form': 'move-from-right-form 0.25s ease-out',
         'move-from-right-form-2': 'move-from-right-form-2 0.25s ease-out',
         'user-menu': 'user-menu 0.1s ease-out',
-        'breathe': 'breathe 1s infinite ease-in-out',
+        'breathe': 'breathe 2s infinite ease-in-out',
         'modal-appointment': 'modal-appointment 0.2s ease-in',
         'alredy-exists': 'alredy-exists 0.1s ease-out',
         'move-from-left': 'move-from-left 0.3s ease-in-out',
@@ -190,9 +190,9 @@ const config = {
           '100%': { opacity: '1', transform: 'translateY(0%)' },
         },
         'breathe': {
-          '0%': { opacity: '0.8' },
+          '0%': { opacity: '1' },
           '50%': { opacity: '0.3' },
-          '100%': { opacity: '0.8' },
+          '100%': { opacity: '1' },
         },
         'modal-appointment': {
           '0%': { opacity: '0.1', transform: 'translateY(-50%)' },
