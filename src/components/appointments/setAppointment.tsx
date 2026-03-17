@@ -19,7 +19,7 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
             appointmentId = (Object.keys(data).length) + 1;
         }
         dbRef = ref(db, `/clinics/${clinicId}/appointments/${formattedDate}/${appointmentId}/`);
-        
+
         await set(dbRef, {
             id: appointmentId,
             patientId: patientId,
@@ -27,6 +27,11 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
             dayComplete: dateData.dayComplete,
             year: dateData.year,
             time: dateData.time,
+            ...(dateData.time2 ? { time2: dateData.time2 } : {}),
+            ...(dateData.time3 ? { time3: dateData.time3 } : {}),
+            ...(dateData.time4 ? { time4: dateData.time4 } : {}),
+            ...(dateData.time5 ? { time5: dateData.time5 } : {}),
+            ...(dateData.time6 ? { time6: dateData.time6 } : {}),
             observations: observations
         });
         dbRef = ref(db, `/clinics/${clinicId}/patients/${patientId}/appointments/`);

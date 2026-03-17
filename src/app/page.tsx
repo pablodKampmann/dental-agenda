@@ -36,6 +36,11 @@ export interface dateData {
   dayComplete: string;
   year: number;
   time: string;
+  time2?: string;
+  time3?: string;
+  time4?: string;
+  time5?: string;
+  time6?: string;
 }
 interface CustomDayjs extends Dayjs {
   $d: Date;
@@ -59,7 +64,7 @@ export default function Page() {
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
   const [reason, setReason] = useState<any>(null);
-  const [observations, setObservations] = useState<any>(null);
+  const [observations, setObservations] = useState<any>('');
   const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
   const [dayName, setDayName] = useState<any>(null);
@@ -81,6 +86,8 @@ export default function Page() {
   const [time, setTime] = useState(getCurrentTime());
   const [chapterName, setChapterName] = useState<string>('Consultas');
   const [chapterData, setChapterData] = useState<any>(null);
+  const isUpdatingFromHours = useRef(false);
+  const skipResetHours = useRef(false);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
@@ -299,6 +306,8 @@ export default function Page() {
         appointments = Object.values(appointments);
       }
       setAppointments(appointments);
+      console.log('dateData que se va a guardar:', dateData); // ← agregá esto
+
       setIsLoadAppoints(false);
     }
     if (result === 'error') {
@@ -309,53 +318,69 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (appointmentDate && appointments) {
-      const hour = parseInt(appointmentDate.time.split(':')[0]);
-      const nextHour = hour + 1;
-      const twoHoursLater = hour + 2;
+    if (appointmentDate) {
+      const timeSlots = ['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'];
 
-      const validAppointments = appointments.filter(
-        (appointment: { time: any; }) => appointment && appointment.time
-      );
+      const [h, m] = appointmentDate.time.split(':').map(Number);
+      const totalMins = h * 60 + m;
 
-      const isNextHourOccupied = validAppointments.find((appointment: { time: string; }) => {
-        const appointmentHour = parseInt(appointment.time.split(':')[0]);
-        return appointmentHour === nextHour;
-      });
+      const addMins = (mins: number) => {
+        const t = totalMins + mins;
+        return `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`;
+      };
 
-      const areTwoHoursFree = !validAppointments.find((appointment: { time: string; }) => {
-        const appointmentHour = parseInt(appointment.time.split(':')[0]);
-        return appointmentHour === nextHour || appointmentHour === twoHoursLater;
-      });
+      const slots = [addMins(30), addMins(60), addMins(90), addMins(120), addMins(150)];
 
-      if (isNextHourOccupied) {
-        setFreeSpaces(0)
-      } else if (areTwoHoursFree) {
-        setFreeSpaces(2)
-      } else {
-        setFreeSpaces(1)
+      if (!appointments || appointments.length === 0) {
+        const maxSlots = slots.filter(s => timeSlots.includes(s)).length;
+        setFreeSpaces(Math.min(maxSlots, 5));
+        return;
       }
+
+      const validAppointments = appointments.filter((a: any) => a && a.time);
+
+      let freeCount = 0;
+      for (const slot of slots) {
+        if (!timeSlots.includes(slot)) break;
+        if (validAppointments.some((a: any) => a.time === slot)) break;
+        freeCount++;
+      }
+
+      setFreeSpaces(freeCount);
     }
   }, [appointmentDate, appointments]);
 
   useEffect(() => {
-    if (appointmentDate) {
-      const hour = parseInt(appointmentDate.time.split(':')[0]);
-      const nextHour = hour + 1;
-      const twoHoursLater = hour + 2;
-      const updatedAppointmentDate = {
-        ...appointmentDate,
-        ...(appointmentHours == 2 ? { time2: (nextHour + ":00") } : {}),
-        ...(appointmentHours == 3 ? { time2: (nextHour + ":00"), time3: (twoHoursLater + ":00") } : {})
+    if (appointmentDate && appointmentHours > 1) {
+      skipResetHours.current = true;
+
+      const [h, m] = appointmentDate.time.split(':').map(Number);
+      const totalMins = h * 60 + m;
+
+      const addMins = (mins: number) => {
+        const t = totalMins + mins;
+        return `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`;
       };
 
-      setAppointmentDate(updatedAppointmentDate)
+      const slots: Record<string, string | undefined> = {
+        time2: undefined, time3: undefined, time4: undefined, time5: undefined, time6: undefined
+      };
+      if (appointmentHours >= 2) slots.time2 = addMins(30);
+      if (appointmentHours >= 3) slots.time3 = addMins(60);
+      if (appointmentHours >= 4) slots.time4 = addMins(90);
+      if (appointmentHours >= 5) slots.time5 = addMins(120);
+      if (appointmentHours >= 6) slots.time6 = addMins(150);
+
+      setAppointmentDate((prev: any) => ({ ...prev, ...slots }));
     }
   }, [appointmentHours]);
 
   useEffect(() => {
+    if (skipResetHours.current) {
+      skipResetHours.current = false;
+      return;
+    }
     setAppointmentHours(1);
-
   }, [appointmentDate]);
 
   async function handleSuccessDeleteAppointment() {
@@ -380,9 +405,11 @@ export default function Page() {
   function timeCalc(time: string) {
     const [hoursStr, minutesStr] = time.split(':');
     const hours = parseInt(hoursStr, 10);
-    const newHours = hours + 1;
-    const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
-    return newTime;
+    const minutes = parseInt(minutesStr, 10);
+    const totalMinutes = hours * 60 + minutes + 30;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
   }
 
   //POP-UP MESSAGES
@@ -602,77 +629,107 @@ export default function Page() {
           <div className='flex justify-between h-screen pb-44 overflow-y-hidden w-full'>
             <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>A <br /> G <br />E <br />N <br />D <br />A</h1>
             <div className='bg-gray-300 bg-opacity-30  shadow-xl flex-1 transition-width  border-2 border-gray-600 rounded-r-lg overflow-y-auto '>
-              <table>
-                <tbody className='text-black '>
-                  {['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'].map((time, index, array) => (
-                    <tr key={time}>
-                      <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b '} border-gray-600`}>
-                        {time}
-                      </td>
-                      <td
-                        className={`
-    ${(appointments && Array.isArray(appointments) && appointments.filter((appointment: { time: string; }) => appointment.time === time).length) ? 'bg-teal-600 bg-opacity-20 ml-4 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8'}
-    ${appointmentDate && appointmentDate.date === date && (appointmentDate.time === time || appointmentDate.time2 === time || appointmentDate.time3 === time)
-                            ? `animate-breathe ${appointmentDate.time === time ? 'bg-teal-600' : 'bg-gray-300'}`
-                            : 'hover:bg-gray-900 hover:bg-opacity-30'
-                          }
-    ${index === array.length - 1 ? '' : 'border-b'}
-    select-none w-full border-gray-600 text-center cursor-pointer items-center`}
-                        onClick={(e) => handleCliclRow(time, e)}
-                      >
-                        {appointments &&
-                          appointments
-                            .filter((appointment: { time: string }) => appointment.time === time)
-                            .map((filteredAppointment: {
-                              patientData: any; id: number; time: string; reason: string; observations: string;
-                            }) => {
-                              const [hoursStr, minutesStr] = time.split(':');
-                              const hours = parseInt(hoursStr, 10);
-                              const newHours = hours + 1;
-                              const newTime = `${newHours.toString().padStart(2, '0')}:${minutesStr}`;
-                              return (
-                                <div key={filteredAppointment.id} className='flex justify-between' >
-                                  <div className='flex-col'>
-                                    <p className='text-left text-xs font-bold'>
-                                      {time}-{newTime}
-                                    </p>
-                                    <div className='flex mt-2'>
-                                      <p className='text-left text-sm ml-2'> Paciente:</p>
-                                      <p className='text-left text-sm font-semibold ml-1'>
-                                        {filteredAppointment.patientData.name}{' '}
-                                        {filteredAppointment.patientData.lastName}
-                                      </p>
-                                    </div>
-                                    <div className='flex'>
-                                      <p className='text-left text-sm ml-2'> DNI:</p>
-                                      <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.dni}</p>
-                                    </div>
-                                    <div className='flex'>
-                                      <p className='text-left text-sm ml-2'> Contacto:</p>
-                                      <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.patientData.num} <br /> {filteredAppointment.patientData.email}</p>
-                                    </div>
-                                  </div>
-                                  <div className='mt-auto'>
-                                    <div className='flex'>
-                                      <p className='text-left text-sm ml-2'> Razón de turno:</p>
-                                      <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.reason}</p>
-                                    </div>
-                                    <div className='flex'>
-                                      <p className='text-left text-sm ml-2'> Observaciones:</p>
-                                      {filteredAppointment.observations ? (
-                                        <p className='text-left text-sm font-semibold ml-1'>{filteredAppointment.observations}</p>
-                                      ) : (
-                                        <p className='text-left text-sm font-semibold ml-1'>Ninguna</p>
-                                      )}
-                                    </div>
-                                  </div>
+              <table className='w-full'>
+                <tbody className='text-black'>
+                  {['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map((time, index, array) => {
+
+                    // Slots que son time2 o time3 de algún turno → no renderizar td
+                    const isSecondarySlot = appointments && Array.isArray(appointments) && appointments.some(
+                      (a: any) => a && (a.time2 === time || a.time3 === time || a.time4 === time || a.time5 === time || a.time6 === time)
+                    );
+
+                    // Turno que empieza en este slot
+                    const appointment = appointments && Array.isArray(appointments) &&
+                      appointments.find((a: any) => a && a.time === time);
+
+                    // Calcular rowSpan
+                    const rowSpan = appointment
+                      ? (appointment.time6 ? 6 : appointment.time5 ? 5 : appointment.time4 ? 4 : appointment.time3 ? 3 : appointment.time2 ? 2 : 1)
+                      : 1;
+
+                    // horario de fin:
+                    const endTime = appointment ? (
+                      appointment.time6 ? timeCalc(appointment.time6)
+                        : appointment.time5 ? timeCalc(appointment.time5)
+                          : appointment.time4 ? timeCalc(appointment.time4)
+                            : appointment.time3 ? timeCalc(appointment.time3)
+                              : appointment.time2 ? timeCalc(appointment.time2)
+                                : timeCalc(time)
+                    ) : timeCalc(time);
+
+                    if (isSecondarySlot) {
+                      // Solo renderizar la celda de hora, sin td de contenido
+                      return (
+                        <tr key={time}>
+                          <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
+                            {time}
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return (
+                      <tr key={time}>
+                        <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
+                          {time}
+                        </td>
+                        <td
+                          rowSpan={rowSpan}
+                          className={`
+              ${appointment ? 'bg-teal-600 bg-opacity-20 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8'}
+             ${appointmentDate && appointmentDate.date === date &&
+                              (appointmentDate.time === time || appointmentDate.time2 === time || appointmentDate.time3 === time ||
+                                appointmentDate.time4 === time || appointmentDate.time5 === time || appointmentDate.time6 === time)
+                              ? 'animate-breathe bg-gray-400'
+                              : 'hover:bg-gray-900 hover:bg-opacity-30'
+                            }
+              ${index === array.length - 1 ? '' : 'border-b'}
+              select-none w-full border-gray-600 text-center cursor-pointer items-center`}
+                          onClick={(e) => handleCliclRow(time, e)}
+                        >
+                          {appointment && (
+                            <div className='flex justify-between'>
+                              <div className='flex-col'>
+                                <p className='text-left text-xs font-bold'>
+                                  {time}-{endTime}
+                                </p>
+                                <div className='flex mt-2'>
+                                  <p className='text-left text-sm ml-2'>Paciente:</p>
+                                  <p className='text-left text-sm font-semibold ml-1'>
+                                    {appointment.patientData.name}{' '}{appointment.patientData.lastName}
+                                  </p>
                                 </div>
-                              );
-                            })
-                        }
-                      </td>
-                    </tr>
-                  ))}
+                                <div className='flex'>
+                                  <p className='text-left text-sm ml-2'>DNI:</p>
+                                  <p className='text-left text-sm font-semibold ml-1'>{appointment.patientData.dni}</p>
+                                </div>
+                                <div className='flex'>
+                                  <p className='text-left text-sm ml-2'>Contacto:</p>
+                                  <p className='text-left text-sm font-semibold ml-1'>
+                                    {appointment.patientData.num} <br /> {appointment.patientData.email}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className='mt-auto'>
+                                <div className='flex'>
+                                  <p className='text-left text-sm ml-2'>Razón de turno:</p>
+                                  <p className='text-left text-sm font-semibold ml-1'>{appointment.reason}</p>
+                                </div>
+                                <div className='flex'>
+                                  <p className='text-left text-sm ml-2'>Observaciones:</p>
+                                  {appointment.observations ? (
+                                    <p className='text-left text-sm font-semibold ml-1'>{appointment.observations}</p>
+                                  ) : (
+                                    <p className='text-left text-sm font-semibold ml-1'>Ninguna</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -723,15 +780,14 @@ export default function Page() {
                             <select
                               value={appointmentHours}
                               onChange={(event) => setAppointmentHours(event.target.value)}
-                              className="select-none rounded-lg pl-2 text-black border-2 border-gray-600 cursor-pointer hover:bg-teal-600 hover:border-gray-600 transition duration-150 hover:text-white bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none  text-lg w-fit"
+                              className="select-none rounded-lg pl-2 text-black border-2 border-gray-600 cursor-pointer hover:bg-teal-600 hover:border-gray-600 transition duration-150 hover:text-white bg-white flex py-1 ml-2 font-semibold shadow-xl focus:outline-none text-lg w-fit"
                             >
-                              <option value={1}>1 Hora</option>
-                              <option value={2} disabled={freeSpaces < 1}>
-                                2 Horas
-                              </option>
-                              <option value={3} disabled={freeSpaces < 2}>
-                                3 Horas
-                              </option>
+                              <option value={1}>30 min</option>
+                              <option value={2} disabled={freeSpaces < 1}>1 hora</option>
+                              <option value={3} disabled={freeSpaces < 2}>1 hora 30 min</option>
+                              <option value={4} disabled={freeSpaces < 3}>2 horas</option>
+                              <option value={5} disabled={freeSpaces < 4}>2 horas 30 min</option>
+                              <option value={6} disabled={freeSpaces < 5}>3 horas</option>
                             </select>
                           </div>
                         </div>
@@ -910,7 +966,14 @@ export default function Page() {
                           <h1 className='text-xl font-bold text-black select-none text-center'>Resumen: </h1>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1  text-lg font-bold text-black select-none text-left'>Fecha: </p>
-                            <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}-{timeCalc(appointmentDate.time)}</p>
+                            <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Dia: {appointmentDate.dayComplete}, {appointmentDate.year} <br /> Horario: {appointmentDate.time}-{
+                              appointmentDate.time6 ? timeCalc(appointmentDate.time6) :
+                                appointmentDate.time5 ? timeCalc(appointmentDate.time5) :
+                                  appointmentDate.time4 ? timeCalc(appointmentDate.time4) :
+                                    appointmentDate.time3 ? timeCalc(appointmentDate.time3) :
+                                      appointmentDate.time2 ? timeCalc(appointmentDate.time2) :
+                                        timeCalc(appointmentDate.time)
+                            }</p>
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-black text-left select-none'>Paciente: </p>
