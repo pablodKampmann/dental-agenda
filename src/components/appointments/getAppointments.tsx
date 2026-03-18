@@ -15,7 +15,7 @@ export async function getAppointments(date: string | null) {
                 const appointments = snapshot.val();
                 const appointmentKeys = Object.keys(appointments);
 
-                for (const key of appointmentKeys) {
+                await Promise.all(appointmentKeys.map(async (key) => {
                     const appointment = appointments[key];
                     const patientId = appointment.patientId;
                     const patientData = await getPatient(patientId);
@@ -24,7 +24,7 @@ export async function getAppointments(date: string | null) {
                     } else {
                         delete appointments[key];
                     }
-                }
+                }));
 
                 return appointments;
             } else {

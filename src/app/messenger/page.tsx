@@ -195,11 +195,11 @@ export default function Messenger() {
     }
 
     return (
-        <div className='ml-56 overflow-hidden  h-screen flex-1 '>
+        <div className=' overflow-hidden  h-screen flex-1 '>
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className='p-6 mt-16  overflow-y-hidden'>
+                <div className='p-7   overflow-y-hidden'>
                     <div className="flex select-none">
                         <div onClick={() => handleSetAction('contactPatient')} className={`${action !== '' && action !== 'contactPatient' ? 'bg-gray-600 bg-opacity-30' : ''} ${action === 'contactPatient' ? 'bg-teal-600 border-gray-600' : 'bg-gray-300 bg-opacity-30 border-gray-400'} py-4 shadow-lg group relative h-1/4 cursor-pointer  hover:bg-teal-600 hover:bg-opacity-80 transition duration-300 border-2 w-1/2 rounded-lg  `}>
                             <div className={`${action === 'contactPatient' ? 'text-white scale-105' : 'text-gray-500'} flex justify-center items-center group-hover:text-white  text-xl font-bold group-hover:scale-105 duration-300 tracking-tight uppercase`}>
