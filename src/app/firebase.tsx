@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
@@ -14,7 +14,11 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// getApps() devuelve la lista de apps ya inicializadas.
+// Si ya hay una, la reutiliza. Si no, crea una nueva.
+// Esto evita que Firebase se inicialice múltiples veces y rompa durante el build.
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
 export const db = getDatabase(app);
 export const storage = getStorage(app, "gs://dental-agenda-22448.appspot.com");
 export const auth = getAuth(app);
