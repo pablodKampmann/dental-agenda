@@ -1,22 +1,24 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAskzVCKV-MT0ZrGafZC_igOLiFKses1-c",
-    authDomain: "dental-agenda-22448.firebaseapp.com",
-    databaseURL: "https://dental-agenda-22448-default-rtdb.firebaseio.com",
-    projectId: "dental-agenda-22448",
-    storageBucket: "dental-agenda-22448.appspot.com",
-    messagingSenderId: "117012483079",
-    appId: "1:117012483079:web:d72a363b6ed8c2f9696ea2",
-    measurementId: "G-19RM1SQK54"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// getApps() devuelve la lista de apps ya inicializadas.
+// Si ya hay una, la reutiliza. Si no, crea una nueva.
+// Esto evita que Firebase se inicialice múltiples veces y rompa durante el build.
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
 export const db = getDatabase(app);
-export const storage = getStorage(app, 'gs://dental-agenda-22448.appspot.com');
+export const storage = getStorage(app, "gs://dental-agenda-22448.appspot.com");
 export const auth = getAuth(app);
-
-
