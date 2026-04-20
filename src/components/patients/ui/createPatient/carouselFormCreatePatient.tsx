@@ -15,9 +15,10 @@ import { SetPatients } from "../../db/setPatients";
 
 interface props {
     setOpen: (value: boolean) => void;
+    handleGetPatients: (quantity: number) => void;
 }
 
-export function CarouselFormCreatePatient({ setOpen }: props) {
+export function CarouselFormCreatePatient({ setOpen, handleGetPatients }: props) {
 
     const [name, setName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -48,6 +49,7 @@ export function CarouselFormCreatePatient({ setOpen }: props) {
                 return;
             }
             await SetPatients(name, lastName, gender, date, dni, num, address, email, insurance, plan, affiliate)
+            await handleGetPatients(20);
             setOpen(false);
         }
     };

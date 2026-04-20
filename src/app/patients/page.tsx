@@ -37,7 +37,7 @@ export default function Patients() {
             {isLoad && (
                 <Loading />
             )}
-            <SheetCreatePatient open={isOpenSheetCreatePatient} setOpen={setIsOpenSheetCreatePatient}/>
+            <SheetCreatePatient open={isOpenSheetCreatePatient} setOpen={setIsOpenSheetCreatePatient} handleGetPatients={handleGetPatients}/>
             <div className={`${isLoad ? 'opacity-0' : 'opacity-100'} transition-opacity duration-150`}>
                 <InputAndOthers searchContent={searchContent} setSearchContent={setSearchContent} loadRow={loadRow} setListOfPatients={setListOfPatients} handleGetPatients={handleGetPatients} setIsOpenSheetCreatePatient={setIsOpenSheetCreatePatient} />
 
