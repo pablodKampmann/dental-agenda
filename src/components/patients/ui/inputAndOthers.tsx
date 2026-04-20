@@ -12,9 +12,10 @@ interface props {
     setListOfPatients: (value: any) => void;
     handleGetPatients: (quantity: number) => void;
     setIsOpenSheetCreatePatient: (value: boolean) => void;
+    clinicId: string | null; 
 }
 
-export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient }: props) {
+export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient, clinicId }: props) {
     const [selectedField, setSelectedField] = useState('name');
 
     //SEARCH PATIENTS LOGIC
@@ -29,7 +30,7 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
             handleGetPatients(10);
         } else {
             const searchPatients = async () => {
-                const patientsFilter = await SearchPatient(selectedField, searchContent);
+                const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
                 if (!isCancelled) {
                     setListOfPatients(patientsFilter);
                 }

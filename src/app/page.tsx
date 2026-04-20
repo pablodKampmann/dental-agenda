@@ -30,6 +30,7 @@ import { Alert } from "./../components/general/alert";
 import { TiDocumentDelete } from "react-icons/ti";
 import { getChapter } from "./../components/practices/getChapter";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { getUser } from '@/components/auth/getUser';
 
 export interface dateData {
   date: string;
@@ -89,6 +90,16 @@ export default function Page() {
   const isUpdatingFromHours = useRef(false);
   const skipResetHours = useRef(false);
 
+  const [clinicId, setClinicId] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    async function fetchClinicId() {
+      const id = await getUser(true);
+      setClinicId(id as string);
+    }
+    fetchClinicId();
+  }, []);
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -104,6 +115,7 @@ export default function Page() {
 
   //PATIENTS LOGIC
   useEffect(() => {
+     if (!clinicId) return;
     if (searchContent.length > 0) {
       Search();
     }
@@ -112,7 +124,7 @@ export default function Page() {
     }
 
     async function Search() {
-      const patientsFilter = await SearchPatient(Field, searchContent)
+      const patientsFilter = await SearchPatient(Field, searchContent, clinicId!)
       if (patientsFilter.length < 1) {
         setListPatients('noResult')
       } else {
@@ -121,21 +133,21 @@ export default function Page() {
     }
 
     async function Get() {
-      const patients = await getPatients(20);
+      const patients = await getPatients(20, clinicId!);
       if (patients) {
         setListPatients(patients.patients)
       } else {
         setListPatients('noResult')
       }
     }
-  }, [searchContent, Field])
+  }, [searchContent, Field, clinicId])
 
   useEffect(() => {
     setSearchContent('');
   }, [Field]);
 
   async function updateListPatients() {
-    const patients = await getPatients(20);
+    const patients = await getPatients(20, clinicId!);
     if (patients) {
       setListPatients(patients.patients)
     } else {
