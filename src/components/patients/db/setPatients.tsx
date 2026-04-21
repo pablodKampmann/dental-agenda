@@ -33,7 +33,8 @@ export async function SetPatients(name: any, lastName: any, gender: any, date: a
         });
 
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return "error"; // Changed from null to "error"
     }
 }
 
