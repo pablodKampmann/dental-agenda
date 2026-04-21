@@ -15,8 +15,9 @@ jobs:
         # actualizado de v3 a v4
         with:
           node-version: 20
+          cache: 'npm'               # ← cachea node_modules entre runs
 
-      - run: npm install
+      - run: npm ci                  # ← cambiamos install por ci (más rápido y determinístico)
 
       - run: npm run build
         env:
