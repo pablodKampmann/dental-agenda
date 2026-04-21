@@ -1,4 +1,4 @@
-import { storage, db } from "./../../app/firebase";
+﻿import { storage, db } from "./../../app/firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { set, get, ref as databaseRef } from "firebase/database";
 
@@ -29,7 +29,8 @@ export async function changeImage(userUid: string, file: File) {
 
     } catch (error) {
         console.error(error);
-        return (error instanceof Error ? error.message : 'unknown-error');
+        return null;
     }
 }
+
 

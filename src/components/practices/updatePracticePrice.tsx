@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { set, ref, get } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -15,6 +15,7 @@ export async function updatePracticePrice(name: string, id: number, price: numbe
         }
     } catch (error) {
         console.error(error);
-        return (error instanceof Error ? error.message : 'unknown-error');
+        return null;
     }
 }
+

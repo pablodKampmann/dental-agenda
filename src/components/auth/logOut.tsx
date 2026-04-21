@@ -9,7 +9,8 @@ export async function logOut() {
             await signOut(auth);
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
 

@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { ref, update, get } from "firebase/database";
 
 export async function setRowChanges(table: string, changes: any, id: string) {
@@ -15,7 +15,8 @@ export async function setRowChanges(table: string, changes: any, id: string) {
         }
     } catch (error) {
         console.error(error);
-        return (error instanceof Error ? error.message : 'unknown-error');
+        return null;
     }
 }
+
 

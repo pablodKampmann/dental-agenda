@@ -1,4 +1,4 @@
-import { db } from "../../app/firebase";
+﻿import { db } from "../../app/firebase";
 import { ref, set, get, push } from "firebase/database";
 import { dateData } from "./../../app/page";
 import { getUser } from "./../auth/getUser";
@@ -38,7 +38,8 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         await push(dbRef, formattedDate)
     } catch (error) {
         console.error(error);
-        return (error instanceof Error ? error.message : 'unknown-error');
+        return null;
     }
 }
+
 

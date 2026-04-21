@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { get, ref } from "firebase/database";
 
 export async function getClinicData(clinicId: string, table: string) {
@@ -20,6 +20,7 @@ export async function getClinicData(clinicId: string, table: string) {
         }
     } catch (error) {
         console.error(error);
-        return (error instanceof Error ? error.message : 'unknown-error');
+        return null;
     }
 }
+
