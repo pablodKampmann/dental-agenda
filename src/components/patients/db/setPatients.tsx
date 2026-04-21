@@ -1,4 +1,4 @@
-import { db } from "./../../../app/firebase";
+﻿import { db } from "./../../../app/firebase";
 import { ref, set, get } from "firebase/database";
 import { getUser } from "../../auth/getUser";
 
@@ -40,7 +40,9 @@ export async function SetPatients(name: any, lastName: any, gender: any, date: a
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
+
 

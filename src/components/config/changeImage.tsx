@@ -1,4 +1,4 @@
-import { storage, db } from "./../../app/firebase";
+﻿import { storage, db } from "./../../app/firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { set, get, ref as databaseRef } from "firebase/database";
 
@@ -17,8 +17,6 @@ export async function changeImage(userUid: string, file: File) {
         if (!navigator.onLine) {
             throw new Error();
         }
-        console.log("oinqfi");
-
         const storageRef = ref(storage, `/userImages/${userUid}.jpg`);
         await uploadBytes(storageRef, file);
         const dbRef = databaseRef(db, `/admins/${userUid}/isPhotoUpdate`);        
@@ -30,7 +28,9 @@ export async function changeImage(userUid: string, file: File) {
 
 
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
+
 

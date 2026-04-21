@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { set, ref, get } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -14,6 +14,8 @@ export async function updatePracticePrice(name: string, id: number, price: numbe
             set(dbRef, price)
         }
     } catch (error) {
-        return 'error'
+        console.error(error);
+        return null;
     }
 }
+

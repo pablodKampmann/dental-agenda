@@ -1,4 +1,4 @@
-import { MdPersonRemoveAlt1 } from 'react-icons/md';
+﻿import { MdPersonRemoveAlt1 } from 'react-icons/md';
 import { FaRunning } from 'react-icons/fa';
 import { deletePatient } from "../patients/db/deletePatient";
 import { ClipLoader } from "react-spinners";
@@ -32,7 +32,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
     async function handleLogOut() {
         setLoading(true);
         const result = await logOut();
-        if (result === 'error') {
+        if (result === null) {
             setLoading(false);
         } else {
             if (onSuccess) {
@@ -44,7 +44,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
     async function handleDeletePatient() {
         setLoading(true);
         const result = await deletePatient(thirdProp);
-        if (result === 'error') {
+        if (result === null) {
             setLoading(false);
         } else {
             if (onSuccess) {
@@ -57,7 +57,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
         setLoading(true);
         const dateUpdate = secondProp.date.replace(/\//g, '');
         const result = await deleteAppointment(secondProp.id, dateUpdate)
-        if (result === 'error') {
+        if (result === null) {
             setLoading(false);
         } else {
             if (onSuccess) {
@@ -69,7 +69,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
     async function handleDeletePractice() {
         setLoading(true);
         const result = await deletePractice(fourthProp, fifthProp);
-        if (result === 'error') {
+        if (result === null) {
             setLoading(false);
         } else {
             if (onSuccess) {
@@ -174,7 +174,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                 </div>
             </div>
         );
-    } else if (action === 'Eliminar Práctica') {
+    } else if (action === 'Eliminar PrÃ¡ctica') {
         return (
             <div className="fixed inset-0 mt-8 flex items-center justify-center">
                 <div className="flex flex-col p-6 rounded-lg shadow-xl bg-white border-4  border-gray-600">
@@ -209,3 +209,4 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
         );
     }
 }
+
