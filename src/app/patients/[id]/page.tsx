@@ -106,7 +106,7 @@ export default function PatientId() {
         const data = await getPatient(id);
         setPatient(data);
         const options = await getInsuranceOptions();
-        if (options !== 'error') {
+        if (options) {
           setInsuranceOptions(options);
         }
       } catch (error) {

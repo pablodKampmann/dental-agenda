@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { get, ref } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -19,7 +19,9 @@ export async function getInsuranceOptions() {
             return array;
         }
     } catch (error) {
-        return 'error'
+        console.error(error);
+        return null;
     }
 }
+
 

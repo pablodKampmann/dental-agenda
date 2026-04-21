@@ -1,4 +1,4 @@
-import { db } from "./../../../app/firebase";
+﻿import { db } from "./../../../app/firebase";
 import { update, ref, get } from "firebase/database";
 import { getUser } from "../../auth/getUser";
 
@@ -19,6 +19,8 @@ export async function updatePatient(changes: string, table: string, id: string |
             }
         }
     } catch (error) {
-        console.log('error');
+        console.error(error);
+        return null;
     }
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
@@ -135,7 +135,7 @@ export default function Page() {
             });
 
             const result = await updateChapterPrices(updatedChapterData, chapterName);
-            if (result === 'error') {
+            if (result === null) {
                 setLoadingIncreaseOrDecrease(false);
             } else {
                 updatePractices();
@@ -210,7 +210,7 @@ export default function Page() {
             const priceNumber = parseFloat(priceFormatted);
             const result = await updatePracticePrice(chapterName, practiceId, priceNumber);
             cancelEdit();
-            if (result !== 'error') {
+            if (result !== null) {
                 updatePractices();
                 setShowResult('good-price-update')
             }
@@ -237,7 +237,7 @@ export default function Page() {
         const priceFormatted = price.replace(/\./g, '');
         const priceNumber = parseFloat(priceFormatted);
         const result = await setPractice(id, priceNumber, practiceName, chapterName);
-        if (result !== 'error') {
+        if (result !== null) {
             if (result === 'already-exists') {
                 setLoading(false);
                 setAlreadyExists(true);
@@ -261,7 +261,7 @@ export default function Page() {
                     {/*   <ModalCreatePatient />*/}
                     {openAlert === 'delete' && (
                         <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar Práctica'} firstProp={'¿Estás seguro/a de que deseas elimanar esta práctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
+                            <Alert onCloseAlert={() => setOpenAlert('')} onSuccess={() => { setOpenAlert(''); updatePractices(); setShowResult('good-delete-practice') }} action={'Eliminar PrÃ¡ctica'} firstProp={'Â¿EstÃ¡s seguro/a de que deseas elimanar esta prÃ¡ctica?'} secondProp={practiceName} thirdProp={price} fourthProp={id} fifthProp={chapterName} />
                         </div>
                     )}
                     <div className='ml-2 mr-2 p-4'>
@@ -272,13 +272,13 @@ export default function Page() {
                                     <option value={"CONSULTAS"} selected>CONSULTAS</option>
                                     <option value={"OPERATORIA DENTAL"} selected>OPERATORIA DENTAL</option>
                                     <option value={"ENDODONCIA"} selected>ENDODONCIA</option>
-                                    <option value={"PRÓTESIS"} selected>PRÓTESIS</option>
-                                    <option value={"ODONTOLOGÍA PREVENTIVA"} selected>ODONTOLOGÍA PREVENTIVA</option>
+                                    <option value={"PRÃ“TESIS"} selected>PRÃ“TESIS</option>
+                                    <option value={"ODONTOLOGÃA PREVENTIVA"} selected>ODONTOLOGÃA PREVENTIVA</option>
                                     <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} selected>ORTODONCIA Y ORTOPEDIA FUNCIONAL</option>
-                                    <option value={"ODONTOPEDIATRÍA"} selected>ODONTOPEDIATRÍA</option>
+                                    <option value={"ODONTOPEDIATRÃA"} selected>ODONTOPEDIATRÃA</option>
                                     <option value={"PERIODONCIA"} selected>PERIODONCIA</option>
-                                    <option value={"RADIOLOGÍA"} selected>RADIOLOGÍA</option>
-                                    <option value={"CIRUGÍA"} selected>CIRUGÍA</option>
+                                    <option value={"RADIOLOGÃA"} selected>RADIOLOGÃA</option>
+                                    <option value={"CIRUGÃA"} selected>CIRUGÃA</option>
                                 </select>
                                 {isLoadData && (
                                     <ClipLoader className='ml-4' />
@@ -293,7 +293,7 @@ export default function Page() {
                                     </div>
                                 ) : (
                                     <div className='flex justify-center items-center'>
-                                        <HiFolderAdd className="mr-2" size={28} />Agregar Práctica
+                                        <HiFolderAdd className="mr-2" size={28} />Agregar PrÃ¡ctica
                                     </div>
                                 )}
                             </button>
@@ -303,12 +303,12 @@ export default function Page() {
                         <div className='flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full'>
                             <div id="billing-target" className='mx-6 mr-8 rounded-lg w-full h-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg'>
                                 <div ref={billingTargetRef} className={`${billingTagetOverflowActived ? 'rounded-tl-md' : 'rounded-t-md '} bg-teal-600  relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}>
-                                    <h1 >Aranceles <span className=' text-white font-black text-xl'>(Capítulo {chapterNum})</span></h1>
+                                    <h1 >Aranceles <span className=' text-white font-black text-xl'>(CapÃ­tulo {chapterNum})</span></h1>
                                     {showResult === 'good-practice' && (
                                         <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right ">
                                             <div className='flex justify-start items-center'>
                                                 <BsClipboardCheck className='text-black' size={26} />
-                                                <p className='ml-2 text-black font-semibold text-lg select-none'>Práctica agregada exitosamente</p>
+                                                <p className='ml-2 text-black font-semibold text-lg select-none'>PrÃ¡ctica agregada exitosamente</p>
                                             </div>
                                         </div>
                                     )}
@@ -316,7 +316,7 @@ export default function Page() {
                                         <div className="absolute transition-width top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400  transform animate-messagge-from-right">
                                             <div className='flex justify-start items-center'>
                                                 <TiDocumentDelete className='text-black' size={28} />
-                                                <p className='ml-1 text-black font-semibold text-lg select-none'>La práctica a sido eliminada</p>
+                                                <p className='ml-1 text-black font-semibold text-lg select-none'>La prÃ¡ctica a sido eliminada</p>
                                             </div>
                                         </div>
                                     )}
@@ -332,7 +332,7 @@ export default function Page() {
                                         <div className="absolute transition-width top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-red-500  transform animate-messagge-from-right">
                                             <div className='flex justify-start items-center'>
                                                 <RiAlertFill className='text-black' size={24} />
-                                                <p className='ml-1 text-black font-semibold text-lg select-none'>No tienes practícas cargadas</p>
+                                                <p className='ml-1 text-black font-semibold text-lg select-none'>No tienes practÃ­cas cargadas</p>
                                             </div>
                                         </div>
                                     )}
@@ -348,8 +348,8 @@ export default function Page() {
                                 <table className="w-full select-none  ">
                                     <thead>
                                         <tr className='border-b-2 border-gray-600 bg-white select-none text-left text-xs font-semibold uppercase tracking-widest text-black'>
-                                            <th className="flex justify-center py-3">Número</th>
-                                            <th className="pl-2 border-r-2 border-l-2 border-gray-600 ">Nombre de Práctica</th>
+                                            <th className="flex justify-center py-3">NÃºmero</th>
+                                            <th className="pl-2 border-r-2 border-l-2 border-gray-600 ">Nombre de PrÃ¡ctica</th>
                                             <th className="pl-5 py-3 w-56">Precio</th>
                                             <th className=" px-1 border-l-2 border-gray-600 py-3">Eliminar</th>
                                         </tr>
@@ -412,11 +412,11 @@ export default function Page() {
                                     <form onSubmit={HandleSubmit} className="relative w-[400px] mr-6 animate-move-from-right-form">
                                         <div className="w-full border-2 border-gray-600 relative  bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
                                             <div className="flex-col items-center ">
-                                                <h1 className='bg-teal-600 rounded-t-md py-1 px-2 text-center text-3xl select-none font-medium border-b-2 border-gray-600'>Agregar Práctica</h1>
+                                                <h1 className='bg-teal-600 rounded-t-md py-1 px-2 text-center text-3xl select-none font-medium border-b-2 border-gray-600'>Agregar PrÃ¡ctica</h1>
                                                 <div className='flex py-4 px-4'>
                                                     <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
                                                     <div className="block font-semibold text-xl text-black ml-3">
-                                                        <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
+                                                        <h2 className="text-2xl font-light leading-tight select-none">CapÃ­tulo {chapterNum} ({chapterName})</h2>
                                                         <p className="text-sm  font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
                                                     </div>
                                                 </div>
@@ -425,7 +425,7 @@ export default function Page() {
                                                 <div className='flex justify-between '>
                                                     <div className="flex flex-col mt-1 w-36 mx-2">
                                                         <div className='flex select-none'>
-                                                            <label className="text-black select-none text-lg ">Núm.</label>
+                                                            <label className="text-black select-none text-lg ">NÃºm.</label>
                                                             {alreadyExists && (
                                                                 <div className='animate-alredy-exists bg-red-500  rounded-lg px-1 text-xs text-center flex h-6 items-center'>
                                                                     Ocupado
@@ -477,7 +477,7 @@ export default function Page() {
                                                 </div>
                                                 <div className="flex flex-col mt-2 w-full pr-4 mx-2">
                                                     <div className='flex'>
-                                                        <label className="text-black select-none text-lg ml-1">Nombre de práctica</label>
+                                                        <label className="text-black select-none text-lg ml-1">Nombre de prÃ¡ctica</label>
                                                     </div>
                                                     <div className="relative text-gray-400 ">
                                                         <input
@@ -513,9 +513,9 @@ export default function Page() {
                                             <div className=' flex  p-4 pt-6 flex-col justify-center items-center'>
                                                 <PiSealWarningThin className="text-gray-600" size={80} />
                                                 {percentage > 0 ? (
-                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas aumentar un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>Â¿EstÃ¡s seguro/a de que deseas aumentar un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prÃ¡cticas del capÃ­tulo?</h1>
                                                 ) : (
-                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>¿Estás seguro/a de que deseas disminuir un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prácticas del capítulo?</h1>
+                                                    <h1 className='text-md px-1 tracking-wide mt-1 text-center'>Â¿EstÃ¡s seguro/a de que deseas disminuir un <span className='font-semibold'>{percentageVisible}</span> el valor de todas las prÃ¡cticas del capÃ­tulo?</h1>
                                                 )}
                                                 <div className='flex mt-16 text-xl font-medium w-full'>
                                                     <button onClick={() => setOpenFormPercentages(false)} className='mr-1.5 py-1 bg-red-600 hover:bg-opacity-70 hover:transition hover:duration-250 hover:text-gray-100 text-red-900 bg-opacity-50 rounded-lg w-full shadow-lg'>NO</button>
@@ -547,7 +547,7 @@ export default function Page() {
                                                         className='flex w-full justify-center border-b-2 border-gray-600 items-center focus:outline-none bg-transparent h-12 text-center text-lg font-medium'
                                                         placeholder='X%'
                                                         type="text"
-                                                        pattern="[0-9]*"  // Solo permite números
+                                                        pattern="[0-9]*"  // Solo permite nÃºmeros
                                                         onChange={(event) => {
                                                             const inputValue = event.target.value;
                                                             const numericValue = inputValue.replace(/\D/g, '');
@@ -584,3 +584,4 @@ export default function Page() {
         </div >
     )
 }
+
