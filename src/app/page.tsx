@@ -151,7 +151,6 @@ export default function Page() {
   //DATE LOGIC
   useEffect(() => {
     const formattedDate = date?.replace(/\//g, '');
-    console.log('inicio handleSetAppoint:', new Date().toISOString());
 
     setIsLoadAppoints(true);
 
@@ -481,7 +480,6 @@ export default function Page() {
           }
           return 0;
         });
-        console.log(filteredData);
 
         setChapterData(filteredData);
 
@@ -804,7 +802,7 @@ export default function Page() {
                               ) : (
                                 <div >
                                   {listPatients.map((patient, index) => (
-                                    <div key={index} onClick={() => { setPatient(patient); console.log(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                    <div key={index} onClick={() => { setPatient(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                       <p className='ml-1'>
                                         {patient.name} {patient.lastName}
                                       </p>

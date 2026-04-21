@@ -12,7 +12,6 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         let appointmentId = 1;
         const formattedDate = dateData.date.replace(/\//g, '');
         let dbRef = ref(db, `/clinics/${clinicId}/appointments/${formattedDate}/`);
-        console.log(dbRef);
         const snapshot = await get(dbRef);
         if (snapshot.val()) {
             const data = snapshot.val();
