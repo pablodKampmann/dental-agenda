@@ -11,9 +11,11 @@ export async function getClinicData(clinicId: string, table: string) {
             if (snapshot.exists() && table !== 'pros') {
                 return snapshot.val();
             } else {
+                const data = snapshot.val();
+                if (!data) return [];
                 const array: any[] = [];
-                Object.keys(snapshot.val()).forEach((key) => {
-                    array.push(snapshot.val()[key].nameComplete);
+                Object.keys(data).forEach((key) => {
+                    array.push(data[key].nameComplete);
                 });
                 return array;
             }
