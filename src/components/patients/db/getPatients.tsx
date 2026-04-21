@@ -1,4 +1,4 @@
-import { db } from "./../../../app/firebase";
+﻿import { db } from "./../../../app/firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
 import { getUser } from "../../auth/getUser";
 
@@ -29,6 +29,8 @@ export async function getPatients(quantity: number) {
             };
         }
     } catch (error) {
-        console.log('error');
+        console.error(error);
+        return null;
     }
 }
+

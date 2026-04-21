@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { set, ref, get } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -22,6 +22,8 @@ export async function updateChapterPrices(updatedChapterData: any, chapter: any)
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
+

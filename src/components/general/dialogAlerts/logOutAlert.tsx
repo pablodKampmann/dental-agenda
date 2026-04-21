@@ -1,4 +1,4 @@
-import {
+﻿import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -20,10 +20,10 @@ export function LogOutAlert({ open, setOpen }: props) {
 
   async function handleLogOut() {
     const result = await logOut();
-    if (result === 'error') {
-      console.log("Error al cerrar sesión");
+    if (result === null) {
+      console.log("Error al cerrar sesiÃ³n");
     } else {
-      console.log("Sesión cerrada exitosamente");
+      console.log("SesiÃ³n cerrada exitosamente");
     }
   }
 
@@ -32,9 +32,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 w-[80%] rounded-xl border-red-950">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative ">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogTitle className="relative ">Â¿EstÃ¡s seguro(a) de que deseas cerrar sesiÃ³n?</AlertDialogTitle>
             <AlertDialogDescription className=" pl-2">
-              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+              DeberÃ¡s volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -49,9 +49,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 border-black">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogTitle className="relative">Â¿EstÃ¡s seguro(a) de que deseas cerrar sesiÃ³n?</AlertDialogTitle>
             <AlertDialogDescription className="w-[80%] pl-2">
-              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+              DeberÃ¡s volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -63,3 +63,4 @@ export function LogOutAlert({ open, setOpen }: props) {
     );
   }
 }
+

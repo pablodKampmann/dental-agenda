@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Navigation } from '../components/general/navigation/navigation'
 import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
+import { AuthProvider } from '../context/AuthContext'
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -10,9 +11,11 @@ const fontSans = FontSans({
 })
 
 export const metadata: Metadata = {
-  title: 'Admin Panel',
-  description: '...',
-
+  title: 'Dental Agenda — Panel de Administración',
+  description: 'Panel de administración para gestión de turnos, pacientes y facturación del consultorio dental.',
+  icons: {
+    icon: '/Diente.png',
+  },
 }
 
 export default async function RootLayout({
@@ -22,7 +25,7 @@ export default async function RootLayout({
 }) {
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
@@ -32,12 +35,14 @@ export default async function RootLayout({
           fontSans.variable
         )}
       >
-        <div className='w-full h-screen overflow-y-hidden'>
-          <Navigation />
-          <div className='mt-[68px] sm:ml-56'>
-            {children}
+        <AuthProvider>
+          <div className='w-full h-screen overflow-y-hidden'>
+            <Navigation />
+            <div className='mt-[68px] sm:ml-56'>
+              {children}
+            </div>
           </div>
-        </div>
+        </AuthProvider>
       </body>
     </html>
   )
