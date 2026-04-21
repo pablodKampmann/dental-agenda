@@ -11,7 +11,7 @@ export async function updatePracticePrice(name: string, id: number, price: numbe
         const dbRef = ref(db, `/clinics/${clinicId}/priceTariffs/${name}/${id}/price/`);
         const snapshot = await get(dbRef);
         if (snapshot.exists()) {
-            set(dbRef, price)
+            await set(dbRef, price)
         }
     } catch (error) {
         return 'error'
