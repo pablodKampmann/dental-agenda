@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { ref, get, remove } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -15,7 +15,9 @@ export async function deletePractice(id: any, chapter: string) {
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
+
 

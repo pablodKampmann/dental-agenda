@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+﻿import { db } from "./../../app/firebase";
 import { get, ref } from "firebase/database";
 import { getPatient } from "../patients/db/getPatient";
 import { getUser } from "./../auth/getUser";
@@ -32,6 +32,8 @@ export async function getAppointments(date: string | null) {
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return null;
     }
 }
+
