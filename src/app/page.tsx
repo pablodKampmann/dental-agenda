@@ -61,7 +61,7 @@ export default function Page() {
   const [openModalAppointment, setOpenModalAppointment] = useState(false);
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0, flipUp: false });
   const [Field, setField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
@@ -273,7 +273,10 @@ export default function Page() {
         const appointment = appointments.find((appointment: { time: string; }) => appointment && appointment.time === time);
         setAppointmentSelect(appointment)
         setOpenModalAppointment(true);
-        setMousePosition({ x: event.clientX, y: event.clientY });
+        const modalHeight = 140; // altura aproximada del modal en px
+        const spaceBelow = window.innerHeight - event.clientY;
+        const flipUp = spaceBelow < modalHeight;
+        setMousePosition({ x: event.pageX, y: event.pageY, flipUp });
       } else if (appointmentDate) {
         clean();
       } else {
@@ -520,7 +523,9 @@ export default function Page() {
                 className='bg-black rounded-xl shadow-xl opacity-90  absolute px-2 py-1 select-none animate-modal-appointment'
                 style={{
                   left: `${mousePosition.x + 10}px`,
-                  top: `${mousePosition.y}px`
+                  ...(mousePosition.flipUp
+                    ? { bottom: `${window.innerHeight - mousePosition.y}px` }
+                    : { top: `${mousePosition.y}px` })
                 }}
               >
                 <div className='flex-col'>
