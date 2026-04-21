@@ -23,11 +23,6 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
     }, [selectedField]);
 
     useEffect(() => {
-        console.log(loadRow);
-
-    }, [loadRow]);
-
-    useEffect(() => {
         let isCancelled = false;
 
         if (searchContent.length < 1) {

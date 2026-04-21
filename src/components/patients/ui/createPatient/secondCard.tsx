@@ -1,8 +1,11 @@
-import { useState } from "react";
+interface props {
+    num: string;
+    setNum: (value: string) => void;
+    email: string;
+    setEmail: (value: string)  => void;
+}
 
-export function SecondCard() {
-    const [num, setNum] = useState("");
-    const [email, setEmail] = useState("");
+export function SecondCard({num, setNum, email, setEmail}: props) {
 
     return (
         <div>

@@ -11,9 +11,10 @@ import { CarouselFormCreatePatient } from "./carouselFormCreatePatient";
 interface props {
     open: boolean;
     setOpen: (value: boolean) => void;
+    handleGetPatients: (quantity: number) => void;
 }
 
-export function SheetCreatePatient({ open, setOpen }: props) {
+export function SheetCreatePatient({ open, setOpen, handleGetPatients }: props) {
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -27,7 +28,7 @@ export function SheetCreatePatient({ open, setOpen }: props) {
                 </SheetHeader>
                 <div className="h-0.5 w-full bg-teal-700 rounded-full my-4"></div>
 
-                <CarouselFormCreatePatient setOpen={setOpen}/>
+                <CarouselFormCreatePatient setOpen={setOpen} handleGetPatients={handleGetPatients}/>
     
             </SheetContent>
         </Sheet>
