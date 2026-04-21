@@ -17,8 +17,6 @@ export async function changeImage(userUid: string, file: File) {
         if (!navigator.onLine) {
             throw new Error();
         }
-        console.log("oinqfi");
-
         const storageRef = ref(storage, `/userImages/${userUid}.jpg`);
         await uploadBytes(storageRef, file);
         const dbRef = databaseRef(db, `/admins/${userUid}/isPhotoUpdate`);        
@@ -30,7 +28,8 @@ export async function changeImage(userUid: string, file: File) {
 
 
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 

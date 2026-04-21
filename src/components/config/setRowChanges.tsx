@@ -14,7 +14,8 @@ export async function setRowChanges(table: string, changes: any, id: string) {
             })
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 

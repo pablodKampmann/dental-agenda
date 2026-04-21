@@ -29,6 +29,7 @@ export async function getPatients(quantity: number) {
             };
         }
     } catch (error) {
-        console.log('error');
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

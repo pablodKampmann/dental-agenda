@@ -15,7 +15,8 @@ export async function deletePractice(id: any, chapter: string) {
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 

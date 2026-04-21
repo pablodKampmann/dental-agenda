@@ -15,7 +15,8 @@ export async function deleteAppointment(id: number, date: string) {
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 

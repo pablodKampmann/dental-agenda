@@ -14,6 +14,7 @@ export async function updatePracticePrice(name: string, id: number, price: numbe
             set(dbRef, price)
         }
     } catch (error) {
-        return 'error'
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

@@ -41,6 +41,7 @@ export async function getPatientAppointments(patientId: string | number | null) 
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

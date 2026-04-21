@@ -14,7 +14,8 @@ export async function deletePatient(id: string | null) {
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 

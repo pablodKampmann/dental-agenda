@@ -19,6 +19,7 @@ export async function getClinicData(clinicId: string, table: string) {
             }
         }
     } catch (error) {
-        return 'error';
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

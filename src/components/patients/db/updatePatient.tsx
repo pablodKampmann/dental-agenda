@@ -19,6 +19,7 @@ export async function updatePatient(changes: string, table: string, id: string |
             }
         }
     } catch (error) {
-        console.log('error');
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

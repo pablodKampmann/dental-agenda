@@ -25,6 +25,7 @@ export async function getChapter(name: string) {
             return { data, chapterNum };
         }
     } catch (error) {
-        return { data: [], chapterNum: '' }; 
+        console.error(error);
+        return { data: [], chapterNum: '' };
     }
 }

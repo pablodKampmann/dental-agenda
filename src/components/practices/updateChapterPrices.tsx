@@ -22,6 +22,7 @@ export async function updateChapterPrices(updatedChapterData: any, chapter: any)
             }
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

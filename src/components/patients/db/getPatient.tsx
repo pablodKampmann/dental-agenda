@@ -18,6 +18,7 @@ export async function getPatient(patientId: string | number | null) {
             }
         }
     } catch (error) {
-        console.log('error');
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }

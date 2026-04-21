@@ -20,7 +20,8 @@ export async function setPractice(id: number, price: number, practiceName: strin
             return ('already-exists')
         }
     } catch (error) {
-        return ('error')
+        console.error(error);
+        return (error instanceof Error ? error.message : 'unknown-error');
     }
 }
 
