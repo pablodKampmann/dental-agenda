@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "ignoreDeprecations": "6.0",
     "lib": [
       "dom",
       "dom.iterable",
