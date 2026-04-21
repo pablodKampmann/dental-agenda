@@ -45,6 +45,12 @@ interface CustomDayjs extends Dayjs {
   $d: Date;
 }
 
+async function fetchAppointments(formattedDate: string | null): Promise<any[] | null> {
+  const result = await getAppointments(formattedDate);
+  if (!result || result === 'vacio') return null;
+  return Array.isArray(result) ? result : Object.values(result);
+}
+
 export default function Page() {
   const router = useRouter()
   const [calendarValue, setCalendarValue] = React.useState<Dayjs | null>(dayjs(new Date()));
@@ -150,19 +156,9 @@ export default function Page() {
     setIsLoadAppoints(true);
 
     async function get() {
-      let appointments = await getAppointments(formattedDate)
-      if (appointments === 'vacio') {
-        setAppointments(null);
-        setIsLoadAppoints(false);
-      } else {
-        if (!Array.isArray(appointments)) {
-          appointments = Object.values(appointments);
-        }
-        setAppointments(appointments);
-        setIsLoadAppoints(false);
-        console.log('setAppointments llamado:', new Date().toISOString());
-
-      }
+      const appointments = await fetchAppointments(formattedDate);
+      setAppointments(appointments);
+      setIsLoadAppoints(false);
       //const options = await getReasonsOptions();
       //setReasonsOptions(options);
     }
@@ -303,18 +299,9 @@ export default function Page() {
     clean();
     const result = await setAppointment(patientId, dateData, observations);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
-    if (appointments === 'vacio') {
-      setAppointments(null);
-      setIsLoadAppoints(false);
-    } else {
-      if (!Array.isArray(appointments)) {
-        appointments = Object.values(appointments);
-      }
-      console.log('appointmentDate a guardar:', JSON.stringify(appointmentDate));
-      setAppointments(appointments);
-      setTimeout(() => setIsLoadAppoints(false), 1500);
-    }
+    const appointments = await fetchAppointments(formattedDate);
+    setAppointments(appointments);
+    setTimeout(() => setIsLoadAppoints(false), 1500);
     if (result === null) {
       setShowResult('error');
     } else {
@@ -397,19 +384,10 @@ export default function Page() {
     setOpenAlertMessage(false);
     setIsLoadAppoints(true);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
-    if (appointments === 'vacio') {
-      setAppointments(null);
-      setIsLoadAppoints(false);
-      setShowResult('good-delete-appointment')
-    } else {
-      if (!Array.isArray(appointments)) {
-        appointments = Object.values(appointments);
-      }
-      setAppointments(appointments);
-      setIsLoadAppoints(false);
-      setShowResult('good-delete-appointment')
-    }
+    const appointments = await fetchAppointments(formattedDate);
+    setAppointments(appointments);
+    setIsLoadAppoints(false);
+    setShowResult('good-delete-appointment');
   }
 
   function timeCalc(time: string) {
