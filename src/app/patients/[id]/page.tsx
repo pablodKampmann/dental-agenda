@@ -27,7 +27,6 @@ import { EditableRow } from "@/components/patients/ui/editableRow";
 
 export default function PatientId() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null);
   const [isLoad, setIsLoad] = useState(true);
   const [loadingCategory, setLoadingCategory] = useState('');
   const [check, setCheck] = useState(false);
@@ -43,26 +42,38 @@ export default function PatientId() {
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
 
+  const [clinicId, setClinicId] = useState<string | null>(null);
+
   //CHECK IF THE USER IS LOGGED IN && GET USER
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && patient) {
-        handleGetUser();
-      } else if (!user) {
+      if (!user) {
         router.push("/notSign");
       }
     });
-
-    async function handleGetUser() {
-      const user = await getUser(false);
-      setUser(user);
-      const date = dayjs(patient.birthDate, "DD/MM/YYYY");
-      setDateFormatted(date)
-      setIsLoad(false);
-    }
-
     return () => unsubscribe();
-  }, [router, patient]);
+}, [router]);
+
+  useEffect(() => {
+    if (!clinicId) return;
+    async function get() {
+      try {
+        const data = await getPatient(id, clinicId as string);
+        setPatient(data);
+        const date = dayjs(data.birthDate, "DD/MM/YYYY");
+        setDateFormatted(date);
+        setIsLoad(false);
+        const options = await getInsuranceOptions();
+        if (options) {
+          setInsuranceOptions(options);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    get();
+  }, [id, clinicId]);
 
   async function submitChanges(changes: string, table: string, category: string) {
     setLoadingCategory(category);
@@ -70,7 +81,7 @@ export default function PatientId() {
     setHovered('')
     setChanges('')
     if (changes !== '') {
-      const newPatient = await updatePatient(changes, table, id);
+      const newPatient = await updatePatient(changes, table, id, clinicId as string);
       if (newPatient) {
         setPatient(newPatient);
         setCheck(true);
@@ -101,21 +112,12 @@ export default function PatientId() {
   }, [date]);
 
   useEffect(() => {
-    async function get() {
-      try {
-        const data = await getPatient(id);
-        setPatient(data);
-        const options = await getInsuranceOptions();
-        if (options) {
-          setInsuranceOptions(options);
-        }
-      } catch (error) {
-        console.error(error);
-      }
+    async function fetchClinicId() {
+      const id = await getUser(true);
+      setClinicId(id as string);
     }
-
-    get();
-  }, [id]);
+    fetchClinicId();
+  }, []);
 
 
 
