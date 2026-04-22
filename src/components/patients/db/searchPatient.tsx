@@ -1,11 +1,12 @@
 import { db } from "./../../../app/firebase";
 import { ref, get, query, orderByChild, startAt, endAt } from "firebase/database";
-import { getUser } from "../../auth/getUser";
 
-export async function SearchPatient(selectedField: string, searchContent: any) {
-    const clinicId = await getUser(true)
+
+export async function SearchPatient(selectedField: string, searchContent: any, clinicId: string) {
     const dbRef = ref(db, `/clinics/${clinicId}/patients/`);
     const patientsFilter: any[] = [];
+    
+
     function check(data: any) {
         for (const value of data) {
             const existingValue = patientsFilter.find(patient => patient.id === value.id);
@@ -14,6 +15,9 @@ export async function SearchPatient(selectedField: string, searchContent: any) {
             }
         }
     }
+
+
+
     if (selectedField === 'name') {
         const searchContentHarc = searchContent.charAt(0).toUpperCase() + searchContent.slice(1);
         const queryByName = query(dbRef, orderByChild('name'), startAt(searchContent), endAt(searchContent + '\uf8ff'));

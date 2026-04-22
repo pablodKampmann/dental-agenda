@@ -1,13 +1,11 @@
 ﻿import { db } from "./../../../app/firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
-import { getUser } from "../../auth/getUser";
 
-export async function getPatients(quantity: number) {
+export async function getPatients(quantity: number, clinicId: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
-            const clinicId = await getUser(true)
             let patients: any[] = [];
             let isFull = false;
             const startIdx = 0;
