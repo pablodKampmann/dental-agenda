@@ -1,4 +1,4 @@
-﻿import { db } from "./../../app/firebase";
+import { db } from "./../../app/firebase";
 import { ref, set, get } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
@@ -20,9 +20,7 @@ export async function setPractice(id: number, price: number, practiceName: strin
             return ('already-exists')
         }
     } catch (error) {
-        console.error(error);
-        return null;
+        return ('error')
     }
 }
-
 

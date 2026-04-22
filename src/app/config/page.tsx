@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Image from 'next/image'
 import * as React from 'react';
@@ -66,7 +66,7 @@ export default function Page() {
         if (!clinicInfo) {
             setLoadingGet(true);
             const result = await getClinicData(user.clinicId, 'info');
-            if (result !== null) {
+            if (result !== 'error') {
                 setClinicInfo(result);
                 setLoadingGet(false);
             }
@@ -78,7 +78,7 @@ export default function Page() {
         if (!pros) {
             setLoadingGet(true);
             const result = await getClinicData(user.clinicId, 'pros');
-            if (result !== null) {
+            if (result !== 'error') {
                 setPros(result);
                 setLoadingGet(false);
             }
@@ -106,14 +106,14 @@ export default function Page() {
             switch (table) {
                 case 'displayName':
                     result = await setRowChanges(table, changes, userUid)
-                    if (result !== null) {
+                    if (result !== 'error') {
                         const user = await getUser(false);
                         setUser(user);
                     }
                     break;
                 case 'language':
                     result = await setRowChanges(table, changes, userUid)
-                    if (result !== null) {
+                    if (result !== 'error') {
                         const user = await getUser(false);
                         setUser(user);
                     }
@@ -196,7 +196,7 @@ export default function Page() {
             setLoadingImage(true);
             const file = e.target.files[0];
             const result = await changeImage(userUid, file);
-            if (result !== null) {
+            if (result !== 'error') {
                 setReloadImage(Date.now());
             }
         }
@@ -217,8 +217,8 @@ export default function Page() {
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={handleGetPros} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
-                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>ConfiguraciÃ³n del Consultorio</button>
-                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>EstadÃ­sticas</button>
+                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración del Consultorio</button>
+                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estadísticas</button>
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
@@ -232,7 +232,7 @@ export default function Page() {
                         <div className='ml-56 mt-4'>
                             {selectedField === 'profile' && (
                                 <div className='text-base'>
-                                    <h1 className=' text-base font-bold tracking-wide'>BÃ¡sico:</h1>
+                                    <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
                                     {/* 1 */}
                                     <div onClick={() => setEditRow('displayName')} className={`${editRow === 'displayName' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Nombre visible:
                                         {editRow === 'displayName' ? (
@@ -268,7 +268,7 @@ export default function Page() {
                                         </div>
                                         {showAlert === 'wrong-password' && (
                                             <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border    border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
-                                                <RiErrorWarningLine className='mr-1' size={22} /> ContraseÃ±a Incorrecta.
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Contraseña Incorrecta.
                                             </div>
                                         )}
                                         {showAlert === 'invalid-email' && (
@@ -277,7 +277,7 @@ export default function Page() {
                                             </div>
                                         )}
                                         {openInputCredential && (
-                                            <div className='py-1.5 px-1 transition duration-75 text-sm font-bold bg-transparent rounded-lg text-white  w-fit flex'>Confirma los cambios con tu contraseÃ±a:
+                                            <div className='py-1.5 px-1 transition duration-75 text-sm font-bold bg-transparent rounded-lg text-white  w-fit flex'>Confirma los cambios con tu contraseña:
                                                 <input onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} onChange={(e) => setUserCredential(e.target.value)} autoFocus className='focus:outline-none bg-emerald-400 bg-opacity-70 mx-2 rounded-lg px-2 font-semibold' type="password" />
                                                 <FaCircleXmark onClick={(e: any) => { handleCancelEditRow(e); setOpenInputCredential(false) }} className="mr-1 cursor-pointer   hover:scale-110 transition duration-150 hover:text-red-700" size={26} />
                                                 <FaCircleCheck onClick={(e: any) => handleChangeEmail(e, 'email', changes)} className="ml-1 cursor-pointer hover:scale-110 transition duration-150 hover:text-teal-600" size={26} />
@@ -290,10 +290,10 @@ export default function Page() {
                                     {showUserName ? (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{user.userName} <MdVisibility onClick={() => setShowUserName(false)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     ) : (
-                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'â—'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     )}
                                     {/* 3 */}
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>ContraseÃ±a de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>â—â—â—â—â—â—â—â—â—â—â—â—â— <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-96 " />
                                     {/* 5 */}
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Preferencias de interfaz:</h1>
@@ -330,15 +330,15 @@ export default function Page() {
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className='text-sm'>
-                                    <h1 className=' text-base font-bold tracking-wide'>BÃ¡sico:</h1>
+                                    <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
                                     <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.name} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>PaÃ­s: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.country} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>DirecciÃ³n: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Horarios de atenciÃ³n: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.initialSchedule} - {clinicInfo.finalSchedule} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>País: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.country} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Dirección: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Horarios de atención: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.initialSchedule} - {clinicInfo.finalSchedule} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-96 " />
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Contacto:</h1>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>TÃ©l de contacto: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.telContact}  <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>TÃ©l de contacto auxiliar: <span className='ml-1 font-semibold flex justify-center items-center'> {clinicInfo.secondTelContact} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.telContact}  <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto auxiliar: <span className='ml-1 font-semibold flex justify-center items-center'> {clinicInfo.secondTelContact} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Correo electronico: <span className='ml-1 font-semibold flex justify-center items-center'> {clinicInfo.email} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                 </div>
                             )}
@@ -351,4 +351,3 @@ export default function Page() {
         </div >
     )
 }
-

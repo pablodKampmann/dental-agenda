@@ -1,4 +1,4 @@
-﻿import { db } from "./../../../app/firebase";
+import { db } from "./../../../app/firebase";
 import { ref, remove, get } from "firebase/database";
 import { getUser } from "../../auth/getUser";
 export async function deletePatient(id: string | null) {
@@ -14,9 +14,7 @@ export async function deletePatient(id: string | null) {
             }
         }
     } catch (error) {
-        console.error(error);
-        return null;
+        return ('error')
     }
 }
-
 

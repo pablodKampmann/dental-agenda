@@ -23,7 +23,7 @@ export async function signIn(user: string, password: string) {
                             return ('all-good');
                         }
                     } catch (error) {
-                        if ((error as any).code === 'auth/wrong-password') {
+                        if (error = 'FirebaseError: Firebase: Error (auth/wrong-password).') {
                             return ('wrong-password')
                         }
                     }

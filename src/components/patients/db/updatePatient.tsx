@@ -1,11 +1,13 @@
-﻿import { db } from "./../../../app/firebase";
+import { db } from "./../../../app/firebase";
 import { update, ref, get } from "firebase/database";
+import { getUser } from "../../auth/getUser";
 
-export async function updatePatient(changes: string, table: string, id: string | null, clinicId: string) {
+export async function updatePatient(changes: string, table: string, id: string | null) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
+            const clinicId = await getUser(true);
             const dbRef = ref(db, `clinics/${clinicId}/patients/${id}`);
             await update(dbRef, {
                 [table]: changes
@@ -17,8 +19,6 @@ export async function updatePatient(changes: string, table: string, id: string |
             }
         }
     } catch (error) {
-        console.error(error);
-        return null;
+        console.log('error');
     }
 }
-

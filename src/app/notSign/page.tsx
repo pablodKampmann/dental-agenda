@@ -73,7 +73,7 @@ export default function NotSing() {
                         <div>
                             <label htmlFor="text" className=" mb-1 text-sm font-medium select-none">Usuario</label>
                             <input onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (e.key === 'Enter' && error === '') {
                                     handleSignIn()
                                 }
                             }} autoFocus={result === 'wrong-userName'} disabled={load} type="text" name="user" id="user" value={userName} onChange={(e) => setUserName(e.target.value)} className={`${load ? 'bg-teal-600 text-white' : 'bg-gray-50 text-black'} ${result === 'wrong-userName' ? 'border-red-500 bg-red-300' : 'border-teal-600'} border-2 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2  font-semibold transition duration-300`} placeholder="nombre.apellido" required />
@@ -82,7 +82,7 @@ export default function NotSing() {
                             <label htmlFor="password" className=" mb-1 text-sm font-medium select-none">Clave</label>
                             <div className='relative'>
                                 <input onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
+                                    if (e.key === 'Enter' && error === '') {
                                         handleSignIn()
                                     }
                                 }} disabled={load} type={showPassword ? 'text' : 'password'} name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="•••••••••••••" className={`${load ? 'bg-teal-600 text-white' : 'bg-gray-50 text-black'} ${result === 'wrong-password' ? 'border-red-500 bg-red-300' : 'border-teal-600'} border-2 pr-10 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 font-semibold transition duration-300`} required />
