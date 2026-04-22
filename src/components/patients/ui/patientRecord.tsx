@@ -88,7 +88,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             <p className='ml-1 text-sm text-black'>{patient.num}</p>
                             <hr className='ml-2 border-2 rounded-full border-teal-600 h-6' />
                             <MdOutlineMailOutline size={20} className='ml-2  text-blue-500' />
-                            {patient.address ? (
+                            {patient.email ? (
                                 <p className='ml-1 text-sm text-black'>{patient.email}</p>
                             ) : (
                                 <p className='ml-1 text-black'>-</p>
