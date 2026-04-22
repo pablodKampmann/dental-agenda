@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
@@ -6,7 +6,7 @@ import { setAppointment } from "./../components/appointments/setAppointment";
 import { getAppointments } from "./../components/appointments/getAppointments";
 import { SearchPatient } from "./../components/patients/db/searchPatient";
 import { getPatients } from "./../components/patients/db/getPatients"
-import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle, BsClipboardCheck } from 'react-icons/bs';
+import { BsPersonCheck, BsCalendar2Date, BsArrowLeftCircle } from 'react-icons/bs';
 import { AiOutlineSchedule } from 'react-icons/ai';
 import { ClipLoader } from "react-spinners";
 import { GiClick } from "react-icons/gi";
@@ -16,7 +16,7 @@ import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatie
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { BiRightArrow, BiLeftArrow, BiError, BiSolidBookAdd, BiSolidBellRing } from "react-icons/bi";
+import { BiRightArrow, BiLeftArrow, BiSolidBookAdd, BiSolidBellRing } from "react-icons/bi";
 import { MdUpdate, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -27,9 +27,9 @@ import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
 import { IoTimeOutline } from "react-icons/io5";
 import { Alert } from "./../components/general/alert";
-import { TiDocumentDelete } from "react-icons/ti";
 import { getChapter } from "./../components/practices/getChapter";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { getUser } from '@/components/auth/getUser';
 
 export interface dateData {
   date: string;
@@ -46,6 +46,12 @@ interface CustomDayjs extends Dayjs {
   $d: Date;
 }
 
+async function fetchAppointments(formattedDate: string | null): Promise<any[] | null> {
+  const result = await getAppointments(formattedDate);
+  if (!result || result === 'vacio') return null;
+  return Array.isArray(result) ? result : Object.values(result);
+}
+
 export default function Page() {
   const router = useRouter()
   const [calendarValue, setCalendarValue] = React.useState<Dayjs | null>(dayjs(new Date()));
@@ -56,7 +62,7 @@ export default function Page() {
   const [openModalAppointment, setOpenModalAppointment] = useState(false);
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0, flipUp: false });
   const [Field, setField] = useState('name');
   const [searchContent, setSearchContent] = useState('');
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
@@ -89,6 +95,16 @@ export default function Page() {
   const isUpdatingFromHours = useRef(false);
   const skipResetHours = useRef(false);
 
+  const [clinicId, setClinicId] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    async function fetchClinicId() {
+      const id = await getUser(true);
+      setClinicId(id as string);
+    }
+    fetchClinicId();
+  }, []);
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -104,6 +120,7 @@ export default function Page() {
 
   //PATIENTS LOGIC
   useEffect(() => {
+     if (!clinicId) return;
     if (searchContent.length > 0) {
       Search();
     }
@@ -112,7 +129,7 @@ export default function Page() {
     }
 
     async function Search() {
-      const patientsFilter = await SearchPatient(Field, searchContent)
+      const patientsFilter = await SearchPatient(Field, searchContent, clinicId!)
       if (patientsFilter.length < 1) {
         setListPatients('noResult')
       } else {
@@ -121,21 +138,21 @@ export default function Page() {
     }
 
     async function Get() {
-      const patients = await getPatients(20);
+      const patients = await getPatients(20, clinicId!);
       if (patients) {
         setListPatients(patients.patients)
       } else {
         setListPatients('noResult')
       }
     }
-  }, [searchContent, Field])
+  }, [searchContent, Field, clinicId])
 
   useEffect(() => {
     setSearchContent('');
   }, [Field]);
 
   async function updateListPatients() {
-    const patients = await getPatients(20);
+    const patients = await getPatients(20, clinicId!);
     if (patients) {
       setListPatients(patients.patients)
     } else {
@@ -146,24 +163,13 @@ export default function Page() {
   //DATE LOGIC
   useEffect(() => {
     const formattedDate = date?.replace(/\//g, '');
-    console.log('inicio handleSetAppoint:', new Date().toISOString());
 
     setIsLoadAppoints(true);
 
     async function get() {
-      let appointments = await getAppointments(formattedDate)
-      if (appointments === 'vacio') {
-        setAppointments(null);
-        setIsLoadAppoints(false);
-      } else {
-        if (!Array.isArray(appointments)) {
-          appointments = Object.values(appointments);
-        }
-        setAppointments(appointments);
-        setIsLoadAppoints(false);
-        console.log('setAppointments llamado:', new Date().toISOString());
-
-      }
+      const appointments = await fetchAppointments(formattedDate);
+      setAppointments(appointments);
+      setIsLoadAppoints(false);
       //const options = await getReasonsOptions();
       //setReasonsOptions(options);
     }
@@ -279,7 +285,10 @@ export default function Page() {
         const appointment = appointments.find((appointment: { time: string; }) => appointment && appointment.time === time);
         setAppointmentSelect(appointment)
         setOpenModalAppointment(true);
-        setMousePosition({ x: event.clientX, y: event.clientY });
+        const modalHeight = 140; // altura aproximada del modal en px
+        const spaceBelow = window.innerHeight - event.clientY;
+        const flipUp = spaceBelow < modalHeight;
+        setMousePosition({ x: event.pageX, y: event.pageY, flipUp });
       } else if (appointmentDate) {
         clean();
       } else {
@@ -304,19 +313,10 @@ export default function Page() {
     clean();
     const result = await setAppointment(patientId, dateData, observations);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
-    if (appointments === 'vacio') {
-      setAppointments(null);
-      setIsLoadAppoints(false);
-    } else {
-      if (!Array.isArray(appointments)) {
-        appointments = Object.values(appointments);
-      }
-      console.log('appointmentDate a guardar:', JSON.stringify(appointmentDate));
-      setAppointments(appointments);
-      setTimeout(() => setIsLoadAppoints(false), 1500);
-    }
-    if (result === 'error') {
+    const appointments = await fetchAppointments(formattedDate);
+    setAppointments(appointments);
+    setTimeout(() => setIsLoadAppoints(false), 1500);
+    if (result === null) {
       setShowResult('error');
     } else {
       setShowResult('good');
@@ -398,19 +398,10 @@ export default function Page() {
     setOpenAlertMessage(false);
     setIsLoadAppoints(true);
     const formattedDate = date?.replace(/\//g, '');
-    let appointments = await getAppointments(formattedDate)
-    if (appointments === 'vacio') {
-      setAppointments(null);
-      setIsLoadAppoints(false);
-      setShowResult('good-delete-appointment')
-    } else {
-      if (!Array.isArray(appointments)) {
-        appointments = Object.values(appointments);
-      }
-      setAppointments(appointments);
-      setIsLoadAppoints(false);
-      setShowResult('good-delete-appointment')
-    }
+    const appointments = await fetchAppointments(formattedDate);
+    setAppointments(appointments);
+    setIsLoadAppoints(false);
+    setShowResult('good-delete-appointment');
   }
 
   function timeCalc(time: string) {
@@ -504,7 +495,6 @@ export default function Page() {
           }
           return 0;
         });
-        console.log(filteredData);
 
         setChapterData(filteredData);
 
@@ -535,42 +525,9 @@ export default function Page() {
                 <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
               </div>
             )}*/}
-            {showResult === 'good' && (
-              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95  transform animate-move-from-right">
-                <div className='flex justify-start items-center'>
-                  <BsClipboardCheck className='text-black' size={36} />
-                  <p className='ml-2 text-black font-semibold text-lg select-none'>Turno asignado exitosamente</p>
-                </div>
-              </div>
-            )}
-            {showResult === 'good-patient' && (
-              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95 transform animate-move-from-right">
-                <div className='flex justify-start items-center'>
-                  <BsClipboardCheck className='text-black' size={36} />
-                  <p className='ml-2 text-black font-semibold text-lg select-none'>Paciente agregado exitosamente</p>
-                </div>
-              </div>
-            )}
-            {showResult === 'error' && (
-              <div className=" fixed shadow-xl top-16 right-0 py-1 pl-1 pr-2 border-2 border-red-900 mt-4 mr-6 rounded-lg bg-red-400 bg-opacity-95 transform animate-move-from-right">
-                <div className='flex justify-start items-center'>
-                  <BiError className='text-black' size={42} />
-                  <p className='ml-1 text-black font-semibold text-lg select-none'>Error:</p>
-                  <p className='ml-1 text-black font-medium text-sm mt-0.5 select-none'>Por favor, verifique su conexión a internet e intente nuevamente.</p>
-                </div>
-              </div>
-            )}
-            {showResult === 'good-delete-appointment' && (
-              <div className="fixed shadow-xl  top-16 right-0 py-2 px-4 border-2 border-green-900 mt-4 mr-6 rounded-lg bg-emerald-500 bg-opacity-95 transform animate-move-from-right">
-                <div className='flex justify-start items-center'>
-                  <TiDocumentDelete className='text-black' size={36} />
-                  <p className='ml-2 text-black font-semibold text-lg select-none'>El turno a sido eliminado.</p>
-                </div>
-              </div>
-            )}
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
+                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'Â¿EstÃ¡s seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
               </div>
             )}
             {openModalAppointment && (
@@ -578,7 +535,9 @@ export default function Page() {
                 className='bg-black rounded-xl shadow-xl opacity-90  absolute px-2 py-1 select-none animate-modal-appointment'
                 style={{
                   left: `${mousePosition.x + 10}px`,
-                  top: `${mousePosition.y}px`
+                  ...(mousePosition.flipUp
+                    ? { bottom: `${window.innerHeight - mousePosition.y}px` }
+                    : { top: `${mousePosition.y}px` })
                 }}
               >
                 <div className='flex-col'>
@@ -644,7 +603,7 @@ export default function Page() {
                 <tbody className='text-black'>
                   {['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map((time, index, array) => {
 
-                    // Slots que son time2 o time3 de algún turno → no renderizar td
+                    // Slots que son time2 o time3 de algÃºn turno â†’ no renderizar td
                     const isSecondarySlot = appointments && Array.isArray(appointments) && appointments.some(
                       (a: any) => a && (a.time2 === time || a.time3 === time || a.time4 === time || a.time5 === time || a.time6 === time)
                     );
@@ -723,7 +682,7 @@ export default function Page() {
                               </div>
                               <div className='mt-auto'>
                                 <div className='flex'>
-                                  <p className='text-left text-sm ml-2'>Razón de turno:</p>
+                                  <p className='text-left text-sm ml-2'>RazÃ³n de turno:</p>
                                   <p className='text-left text-sm font-semibold ml-1'>{appointment.reason}</p>
                                 </div>
                                 <div className='flex'>
@@ -766,7 +725,7 @@ export default function Page() {
                           <div className=' border-gray-600 w-full hover:bg-opacity-50 bg-white mt-4 mb-3  py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
                             <div className='group-hover:text-transparent text-black'>
                               <div className=''>
-                                <p className='text-sm  text-center select-none whitespace-nowrap	'>Día seleccionado: </p>
+                                <p className='text-sm  text-center select-none whitespace-nowrap	'>DÃ­a seleccionado: </p>
                                 <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
                               </div>
                               <div className=''>
@@ -787,7 +746,7 @@ export default function Page() {
                             <div className='bg-black bg-opacity-90 h-1 w-1/2 rounded-full'></div>
                           </div>
                           <div className='flex justify-center'>
-                            <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>Duración del turno (horas):</h1>
+                            <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>DuraciÃ³n del turno (horas):</h1>
                             <select
                               value={appointmentHours}
                               onChange={(event) => setAppointmentHours(event.target.value)}
@@ -860,7 +819,7 @@ export default function Page() {
                               ) : (
                                 <div >
                                   {listPatients.map((patient, index) => (
-                                    <div key={index} onClick={() => { setPatient(patient); console.log(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
+                                    <div key={index} onClick={() => { setPatient(patient); }} className="p-1 select-none hover:bg-gray-200 text-black text-base border-b border-gray-600 transition duration-100 cursor-pointer flex justify-between">
                                       <p className='ml-1'>
                                         {patient.name} {patient.lastName}
                                       </p>
@@ -915,7 +874,7 @@ export default function Page() {
                         <div className='flex items-center justify-center mt-2'>
                           <div className=' w-full mt-2 py-1 hover:bg-opacity-30 bg-white  mb-2 mx-4 transition duration-150 border-2 border-gray-600 rounded-lg  flex justify-center items-center '>
                             <div className=' text-black'>
-                              <p className='text-sm  text-center select-none'>Razón: </p>
+                              <p className='text-sm  text-center select-none'>RazÃ³n: </p>
                               <p className='ml-1 text-sm  text-center font-bold select-none'>{reason.name}</p>
                             </div>
                           </div>
@@ -931,20 +890,20 @@ export default function Page() {
                           <h1 className='text-xl font-bold text-black text-center flex justify-center items-end  cursor-default mt-1 select-none'>Selecciona el motivo <p className='flex ml-2 mb-0.5 text-xs font-bold'>(Opcional)</p></h1>
                         </div>
                         <div className='mx-2 mt-4 mb-4 px-2 flex justify-center items-center'>
-                          <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>Razón:</h1>
+                          <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>RazÃ³n:</h1>
                           <select value={chapterName} onChange={(e) => setChapterName(e.target.value)}
                             className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white  transition duration-300 bg-white bg-opacity-30 w-full py-1 ml-2  outline-none text-black text-lg font-bold border-2 px-1  border-gray-600 rounded-lg shadow-lg  flex justify-center items-center'>
                             <option>Seleccionar</option>
                             <option value={"CONSULTAS"} >CONSULTAS</option>
                             <option value={"OPERATORIA DENTAL"} >OPERATORIA DENTAL</option>
                             <option value={"ENDODONCIA"} >ENDODONCIA</option>
-                            <option value={"PRÓTESIS"} >PRÓTESIS</option>
-                            <option value={"ODONTOLOGÍA PREVENTIVA"} >ODONTOLOGÍA PREVENTIVA</option>
+                            <option value={"PRÃ“TESIS"} >PRÃ“TESIS</option>
+                            <option value={"ODONTOLOGÃA PREVENTIVA"} >ODONTOLOGÃA PREVENTIVA</option>
                             <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} >ORTODONCIA Y ORTOPEDIA FUNCIONAL</option>
-                            <option value={"ODONTOPEDIATRÍA"} >ODONTOPEDIATRÍA</option>
+                            <option value={"ODONTOPEDIATRÃA"} >ODONTOPEDIATRÃA</option>
                             <option value={"PERIODONCIA"} >PERIODONCIA</option>
-                            <option value={"RADIOLOGÍA"} >RADIOLOGÍA</option>
-                            <option value={"CIRUGÍA"} >CIRUGÍA</option>
+                            <option value={"RADIOLOGÃA"} >RADIOLOGÃA</option>
+                            <option value={"CIRUGÃA"} >CIRUGÃA</option>
                           </select>
                         </div>
                         {chapterName !== '' && chapterData && (
@@ -957,7 +916,7 @@ export default function Page() {
                               </div>
                             ) : (
                               <div className='flex justify-center items-center py-1 text-base bg-red-500 rounded-md font-medium bg-opacity-30'>
-                                No hay prácticas en este Capítulo
+                                No hay prÃ¡cticas en este CapÃ­tulo
                               </div>
                             )}
 
@@ -991,18 +950,18 @@ export default function Page() {
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-black text-left select-none'>Paciente: </p>
-                            <p className='ml-1 text-sm text-black text-left font-bold'>Nombre: {patient.name} {patient.lastName} <br /> DNI: {patient.dni} <br />Edad: {getAge(patient.birthDate)} años</p>
+                            <p className='ml-1 text-sm text-black text-left font-bold'>Nombre: {patient.name} {patient.lastName} <br /> DNI: {patient.dni} <br />Edad: {getAge(patient.birthDate)} aÃ±os</p>
                             {patient.insurance === 'Particular' ? (
                               <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance}</p>
                             ) : (
-                              <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance} <br /> Plan:  {patient.plan}<br />Número de afiliado: {patient.affiliateNum}</p>
+                              <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance} <br /> Plan:  {patient.plan}<br />NÃºmero de afiliado: {patient.affiliateNum}</p>
                             )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             {reason ? (
-                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: <br /><span className=' mb-1 text-sm text-black text-left font-bold'></span></p>
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>RazÃ³n: <br /><span className=' mb-1 text-sm text-black text-left font-bold'></span></p>
                             ) : (
-                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: -</p>
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>RazÃ³n: -</p>
                             )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
@@ -1019,18 +978,18 @@ export default function Page() {
                     ) : (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1 shadow-xl'>
-                          <p className='text-sm font-semibold select-none text-black text-center mb-2'>Para confirmar el turno completá:</p>
+                          <p className='text-sm font-semibold select-none text-black text-center mb-2'>Para confirmar el turno completÃ¡:</p>
                           <div className='flex flex-col gap-1 px-2 pb-2'>
                             {!appointmentDate && (
                               <div className='flex items-center gap-2 bg-red-50 border border-red-300 rounded-lg px-3 py-1.5'>
                                 <div className='w-2 h-2 rounded-full bg-red-400'></div>
-                                <p className='text-sm text-red-600 font-medium select-none'>Seleccioná un horario en la agenda</p>
+                                <p className='text-sm text-red-600 font-medium select-none'>SeleccionÃ¡ un horario en la agenda</p>
                               </div>
                             )}
                             {!patient && (
                               <div className='flex items-center gap-2 bg-red-50 border border-red-300 rounded-lg px-3 py-1.5'>
                                 <div className='w-2 h-2 rounded-full bg-red-400'></div>
-                                <p className='text-sm text-red-600 font-medium select-none'>Seleccioná un paciente</p>
+                                <p className='text-sm text-red-600 font-medium select-none'>SeleccionÃ¡ un paciente</p>
                               </div>
                             )}
                           </div>
@@ -1078,3 +1037,4 @@ export default function Page() {
     </div >
   )
 }
+
