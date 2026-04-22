@@ -1,13 +1,11 @@
 ﻿import { db } from "./../../../app/firebase";
 import { update, ref, get } from "firebase/database";
-import { getUser } from "../../auth/getUser";
 
-export async function updatePatient(changes: string, table: string, id: string | null) {
+export async function updatePatient(changes: string, table: string, id: string | null, clinicId: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
         } else {
-            const clinicId = await getUser(true);
             const dbRef = ref(db, `clinics/${clinicId}/patients/${id}`);
             await update(dbRef, {
                 [table]: changes

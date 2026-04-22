@@ -1,6 +1,7 @@
 'use client'
 
 import { getPatient } from "./../../../../components/patients/db/getPatient";
+import { getUser } from "@/components/auth/getUser";
 import React, { useState, useEffect } from 'react';
 import { auth } from "../../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -16,31 +17,41 @@ export default function ClinicHistory() {
     const id = pathname.split('/').slice(-2, -1)[0] || null;
     const [patient, setPatient] = useState<any>(null);
 
+    const [clinicId, setClinicId] = useState<string | null >(null);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user && patient) {
-                setIsLoad(false);
-            } else if (!user) {
+            if (!user) {
                 router.push("/notSign");
             }
         });
 
         return () => unsubscribe();
-    }, [router, patient]);
+    }, [router]);
+
+     useEffect(() => {
+        async function fetchClinicId() {
+          const id = await getUser(true);
+          setClinicId(id as string);
+        }
+        fetchClinicId();
+      }, []);
 
 
     useEffect(() => {
+        if (!clinicId) return; 
         async function get() {
             try {
-                const data = await getPatient(id);
+                const data = await getPatient(id, clinicId as string);
                 setPatient(data);
+                setIsLoad(false);
             } catch (error) {
                 console.error(error);
             }
         }
 
         get();
-    }, [id]);
+    }, [id,clinicId]);
 
     if (id !== null) {
         return (
