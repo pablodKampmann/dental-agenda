@@ -11,45 +11,25 @@ import { FirstCard } from "./firstCard";
 import { SecondCard } from "./secondCard";
 import { ThirdCard } from "./thirdCard";
 import { useState } from "react";
-import { SetPatients } from "../../db/setPatients";
 
 interface props {
     setOpen: (value: boolean) => void;
-    handleGetPatients: (quantity: number) => void;
 }
 
-export function CarouselFormCreatePatient({ setOpen, handleGetPatients }: props) {
-
-    const [name, setName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [gender, setGender] = useState("");
-    const [date, setDate] = useState("");
-    const [dni, setDni] = useState("");
-    const [address, setAddress] = useState("");
-    const [num, setNum] = useState("");
-    const [email, setEmail] = useState("");
-    const [insurance, setInsurance] = useState("");
-    const [plan, setPlan] = useState("");
-    const [affiliate, setAffiliate] = useState("");
-
+export function CarouselFormCreatePatient({ setOpen }: props) {
     const cards = [
-        <FirstCard key="first" name={name} setName={setName} lastName={lastName} setLastName={setLastName} gender={gender} setGender={setGender} date={date} setDate={setDate} dni={dni} setDni={setDni} address={address} setAddress={setAddress} />,
-        <SecondCard key="second" num={num} setNum={setNum} email={email} setEmail={setEmail} />,
-        <ThirdCard key="third" insurance={insurance} setInsurance={setInsurance} plan={plan} setPlan={setPlan} affiliate={affiliate} setAffiliate={setAffiliate} />
+        <FirstCard key="first" />,
+        <SecondCard key="second" />,
+        <ThirdCard key="third" />
     ];
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const handleNextClick = async () => {
+    const handleNextClick = () => {
         if (currentIndex < cards.length - 1) {
             setCurrentIndex(currentIndex + 1);
             (document.querySelector('.carousel-next') as HTMLElement)?.click();
         } else {
-            if (!name || !lastName || !gender || !date || !dni || !num || !insurance) {
-                return;
-            }
-            await SetPatients(name, lastName, gender, date, dni, num, address, email, insurance, plan, affiliate)
-            await handleGetPatients(20);
             setOpen(false);
         }
     };

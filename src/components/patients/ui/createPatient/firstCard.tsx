@@ -1,21 +1,13 @@
-interface props {
-    name: string;
-    setName: (value: string) => void;
-    lastName: string;
-    setLastName: (value: string) => void;
-    gender: string;
-    setGender: (value: string) => void;
-    date: string;
-    setDate: (value: string) => void;
-    dni: string;
-    setDni: (value: string) => void;
-    address: string;
-    setAddress: (value: string) => void;
-}
+import { useState } from "react";
 
+export function FirstCard() {
+    const [name, setName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [gender, setGender] = useState("");
+    const [date, setDate] = useState<null | any>(null);
+    const [dni, setDni] = useState("");
+    const [address, setAddress] = useState("");
 
-export function FirstCard({ name, setName, lastName, setLastName, gender, setGender, date, setDate, dni, setDni, address, setAddress }: props) {
-  
     return (
         <div className="w-full">
             <h2 className=" text-lg  font-semibold">General</h2>

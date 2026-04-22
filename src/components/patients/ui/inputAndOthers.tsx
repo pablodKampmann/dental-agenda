@@ -12,10 +12,9 @@ interface props {
     setListOfPatients: (value: any) => void;
     handleGetPatients: (quantity: number) => void;
     setIsOpenSheetCreatePatient: (value: boolean) => void;
-    clinicId: string | null; 
 }
 
-export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient, clinicId }: props) {
+export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient }: props) {
     const [selectedField, setSelectedField] = useState('name');
 
     //SEARCH PATIENTS LOGIC
@@ -24,13 +23,18 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
     }, [selectedField]);
 
     useEffect(() => {
+        console.log(loadRow);
+
+    }, [loadRow]);
+
+    useEffect(() => {
         let isCancelled = false;
 
         if (searchContent.length < 1) {
             handleGetPatients(10);
         } else {
             const searchPatients = async () => {
-                const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
+                const patientsFilter = await SearchPatient(selectedField, searchContent);
                 if (!isCancelled) {
                     setListOfPatients(patientsFilter);
                 }

@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(git add src/components/appointments/deleteAppointment.tsx src/components/appointments/getAppointments.tsx src/components/appointments/getPatientAppointments.tsx src/components/appointments/setAppointment.tsx src/components/config/changeImage.tsx src/components/config/getClinicData.tsx src/components/config/setRowChanges.tsx src/components/options/getInsuranceOpt.tsx src/components/patients/db/deletePatient.tsx src/components/patients/db/getPatient.tsx src/components/patients/db/getPatients.tsx src/components/patients/db/setPatients.tsx src/components/patients/db/updatePatient.tsx src/components/practices/deletePractice.tsx src/components/practices/getChapter.tsx src/components/practices/setPractice.tsx src/components/practices/updateChapterPrices.tsx src/components/practices/updatePracticePrice.tsx)"
-    ]
-  }
-}

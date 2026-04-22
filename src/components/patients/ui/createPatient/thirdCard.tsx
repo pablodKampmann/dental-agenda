@@ -1,13 +1,9 @@
-interface props {
-    insurance: string;
-    setInsurance: (value: string) => void;
-    plan: string;
-    setPlan: (value: string) => void;
-    affiliate: string;
-    setAffiliate: (value: string) => void;
-}
+import { useState } from "react";
 
-export function ThirdCard({insurance, setInsurance, plan, setPlan, affiliate, setAffiliate}: props) {
+export function ThirdCard() {
+    const [insurance, setInsurance] = useState("");
+    const [plan, setPlan] = useState("");
+    const [affiliate, setAffiliate] = useState("");
 
     return (
         <div>

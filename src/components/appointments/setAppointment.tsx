@@ -1,4 +1,4 @@
-﻿import { db } from "../../app/firebase";
+import { db } from "../../app/firebase";
 import { ref, set, get, push } from "firebase/database";
 import { dateData } from "./../../app/page";
 import { getUser } from "./../auth/getUser";
@@ -12,6 +12,7 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         let appointmentId = 1;
         const formattedDate = dateData.date.replace(/\//g, '');
         let dbRef = ref(db, `/clinics/${clinicId}/appointments/${formattedDate}/`);
+        console.log(dbRef);
         const snapshot = await get(dbRef);
         if (snapshot.val()) {
             const data = snapshot.val();
@@ -36,9 +37,7 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         dbRef = ref(db, `/clinics/${clinicId}/patients/${patientId}/appointments/`);
         await push(dbRef, formattedDate)
     } catch (error) {
-        console.error(error);
-        return null;
+        return ('error')
     }
 }
-
 
