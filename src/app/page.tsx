@@ -120,7 +120,7 @@ export default function Page() {
 
   //PATIENTS LOGIC
   useEffect(() => {
-     if (!clinicId) return;
+    if (!clinicId) return;
     if (searchContent.length > 0) {
       Search();
     }
@@ -311,7 +311,7 @@ export default function Page() {
   async function handleSetAppoint(patientId: number, dateData: dateData, reason: any, observations?: string) {
     setIsLoadAppoints(true);
     clean();
-    const result = await setAppointment(patientId, dateData, observations);
+    const result = await setAppointment(patientId, dateData, reason, observations);
     const formattedDate = date?.replace(/\//g, '');
     const appointments = await fetchAppointments(formattedDate);
     setAppointments(appointments);

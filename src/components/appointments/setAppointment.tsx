@@ -3,7 +3,7 @@ import { ref, set, get, push } from "firebase/database";
 import { dateData } from "./../../app/page";
 import { getUser } from "./../auth/getUser";
 
-export async function setAppointment(patientId: number, dateData: dateData, observations?: string) {
+export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
@@ -15,7 +15,7 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         const snapshot = await get(dbRef);
         if (snapshot.val()) {
             const data = snapshot.val();
-            appointmentId = (Object.keys(data).length) + 1;
+            appointmentId = Math.max(...Object.keys(data).map(Number)) + 1;
         }
         dbRef = ref(db, `/clinics/${clinicId}/appointments/${formattedDate}/${appointmentId}/`);
 
@@ -31,6 +31,7 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
             ...(dateData.time4 ? { time4: dateData.time4 } : {}),
             ...(dateData.time5 ? { time5: dateData.time5 } : {}),
             ...(dateData.time6 ? { time6: dateData.time6 } : {}),
+            ...(reason ? { reason: reason } : {}),
             observations: observations
         });
         dbRef = ref(db, `/clinics/${clinicId}/patients/${patientId}/appointments/`);
@@ -40,5 +41,3 @@ export async function setAppointment(patientId: number, dateData: dateData, obse
         return null;
     }
 }
-
-
