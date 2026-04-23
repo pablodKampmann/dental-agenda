@@ -99,7 +99,7 @@ export function ModalCreatePatient() {
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
                                 <div className='flex'>
-                                    <label className="text-black select-none text-lg ml-1">GÃ©nero</label>
+                                    <label className="text-black select-none text-lg ml-1">Género</label>
                                     <p className='text-red-500 ml-1 text-lg'>*</p>
                                 </div>
                                 <div className="relative text-gray-400 ">
@@ -156,7 +156,7 @@ export function ModalCreatePatient() {
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
                                 <div className='flex'>
-                                    <label className="text-black select-none text-lg ml-1">NÃºm. TelÃ©fono</label>
+                                    <label className="text-black select-none text-lg ml-1">Núm. Teléfono</label>
                                     <p className='text-red-500 ml-1 text-lg'>*</p>
                                 </div>
                                 <div className="relative text-gray-400">
@@ -188,7 +188,7 @@ export function ModalCreatePatient() {
                                 </div>
                             </div>
                             <div className="flex flex-col w-full mt-1 mx-2">
-                                <label className="text-black select-none text-lg ml-1">Correo ElectrÃ³nico</label>
+                                <label className="text-black select-none text-lg ml-1">Correo Electrónico</label>
                                 <div className="relative text-gray-400">
                                     <input
                                         type="text"
@@ -249,7 +249,7 @@ export function ModalCreatePatient() {
                                 </div>
                             </div>
                             <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>NÃºm. Afiliado</label>
+                                <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>Núm. Afiliado</label>
                                 <div className="relative text-gray-400">
                                     <input type="text"
                                         className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-30 text-black"
