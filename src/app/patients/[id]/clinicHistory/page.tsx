@@ -55,7 +55,7 @@ export default function ClinicHistory() {
 
     if (id !== null) {
         return (
-            <div className='ml-56'>
+            <div>
                 {isLoad ? (
                     <Loading />
                 ) : (
