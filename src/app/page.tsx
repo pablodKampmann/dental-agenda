@@ -527,7 +527,7 @@ export default function Page() {
             )}*/}
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'Â¿EstÃ¡s seguro/a de que deseas elimanar el turno?'} secondProp={appointmentSelect} />
+                <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas eliminar el turno?'} secondProp={appointmentSelect} />
               </div>
             )}
             {openModalAppointment && (
@@ -603,7 +603,7 @@ export default function Page() {
                 <tbody className='text-black'>
                   {['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map((time, index, array) => {
 
-                    // Slots que son time2 o time3 de algÃºn turno â†’ no renderizar td
+                    // Slots que son time2 o time3 de algún turno → no renderizar td
                     const isSecondarySlot = appointments && Array.isArray(appointments) && appointments.some(
                       (a: any) => a && (a.time2 === time || a.time3 === time || a.time4 === time || a.time5 === time || a.time6 === time)
                     );
@@ -682,7 +682,7 @@ export default function Page() {
                               </div>
                               <div className='mt-auto'>
                                 <div className='flex'>
-                                  <p className='text-left text-sm ml-2'>RazÃ³n de turno:</p>
+                                  <p className='text-left text-sm ml-2'>Razón de turno:</p>
                                   <p className='text-left text-sm font-semibold ml-1'>{appointment.reason}</p>
                                 </div>
                                 <div className='flex'>
@@ -725,7 +725,7 @@ export default function Page() {
                           <div className=' border-gray-600 w-full hover:bg-opacity-50 bg-white mt-4 mb-3  py-1 transition duration-150 border-2 px-6 rounded-lg flex justify-center items-center '>
                             <div className='group-hover:text-transparent text-black'>
                               <div className=''>
-                                <p className='text-sm  text-center select-none whitespace-nowrap	'>DÃ­a seleccionado: </p>
+                                <p className='text-sm  text-center select-none whitespace-nowrap	'>Día seleccionado: </p>
                                 <p className='ml-1 text-sm  text-center font-bold select-none'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
                               </div>
                               <div className=''>
@@ -746,7 +746,7 @@ export default function Page() {
                             <div className='bg-black bg-opacity-90 h-1 w-1/2 rounded-full'></div>
                           </div>
                           <div className='flex justify-center'>
-                            <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>DuraciÃ³n del turno (horas):</h1>
+                            <h1 className='text-black ml-1 mt-1 rounded-lg border-gray-600 font-bold'>Duración del turno (horas):</h1>
                             <select
                               value={appointmentHours}
                               onChange={(event) => setAppointmentHours(event.target.value)}
@@ -874,7 +874,7 @@ export default function Page() {
                         <div className='flex items-center justify-center mt-2'>
                           <div className=' w-full mt-2 py-1 hover:bg-opacity-30 bg-white  mb-2 mx-4 transition duration-150 border-2 border-gray-600 rounded-lg  flex justify-center items-center '>
                             <div className=' text-black'>
-                              <p className='text-sm  text-center select-none'>RazÃ³n: </p>
+                              <p className='text-sm  text-center select-none'>Razón: </p>
                               <p className='ml-1 text-sm  text-center font-bold select-none'>{reason.name}</p>
                             </div>
                           </div>
@@ -890,20 +890,20 @@ export default function Page() {
                           <h1 className='text-xl font-bold text-black text-center flex justify-center items-end  cursor-default mt-1 select-none'>Selecciona el motivo <p className='flex ml-2 mb-0.5 text-xs font-bold'>(Opcional)</p></h1>
                         </div>
                         <div className='mx-2 mt-4 mb-4 px-2 flex justify-center items-center'>
-                          <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>RazÃ³n:</h1>
+                          <h1 className='text-black text-xl mt-0.5 font-semibold select-none'>Razón:</h1>
                           <select value={chapterName} onChange={(e) => setChapterName(e.target.value)}
                             className='cursor-pointer hover:bg-teal-600 hover:border-gray-600 hover:text-white  transition duration-300 bg-white bg-opacity-30 w-full py-1 ml-2  outline-none text-black text-lg font-bold border-2 px-1  border-gray-600 rounded-lg shadow-lg  flex justify-center items-center'>
                             <option>Seleccionar</option>
                             <option value={"CONSULTAS"} >CONSULTAS</option>
                             <option value={"OPERATORIA DENTAL"} >OPERATORIA DENTAL</option>
                             <option value={"ENDODONCIA"} >ENDODONCIA</option>
-                            <option value={"PRÃ“TESIS"} >PRÃ“TESIS</option>
-                            <option value={"ODONTOLOGÃA PREVENTIVA"} >ODONTOLOGÃA PREVENTIVA</option>
+                            <option value={"PRÓTESIS"} >PRÓTESIS</option>
+                            <option value={"ODONTOLOGÍA PREVENTIVA"} >ODONTOLOGÍA PREVENTIVA</option>
                             <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} >ORTODONCIA Y ORTOPEDIA FUNCIONAL</option>
-                            <option value={"ODONTOPEDIATRÃA"} >ODONTOPEDIATRÃA</option>
+                            <option value={"ODONTOPEDIATRÍA"} >ODONTOPEDIATRÍA</option>
                             <option value={"PERIODONCIA"} >PERIODONCIA</option>
-                            <option value={"RADIOLOGÃA"} >RADIOLOGÃA</option>
-                            <option value={"CIRUGÃA"} >CIRUGÃA</option>
+                            <option value={"RADIOLOGÍA"} >RADIOLOGÍA</option>
+                            <option value={"CIRUGÍA"} >CIRUGÍA</option>
                           </select>
                         </div>
                         {chapterName !== '' && chapterData && (
@@ -916,7 +916,7 @@ export default function Page() {
                               </div>
                             ) : (
                               <div className='flex justify-center items-center py-1 text-base bg-red-500 rounded-md font-medium bg-opacity-30'>
-                                No hay prÃ¡cticas en este CapÃ­tulo
+                                No hay prácticas en este Capítulo
                               </div>
                             )}
 
@@ -950,18 +950,18 @@ export default function Page() {
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             <p className='ml-1 text-lg font-bold text-black text-left select-none'>Paciente: </p>
-                            <p className='ml-1 text-sm text-black text-left font-bold'>Nombre: {patient.name} {patient.lastName} <br /> DNI: {patient.dni} <br />Edad: {getAge(patient.birthDate)} aÃ±os</p>
+                            <p className='ml-1 text-sm text-black text-left font-bold'>Nombre: {patient.name} {patient.lastName} <br /> DNI: {patient.dni} <br />Edad: {getAge(patient.birthDate)} años</p>
                             {patient.insurance === 'Particular' ? (
                               <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance}</p>
                             ) : (
-                              <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance} <br /> Plan:  {patient.plan}<br />NÃºmero de afiliado: {patient.affiliateNum}</p>
+                              <p className='ml-1 mb-1 text-sm text-black text-left font-bold'>Obra Social: {patient.insurance} <br /> Plan:  {patient.plan}<br />Número de afiliado: {patient.affiliateNum}</p>
                             )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
                             {reason ? (
-                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>RazÃ³n: <br /><span className=' mb-1 text-sm text-black text-left font-bold'></span></p>
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: <br /><span className=' mb-1 text-sm text-black text-left font-bold'></span></p>
                             ) : (
-                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>RazÃ³n: -</p>
+                              <p className='ml-1 text-lg font-bold text-black select-none text-left'>Razón: -</p>
                             )}
                           </div>
                           <div className='mt-1 m-2 border-2 rounded-lg border-gray-600'>
@@ -978,18 +978,18 @@ export default function Page() {
                     ) : (
                       <div className='mt-4 ml-2 mr-2 mb-2 flex'>
                         <div className='ml-1 mr-1 border-2 border-gray-600 rounded-lg bg-white w-full p-1 shadow-xl'>
-                          <p className='text-sm font-semibold select-none text-black text-center mb-2'>Para confirmar el turno completÃ¡:</p>
+                          <p className='text-sm font-semibold select-none text-black text-center mb-2'>Para confirmar el turno completá:</p>
                           <div className='flex flex-col gap-1 px-2 pb-2'>
                             {!appointmentDate && (
                               <div className='flex items-center gap-2 bg-red-50 border border-red-300 rounded-lg px-3 py-1.5'>
                                 <div className='w-2 h-2 rounded-full bg-red-400'></div>
-                                <p className='text-sm text-red-600 font-medium select-none'>SeleccionÃ¡ un horario en la agenda</p>
+                                <p className='text-sm text-red-600 font-medium select-none'>Seleccioná un horario en la agenda</p>
                               </div>
                             )}
                             {!patient && (
                               <div className='flex items-center gap-2 bg-red-50 border border-red-300 rounded-lg px-3 py-1.5'>
                                 <div className='w-2 h-2 rounded-full bg-red-400'></div>
-                                <p className='text-sm text-red-600 font-medium select-none'>SeleccionÃ¡ un paciente</p>
+                                <p className='text-sm text-red-600 font-medium select-none'>Seleccioná un paciente</p>
                               </div>
                             )}
                           </div>

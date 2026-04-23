@@ -174,7 +174,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                 </div>
             </div>
         );
-    } else if (action === 'Eliminar PrÃ¡ctica') {
+    } else if (action === 'Eliminar Práctica') {
         return (
             <div className="fixed inset-0 mt-8 flex items-center justify-center">
                 <div className="flex flex-col p-6 rounded-lg shadow-xl bg-white border-4  border-gray-600">
