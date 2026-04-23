@@ -55,7 +55,7 @@ export default function Odontogram() {
     if (id !== null) {
 
         return (
-            <div className='ml-56 mt-2'>
+            <div >
                 {isLoad ? (
                     <div className='fixed inset-0 backdrop-blur-sm ml-56'>
                         <div className='fixed inset-0 flex items-center justify-center'>

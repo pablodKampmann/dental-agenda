@@ -123,7 +123,7 @@ export default function PatientId() {
 
   if (id !== null) {
     return (
-      <div className='ml-56'>
+      <div>
         {isLoad ? (
           <Loading />
         ) : (
