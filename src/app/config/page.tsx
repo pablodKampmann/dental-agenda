@@ -203,16 +203,16 @@ export default function Page() {
     }
 
     return (
-        <div className='ml-56 h-screen overflow-y-hidden flex-1 ' >
+        <div className=' h-screen overflow-y-hidden flex-1 ' >
             {isLoad ? (
                 <Loading />
             ) : (
                 <div className=' h-screen'>
-                    <div className=' bg-white w-full h-fit rounded-lg relative mt-16 text-black'>
+                    <div className=' bg-white w-full h-fit relative  text-black'>
                         {loadingGet ? (
-                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold rounded-t-md '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
+                            <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold  '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
                         ) : (
-                            <h1 onClick={() => setShowAlert('wrong-password')} className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  rounded-t-md '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
+                            <h1 onClick={() => setShowAlert('wrong-password')} className='bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  '> <span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span></h1>
                         )}
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
@@ -290,10 +290,10 @@ export default function Page() {
                                     {showUserName ? (
                                         <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{user.userName} <MdVisibility onClick={() => setShowUserName(false)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     ) : (
-                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'â—'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     )}
                                     {/* 3 */}
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>â—â—â—â—â—â—â—â—â—â—â—â—â— <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
                                     <hr className="border-black border border-dashed  w-96 " />
                                     {/* 5 */}
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Preferencias de interfaz:</h1>
