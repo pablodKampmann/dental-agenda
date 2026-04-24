@@ -1,7 +1,7 @@
 <h1 align="center">🦷 Dental Agenda</h1>
 
 <p align="center">
-  Administrative platform for dental clinics
+  Plataforma administrativa para consultorios odontológicos
 </p>
 
 ---
