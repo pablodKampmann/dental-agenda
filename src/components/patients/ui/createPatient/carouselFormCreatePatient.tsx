@@ -1,7 +1,6 @@
 'use client'
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { Card } from "@/components/ui/card";
 import {
     Carousel,
@@ -40,11 +39,9 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
     const [plan, setPlan] = useState("");
     const [affiliate, setAffiliate] = useState("");
 
-    // Insurance & plan options
     const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
     const [planOptions, setPlanOptions] = useState<string[]>([]);
 
-    // Carousel state
     const [currentIndex, setCurrentIndex] = useState(0);
     const [carouselKey, setCarouselKey] = useState(0);
     const [validationError, setValidationError] = useState("");
@@ -157,7 +154,7 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
 
     return (
         <>
-            <Carousel key={carouselKey} className="w-full max-w-xs">
+            <Carousel key={carouselKey} opts={{ duration: 12 }} className="w-full max-w-xs">
                 <CarouselContent>
                     {cards.map((card, index) => (
                         <CarouselItem key={index}>
@@ -191,8 +188,7 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
                 <CarouselNext className="hidden carousel-next" />
             </Carousel>
 
-            {/* Mini modales fuera del Carousel para que Embla no intercepte los eventos */}
-            {openInsuranceModal && createPortal(
+            {openInsuranceModal && (
                 <>
                     <div
                         className={`fixed inset-0 z-[100] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${insuranceMounted ? 'opacity-100' : 'opacity-0'}`}
@@ -219,11 +215,10 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
                             </div>
                         </div>
                     </div>
-                </>,
-                document.body
+                </>
             )}
 
-            {openPlanModal && createPortal(
+            {openPlanModal && (
                 <>
                     <div
                         className={`fixed inset-0 z-[100] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${planMounted ? 'opacity-100' : 'opacity-0'}`}
@@ -250,8 +245,7 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
                             </div>
                         </div>
                     </div>
-                </>,
-                document.body
+                </>
             )}
         </>
     );

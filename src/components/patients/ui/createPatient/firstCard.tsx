@@ -59,8 +59,8 @@ export function FirstCard({ name, setName, lastName, setLastName, gender, setGen
                         value={dni}
                         onChange={(e) => setDni(e.target.value)}
                         maxLength={8}
-                        onKeyDown={(event) => {
-                            if (!/[0-9]/.test(event.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(event.key)) event.preventDefault();
+                        onKeyDown={(e) => {
+                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) e.preventDefault();
                         }}
                         className={INPUT_CLS}
                     />
