@@ -519,12 +519,11 @@ export default function Page() {
       ) : (
         <div className='ml-4 mr-2 p-4 '>
           <div className='mt-2'>
-            {/** 
-            {openModalCreatePatient && (
-              <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
-              </div>
-            )}*/}
+            <ModalCreatePatient
+              open={openModalCreatePatient}
+              onClose={() => setOpenModalCreatePatient(false)}
+              onSuccess={() => { setShowResult('good-patient'); updateListPatients(); }}
+            />
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                 <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas eliminar el turno?'} secondProp={appointmentSelect} />
