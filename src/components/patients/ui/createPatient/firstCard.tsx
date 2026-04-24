@@ -1,3 +1,7 @@
+'use client'
+
+const INPUT_CLS = "w-full border-2 border-gray-300 rounded-xl px-3 h-9 focus:outline-teal-700 bg-gray-300 bg-opacity-70 text-black text-sm";
+
 interface props {
     name: string;
     setName: (value: string) => void;
@@ -13,54 +17,57 @@ interface props {
     setAddress: (value: string) => void;
 }
 
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+    return (
+        <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium tracking-tight">
+                {label} {required && <span className="text-red-800 font-semibold">*</span>}
+            </label>
+            {children}
+        </div>
+    );
+}
 
 export function FirstCard({ name, setName, lastName, setLastName, gender, setGender, date, setDate, dni, setDni, address, setAddress }: props) {
-  
     return (
         <div className="w-full">
-            <h2 className=" text-lg  font-semibold">General</h2>
-            <div className="flex-col text-base  space-y-4 my-4">
-                <div className="flex items-center">
-                    <label className="relative  tracking-tighter">
-                        Nombre:
-                        <p className="absolute -top-2 font-semibold text-sm -right-2 text-red-800">*</p>
-                    </label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
-                <div className="flex items-center">
-                    <label className="relative  tracking-tighter">
-                        Apellido:
-                        <p className="absolute -top-2 font-semibold text-sm -right-2 text-red-800">*</p>
-                    </label>
-                    <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
-                <div className="flex items-center">
-                    <label className="relative  tracking-tighter">
-                        Género:
-                        <p className="absolute -top-2 font-semibold text-sm -right-2 text-red-800">*</p>
-                    </label>
-                    <input value={gender} onChange={(e) => setGender(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
-                <div className="flex items-center">
-                    <label className="relative  tracking-tighter">
-                        Nacimiento:
-                        <p className="absolute -top-2 font-semibold text-sm -right-2 text-red-800">*</p>
-                    </label>
-                    <input value={date} onChange={(e) => setDate(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
-                <div className="flex items-center">
-                    <label className="relative  tracking-tighter">
-                        Dni:
-                        <p className="absolute -top-2 font-semibold text-sm -right-2 text-red-800">*</p>
-                    </label>
-                    <input value={dni} onChange={(e) => setDni(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
-                <div className="flex items-center">
-                    <label>
-                        Domicilio:
-                    </label>
-                    <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full ml-4 border-2 border-gray-300 rounded-xl px-3 focus:outline-teal-700" />
-                </div>
+            <h2 className="text-lg font-semibold">General</h2>
+            <div className="flex flex-col space-y-3 my-4">
+                <Field label="Nombre" required>
+                    <input value={name} onChange={(e) => setName(e.target.value)} className={INPUT_CLS} />
+                </Field>
+                <Field label="Apellido" required>
+                    <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={INPUT_CLS} />
+                </Field>
+                <Field label="Género" required>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)} className={INPUT_CLS}>
+                        <option value="" disabled>Seleccionar</option>
+                        <option value="male">Masculino</option>
+                        <option value="female">Femenino</option>
+                    </select>
+                </Field>
+                <Field label="Nacimiento" required>
+                    <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className={INPUT_CLS}
+                    />
+                </Field>
+                <Field label="DNI" required>
+                    <input
+                        value={dni}
+                        onChange={(e) => setDni(e.target.value)}
+                        maxLength={8}
+                        onKeyDown={(event) => {
+                            if (!/[0-9]/.test(event.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(event.key)) event.preventDefault();
+                        }}
+                        className={INPUT_CLS}
+                    />
+                </Field>
+                <Field label="Domicilio">
+                    <input value={address} onChange={(e) => setAddress(e.target.value)} className={INPUT_CLS} />
+                </Field>
             </div>
         </div>
     );

@@ -60,7 +60,7 @@ export default function Patients() {
                 <Loading />
             )}
             {isMobile
-                ? <SheetCreatePatient open={isOpenSheetCreatePatient} setOpen={setIsOpenSheetCreatePatient} handleGetPatients={handleGetPatients} />
+                ? <SheetCreatePatient open={isOpenSheetCreatePatient} onClose={() => setIsOpenSheetCreatePatient(false)} onSuccess={() => handleGetPatients(20)} />
                 : <ModalCreatePatient open={isOpenModalCreatePatient} onClose={() => setIsOpenModalCreatePatient(false)} onSuccess={() => handleGetPatients(20)} />
             }
             <div className={`${isLoad ? 'opacity-0' : 'opacity-100'} transition-opacity duration-150`}>
