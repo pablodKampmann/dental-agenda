@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="./public/tooth_square_for_github.png" width="140" />
-</p>
-
 <h1 align="center">🦷 Dental Agenda</h1>
 
 <p align="center">
@@ -108,6 +104,14 @@ npm run build    # build de producción — corre el chequeo de tipos y compila
 ```
 
 <br/>
+
+<h1 align="center">🦷 Dental Agenda</h1>
+
+<p align="center">
+  Administrative platform for dental clinics
+</p>
+
+---
 
 > 🇺🇸 English version
 
