@@ -15,10 +15,16 @@ import { ThirdCard } from "./thirdCard";
 import { SetPatients } from "../../db/setPatients";
 import { formatPhoneNumberIntl } from 'react-phone-number-input';
 import { getInsuranceOptions } from "../../../options/getInsuranceOpt";
+import { getInsurancePlans } from "../../../options/getInsurancePlans";
+import { addInsurance } from "../../../options/addInsurance";
+import { addInsurancePlan } from "../../../options/addInsurancePlan";
 import dayjs from 'dayjs';
 
-const MINI_INPUT_CLS = "h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-70 text-black";
+const MINI_INPUT_CLS = "h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-40 text-black";
 const MINI_BTN = "font-semibold flex justify-center items-center w-full px-4 py-3 rounded-md focus:outline-none transition duration-200";
+
+interface InsuranceOption { id: string; name: string; }
+interface PlanOption { id: string; name: string; }
 
 interface props {
     onClose: () => void;
@@ -26,7 +32,6 @@ interface props {
 }
 
 export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
-    // Form state
     const [name, setName] = useState("");
     const [lastName, setLastName] = useState("");
     const [gender, setGender] = useState("");
@@ -36,33 +41,40 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
     const [num, setNum] = useState("");
     const [email, setEmail] = useState("");
     const [insurance, setInsurance] = useState("");
+    const [insuranceId, setInsuranceId] = useState("");
     const [plan, setPlan] = useState("");
+    const [planId, setPlanId] = useState("");
     const [affiliate, setAffiliate] = useState("");
 
-    const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
-    const [planOptions, setPlanOptions] = useState<string[]>([]);
+    const [insuranceOptions, setInsuranceOptions] = useState<InsuranceOption[] | null>(null);
+    const [planOptions, setPlanOptions] = useState<PlanOption[]>([]);
+    const [loadingPlans, setLoadingPlans] = useState(false);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [carouselKey, setCarouselKey] = useState(0);
     const [validationError, setValidationError] = useState("");
 
-    // Mini modal — insurance
     const [openInsuranceModal, setOpenInsuranceModal] = useState(false);
     const [newInsuranceName, setNewInsuranceName] = useState("");
     const [insuranceMounted, setInsuranceMounted] = useState(false);
 
-    // Mini modal — plan
     const [openPlanModal, setOpenPlanModal] = useState(false);
     const [newPlanName, setNewPlanName] = useState("");
     const [planMounted, setPlanMounted] = useState(false);
 
     useEffect(() => {
-        async function Get() {
-            const options = await getInsuranceOptions();
-            if (options !== null) setInsuranceOptions(options);
-        }
-        Get();
+        getInsuranceOptions().then(options => { if (options !== null) setInsuranceOptions(options); });
     }, []);
+
+    useEffect(() => {
+        setPlan(""); setPlanId(""); setPlanOptions([]);
+        if (!insuranceId || insurance === 'Particular') return;
+        setLoadingPlans(true);
+        getInsurancePlans(insuranceId).then(plans => {
+            setPlanOptions(plans ?? []);
+            setLoadingPlans(false);
+        });
+    }, [insuranceId]);
 
     useEffect(() => {
         if (openInsuranceModal) {
@@ -80,33 +92,46 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
         setPlanMounted(false);
     }, [openPlanModal]);
 
-    // Reset plan when insurance changes
-    useEffect(() => {
-        setPlan("");
-    }, [insurance]);
+    function handleSelectInsurance(id: string, insuranceName: string) {
+        setInsuranceId(id);
+        setInsurance(insuranceName);
+    }
+
+    function handleSelectPlan(id: string, planName: string) {
+        setPlanId(id);
+        setPlan(planName);
+    }
 
     function resetForm() {
         setName(""); setLastName(""); setGender(""); setDate("");
         setDni(""); setAddress(""); setNum(""); setEmail("");
-        setInsurance(""); setPlan(""); setAffiliate("");
+        setInsurance(""); setInsuranceId(""); setPlan(""); setPlanId(""); setAffiliate("");
+        setPlanOptions([]);
         setValidationError("");
         setCurrentIndex(0);
         setCarouselKey(k => k + 1);
     }
 
-    function handleAddInsurance() {
+    async function handleAddInsurance() {
         if (!newInsuranceName.trim()) return;
-        setInsuranceOptions(prev => prev ? [...prev, newInsuranceName.trim()] : [newInsuranceName.trim()]);
-        setInsurance(newInsuranceName.trim());
+        const result = await addInsurance(newInsuranceName.trim());
+        if (result) {
+            setInsuranceOptions(prev => prev ? [...prev, result] : [result]);
+            setInsuranceId(result.id);
+            setInsurance(result.name);
+        }
         setNewInsuranceName("");
         setOpenInsuranceModal(false);
     }
 
-    function handleAddPlan() {
-        if (!newPlanName.trim()) return;
-        const trimmed = newPlanName.trim();
-        setPlanOptions(prev => [...prev, trimmed]);
-        setPlan(trimmed);
+    async function handleAddPlan() {
+        if (!newPlanName.trim() || !insuranceId) return;
+        const result = await addInsurancePlan(insuranceId, newPlanName.trim());
+        if (result) {
+            setPlanOptions(prev => [...prev, result]);
+            setPlanId(result.id);
+            setPlan(result.name);
+        }
         setNewPlanName("");
         setOpenPlanModal(false);
     }
@@ -114,7 +139,7 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
     const cards = [
         <FirstCard key="first" name={name} setName={setName} lastName={lastName} setLastName={setLastName} gender={gender} setGender={setGender} date={date} setDate={setDate} dni={dni} setDni={setDni} address={address} setAddress={setAddress} />,
         <SecondCard key="second" num={num} setNum={setNum} email={email} setEmail={setEmail} />,
-        <ThirdCard key="third" insurance={insurance} setInsurance={setInsurance} plan={plan} setPlan={setPlan} affiliate={affiliate} setAffiliate={setAffiliate} insuranceOptions={insuranceOptions} planOptions={planOptions} onOpenInsuranceModal={() => setOpenInsuranceModal(true)} onOpenPlanModal={() => setOpenPlanModal(true)} />
+        <ThirdCard key="third" insuranceId={insuranceId} insurance={insurance} onSelectInsurance={handleSelectInsurance} planId={planId} onSelectPlan={handleSelectPlan} affiliate={affiliate} setAffiliate={setAffiliate} insuranceOptions={insuranceOptions} planOptions={planOptions} loadingPlans={loadingPlans} onOpenInsuranceModal={() => setOpenInsuranceModal(true)} onOpenPlanModal={() => setOpenPlanModal(true)} />
     ];
 
     const handleNextClick = async () => {
@@ -131,13 +156,13 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
             setCurrentIndex(currentIndex + 1);
             (document.querySelector('.carousel-next') as HTMLElement)?.click();
         } else {
-            if (!insurance) {
+            if (!insuranceId) {
                 setValidationError("La obra social es obligatoria.");
                 return;
             }
             const formattedDate = dayjs(date).format('DD/MM/YYYY');
             const formattedNum = formatPhoneNumberIntl(num);
-            await SetPatients(name, lastName, gender, formattedDate, dni, formattedNum, address, email, insurance, plan, affiliate);
+            await SetPatients(name, lastName, gender, formattedDate, dni, formattedNum, address, email, insurance, insuranceId, plan, planId, affiliate);
             resetForm();
             onSuccess();
             onClose();

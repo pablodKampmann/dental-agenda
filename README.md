@@ -1,7 +1,9 @@
 <h1 align="center">🦷 Dental Agenda</h1>
 
 <p align="center">
-  Plataforma administrativa para consultorios odontológicos
+    Administrative platform for dental clinics
+                        -
+    Plataforma administrativa para consultorios odontológicos
 </p>
 
 ---
@@ -97,19 +99,11 @@ npm run build    # build de producción — corre el chequeo de tipos y compila
 
 <br/>
 
-```
  ✦ · · · · · · · · · · · ✦ · · · · · · · · · · · ✦
               🇺🇸  English version
  ✦ · · · · · · · · · · · ✦ · · · · · · · · · · · ✦
-```
 
 <br/>
-
-<h1 align="center">🦷 Dental Agenda</h1>
-
-<p align="center">
-  Administrative platform for dental clinics
-</p>
 
 ---
 

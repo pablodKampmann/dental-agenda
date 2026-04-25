@@ -2,7 +2,7 @@
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
-const INPUT_CLS = "w-full border-2 border-gray-300 rounded-xl px-3 h-9 focus:outline-teal-700 bg-gray-300 bg-opacity-70 text-black text-sm";
+const INPUT_CLS = "w-full border-2 border-gray-300 rounded-xl px-3 h-9 focus:outline-teal-700 bg-gray-300 bg-opacity-40 text-black text-sm";
 
 interface props {
     num: string;
@@ -34,7 +34,7 @@ export function SecondCard({ num, setNum, email, setEmail }: props) {
                         defaultCountry="AR"
                         value={num}
                         onChange={(value) => setNum(value || '')}
-                        className="w-full input-phone-number border-2 border-gray-300 rounded-xl px-3 h-9 bg-gray-300 bg-opacity-70 text-black text-sm"
+                        className="w-full input-phone-number border-2 border-gray-300 rounded-xl px-3 h-9 bg-gray-300 bg-opacity-40 text-black text-sm"
                         countries={['AR', 'UY', 'BR', 'US']}
                     />
                 </Field>

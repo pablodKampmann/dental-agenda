@@ -11,6 +11,7 @@ import { getUser } from "../../components/auth/getUser";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
 import { getClinicData } from "../../components/config/getClinicData";
+import { InsurancesConfig } from "../../components/config/insurancesConfig";
 import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../../components/config/setRowChanges";
@@ -218,6 +219,7 @@ export default function Page() {
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={handleGetPros} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
                             <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración del Consultorio</button>
+                            <button onClick={() => setSelectedField('insurances')} className={`${selectedField === 'insurances' ? 'bg-white duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Obras Sociales</button>
                             <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estadísticas</button>
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
@@ -327,6 +329,9 @@ export default function Page() {
                                         </div>
                                     ))}
                                 </div>
+                            )}
+                            {selectedField === 'insurances' && (
+                                <InsurancesConfig />
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className='text-sm'>

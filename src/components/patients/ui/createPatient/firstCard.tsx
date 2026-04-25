@@ -1,6 +1,6 @@
 'use client'
 
-const INPUT_CLS = "w-full border-2 border-gray-300 rounded-xl px-3 h-9 focus:outline-teal-700 bg-gray-300 bg-opacity-70 text-black text-sm";
+const INPUT_CLS = "w-full border-2 border-gray-300 rounded-xl px-3 h-9 focus:outline-teal-700 bg-gray-300 bg-opacity-40 text-black text-sm";
 
 interface props {
     name: string;
@@ -60,7 +60,17 @@ export function FirstCard({ name, setName, lastName, setLastName, gender, setGen
                         onChange={(e) => setDni(e.target.value)}
                         maxLength={8}
                         onKeyDown={(e) => {
+                            if (e.ctrlKey || e.metaKey) return;
                             if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) e.preventDefault();
+                        }}
+                        onPaste={(e) => {
+                            e.preventDefault();
+                            const pasted = e.clipboardData.getData('text').replace(/\D/g, '');
+                            const input = e.currentTarget;
+                            const start = input.selectionStart ?? 0;
+                            const end = input.selectionEnd ?? 0;
+                            const next = (dni.slice(0, start) + pasted + dni.slice(end)).slice(0, 8);
+                            setDni(next);
                         }}
                         className={INPUT_CLS}
                     />
