@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patients/ui/patientRecord";
 import { getInsuranceOptions } from "./../../../components/options/getInsuranceOpt";
+import { getInsurancePlans } from "./../../../components/options/getInsurancePlans";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -38,7 +39,11 @@ export default function PatientId() {
   const [changes, setChanges] = useState<any>('');
   const [openAlert, setOpenAlert] = useState(false);
   const [openInfo, setOpenInfo] = useState(false);
-  const [insuranceOptions, setInsuranceOptions] = useState<null | any[]>(null);
+  const [insuranceOptions, setInsuranceOptions] = useState<null | {id: string, name: string}[]>(null);
+  const [planOptions, setPlanOptions] = useState<{id: string, name: string}[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [insuranceDraft, setInsuranceDraft] = useState<{id: string, name: string} | null>(null);
+  const [planDraft, setPlanDraft] = useState<{id: string, name: string} | null>(null);
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
 
@@ -75,7 +80,37 @@ export default function PatientId() {
     get();
   }, [id, clinicId]);
 
+  async function submitInsuranceChanges() {
+    if (!insuranceDraft) { setRowModify(''); return; }
+    setLoadingCategory('medic');
+    setRowModify('');
+    setHovered('');
+    setChanges('');
+    const newPatient = await updatePatient(
+      { insurance: insuranceDraft.name, insuranceId: insuranceDraft.id, plan: '', planId: '' },
+      null, id, clinicId as string
+    );
+    if (newPatient) { setPatient(newPatient); setCheck(true); } else { setLoadingCategory(''); }
+    setInsuranceDraft(null);
+  }
+
+  async function submitPlanChanges() {
+    if (!planDraft?.id) { setRowModify(''); setPlanDraft(null); return; }
+    setLoadingCategory('medic');
+    setRowModify('');
+    setHovered('');
+    setChanges('');
+    const newPatient = await updatePatient(
+      { plan: planDraft.name, planId: planDraft.id },
+      null, id, clinicId as string
+    );
+    if (newPatient) { setPatient(newPatient); setCheck(true); } else { setLoadingCategory(''); }
+    setPlanDraft(null);
+  }
+
   async function submitChanges(changes: string, table: string, category: string) {
+    if (table === 'insurance') { await submitInsuranceChanges(); return; }
+    if (table === 'plan') { await submitPlanChanges(); return; }
     setLoadingCategory(category);
     setRowModify('');
     setHovered('')
@@ -101,6 +136,27 @@ export default function PatientId() {
 
     return () => clearTimeout(timeoutId);
   }, [check]);
+
+  useEffect(() => {
+    if (!patient?.insuranceId || patient.insurance === 'Particular') {
+      setPlanOptions([]);
+      return;
+    }
+    setLoadingPlans(true);
+    getInsurancePlans(patient.insuranceId).then(plans => {
+      setPlanOptions(plans ?? []);
+      setLoadingPlans(false);
+    });
+  }, [patient?.insuranceId]);
+
+  useEffect(() => {
+    if (rowModify === 'insurance' && patient) {
+      setInsuranceDraft({ id: patient.insuranceId ?? '', name: patient.insurance ?? '' });
+    }
+    if (rowModify === 'plan' && patient) {
+      setPlanDraft({ id: patient.planId ?? '', name: patient.plan ?? '' });
+    }
+  }, [rowModify]);
 
   useEffect(() => {
     if (date) {
@@ -348,9 +404,9 @@ export default function PatientId() {
                               submitChanges={submitChanges}
                               changes={changes}
                               renderInput={
-                                <select defaultValue={patient.insurance} onChange={(e) => setChanges(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitChanges(changes, 'insurance', 'medic'); else if (e.key === 'Escape') setRowModify(''); }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
-                                  {insuranceOptions?.map((insurance, index) => (
-                                    <option key={index} value={insurance}>{insurance}</option>
+                                <select value={insuranceDraft?.id ?? ''} onChange={(e) => { const opt = insuranceOptions?.find(o => o.id === e.target.value); if (opt) setInsuranceDraft(opt); }} onKeyDown={(e) => { if (e.key === 'Enter') submitInsuranceChanges(); else if (e.key === 'Escape') { setRowModify(''); setInsuranceDraft(null); } }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
+                                  {insuranceOptions?.map((opt) => (
+                                    <option key={opt.id} value={opt.id}>{opt.name}</option>
                                   ))}
                                 </select>
                               }
@@ -381,6 +437,19 @@ export default function PatientId() {
                                   setChanges={setChanges}
                                   submitChanges={submitChanges}
                                   changes={changes}
+                                  renderInput={
+                                    loadingPlans ? (
+                                      <span className="ml-4 text-sm text-gray-400">Cargando...</span>
+                                    ) : (
+                                      <select value={planDraft?.id ?? ''} onChange={(e) => { const opt = planOptions.find(o => o.id === e.target.value); if (opt) setPlanDraft(opt); }} onKeyDown={(e) => { if (e.key === 'Enter') submitPlanChanges(); else if (e.key === 'Escape') { setRowModify(''); setPlanDraft(null); } }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
+                                        {!planDraft?.id && <option value="" disabled>Seleccionar...</option>}
+                                        {planOptions.length === 0 && planDraft?.id && <option value="" disabled>Sin planes</option>}
+                                        {planOptions.map((opt) => (
+                                          <option key={opt.id} value={opt.id}>{opt.name}</option>
+                                        ))}
+                                      </select>
+                                    )
+                                  }
                                 />
                                 {/*affiliateNum*/}
                                 <EditableRow
