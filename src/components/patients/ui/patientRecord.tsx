@@ -7,7 +7,7 @@ import { HiMiniPencilSquare } from 'react-icons/hi2';
 import { usePathname } from 'next/navigation'
 import { FaMale, FaFemale } from "react-icons/fa";
 import { HiOutlineIdentification } from "react-icons/hi";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 interface ModalSettProps {
     patient: any | null;

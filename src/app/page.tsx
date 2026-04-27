@@ -33,6 +33,9 @@ import { getChapter } from "./../components/practices/getChapter";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { getUser } from '@/components/auth/getUser';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+
 export interface dateData {
   date: string;
   dayComplete: string;
@@ -53,6 +56,28 @@ async function fetchAppointments(formattedDate: string | null): Promise<any[] | 
   if (!result || result === 'vacio') return null;
   return Array.isArray(result) ? result : Object.values(result);
 }
+
+
+function PatientParamReader({ setPatient, setShowForm }: { setPatient: (p: any) => void, setShowForm: (v: boolean) => void }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const patientParam = searchParams.get('patient');
+    if (patientParam) {
+      try {
+        const patientData = JSON.parse(decodeURIComponent(patientParam));
+        setPatient(patientData);
+        setShowForm(true);
+      } catch (error) {
+        console.error('Error parsing patient data from URL:', error);
+      }
+    }
+  }, [searchParams]);
+
+  return null;
+}
+
+
 
 export default function Page() {
   const router = useRouter()
@@ -100,8 +125,6 @@ export default function Page() {
   const skipResetHours = useRef(false);
 
   const [clinicId, setClinicId] = useState<string | null>(null);
-
-
   useEffect(() => {
     async function fetchClinicId() {
       const id = await getUser(true);
@@ -527,6 +550,9 @@ export default function Page() {
               ? <SheetCreatePatient open={openSheetCreatePatient} onClose={() => setOpenSheetCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients(); }} />
               : <ModalCreatePatient open={openModalCreatePatient} onClose={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients(); }} />
             }
+            <Suspense fallback={null}>
+              <PatientParamReader setPatient={setPatient} setShowForm={setShowForm} />
+            </Suspense>
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                 <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas eliminar el turno?'} secondProp={appointmentSelect} />
