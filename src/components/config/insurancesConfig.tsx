@@ -80,7 +80,7 @@ export function InsurancesConfig() {
     if (!insurances) {
         return <div className="flex justify-center mt-8"><MoonLoader size={28} color="#0f766e" /></div>;
     }
-
+console.log('insurances:', insurances);
     return (
         <div className="max-w-lg">
             <h1 className="text-base font-bold tracking-wide mb-3">Obras Sociales</h1>
