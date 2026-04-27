@@ -304,36 +304,20 @@ export default function Page() {
                   }}
                   className="cursor-pointer  hover:border-gray-600 hover:border-y-2 border-x-2 border-x-gray-600 border-x-transparent transition duration-300 bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-y-4 px-4  border-teal-600 rounded-3xl shadow-lg  flex justify-center items-center"
                 >
-                  <option value={"CONSULTAS"} selected>
-                    CONSULTAS
-                  </option>
-                  <option value={"OPERATORIA DENTAL"} selected>
-                    OPERATORIA DENTAL
-                  </option>
-                  <option value={"ENDODONCIA"} selected>
-                    ENDODONCIA
-                  </option>
-                  <option value={"PRÓTESIS"} selected>
-                    PRÓTESIS
-                  </option>
-                  <option value={"ODONTOLOGÍA PREVENTIVA"} selected>
+                  <option value={"CONSULTAS"}>CONSULTAS</option>
+                  <option value={"OPERATORIA DENTAL"}>OPERATORIA DENTAL</option>
+                  <option value={"ENDODONCIA"}>ENDODONCIA</option>
+                  <option value={"PRÓTESIS"}>PRÓTESIS</option>
+                  <option value={"ODONTOLOGÍA PREVENTIVA"}>
                     ODONTOLOGÍA PREVENTIVA
                   </option>
-                  <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"} selected>
+                  <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"}>
                     ORTODONCIA Y ORTOPEDIA FUNCIONAL
                   </option>
-                  <option value={"ODONTOPEDIATRÍA"} selected>
-                    ODONTOPEDIATRÍA
-                  </option>
-                  <option value={"PERIODONCIA"} selected>
-                    PERIODONCIA
-                  </option>
-                  <option value={"RADIOLOGÍA"} selected>
-                    RADIOLOGÍA
-                  </option>
-                  <option value={"CIRUGÍA"} selected>
-                    CIRUGÍA
-                  </option>
+                  <option value={"ODONTOPEDIATRÍA"}>ODONTOPEDIATRÍA</option>
+                  <option value={"PERIODONCIA"}>PERIODONCIA</option>
+                  <option value={"RADIOLOGÍA"}>RADIOLOGÍA</option>
+                  <option value={"CIRUGÍA"}>CIRUGÍA</option>
                 </select>
                 {isLoadData && <ClipLoader className="ml-4" />}
               </div>
