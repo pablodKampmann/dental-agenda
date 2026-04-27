@@ -632,7 +632,7 @@ export default function Page() {
                               type="text"
                               className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-white text-black"
                               required
-                              name="lastName"
+                              name="practiceName"
                               value={practiceName}
                               onChange={(e) => setPracticeName(e.target.value)}
                             />
