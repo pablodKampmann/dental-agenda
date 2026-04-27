@@ -845,14 +845,36 @@ export default function Page() {
                             -20%
                           </button>
                         </div>
-                        <button
-                          onClick={() => {
-                            setOpenPercentageEdit("decrease");
-                          }}
-                          className="font-medium hover:bg-teal-600 w-full hover:duration-150 border-t-2 py-2 border-gray-600"
-                        >
-                          Personalizar -X%
-                        </button>
+                        {openPercentageEdit === "decrease" ? (
+                          <input
+                            value={percentageEditValue}
+                            className="flex w-full justify-center border-t-2 border-gray-600 items-center focus:outline-none bg-transparent h-12 text-center text-lg font-medium"
+                            placeholder="X%"
+                            type="text"
+                            pattern="[0-9]*"
+                            onChange={(event) => {
+                              const inputValue = event.target.value;
+                              const numericValue = inputValue.replace(
+                                /\D/g,
+                                "",
+                              );
+                              const valueWithPercentage =
+                                "-" + numericValue + "%";
+                              setPercentageEditValue(valueWithPercentage);
+                              setPercentage(-(parseFloat(numericValue) / 100));
+                              setPercentageVisible("-" + numericValue + "%");
+                            }}
+                          />
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setOpenPercentageEdit("decrease");
+                            }}
+                            className="font-medium hover:bg-teal-600 w-full hover:duration-150 border-t-2 py-2 border-gray-600"
+                          >
+                            Personalizar -X%
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
