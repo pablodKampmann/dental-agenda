@@ -124,7 +124,8 @@ export function PatientRecord({ patient }: ModalSettProps) {
                     </div>
                 </div>
                 <div className='flex ml-auto'>
-                    <div className='flex justify-center items-center'>
+                    <div className='flex justify-center items-center flex-col'>
+                         <HiMiniPencilSquare size={40} className="text-gray-600 mb-1" />
                         <h1
                             onClick={() => {
                                 const patientParam = encodeURIComponent(JSON.stringify({
