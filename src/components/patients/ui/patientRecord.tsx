@@ -7,6 +7,7 @@ import { HiMiniPencilSquare } from 'react-icons/hi2';
 import { usePathname } from 'next/navigation'
 import { FaMale, FaFemale } from "react-icons/fa";
 import { HiOutlineIdentification } from "react-icons/hi";
+import { useRouter } from 'next/router';
 
 interface ModalSettProps {
     patient: any | null;
@@ -15,6 +16,7 @@ interface ModalSettProps {
 export function PatientRecord({ patient }: ModalSettProps) {
     const [selectedField, setSelectedField] = useState<string | null>(null);
     const pathname = usePathname()
+    const router = useRouter();
 
     function getAge(date: any) {
         var today = new Date();
@@ -123,10 +125,26 @@ export function PatientRecord({ patient }: ModalSettProps) {
                 </div>
                 <div className='flex ml-auto'>
                     <div className='flex justify-center items-center'>
-                        <div className='flex-col mr-4'>
-                            <HiMiniPencilSquare className="text-gray-600 ml-3" size={56} />
-                            <h1 className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-1.5 select-none cursor-pointer transition duration-150'>DAR CITA</h1>
-                        </div>
+                        <h1
+                            onClick={() => {
+                                const patientParam = encodeURIComponent(JSON.stringify({
+                                    id: patient.id,
+                                    name: patient.name,
+                                    lastName: patient.lastName,
+                                    dni: patient.dni,
+                                    birthDate: patient.birthDate,
+                                    num: patient.num,
+                                    email: patient.email,
+                                    insurance: patient.insurance,
+                                    plan: patient.plan,
+                                    affiliateNum: patient.affiliateNum
+                                }))
+                                router.push(`/?patient=${patientParam}`)
+                            }}
+                            className='bg-teal-600 font-medium text-black hover:scale-110 rounded-lg px-1 py-0.5 mt-1.5 select-none cursor-pointer transition duration-150'
+                        >
+                            DAR CITA
+                        </h1>
                     </div>
                 </div>
             </div>
