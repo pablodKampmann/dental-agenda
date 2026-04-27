@@ -23,6 +23,7 @@ import { RiErrorWarningLine } from "react-icons/ri";
 import { updateUserName } from "../../components/config/updateUserName";
 import { updateUserPassword } from "../../components/config/updateUserPassword";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+import { setClinicInfoChanges } from "../../components/config/setClinicInfoChanges";
 
 export default function Page() {
     const router = useRouter()
@@ -36,7 +37,7 @@ export default function Page() {
     const [clinicInfo, setClinicInfo] = useState<any>(null);
     const [pros, setPros] = useState<null | any[]>(null);
     const [editRow, setEditRow] = useState<string>('');
-    const [changes, setChanges] = useState<any>(null);
+    const [changes, setChanges] = useState<string | null>(null);
     const [loadingImage, setLoadingImage] = useState(true);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const [reloadImage, setReloadImage] = useState(Date.now());
@@ -48,6 +49,7 @@ export default function Page() {
     const [passwordInput, setPasswordInput] = useState<string>('');
     const [currentPassword, setCurrentPassword] = useState<string>('');
     const [newPassword, setNewPassword] = useState<string>('');
+    const [scheduleChanges, setScheduleChanges] = useState<{ initial: string, final: string }>({ initial: '', final: '' });
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -69,19 +71,38 @@ export default function Page() {
         return () => unsubscribe();
     }, [router]);
 
+    //FUNCTION TO SAVE EDITINGS IN CONFIG
+    async function handleEditClinicRow(e: any, field: string, value: any) {
+        e.stopPropagation();
+        if (!value) { reset(); return; }
+        setLoadingGet(true);
+        await setClinicInfoChanges(user.clinicId, field, value);
+        const result = await getClinicData(user.clinicId, 'info');
+        if (result) setClinicInfo(result);
+        reset();
+    }
+
+
     //FUNCTIONS GETS    
 
-    async function handleGetClinicConfig() {
-        setSelectedField('clinicConfig');
-        if (!clinicInfo) {
-            setLoadingGet(true);
-            const result = await getClinicData(user.clinicId, 'info');
-            if (result !== null) {
-                setClinicInfo(result);
-                setLoadingGet(false);
-            }
+   async function handleGetClinicConfig() {
+    setSelectedField('clinicConfig');
+    if (!clinicInfo) {
+        setLoadingGet(true);
+        const result = await getClinicData(user.clinicId, 'info');
+
+        if (result !== null) {
+            result.initialSchedule =
+                typeof result.initialSchedule === 'object'
+                    ? result.initialSchedule?.final ?? ''
+                    : result.initialSchedule ?? '';
+
+            setClinicInfo(result);
+            console.log('clinicInfo result:', result);
+            setLoadingGet(false);
         }
     }
+}
 
     async function handleGetPros() {
         setSelectedField('pros');
@@ -283,6 +304,7 @@ export default function Page() {
         }
     }
 
+   console.log('scheduleChanges value:', scheduleChanges);
     return (
         <div className=' h-screen overflow-y-hidden flex-1 ' >
             {isLoad ? (
@@ -498,16 +520,88 @@ export default function Page() {
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className='text-sm'>
-                                    <h1 className=' text-base font-bold tracking-wide'>Básico:</h1>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Nombre: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.name} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>País: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.country} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Dirección: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Horarios de atención: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.initialSchedule} - {clinicInfo.finalSchedule} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <hr className="border-black border border-dashed  w-96 " />
-                                    <h1 className=' mt-2 text-base font-bold tracking-wide'>Contacto:</h1>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto: <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.telContact}  <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Tél de contacto auxiliar: <span className='ml-1 font-semibold flex justify-center items-center'> {clinicInfo.secondTelContact} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Correo electronico: <span className='ml-1 font-semibold flex justify-center items-center'> {clinicInfo.email} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
+                                    <h1 className='text-base font-bold tracking-wide'>Básico:</h1>
+                                    <div onClick={() => setEditRow('name')} className={`${editRow === 'name' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Nombre:
+                                        {editRow === 'name' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'name', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.name} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'name', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.name} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <div onClick={() => setEditRow('country')} className={`${editRow === 'country' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>País:
+                                        {editRow === 'country' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'country', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.country} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'country', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.country} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <div onClick={() => setEditRow('address')} className={`${editRow === 'address' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Dirección:
+                                        {editRow === 'address' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'address', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.address} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'address', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <div onClick={() => { setChanges(null);  setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className={`${editRow === 'schedule' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Horarios de atención:
+                                        {editRow === 'schedule' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} onChange={(e) => setScheduleChanges(prev => ({ ...prev, initial: e.target.value }))} autoFocus defaultValue={clinicInfo.initialSchedule} placeholder='inicio' className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold w-16' />
+                                                <span>-</span>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} onChange={(e) => setScheduleChanges(prev => ({ ...prev, final: e.target.value }))} defaultValue={clinicInfo.finalSchedule} placeholder='fin' className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold w-16' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={async (e: any) => { e.stopPropagation(); setLoadingGet(true); await setClinicInfoChanges(user.clinicId, 'initialSchedule', scheduleChanges.initial); await setClinicInfoChanges(user.clinicId, 'finalSchedule', scheduleChanges.final); const result = await getClinicData(user.clinicId, 'info'); if (result) setClinicInfo(result); reset(); }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.initialSchedule} - {clinicInfo.finalSchedule} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <hr className="border-black border border-dashed w-96" />
+                                    <h1 className='mt-2 text-base font-bold tracking-wide'>Contacto:</h1>
+                                    <div onClick={() => setEditRow('telContact')} className={`${editRow === 'telContact' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Tél de contacto:
+                                        {editRow === 'telContact' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'telContact', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.telContact} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'telContact', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.telContact} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <div onClick={() => setEditRow('secondTelContact')} className={`${editRow === 'secondTelContact' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Tél de contacto auxiliar:
+                                        {editRow === 'secondTelContact' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'secondTelContact', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.secondTelContact} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'secondTelContact', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.secondTelContact} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
+                                    <div onClick={() => setEditRow('clinicEmail')} className={`${editRow === 'clinicEmail' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Correo electrónico:
+                                        {editRow === 'clinicEmail' ? (
+                                            <div className='flex justify-center items-center'>
+                                                <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter' && changes !== null) handleEditClinicRow(e, 'email', changes); }} onChange={(e) => setChanges(e.target.value)} autoFocus defaultValue={clinicInfo.email} className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold' />
+                                                <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                <FaCircleCheck onClick={(e: any) => handleEditClinicRow(e, 'email', changes)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                            </div>
+                                        ) : (
+                                            <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.email} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
