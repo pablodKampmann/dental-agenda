@@ -13,6 +13,8 @@ import { GiClick } from "react-icons/gi";
 import { FaFileMedicalAlt, FaShare } from "react-icons/fa";
 import { Loading } from "./../components/general/loading";
 import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatient'
+import { SheetCreatePatient } from './../components/patients/ui/createPatient/sheetCreatePatient'
+import { useMediaQuery } from './../hooks/useMediaQuery'
 import { useRouter } from 'next/navigation'
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -80,6 +82,8 @@ export default function Page() {
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
   const [appointmentHours, setAppointmentHours] = useState<any>(1);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
+  const [openSheetCreatePatient, setOpenSheetCreatePatient] = useState(false);
+  const isMobile = !useMediaQuery('(min-width: 768px)');
   const [showResult, setShowResult] = useState<any>(null);
   const [reasonsOptions, setReasonsOptions] = useState<null | any[]>(null);
   const [freeSpaces, setFreeSpaces] = useState<any>(null);
@@ -519,12 +523,10 @@ export default function Page() {
       ) : (
         <div className='ml-4 mr-2 p-4 '>
           <div className='mt-2'>
-            {/** 
-            {openModalCreatePatient && (
-              <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                <ModalCreatePatient onCloseModal={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients() }} />
-              </div>
-            )}*/}
+            {isMobile
+              ? <SheetCreatePatient open={openSheetCreatePatient} onClose={() => setOpenSheetCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients(); }} />
+              : <ModalCreatePatient open={openModalCreatePatient} onClose={() => setOpenModalCreatePatient(false)} onSuccess={() => { setShowResult('good-patient'); updateListPatients(); }} />
+            }
             {openAlertMessage && (
               <div className='absolute inset-0 backdrop-blur-sm ml-56 z-10'>
                 <Alert onCloseAlert={() => setOpenAlertMessage(false)} onSuccess={handleSuccessDeleteAppointment} action={'Eliminar Turno'} firstProp={'¿Estás seguro/a de que deseas eliminar el turno?'} secondProp={appointmentSelect} />
@@ -853,7 +855,7 @@ export default function Page() {
                     {!patient && (
                       <div className='flex ml-1'>
                         <p className='ml-4 mb-1 mt-0.5 text-gray-500 text-sm font-medium select-none'>No encontras un paciente?</p>
-                        <div onClick={() => setOpenModalCreatePatient(true)} className='cursor-pointer flex items-center'>
+                        <div onClick={() => isMobile ? setOpenSheetCreatePatient(true) : setOpenModalCreatePatient(true)} className='cursor-pointer flex items-center'>
                           <p className='ml-2 mb-0.5 text-gray-500 text-sm font-extrabold select-none '>Cargalo ahora</p>
                           <GiClick className="ml-1 mb-1 text-gray-500" />
                         </div>
