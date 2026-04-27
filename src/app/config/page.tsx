@@ -20,6 +20,9 @@ import { RxUpdate } from "react-icons/rx";
 import { updateUserEmail } from "../../components/config/updateUserEmail";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { RiErrorWarningLine } from "react-icons/ri";
+import { updateUserName } from "../../components/config/updateUserName";
+import { updateUserPassword } from "../../components/config/updateUserPassword";
+import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 
 export default function Page() {
     const router = useRouter()
@@ -28,6 +31,7 @@ export default function Page() {
     const [user, setUser] = useState<any>(null);
     const [selectedField, setSelectedField] = useState<string>('profile');
     const [showUserName, setShowUserName] = useState(false);
+    const [userNameError, setUserNameError] = useState<string>('');
     const [loadingGet, setLoadingGet] = useState(false);
     const [clinicInfo, setClinicInfo] = useState<any>(null);
     const [pros, setPros] = useState<null | any[]>(null);
@@ -39,6 +43,11 @@ export default function Page() {
     const [openInputCredential, setOpenInputCredential] = useState(false);
     const [userCredential, setUserCredential] = useState<string>('');
     const [showAlert, setShowAlert] = useState<string>('');
+    const [openInputCredentialPassword, setOpenInputCredentialPassword] = useState(false);
+    const [passwordStep, setPasswordStep] = useState<number>(0);
+    const [passwordInput, setPasswordInput] = useState<string>('');
+    const [currentPassword, setCurrentPassword] = useState<string>('');
+    const [newPassword, setNewPassword] = useState<string>('');
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -92,9 +101,11 @@ export default function Page() {
         setEditRow('');
         setLoadingGet(false);
         setChanges(null);
-        if (openInputCredential) {
-            setOpenInputCredential(false);
-        }
+        setPasswordStep(0);
+        setPasswordInput('');
+        setCurrentPassword('');
+        setNewPassword('');
+        if (openInputCredential) setOpenInputCredential(false);
     }
 
     async function handleEditRow(e: any, table: string, changes: any) {
@@ -174,6 +185,75 @@ export default function Page() {
         reset();
     }
 
+    async function handleChangeUserName(e: any) {
+        e.stopPropagation();
+
+        if (!changes || changes.trim() === '') return;
+        if (changes.includes(' ')) {
+            setShowAlert('userName-spaces');
+            reset();
+            return;
+        }
+
+        setLoadingGet(true);
+        const result = await updateUserName(changes.trim(), userUid);
+
+        if (result === 'ok') {
+            const updatedUser = await getUser(false);
+            setUser(updatedUser);
+        } else if (result === 'already-in-use') {
+            setShowAlert('userName-in-use');
+        } else {
+            setShowAlert('userName-error');
+        }
+
+        reset();
+    }
+
+    async function handlePasswordStep(e: any) {
+        e.stopPropagation();
+
+        if (passwordStep === 1) {
+            if (!passwordInput) return;
+            setLoadingGet(true);
+            const auth = getAuth();
+            const currentUser = auth.currentUser;
+            if (currentUser && currentUser.email) {
+                try {
+                    const credential = EmailAuthProvider.credential(currentUser.email, passwordInput);
+                    await reauthenticateWithCredential(currentUser, credential);
+                    setCurrentPassword(passwordInput);
+                    setPasswordInput('');
+                    setPasswordStep(2);
+                } catch (error: any) {
+                    setShowAlert('wrong-password');
+                }
+            }
+            setLoadingGet(false);
+        } else if (passwordStep === 2) {
+            if (passwordInput.length < 6) {
+                setShowAlert('password-too-short');
+                return;
+            }
+            setNewPassword(passwordInput);
+            setPasswordInput('');
+            setPasswordStep(3);
+
+        } else if (passwordStep === 3) {
+            if (passwordInput !== newPassword) {
+                setShowAlert('password-mismatch');
+                setPasswordInput('');
+                return;
+            }
+            setLoadingGet(true);
+            const result = await updateUserPassword(newPassword, currentPassword);
+            if (result === 'wrong-password') {
+                setShowAlert('wrong-password');
+            }
+            reset();
+        }
+    }
+
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setShowAlert('');
@@ -224,7 +304,7 @@ export default function Page() {
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
-                            <Image quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full bg-white object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII='/>
+                            <Image quality={100} onLoadingComplete={() => setLoadingImage(false)} priority={true} src={`${user.photoURL}?${reloadImage}`} width={160} height={160} className={`${loadingImage ? 'blur-[2px]' : 'group-hover:cursor-pointer group-hover:blur-[2px]'} rounded-full bg-white object-cover	 border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300`} alt="UserPhoto" placeholder='blur' blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8XwMAAoABfYJLKisAAAAASUVORK5CYII=' />
                             {loadingImage ? (
                                 <div className='absolute top-0 justify-center flex opacity-100'><MoonLoader speedMultiplier={1.4} color='#042f2e' size={126} /></div>
                             ) : (
@@ -287,16 +367,99 @@ export default function Page() {
                                         )}
                                     </div>
                                     <hr className="border-black border border-dashed  w-96 mt-2 " />
-                                    {/* 3 */}
-                                    <h1 className=' mt-2 text-base font-bold tracking-wide'>Credenciales de acceso:</h1>
-                                    {showUserName ? (
-                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{user.userName} <MdVisibility onClick={() => setShowUserName(false)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    ) : (
-                                        <div className='mb-2 mt-1 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Usuario de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>{'●'.repeat(user.userName.length)} <MdVisibilityOff onClick={() => setShowUserName(true)} className="ml-1 cursor-pointer hover:scale-110" size={20} /> <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    )}
-                                    {/* 3 */}
-                                    <div className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>Contraseña de acceso: <span className='ml-1 font-semibold flex justify-center items-center'>●●●●●●●●●●●●● <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span></div>
-                                    <hr className="border-black border border-dashed  w-96 " />
+                                    {/* Usuario de acceso */}
+                                    <div className='w-fit relative'>
+                                        <div
+                                            onClick={() => setEditRow('userName')}
+                                            className={`${editRow === 'userName' ? 'border-emerald-500' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}
+                                        >
+                                            Usuario de acceso:
+                                            {editRow === 'userName' ? (
+                                                <div className='flex justify-center items-center'>
+                                                    <input
+                                                        onKeyDown={(e: any) => {
+                                                            if (e.key === 'Escape') reset();
+                                                            else if (e.key === 'Enter' && changes !== null) handleChangeUserName(e);
+                                                        }}
+                                                        onChange={(e) => setChanges(e.target.value)}
+                                                        autoFocus
+                                                        defaultValue={user.userName}
+                                                        className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
+                                                    />
+                                                    <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                    <FaCircleCheck onClick={(e: any) => { if (changes !== null) handleChangeUserName(e); }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                                </div>
+                                            ) : (
+                                                <span className='ml-1 font-semibold flex justify-center items-center'>
+                                                    {showUserName ? user.userName : '●'.repeat(user.userName.length)}
+                                                    <MdVisibilityOff onClick={(e: any) => { e.stopPropagation(); setShowUserName(v => !v); }} className="ml-1 cursor-pointer hover:scale-110" size={20} />
+                                                    <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} />
+                                                </span>
+                                            )}
+                                        </div>
+                                        {showAlert === 'userName-in-use' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Usuario ya en uso.
+                                            </div>
+                                        )}
+                                        {showAlert === 'userName-spaces' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> El usuario no puede tener espacios.
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Contraseña de acceso */}
+                                    <div className='w-fit relative'>
+                                        <div
+                                            onClick={() => { if (passwordStep === 0) { setEditRow('password'); setPasswordStep(1); } }}
+                                            className={`${editRow === 'password' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1.5 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}
+                                        >
+                                            Contraseña de acceso:
+                                            {editRow === 'password' ? (
+                                                <div className='flex justify-center items-center'>
+                                                    <input
+                                                        key={passwordStep}
+                                                        value={passwordInput}
+                                                        onChange={(e) => setPasswordInput(e.target.value)}
+                                                        onKeyDown={(e: any) => {
+                                                            if (e.key === 'Escape') reset();
+                                                            else if (e.key === 'Enter') handlePasswordStep(e);
+                                                        }}
+                                                        autoFocus
+                                                        type="password"
+                                                        placeholder={
+                                                            passwordStep === 1 ? 'Ingresá tu contraseña actual' :
+                                                                passwordStep === 2 ? 'Creá tu contraseña nueva' :
+                                                                    'Repetí tu contraseña nueva'
+                                                        }
+                                                        className='focus:outline-none w-72 bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
+                                                    />
+                                                    <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 hover:text-red-900" size={24} />
+                                                    <FaCircleCheck onClick={(e: any) => handlePasswordStep(e)} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 hover:text-emerald-600" size={24} />
+                                                </div>
+                                            ) : (
+                                                <span className='ml-1 font-semibold flex justify-center items-center'>
+                                                    ●●●●●●●●●●●●●
+                                                    <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} />
+                                                </span>
+                                            )}
+                                        </div>
+                                        {showAlert === 'wrong-password' && editRow === 'password' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Contraseña incorrecta.
+                                            </div>
+                                        )}
+                                        {showAlert === 'password-too-short' && editRow === 'password' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Mínimo 6 caracteres.
+                                            </div>
+                                        )}
+                                        {showAlert === 'password-mismatch' && editRow === 'password' && (
+                                            <div className='bg-red-600 whitespace-nowrap animate-move-from-left select-none bg-opacity-80 py-1 border border-black rounded-full shadow-lg px-2 absolute text-base font-semibold flex justify-center items-center w-auto left-[340px] top-0'>
+                                                <RiErrorWarningLine className='mr-1' size={22} /> Las contraseñas no coinciden.
+                                            </div>
+                                        )}
+                                    </div>
                                     {/* 5 */}
                                     <h1 className=' mt-2 text-base font-bold tracking-wide'>Preferencias de interfaz:</h1>
                                     <div onClick={() => setEditRow('language')} className={`${editRow === 'language' ? 'border-teal-600' : 'hover:border-black border-transparent'} mb-2 mt-1 py-1.5 px-1 cursor-pointer transition duration-75 border-2  group  rounded-lg border-dashed w-fit flex`}>Idioma:
