@@ -25,6 +25,10 @@ import { updateUserPassword } from "../../components/config/updateUserPassword";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { setClinicInfoChanges } from "../../components/config/setClinicInfoChanges";
 
+import { setPro } from "../../components/config/setPro";
+import { updatePro } from "../../components/config/updatePro";
+import { deletePro } from "../../components/config/deletePro";
+
 export default function Page() {
     const router = useRouter()
     const [userUid, setUserUid] = useState<string>('');
@@ -50,6 +54,9 @@ export default function Page() {
     const [currentPassword, setCurrentPassword] = useState<string>('');
     const [newPassword, setNewPassword] = useState<string>('');
     const [scheduleChanges, setScheduleChanges] = useState<{ initial: string, final: string }>({ initial: '', final: '' });
+
+    const [newPro, setNewPro] = useState<string>('');
+    const [addingPro, setAddingPro] = useState(false);
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -85,24 +92,24 @@ export default function Page() {
 
     //FUNCTIONS GETS    
 
-   async function handleGetClinicConfig() {
-    setSelectedField('clinicConfig');
-    if (!clinicInfo) {
-        setLoadingGet(true);
-        const result = await getClinicData(user.clinicId, 'info');
+    async function handleGetClinicConfig() {
+        setSelectedField('clinicConfig');
+        if (!clinicInfo) {
+            setLoadingGet(true);
+            const result = await getClinicData(user.clinicId, 'info');
 
-        if (result !== null) {
-            result.initialSchedule =
-                typeof result.initialSchedule === 'object'
-                    ? result.initialSchedule?.final ?? ''
-                    : result.initialSchedule ?? '';
+            if (result !== null) {
+                result.initialSchedule =
+                    typeof result.initialSchedule === 'object'
+                        ? result.initialSchedule?.final ?? ''
+                        : result.initialSchedule ?? '';
 
-            setClinicInfo(result);
-            console.log('clinicInfo result:', result);
-            setLoadingGet(false);
+                setClinicInfo(result);
+                console.log('clinicInfo result:', result);
+                setLoadingGet(false);
+            }
         }
     }
-}
 
     async function handleGetPros() {
         setSelectedField('pros');
@@ -304,7 +311,7 @@ export default function Page() {
         }
     }
 
-   console.log('scheduleChanges value:', scheduleChanges);
+    console.log('scheduleChanges value:', scheduleChanges);
     return (
         <div className=' h-screen overflow-y-hidden flex-1 ' >
             {isLoad ? (
@@ -503,16 +510,87 @@ export default function Page() {
                             )}
                             {selectedField === 'pros' && loadingGet === false && pros && (
                                 <div className='text-sm'>
-                                    <h1 className=' text-base font-bold tracking-wide'>Lista de profesionales:</h1>
-                                    {pros.map((professional, index) => (
-                                        <div key={index} className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>
-                                            Nombre Completo:
-                                            <span className='ml-1 font-semibold flex justify-center items-center'>
-                                                {professional}
-                                                <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} />
-                                            </span>
+                                    <h1 className='text-base font-bold tracking-wide'>Lista de profesionales:</h1>
+                                    {pros.map((professional) => (
+                                        <div key={professional.key} className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex items-center'>
+                                            {editRow === professional.key ? (
+                                                <div className='flex items-center'>
+                                                    <input
+                                                        autoFocus
+                                                        defaultValue={professional.nameComplete}
+                                                        onChange={(e) => setChanges(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Escape') reset();
+                                                            else if (e.key === 'Enter' && changes) {
+                                                                updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                    setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                    reset();
+                                                                });
+                                                            }
+                                                        }}
+                                                        className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
+                                                    />
+                                                    <FaCircleXmark onClick={() => reset()} className="mr-1 text-red-700 hover:scale-110 transition duration-150" size={24} />
+                                                    <FaCircleCheck onClick={() => {
+                                                        if (changes) {
+                                                            updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                reset();
+                                                            });
+                                                        }
+                                                    }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150" size={24} />
+                                                </div>
+                                            ) : (
+                                                <span className='font-semibold flex items-center'>
+                                                    Nombre Completo: <span className='ml-1'>{professional.nameComplete}</span>
+                                                    <TbPencilCog onClick={() => setEditRow(professional.key)} className="ml-4 transition duration-150 group-hover:text-black text-transparent cursor-pointer" size={20} />
+                                                    <FaCircleXmark onClick={() => {
+                                                        deletePro(user.clinicId, professional.key).then(() => {
+                                                            setPros(pros.filter(p => p.key !== professional.key));
+                                                        });
+                                                    }} className="ml-2 text-red-500 hover:scale-110 transition duration-150 opacity-0 group-hover:opacity-100 cursor-pointer" size={18} />
+                                                </span>
+                                            )}
                                         </div>
                                     ))}
+                                    {addingPro ? (
+                                        <div className='flex items-center mt-2'>
+                                            <input
+                                                autoFocus
+                                                placeholder='Nombre completo'
+                                                onChange={(e) => setNewPro(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape') setAddingPro(false);
+                                                    else if (e.key === 'Enter' && newPro) {
+                                                        setPro(user.clinicId, newPro).then(() => {
+                                                            getClinicData(user.clinicId, 'pros').then((result) => {
+                                                                if (result) setPros(result);
+                                                            });
+                                                            setAddingPro(false);
+                                                            setNewPro('');
+                                                        });
+                                                    }
+                                                }}
+                                                className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
+                                            />
+                                            <FaCircleXmark onClick={() => setAddingPro(false)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 cursor-pointer" size={24} />
+                                            <FaCircleCheck onClick={() => {
+                                                if (newPro) {
+                                                    setPro(user.clinicId, newPro).then(() => {
+                                                        getClinicData(user.clinicId, 'pros').then((result) => {
+                                                            if (result) setPros(result);
+                                                        });
+                                                        setAddingPro(false);
+                                                        setNewPro('');
+                                                    });
+                                                }
+                                            }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 cursor-pointer" size={24} />
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setAddingPro(true)} className='mt-2 px-3 py-1 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition duration-150'>
+                                            + Agregar profesional
+                                        </button>
+                                    )}
                                 </div>
                             )}
                             {selectedField === 'insurances' && (
@@ -554,7 +632,7 @@ export default function Page() {
                                             <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                         )}
                                     </div>
-                                    <div onClick={() => { setChanges(null);  setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className={`${editRow === 'schedule' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Horarios de atención:
+                                    <div onClick={() => { setChanges(null); setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className={`${editRow === 'schedule' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Horarios de atención:
                                         {editRow === 'schedule' ? (
                                             <div className='flex justify-center items-center'>
                                                 <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} onChange={(e) => setScheduleChanges(prev => ({ ...prev, initial: e.target.value }))} autoFocus defaultValue={clinicInfo.initialSchedule} placeholder='inicio' className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold w-16' />

@@ -13,11 +13,10 @@ export async function getClinicData(clinicId: string, table: string) {
             } else {
                 const data = snapshot.val();
                 if (!data) return [];
-                const array: any[] = [];
-                Object.keys(data).forEach((key) => {
-                    array.push(data[key].nameComplete);
-                });
-                return array;
+                return Object.entries(data).map(([key, value]: [string, any]) => ({
+                    key,
+                    nameComplete: value.nameComplete
+                }));
             }
         }
     } catch (error) {
