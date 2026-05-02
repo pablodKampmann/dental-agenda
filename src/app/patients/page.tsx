@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getUser } from '@/services/auth/getUser';
-import { Loading } from "./../../components/general/loading";
+import { Loading } from "./../../components/shared/loading";
 import { InputAndOthers } from "./../../components/patients/ui/inputAndOthers";
 import { Table } from "./../../components/patients/ui/table";
 import { getPatients } from "./../../services/patients/getPatients";
@@ -71,3 +71,4 @@ export default function Patients() {
         </div >
     );
 }
+

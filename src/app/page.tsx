@@ -8,7 +8,7 @@ import { SearchPatient } from './../services/patients/searchPatient';
 import { getPatients } from './../services/patients/getPatients';
 import { ClipLoader } from 'react-spinners';
 import { FaShare } from 'react-icons/fa';
-import { Loading } from './../components/general/loading';
+import { Loading } from './../components/shared/loading';
 import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatient';
 import { SheetCreatePatient } from './../components/patients/ui/createPatient/sheetCreatePatient';
 import { useMediaQuery } from './../hooks/useMediaQuery';
@@ -25,7 +25,7 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
-import { Alert } from './../components/general/alert';
+import { Alert } from './../components/shared/alert';
 import { getUser } from '@/services/auth/getUser';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -535,3 +535,4 @@ export default function Page() {
     </div>
   );
 }
+

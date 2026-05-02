@@ -1,14 +1,14 @@
 'use client'
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/shared/ui/card";
 import {
     Carousel,
     CarouselContent,
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@/components/shared/ui/carousel";
 import { FirstCard } from "./firstCard";
 import { SecondCard } from "./secondCard";
 import { ThirdCard } from "./thirdCard";
@@ -275,3 +275,4 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
         </>
     );
 }
+

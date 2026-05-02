@@ -1,4 +1,4 @@
-﻿import {
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -7,7 +7,7 @@
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/shared/ui/alert-dialog"
 import { logOut } from "../../auth/logOut";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 interface props {
@@ -21,9 +21,9 @@ export function LogOutAlert({ open, setOpen }: props) {
   async function handleLogOut() {
     const result = await logOut();
     if (result === null) {
-      console.log("Error al cerrar sesión");
+      console.log("Error al cerrar sesi�n");
     } else {
-      console.log("Sesión cerrada exitosamente");
+      console.log("Sesi�n cerrada exitosamente");
     }
   }
 
@@ -32,9 +32,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 w-[80%] rounded-xl border-red-950">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative ">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogTitle className="relative ">�Est�s seguro(a) de que deseas cerrar sesi�n?</AlertDialogTitle>
             <AlertDialogDescription className=" pl-2">
-              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+              Deber�s volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -49,9 +49,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 border-black">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
+            <AlertDialogTitle className="relative">�Est�s seguro(a) de que deseas cerrar sesi�n?</AlertDialogTitle>
             <AlertDialogDescription className="w-[80%] pl-2">
-              Deberás volver a ingresar tus credenciales para acceder nuevamente.
+              Deber�s volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -63,4 +63,5 @@ export function LogOutAlert({ open, setOpen }: props) {
     );
   }
 }
+
 

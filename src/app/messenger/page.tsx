@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "./../../components/general/loading";
+import { Loading } from "./../../components/shared/loading";
 // import { BsChatSquareText } from "react-icons/bs";
 // import { AiOutlineNotification } from "react-icons/ai";
 // import { FaWhatsapp, FaMale, FaFemale } from "react-icons/fa";
@@ -387,3 +387,4 @@ export default function Messenger() {
         </div>
     );
 }
+
