@@ -2,18 +2,18 @@
 
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { setAppointment } from './../components/appointments/setAppointment';
-import { getAppointments } from './../components/appointments/getAppointments';
-import { SearchPatient } from './../components/patients/db/searchPatient';
-import { getPatients } from './../components/patients/db/getPatients';
+import { setAppointment } from './../services/appointments/setAppointment';
+import { getAppointments } from './../services/appointments/getAppointments';
+import { SearchPatient } from './../services/patients/searchPatient';
+import { getPatients } from './../services/patients/getPatients';
 import { ClipLoader } from 'react-spinners';
 import { FaShare } from 'react-icons/fa';
-import { Loading } from './../components/general/loading';
+import { Loading } from './../components/shared/loading';
 import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatient';
 import { SheetCreatePatient } from './../components/patients/ui/createPatient/sheetCreatePatient';
 import { useMediaQuery } from './../hooks/useMediaQuery';
 import { useRouter } from 'next/navigation';
-import { auth } from './firebase';
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { BiRightArrow, BiLeftArrow, BiSolidBookAdd, BiSolidBellRing } from 'react-icons/bi';
 import { MdUpdate, MdDeleteForever } from 'react-icons/md';
@@ -25,8 +25,8 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
-import { Alert } from './../components/general/alert';
-import { getUser } from '@/components/auth/getUser';
+import { Alert } from './../components/shared/alert';
+import { getUser } from '@/services/auth/getUser';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { TIME_SLOTS, timeCalc } from '@/components/appointments/appointmentUtils';
@@ -535,3 +535,4 @@ export default function Page() {
     </div>
   );
 }
+

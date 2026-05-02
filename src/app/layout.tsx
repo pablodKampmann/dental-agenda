@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Navigation } from '../components/general/navigation/navigation'
+import { Navigation } from '../components/navigation/navigation'
 import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '../context/AuthContext'
@@ -48,3 +48,4 @@ export default async function RootLayout({
   )
 
 }
+

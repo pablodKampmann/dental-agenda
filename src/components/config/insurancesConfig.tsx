@@ -1,11 +1,11 @@
 'use client'
 import { useState, useEffect } from "react";
-import { getInsuranceOptions } from "../options/getInsuranceOpt";
-import { getInsurancePlans } from "../options/getInsurancePlans";
-import { addInsurance } from "../options/addInsurance";
-import { addInsurancePlan } from "../options/addInsurancePlan";
-import { deleteInsurance } from "../options/deleteInsurance";
-import { deleteInsurancePlan } from "../options/deleteInsurancePlan";
+import { getInsuranceOptions } from "@/services/options/getInsuranceOpt";
+import { getInsurancePlans } from "@/services/options/getInsurancePlans";
+import { addInsurance } from "@/services/options/addInsurance";
+import { addInsurancePlan } from "@/services/options/addInsurancePlan";
+import { deleteInsurance } from "@/services/options/deleteInsurance";
+import { deleteInsurancePlan } from "@/services/options/deleteInsurancePlan";
 import { FaCircleXmark } from "react-icons/fa6";
 import { IoChevronDownOutline, IoChevronUpOutline } from "react-icons/io5";
 

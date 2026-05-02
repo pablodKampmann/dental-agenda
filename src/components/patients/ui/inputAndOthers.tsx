@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { TbUserSearch } from 'react-icons/tb';
 import { ClipLoader } from "react-spinners";
-import { SearchPatient } from "./../../../components/patients/db/searchPatient";
+import { SearchPatient } from "./../../../services/patients/searchPatient";
 import { BsPersonFillAdd } from "react-icons/bs";
 
 interface props {

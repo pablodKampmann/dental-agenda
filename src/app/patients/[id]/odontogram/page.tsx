@@ -1,15 +1,15 @@
 'use client'
 
-import { getPatient } from "./../../../../components/patients/db/getPatient";
+import { getPatient } from "./../../../../services/patients/getPatient";
 import React, { useState, useEffect } from 'react';
-import { auth } from "../../../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaTooth } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../../components/patients/ui/patientRecord";
 import Image from 'next/image'
-import { getUser } from "@/components/auth/getUser";
+import { getUser } from "@/services/auth/getUser";
 
 export default function Odontogram() {
     const router = useRouter()

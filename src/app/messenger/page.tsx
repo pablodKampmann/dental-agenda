@@ -2,18 +2,18 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
-import { auth } from "../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Loading } from "./../../components/general/loading";
+import { Loading } from "./../../components/shared/loading";
 // import { BsChatSquareText } from "react-icons/bs";
 // import { AiOutlineNotification } from "react-icons/ai";
 // import { FaWhatsapp, FaMale, FaFemale } from "react-icons/fa";
-// import { getPatients } from "./../../components/patients/db/getPatients";
-// import { SearchPatient } from "./../../components/patients/db/searchPatient";
+// import { getPatients } from "./../../services/patients/getPatients";
+// import { SearchPatient } from "./../../services/patients/searchPatient";
 // import { BounceLoader, ClipLoader } from "react-spinners";
 // import { LuSearchX } from "react-icons/lu";
-// import { getPatient } from "./../../components/patients/db/getPatient";
-// import { getPatientAppointments } from "./../../components/appointments/getPatientAppointments";
+// import { getPatient } from "./../../services/patients/getPatient";
+// import { getPatientAppointments } from "./../../services/appointments/getPatientAppointments";
 // import { MdMailOutline } from "react-icons/md";
 // import { PiDownload } from "react-icons/pi";
 // import { LiaMoneyCheckAltSolid } from "react-icons/lia";
@@ -387,3 +387,4 @@ export default function Messenger() {
         </div>
     );
 }
+

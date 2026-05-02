@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ref, onValue } from 'firebase/database';
-import { db } from './../app/firebase';
+import { db } from '@/lib/firebase';
 
 export function useReloadPhotoURL(userUid: string) {
     const [reloadImage, setReloadImage] = useState(Date.now());

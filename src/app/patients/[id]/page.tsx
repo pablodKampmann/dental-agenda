@@ -1,28 +1,28 @@
 'use client'
 
-import { getPatient } from "./../../../components/patients/db/getPatient";
+import { getPatient } from "./../../../services/patients/getPatient";
 import React, { useState, useEffect, useRef } from 'react';
 import { ImAccessibility } from 'react-icons/im';
 import { BsFillPhoneFill} from 'react-icons/bs';
-import { updatePatient } from "./../../../components/patients/db/updatePatient";
+import { updatePatient } from "./../../../services/patients/updatePatient";
 import { BiPlusMedical } from 'react-icons/bi';
-import { Alert } from "./../../../components/general/alert";
-import { auth } from "../../firebase";
+import { Alert } from "./../../../components/shared/alert";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../components/patients/ui/patientRecord";
-import { getInsuranceOptions } from "./../../../components/options/getInsuranceOpt";
-import { getInsurancePlans } from "./../../../components/options/getInsurancePlans";
+import { getInsuranceOptions } from "./../../../services/options/getInsuranceOpt";
+import { getInsurancePlans } from "./../../../services/options/getInsurancePlans";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from 'dayjs';
-import { Loading } from "./../../../components/general/loading";
+import { Loading } from "./../../../components/shared/loading";
 import { MoonLoader } from "react-spinners";
 import { FaCheck } from "react-icons/fa6";
-import { getUser } from "./../../../components/auth/getUser";
+import { getUser } from "./../../../services/auth/getUser";
 
 import { EditableRow } from "@/components/patients/ui/editableRow";
 

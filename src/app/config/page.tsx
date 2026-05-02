@@ -3,30 +3,30 @@
 import Image from 'next/image'
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { Loading } from "../../components/general/loading";
+import { Loading } from "../../components/shared/loading";
 import { useRouter } from 'next/navigation'
-import { auth } from "../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUser } from "../../components/auth/getUser";
+import { getUser } from "../../services/auth/getUser";
 import { MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
-import { getClinicData } from "../../components/config/getClinicData";
+import { getClinicData } from "../../services/config/getClinicData";
 import { InsurancesConfig } from "../../components/config/insurancesConfig";
 import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
-import { setRowChanges } from "../../components/config/setRowChanges";
-import { changeImage } from "../../components/config/changeImage";
+import { setRowChanges } from "../../services/config/setRowChanges";
+import { changeImage } from "../../services/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
-import { updateUserEmail } from "../../components/config/updateUserEmail";
+import { updateUserEmail } from "../../services/config/updateUserEmail";
 import { RiErrorWarningLine } from "react-icons/ri";
-import { updateUserName } from "../../components/config/updateUserName";
-import { updateUserPassword } from "../../components/config/updateUserPassword";
+import { updateUserName } from "../../services/config/updateUserName";
+import { updateUserPassword } from "../../services/config/updateUserPassword";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
-import { setClinicInfoChanges } from "../../components/config/setClinicInfoChanges";
+import { setClinicInfoChanges } from "../../services/config/setClinicInfoChanges";
 
-import { setPro } from "../../components/config/setPro";
-import { updatePro } from "../../components/config/updatePro";
-import { deletePro } from "../../components/config/deletePro";
+import { setPro } from "../../services/config/setPro";
+import { updatePro } from "../../services/config/updatePro";
+import { deletePro } from "../../services/config/deletePro";
 
 export default function Page() {
     const router = useRouter()
@@ -322,9 +322,9 @@ export default function Page() {
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={handleGetPros} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
-                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuración del Consultorio</button>
+                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuraci¾n del Consultorio</button>
                             <button onClick={() => setSelectedField('insurances')} className={`${selectedField === 'insurances' ? 'bg-white duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Obras Sociales</button>
-                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estadísticas</button>
+                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>EstadÝsticas</button>
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
@@ -339,7 +339,7 @@ export default function Page() {
                     <div className='ml-56 text-black pt-4 overflow-y-auto flex-1 pb-8 config-scroll'>
                             {selectedField === 'profile' && (
                                 <div className="max-w-lg">
-                                    <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>
+                                    <h1 className="text-base font-bold tracking-wide mb-3">Bßsico:</h1>
                                     <div className="flex flex-col gap-2 mb-4">
                                         {/* Nombre visible */}
                                         <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
@@ -367,9 +367,9 @@ export default function Page() {
                                             <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
                                                 {editRow === 'email' ? (
                                                     <div className="flex items-center gap-2 flex-1">
-                                                        <span className="text-sm text-gray-500 flex-shrink-0">{openInputCredential ? 'Contraseña actual:' : 'Email:'}</span>
+                                                        <span className="text-sm text-gray-500 flex-shrink-0">{openInputCredential ? 'Contrase±a actual:' : 'Email:'}</span>
                                                         {openInputCredential ? (
-                                                            <input autoFocus type="password" placeholder="Confirmá con tu contraseña" onChange={(e) => setUserCredential(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
+                                                            <input autoFocus type="password" placeholder="Confirmß con tu contrase±a" onChange={(e) => setUserCredential(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         ) : (
                                                             <input autoFocus defaultValue={user.email} onChange={(e) => setChanges(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         )}
@@ -388,12 +388,12 @@ export default function Page() {
                                             </div>
                                             {showAlert === 'wrong-password' && editRow === 'email' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Contraseña incorrecta.
+                                                    <RiErrorWarningLine size={14} /> Contrase±a incorrecta.
                                                 </div>
                                             )}
                                             {showAlert === 'invalid-email' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Email inválido.
+                                                    <RiErrorWarningLine size={14} /> Email invßlido.
                                                 </div>
                                             )}
                                         </div>
@@ -416,7 +416,7 @@ export default function Page() {
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-gray-500">Usuario:</span>
                                                             <span className="text-sm font-semibold text-black flex items-center gap-1">
-                                                                {showUserName ? user.userName : '●'.repeat(user.userName.length)}
+                                                                {showUserName ? user.userName : '?'.repeat(user.userName.length)}
                                                                 <MdVisibilityOff onClick={(e: any) => { e.stopPropagation(); setShowUserName(v => !v); }} className="cursor-pointer hover:scale-110 text-gray-400" size={16} />
                                                             </span>
                                                         </div>
@@ -435,13 +435,13 @@ export default function Page() {
                                                 </div>
                                             )}
                                         </div>
-                                        {/* Contraseña */}
+                                        {/* Contrase±a */}
                                         <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                             <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
                                                 {editRow === 'password' ? (
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <span className="text-sm text-gray-500 flex-shrink-0">
-                                                            {passwordStep === 1 ? 'Contraseña actual:' : passwordStep === 2 ? 'Nueva contraseña:' : 'Repetir nueva:'}
+                                                            {passwordStep === 1 ? 'Contrase±a actual:' : passwordStep === 2 ? 'Nueva contrase±a:' : 'Repetir nueva:'}
                                                         </span>
                                                         <input key={passwordStep} value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter') handlePasswordStep(e); }} autoFocus type="password" className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
@@ -450,8 +450,8 @@ export default function Page() {
                                                 ) : (
                                                     <>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-500">Contraseña:</span>
-                                                            <span className="text-sm font-semibold text-black">●●●●●●●●●●●●●</span>
+                                                            <span className="text-sm text-gray-500">Contrase±a:</span>
+                                                            <span className="text-sm font-semibold text-black">?????????????</span>
                                                         </div>
                                                         <button onClick={() => { setEditRow('password'); setPasswordStep(1); }} className="text-gray-400 hover:text-teal-700 transition duration-150"><TbPencilCog size={18} /></button>
                                                     </>
@@ -459,17 +459,17 @@ export default function Page() {
                                             </div>
                                             {showAlert === 'wrong-password' && editRow === 'password' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Contraseña incorrecta.
+                                                    <RiErrorWarningLine size={14} /> Contrase±a incorrecta.
                                                 </div>
                                             )}
                                             {showAlert === 'password-too-short' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Mínimo 6 caracteres.
+                                                    <RiErrorWarningLine size={14} /> MÝnimo 6 caracteres.
                                                 </div>
                                             )}
                                             {showAlert === 'password-mismatch' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Las contraseñas no coinciden.
+                                                    <RiErrorWarningLine size={14} /> Las contrase±as no coinciden.
                                                 </div>
                                             )}
                                         </div>
@@ -544,8 +544,8 @@ export default function Page() {
                                                             <div className="flex items-center gap-2">
                                                                 {confirmDeletePro === professional.key ? (
                                                                     <div className="flex items-center gap-2 text-xs">
-                                                                        <span className="text-red-600 font-semibold">¿Borrar?</span>
-                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">Sí</button>
+                                                                        <span className="text-red-600 font-semibold">┐Borrar?</span>
+                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">SÝ</button>
                                                                         <button onClick={() => setConfirmDeletePro(null)} className="text-gray-500 hover:underline">No</button>
                                                                     </div>
                                                                 ) : (
@@ -604,12 +604,12 @@ export default function Page() {
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className="max-w-lg">
-                                    <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>
+                                    <h1 className="text-base font-bold tracking-wide mb-3">Bßsico:</h1>
                                     <div className="flex flex-col gap-2 mb-4">
                                         {([
                                             { key: 'name', label: 'Nombre', value: clinicInfo.name },
-                                            { key: 'country', label: 'País', value: clinicInfo.country },
-                                            { key: 'address', label: 'Dirección', value: clinicInfo.address },
+                                            { key: 'country', label: 'PaÝs', value: clinicInfo.country },
+                                            { key: 'address', label: 'Direcci¾n', value: clinicInfo.address },
                                         ] as { key: string; label: string; value: string }[]).map(({ key, label, value }) => (
                                             <div key={key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                                 <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
@@ -639,7 +639,7 @@ export default function Page() {
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <span className="text-sm text-gray-500 flex-shrink-0">Horarios:</span>
                                                         <input autoFocus defaultValue={clinicInfo.initialSchedule} placeholder="inicio" onChange={(e) => setScheduleChanges(prev => ({ ...prev, initial: e.target.value }))} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20" />
-                                                        <span className="text-gray-400">—</span>
+                                                        <span className="text-gray-400">ù</span>
                                                         <input defaultValue={clinicInfo.finalSchedule} placeholder="fin" onChange={(e) => setScheduleChanges(prev => ({ ...prev, final: e.target.value }))} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20" />
                                                         <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
                                                         <FaCircleCheck onClick={async (e: any) => { e.stopPropagation(); setLoadingGet(true); await setClinicInfoChanges(user.clinicId, 'initialSchedule', scheduleChanges.initial); await setClinicInfoChanges(user.clinicId, 'finalSchedule', scheduleChanges.final); const result = await getClinicData(user.clinicId, 'info'); if (result) setClinicInfo(result); reset(); }} className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
@@ -647,8 +647,8 @@ export default function Page() {
                                                 ) : (
                                                     <>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-500">Horarios de atención:</span>
-                                                            <span className="text-sm font-semibold text-black">{clinicInfo.initialSchedule} — {clinicInfo.finalSchedule}</span>
+                                                            <span className="text-sm text-gray-500">Horarios de atenci¾n:</span>
+                                                            <span className="text-sm font-semibold text-black">{clinicInfo.initialSchedule} ù {clinicInfo.finalSchedule}</span>
                                                         </div>
                                                         <button onClick={() => { setChanges(null); setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className="text-gray-400 hover:text-teal-700 transition duration-150"><TbPencilCog size={18} /></button>
                                                     </>
@@ -660,9 +660,9 @@ export default function Page() {
                                     <h1 className="text-base font-bold tracking-wide mb-3">Contacto:</h1>
                                     <div className="flex flex-col gap-2">
                                         {([
-                                            { key: 'telContact', label: 'Tél de contacto', value: clinicInfo.telContact, saveKey: 'telContact' },
-                                            { key: 'secondTelContact', label: 'Tél auxiliar', value: clinicInfo.secondTelContact, saveKey: 'secondTelContact' },
-                                            { key: 'clinicEmail', label: 'Correo electrónico', value: clinicInfo.email, saveKey: 'email' },
+                                            { key: 'telContact', label: 'TÚl de contacto', value: clinicInfo.telContact, saveKey: 'telContact' },
+                                            { key: 'secondTelContact', label: 'TÚl auxiliar', value: clinicInfo.secondTelContact, saveKey: 'secondTelContact' },
+                                            { key: 'clinicEmail', label: 'Correo electr¾nico', value: clinicInfo.email, saveKey: 'email' },
                                         ] as { key: string; label: string; value: string; saveKey: string }[]).map(({ key, label, value, saveKey }) => (
                                             <div key={key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                                 <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
@@ -694,4 +694,5 @@ export default function Page() {
         </div>
     )
 }
+
 

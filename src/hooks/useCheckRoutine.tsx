@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUser } from "../components/auth/getUser";
+import { getUser } from "../services/auth/getUser";
 
 export function useCheckRoutine(getOnlyClinicId: boolean) {
     const [value, setValue] = useState<any>(null);

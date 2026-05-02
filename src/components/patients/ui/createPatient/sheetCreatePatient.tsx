@@ -4,7 +4,7 @@ import {
     SheetDescription,
     SheetHeader,
     SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/shared/ui/sheet"
 import { BsPersonFillAdd } from "react-icons/bs";
 import { CarouselFormCreatePatient } from "./carouselFormCreatePatient";
 
@@ -33,3 +33,4 @@ export function SheetCreatePatient({ open, onClose, onSuccess }: props) {
         </Sheet>
     )
 }
+

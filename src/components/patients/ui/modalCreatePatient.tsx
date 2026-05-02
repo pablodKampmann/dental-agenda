@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getInsuranceOptions } from "./../../options/getInsuranceOpt";
-import { getInsurancePlans } from "./../../options/getInsurancePlans";
-import { addInsurance } from "./../../options/addInsurance";
-import { addInsurancePlan } from "./../../options/addInsurancePlan";
-import { SetPatients } from "./../db/setPatients";
+import { getInsuranceOptions } from "@/services/options/getInsuranceOpt";
+import { getInsurancePlans } from "@/services/options/getInsurancePlans";
+import { addInsurance } from "@/services/options/addInsurance";
+import { addInsurancePlan } from "@/services/options/addInsurancePlan";
+import { SetPatients } from "@/services/patients/setPatients";
 import PhoneInput, { formatPhoneNumberIntl } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";

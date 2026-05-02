@@ -1,23 +1,23 @@
 'use client'
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/shared/ui/card";
 import {
     Carousel,
     CarouselContent,
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@/components/shared/ui/carousel";
 import { FirstCard } from "./firstCard";
 import { SecondCard } from "./secondCard";
 import { ThirdCard } from "./thirdCard";
-import { SetPatients } from "../../db/setPatients";
+import { SetPatients } from "@/services/patients/setPatients";
 import { formatPhoneNumberIntl } from 'react-phone-number-input';
-import { getInsuranceOptions } from "../../../options/getInsuranceOpt";
-import { getInsurancePlans } from "../../../options/getInsurancePlans";
-import { addInsurance } from "../../../options/addInsurance";
-import { addInsurancePlan } from "../../../options/addInsurancePlan";
+import { getInsuranceOptions } from "@/services/options/getInsuranceOpt";
+import { getInsurancePlans } from "@/services/options/getInsurancePlans";
+import { addInsurance } from "@/services/options/addInsurance";
+import { addInsurancePlan } from "@/services/options/addInsurancePlan";
 import dayjs from 'dayjs';
 
 const MINI_INPUT_CLS = "h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-40 text-black";
@@ -275,3 +275,4 @@ export function CarouselFormCreatePatient({ onClose, onSuccess }: props) {
         </>
     );
 }
+

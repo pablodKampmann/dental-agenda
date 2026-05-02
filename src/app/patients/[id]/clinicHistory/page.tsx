@@ -1,14 +1,14 @@
 'use client'
 
-import { getPatient } from "./../../../../components/patients/db/getPatient";
-import { getUser } from "@/components/auth/getUser";
+import { getPatient } from "./../../../../services/patients/getPatient";
+import { getUser } from "@/services/auth/getUser";
 import React, { useState, useEffect } from 'react';
-import { auth } from "../../../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import { PatientRecord } from "./../../../../components/patients/ui/patientRecord";
-import { Loading } from "./../../../../components/general/loading";
+import { Loading } from "./../../../../components/shared/loading";
 
 export default function ClinicHistory() {
     const router = useRouter()
