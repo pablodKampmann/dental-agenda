@@ -1,8 +1,8 @@
-import { getInsuranceOptions } from "../components/options/getInsuranceOpt";
-import { getInsurancePlans } from "../components/options/getInsurancePlans";
-import { addInsurance } from "../components/options/addInsurance";
-import { addInsurancePlan } from "../components/options/addInsurancePlan";
-import { SetPatients } from "../components/patients/db/setPatients";
+import { getInsuranceOptions } from "../services/options/getInsuranceOpt";
+import { getInsurancePlans } from "../services/options/getInsurancePlans";
+import { addInsurance } from "../services/options/addInsurance";
+import { addInsurancePlan } from "../services/options/addInsurancePlan";
+import { SetPatients } from "../services/patients/setPatients";
 
 // ---------------------------------------------------------------------------
 // SEED DATA — editá esta lista para agregar o modificar pacientes de prueba

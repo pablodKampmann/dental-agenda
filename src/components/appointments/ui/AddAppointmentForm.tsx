@@ -5,7 +5,7 @@ import { BsArrowLeftCircle } from 'react-icons/bs';
 import { ClipLoader } from 'react-spinners';
 import { GiClick } from 'react-icons/gi';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { getChapter } from '@/components/practices/getChapter';
+import { getChapter } from '@/services/practices/getChapter';
 import { timeCalc, getAge, formatPrice } from '../appointmentUtils';
 import type { dateData } from '../appointmentUtils';
 

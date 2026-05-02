@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "./../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Loading } from "./../../components/general/loading";
-import { getChapter } from "./../../components/practices/getChapter";
+import { getChapter } from "./../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
 import { MdDelete } from "react-icons/md";
@@ -17,10 +17,10 @@ import { BsClipboardCheck } from "react-icons/bs";
 import { IoLogoUsd } from "react-icons/io5";
 import { RiAlertFill } from "react-icons/ri";
 import { FaRegCircleCheck, FaRegCircleXmark } from "react-icons/fa6";
-import { updatePracticePrice } from "./../../components/practices/updatePracticePrice";
-import { setPractice } from "./../../components/practices/setPractice";
+import { updatePracticePrice } from "./../../services/practices/updatePracticePrice";
+import { setPractice } from "./../../services/practices/setPractice";
 import { ImCancelCircle } from "react-icons/im";
-import { updateChapterPrices } from "./../../components/practices/updateChapterPrices";
+import { updateChapterPrices } from "./../../services/practices/updateChapterPrices";
 import { PiSealWarningThin } from "react-icons/pi";
 
 export default function Page() {

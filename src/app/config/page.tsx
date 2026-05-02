@@ -7,26 +7,26 @@ import { Loading } from "../../components/general/loading";
 import { useRouter } from 'next/navigation'
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { getUser } from "../../components/auth/getUser";
+import { getUser } from "../../services/auth/getUser";
 import { MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from 'react-icons/tb';
-import { getClinicData } from "../../components/config/getClinicData";
+import { getClinicData } from "../../services/config/getClinicData";
 import { InsurancesConfig } from "../../components/config/insurancesConfig";
 import { ScaleLoader, MoonLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
-import { setRowChanges } from "../../components/config/setRowChanges";
-import { changeImage } from "../../components/config/changeImage";
+import { setRowChanges } from "../../services/config/setRowChanges";
+import { changeImage } from "../../services/config/changeImage";
 import { RxUpdate } from "react-icons/rx";
-import { updateUserEmail } from "../../components/config/updateUserEmail";
+import { updateUserEmail } from "../../services/config/updateUserEmail";
 import { RiErrorWarningLine } from "react-icons/ri";
-import { updateUserName } from "../../components/config/updateUserName";
-import { updateUserPassword } from "../../components/config/updateUserPassword";
+import { updateUserName } from "../../services/config/updateUserName";
+import { updateUserPassword } from "../../services/config/updateUserPassword";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
-import { setClinicInfoChanges } from "../../components/config/setClinicInfoChanges";
+import { setClinicInfoChanges } from "../../services/config/setClinicInfoChanges";
 
-import { setPro } from "../../components/config/setPro";
-import { updatePro } from "../../components/config/updatePro";
-import { deletePro } from "../../components/config/deletePro";
+import { setPro } from "../../services/config/setPro";
+import { updatePro } from "../../services/config/updatePro";
+import { deletePro } from "../../services/config/deletePro";
 
 export default function Page() {
     const router = useRouter()

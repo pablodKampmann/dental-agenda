@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { getUser } from '@/components/auth/getUser';
+import { getUser } from '@/services/auth/getUser';
 import { Loading } from "./../../components/general/loading";
 import { InputAndOthers } from "./../../components/patients/ui/inputAndOthers";
 import { Table } from "./../../components/patients/ui/table";
-import { getPatients } from "./../../components/patients/db/getPatients";
+import { getPatients } from "./../../services/patients/getPatients";
 import { SheetCreatePatient } from "../../components/patients/ui/createPatient/sheetCreatePatient";
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
 import { useMediaQuery } from "../../hooks/useMediaQuery";

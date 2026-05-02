@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser } from '../components/auth/getUser';
+import { getUser } from '../services/auth/getUser';
 
 interface AuthUser {
     userUid: string;

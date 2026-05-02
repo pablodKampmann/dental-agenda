@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { setAppointment } from './../components/appointments/setAppointment';
-import { getAppointments } from './../components/appointments/getAppointments';
-import { SearchPatient } from './../components/patients/db/searchPatient';
-import { getPatients } from './../components/patients/db/getPatients';
+import { setAppointment } from './../services/appointments/setAppointment';
+import { getAppointments } from './../services/appointments/getAppointments';
+import { SearchPatient } from './../services/patients/searchPatient';
+import { getPatients } from './../services/patients/getPatients';
 import { ClipLoader } from 'react-spinners';
 import { FaShare } from 'react-icons/fa';
 import { Loading } from './../components/general/loading';
@@ -26,7 +26,7 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/es';
 import { Alert } from './../components/general/alert';
-import { getUser } from '@/components/auth/getUser';
+import { getUser } from '@/services/auth/getUser';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { TIME_SLOTS, timeCalc } from '@/components/appointments/appointmentUtils';
@@ -34,7 +34,7 @@ import { AppointmentsTable } from '@/components/appointments/ui/AppointmentsTabl
 import { AddAppointmentForm } from '@/components/appointments/ui/AddAppointmentForm';
 import { RemainingAppointments } from '@/components/appointments/ui/RemainingAppointments';
 
-export type { dateData } from '@/components/appointments/appointmentUtils';
+export type { dateData } from '@/services/appointments/appointmentUtils';
 
 interface CustomDayjs extends Dayjs {
   $d: Date;
