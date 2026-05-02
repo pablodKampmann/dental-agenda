@@ -13,7 +13,8 @@
       "Bash(grep -rn \"from.*components/auth\\\\|from.*['\\\\\"]../auth/\\\\|from.*['\\\\\"]../../auth/\\\\|from.*['\\\\\"]../../../auth/\" src/ --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -rn \"from.*['\\\\\"]../practices/\\\\|from.*['\\\\\"]../../practices/\\\\|from.*['\\\\\"]../../../practices/\" src/ --include=\"*.ts\" --include=\"*.tsx\")",
       "Bash(grep -rn \"from.*['\\\\\"].*patients/db/\\\\|from.*['\\\\\"].*/db/\" src/ --include=\"*.ts\" --include=\"*.tsx\")",
-      "Bash(grep -rn \"from.*['\\\\\"]../options/\\\\|from.*['\\\\\"]../../options/\\\\|from.*['\\\\\"]../../../options/\" src/ --include=\"*.ts\" --include=\"*.tsx\")"
+      "Bash(grep -rn \"from.*['\\\\\"]../options/\\\\|from.*['\\\\\"]../../options/\\\\|from.*['\\\\\"]../../../options/\" src/ --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(Remove-Item \"src\\\\components\\\\appointments\\\\deleteAppointment.tsx\", \"src\\\\components\\\\appointments\\\\getAppointments.tsx\", \"src\\\\components\\\\appointments\\\\getPatientAppointments.tsx\", \"src\\\\components\\\\appointments\\\\setAppointment.tsx\")"
     ]
   }
 }
