@@ -56,7 +56,7 @@ export default function Page() {
     const [scheduleChanges, setScheduleChanges] = useState<{ initial: string, final: string }>({ initial: '', final: '' });
 
     const [newPro, setNewPro] = useState<string>('');
-    const [addingPro, setAddingPro] = useState(false);
+    const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -509,88 +509,99 @@ export default function Page() {
                                 </div>
                             )}
                             {selectedField === 'pros' && loadingGet === false && pros && (
-                                <div className='text-sm'>
-                                    <h1 className='text-base font-bold tracking-wide'>Lista de profesionales:</h1>
-                                    {pros.map((professional) => (
-                                        <div key={professional.key} className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex items-center'>
-                                            {editRow === professional.key ? (
-                                                <div className='flex items-center'>
-                                                    <input
-                                                        autoFocus
-                                                        defaultValue={professional.nameComplete}
-                                                        onChange={(e) => setChanges(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Escape') reset();
-                                                            else if (e.key === 'Enter' && changes) {
-                                                                updatePro(user.clinicId, professional.key, changes).then(() => {
-                                                                    setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
-                                                                    reset();
-                                                                });
-                                                            }
-                                                        }}
-                                                        className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
-                                                    />
-                                                    <FaCircleXmark onClick={() => reset()} className="mr-1 text-red-700 hover:scale-110 transition duration-150" size={24} />
-                                                    <FaCircleCheck onClick={() => {
-                                                        if (changes) {
-                                                            updatePro(user.clinicId, professional.key, changes).then(() => {
-                                                                setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
-                                                                reset();
-                                                            });
-                                                        }
-                                                    }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150" size={24} />
+                                <div className="max-w-lg">
+                                    <h1 className="text-base font-bold tracking-wide mb-3">Lista de profesionales:</h1>
+
+                                    <div className="flex flex-col gap-2 mb-4">
+                                        {pros.map((professional) => (
+                                            <div key={professional.key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                                                <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
+                                                    {editRow === professional.key ? (
+                                                        <div className="flex items-center gap-2 flex-1">
+                                                            <input
+                                                                autoFocus
+                                                                defaultValue={professional.nameComplete}
+                                                                onChange={(e) => setChanges(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Escape') reset();
+                                                                    else if (e.key === 'Enter' && changes) {
+                                                                        updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                            setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                            reset();
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                                                            />
+                                                            <FaCircleXmark onClick={() => reset()} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
+                                                            <FaCircleCheck onClick={() => {
+                                                                if (changes) {
+                                                                    updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                        setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                        reset();
+                                                                    });
+                                                                }
+                                                            }} className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-sm font-semibold text-black">{professional.nameComplete}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                {confirmDeletePro === professional.key ? (
+                                                                    <div className="flex items-center gap-2 text-xs">
+                                                                        <span className="text-red-600 font-semibold">¿Borrar?</span>
+                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">Sí</button>
+                                                                        <button onClick={() => setConfirmDeletePro(null)} className="text-gray-500 hover:underline">No</button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <button onClick={() => setEditRow(professional.key)} className="text-gray-400 hover:text-teal-700 transition duration-150">
+                                                                            <TbPencilCog size={18} />
+                                                                        </button>
+                                                                        <button onClick={() => setConfirmDeletePro(professional.key)} className="text-gray-400 hover:text-red-600 transition duration-150">
+                                                                            <FaCircleXmark size={18} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <span className='font-semibold flex items-center'>
-                                                    Nombre Completo: <span className='ml-1'>{professional.nameComplete}</span>
-                                                    <TbPencilCog onClick={() => setEditRow(professional.key)} className="ml-4 transition duration-150 group-hover:text-black text-transparent cursor-pointer" size={20} />
-                                                    <FaCircleXmark onClick={() => {
-                                                        deletePro(user.clinicId, professional.key).then(() => {
-                                                            setPros(pros.filter(p => p.key !== professional.key));
-                                                        });
-                                                    }} className="ml-2 text-red-500 hover:scale-110 transition duration-150 opacity-0 group-hover:opacity-100 cursor-pointer" size={18} />
-                                                </span>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {addingPro ? (
-                                        <div className='flex items-center mt-2'>
-                                            <input
-                                                autoFocus
-                                                placeholder='Nombre completo'
-                                                onChange={(e) => setNewPro(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Escape') setAddingPro(false);
-                                                    else if (e.key === 'Enter' && newPro) {
-                                                        setPro(user.clinicId, newPro).then(() => {
-                                                            getClinicData(user.clinicId, 'pros').then((result) => {
-                                                                if (result) setPros(result);
-                                                            });
-                                                            setAddingPro(false);
-                                                            setNewPro('');
-                                                        });
-                                                    }
-                                                }}
-                                                className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold'
-                                            />
-                                            <FaCircleXmark onClick={() => setAddingPro(false)} className="mr-1 text-red-700 hover:scale-110 transition duration-150 cursor-pointer" size={24} />
-                                            <FaCircleCheck onClick={() => {
-                                                if (newPro) {
-                                                    setPro(user.clinicId, newPro).then(() => {
-                                                        getClinicData(user.clinicId, 'pros').then((result) => {
-                                                            if (result) setPros(result);
-                                                        });
-                                                        setAddingPro(false);
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Nombre completo..."
+                                            value={newPro}
+                                            onChange={(e) => setNewPro(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && newPro.trim()) {
+                                                    e.preventDefault();
+                                                    setPro(user.clinicId, newPro.trim()).then(() => {
+                                                        getClinicData(user.clinicId, 'pros').then((result) => { if (result) setPros(result); });
                                                         setNewPro('');
                                                     });
                                                 }
-                                            }} className="ml-1 text-emerald-500 hover:scale-110 transition duration-150 cursor-pointer" size={24} />
-                                        </div>
-                                    ) : (
-                                        <button onClick={() => setAddingPro(true)} className='mt-2 px-3 py-1 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition duration-150'>
-                                            + Agregar profesional
+                                            }}
+                                            className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                if (newPro.trim()) {
+                                                    setPro(user.clinicId, newPro.trim()).then(() => {
+                                                        getClinicData(user.clinicId, 'pros').then((result) => { if (result) setPros(result); });
+                                                        setNewPro('');
+                                                    });
+                                                }
+                                            }}
+                                            className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap"
+                                        >
+                                            + Agregar
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
                             )}
                             {selectedField === 'insurances' && (
