@@ -336,7 +336,7 @@ export default function Page() {
                             )}
                         </div>
                     </div>
-                    <div className='ml-56 text-black pt-4 overflow-y-auto flex-1 pb-8 config-scroll'>
+                    <div className='ml-56 text-black pt-4 overflow-y-auto flex-1 pb-16 config-scroll'>
                             {selectedField === 'profile' && (
                                 <div className="max-w-lg">
                                     <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>

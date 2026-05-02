@@ -79,7 +79,7 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
     if (!insurances) return null;
 
     return (
-        <div className="max-w-lg overflow-y-auto">
+        <div className="max-w-lg pb-4">
             <h1 className="text-base font-bold tracking-wide mb-3">Obras Sociales</h1>
 
             <div className="flex flex-col gap-2 mb-4">
