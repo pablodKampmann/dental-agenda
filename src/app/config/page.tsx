@@ -25,6 +25,10 @@ import { updateUserPassword } from "../../components/config/updateUserPassword";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { setClinicInfoChanges } from "../../components/config/setClinicInfoChanges";
 
+import { setPro } from "../../components/config/setPro";
+import { updatePro } from "../../components/config/updatePro";
+import { deletePro } from "../../components/config/deletePro";
+
 export default function Page() {
     const router = useRouter()
     const [userUid, setUserUid] = useState<string>('');
@@ -50,6 +54,9 @@ export default function Page() {
     const [currentPassword, setCurrentPassword] = useState<string>('');
     const [newPassword, setNewPassword] = useState<string>('');
     const [scheduleChanges, setScheduleChanges] = useState<{ initial: string, final: string }>({ initial: '', final: '' });
+
+    const [newPro, setNewPro] = useState<string>('');
+    const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
 
     //CHECK IF THE USER IS LOGGED IN && GET USER
     useEffect(() => {
@@ -85,24 +92,24 @@ export default function Page() {
 
     //FUNCTIONS GETS    
 
-   async function handleGetClinicConfig() {
-    setSelectedField('clinicConfig');
-    if (!clinicInfo) {
-        setLoadingGet(true);
-        const result = await getClinicData(user.clinicId, 'info');
+    async function handleGetClinicConfig() {
+        setSelectedField('clinicConfig');
+        if (!clinicInfo) {
+            setLoadingGet(true);
+            const result = await getClinicData(user.clinicId, 'info');
 
-        if (result !== null) {
-            result.initialSchedule =
-                typeof result.initialSchedule === 'object'
-                    ? result.initialSchedule?.final ?? ''
-                    : result.initialSchedule ?? '';
+            if (result !== null) {
+                result.initialSchedule =
+                    typeof result.initialSchedule === 'object'
+                        ? result.initialSchedule?.final ?? ''
+                        : result.initialSchedule ?? '';
 
-            setClinicInfo(result);
-            console.log('clinicInfo result:', result);
-            setLoadingGet(false);
+                setClinicInfo(result);
+                console.log('clinicInfo result:', result);
+                setLoadingGet(false);
+            }
         }
     }
-}
 
     async function handleGetPros() {
         setSelectedField('pros');
@@ -304,7 +311,7 @@ export default function Page() {
         }
     }
 
-   console.log('scheduleChanges value:', scheduleChanges);
+    console.log('scheduleChanges value:', scheduleChanges);
     return (
         <div className=' h-screen overflow-y-hidden flex-1 ' >
             {isLoad ? (
@@ -502,17 +509,99 @@ export default function Page() {
                                 </div>
                             )}
                             {selectedField === 'pros' && loadingGet === false && pros && (
-                                <div className='text-sm'>
-                                    <h1 className=' text-base font-bold tracking-wide'>Lista de profesionales:</h1>
-                                    {pros.map((professional, index) => (
-                                        <div key={index} className='my-2 py-1 px-1 cursor-pointer transition duration-150 border-2 border-transparent group hover:border-black rounded-lg border-dashed w-fit flex'>
-                                            Nombre Completo:
-                                            <span className='ml-1 font-semibold flex justify-center items-center'>
-                                                {professional}
-                                                <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} />
-                                            </span>
-                                        </div>
-                                    ))}
+                                <div className="max-w-lg">
+                                    <h1 className="text-base font-bold tracking-wide mb-3">Lista de profesionales:</h1>
+
+                                    <div className="flex flex-col gap-2 mb-4">
+                                        {pros.map((professional) => (
+                                            <div key={professional.key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                                                <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
+                                                    {editRow === professional.key ? (
+                                                        <div className="flex items-center gap-2 flex-1">
+                                                            <input
+                                                                autoFocus
+                                                                defaultValue={professional.nameComplete}
+                                                                onChange={(e) => setChanges(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Escape') reset();
+                                                                    else if (e.key === 'Enter' && changes) {
+                                                                        updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                            setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                            reset();
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                                                            />
+                                                            <FaCircleXmark onClick={() => reset()} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
+                                                            <FaCircleCheck onClick={() => {
+                                                                if (changes) {
+                                                                    updatePro(user.clinicId, professional.key, changes).then(() => {
+                                                                        setPros(pros.map(p => p.key === professional.key ? { ...p, nameComplete: changes } : p));
+                                                                        reset();
+                                                                    });
+                                                                }
+                                                            }} className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-sm font-semibold text-black">{professional.nameComplete}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                {confirmDeletePro === professional.key ? (
+                                                                    <div className="flex items-center gap-2 text-xs">
+                                                                        <span className="text-red-600 font-semibold">¿Borrar?</span>
+                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">Sí</button>
+                                                                        <button onClick={() => setConfirmDeletePro(null)} className="text-gray-500 hover:underline">No</button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <button onClick={() => setEditRow(professional.key)} className="text-gray-400 hover:text-teal-700 transition duration-150">
+                                                                            <TbPencilCog size={18} />
+                                                                        </button>
+                                                                        <button onClick={() => setConfirmDeletePro(professional.key)} className="text-gray-400 hover:text-red-600 transition duration-150">
+                                                                            <FaCircleXmark size={18} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Nombre completo..."
+                                            value={newPro}
+                                            onChange={(e) => setNewPro(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && newPro.trim()) {
+                                                    e.preventDefault();
+                                                    setPro(user.clinicId, newPro.trim()).then(() => {
+                                                        getClinicData(user.clinicId, 'pros').then((result) => { if (result) setPros(result); });
+                                                        setNewPro('');
+                                                    });
+                                                }
+                                            }}
+                                            className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                if (newPro.trim()) {
+                                                    setPro(user.clinicId, newPro.trim()).then(() => {
+                                                        getClinicData(user.clinicId, 'pros').then((result) => { if (result) setPros(result); });
+                                                        setNewPro('');
+                                                    });
+                                                }
+                                            }}
+                                            className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap"
+                                        >
+                                            + Agregar
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                             {selectedField === 'insurances' && (
@@ -554,7 +643,7 @@ export default function Page() {
                                             <span className='ml-1 font-semibold flex justify-center items-center'>{clinicInfo.address} <TbPencilCog className="ml-4 transition duration-150 group-hover:text-black text-transparent" size={20} /></span>
                                         )}
                                     </div>
-                                    <div onClick={() => { setChanges(null);  setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className={`${editRow === 'schedule' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Horarios de atención:
+                                    <div onClick={() => { setChanges(null); setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className={`${editRow === 'schedule' ? 'border-emerald-500' : 'hover:border-black border-transparent'} my-2 py-1 px-1 cursor-pointer transition duration-75 border-2 group rounded-lg border-dashed w-fit flex`}>Horarios de atención:
                                         {editRow === 'schedule' ? (
                                             <div className='flex justify-center items-center'>
                                                 <input onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} onChange={(e) => setScheduleChanges(prev => ({ ...prev, initial: e.target.value }))} autoFocus defaultValue={clinicInfo.initialSchedule} placeholder='inicio' className='focus:outline-none bg-gray-400 bg-opacity-30 mx-2 rounded-lg px-1 font-semibold w-16' />
