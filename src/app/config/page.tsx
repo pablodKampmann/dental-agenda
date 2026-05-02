@@ -308,12 +308,12 @@ export default function Page() {
     }
 
     return (
-        <div className=' h-screen overflow-y-hidden flex-1 ' >
+        <div className='h-screen flex flex-col overflow-hidden flex-1'>
             {isLoad ? (
                 <Loading />
             ) : (
-                <div className=' h-screen'>
-                    <div className=' bg-white w-full h-fit relative  text-black'>
+                <>
+                    <div className='bg-white w-full relative text-black flex-shrink-0'>
                         {loadingGet ? (
                             <h1 className='bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold  '><span className='bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1'>{user.displayName}</span> <ScaleLoader margin={3} className='ml-4' color="white" width={2} height={26} speedMultiplier={1.4} /></h1>
                         ) : (
@@ -335,7 +335,8 @@ export default function Page() {
                                 <div className='absolute top-[47px] left-[48px] justify-center flex group-hover:opacity-100 opacity-0'><RxUpdate className="cursor-pointer text-white text-opacity-40" size={64} /></div>
                             )}
                         </div>
-                        <div className='ml-56 mt-4'>
+                    </div>
+                    <div className='ml-56 text-black pt-4 overflow-y-auto flex-1 pb-8 config-scroll'>
                             {selectedField === 'profile' && (
                                 <div className="max-w-lg">
                                     <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>
@@ -688,12 +689,9 @@ export default function Page() {
                                 </div>
                             )}
                         </div>
-
-                    </div >
-                </div >
-            )
-            }
-        </div >
+                </>
+            )}
+        </div>
     )
 }
 
