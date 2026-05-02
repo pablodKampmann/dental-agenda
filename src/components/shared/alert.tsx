@@ -2,8 +2,8 @@
 import { FaRunning } from 'react-icons/fa';
 import { deletePatient } from "@/services/patients/deletePatient";
 import { ClipLoader } from "react-spinners";
-import React, { useState } from 'react';
-import { deleteAppointment } from "../appointments/deleteAppointment";
+import { useState } from 'react';
+import { deleteAppointment } from "@/services/appointments/deleteAppointment";
 import { FaUser } from "react-icons/fa";
 import { IoTimeSharp, IoLogoUsd } from "react-icons/io5";
 import { AiFillPushpin } from "react-icons/ai";
