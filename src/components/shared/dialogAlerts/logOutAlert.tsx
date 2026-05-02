@@ -21,9 +21,9 @@ export function LogOutAlert({ open, setOpen }: props) {
   async function handleLogOut() {
     const result = await logOut();
     if (result === null) {
-      console.log("Error al cerrar sesi¾n");
+      console.log("Error al cerrar sesión");
     } else {
-      console.log("Sesi¾n cerrada exitosamente");
+      console.log("Sesión cerrada exitosamente");
     }
   }
 
@@ -32,9 +32,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 w-[80%] rounded-xl border-red-950">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative ">┐Estßs seguro(a) de que deseas cerrar sesi¾n?</AlertDialogTitle>
+            <AlertDialogTitle className="relative ">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
             <AlertDialogDescription className=" pl-2">
-              Deberßs volver a ingresar tus credenciales para acceder nuevamente.
+              Deberás volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -49,9 +49,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 border-black">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative">┐Estßs seguro(a) de que deseas cerrar sesi¾n?</AlertDialogTitle>
+            <AlertDialogTitle className="relative">¿Estás seguro(a) de que deseas cerrar sesión?</AlertDialogTitle>
             <AlertDialogDescription className="w-[80%] pl-2">
-              Deberßs volver a ingresar tus credenciales para acceder nuevamente.
+              Deberás volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
