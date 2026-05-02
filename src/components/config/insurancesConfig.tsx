@@ -6,7 +6,6 @@ import { addInsurance } from "../options/addInsurance";
 import { addInsurancePlan } from "../options/addInsurancePlan";
 import { deleteInsurance } from "../options/deleteInsurance";
 import { deleteInsurancePlan } from "../options/deleteInsurancePlan";
-import { MoonLoader } from "react-spinners";
 import { FaCircleXmark } from "react-icons/fa6";
 import { IoChevronDownOutline, IoChevronUpOutline } from "react-icons/io5";
 
@@ -15,10 +14,9 @@ interface PlanOption { id: string; name: string; }
 
 const INPUT_CLS = "border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full";
 
-export function InsurancesConfig() {
+export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean) => void }) {
     const [insurances, setInsurances] = useState<InsuranceOption[] | null>(null);
     const [plans, setPlans] = useState<Record<string, PlanOption[]>>({});
-    const [loadingPlans, setLoadingPlans] = useState<Record<string, boolean>>({});
     const [expanded, setExpanded] = useState<string | null>(null);
 
     const [newInsuranceName, setNewInsuranceName] = useState("");
@@ -31,7 +29,8 @@ export function InsurancesConfig() {
     const [confirmDeletePlan, setConfirmDeletePlan] = useState<Record<string, string | null>>({});
 
     useEffect(() => {
-        getInsuranceOptions().then(opts => setInsurances(opts ?? []));
+        setLoadingGet(true);
+        getInsuranceOptions().then(opts => { setInsurances(opts ?? []); setLoadingGet(false); });
     }, []);
 
     async function toggleExpand(id: string) {
@@ -78,7 +77,7 @@ export function InsurancesConfig() {
     }
 
     if (!insurances) {
-        return <div className="flex justify-center mt-8"><MoonLoader size={28} color="#0f766e" /></div>;
+        return <div className="flex justify-center mt-8"><ScaleLoader color="#0f766e" height={24} width={2} margin={2} speedMultiplier={1.4} /></div>;
     }
 console.log('insurances:', insurances);
     return (
@@ -112,7 +111,7 @@ console.log('insurances:', insurances);
                         {expanded === ins.id && (
                             <div className="px-4 py-3 border-t border-gray-200 bg-white">
                                 {loadingPlans[ins.id] ? (
-                                    <div className="flex justify-center py-2"><MoonLoader size={18} color="#0f766e" /></div>
+                                    <div className="flex justify-center py-2"><ScaleLoader color="#0f766e" height={16} width={2} margin={2} speedMultiplier={1.4} /></div>
                                 ) : (
                                     <>
                                         {(plans[ins.id] ?? []).length === 0 ? (
