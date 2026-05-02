@@ -599,7 +599,7 @@ export default function Page() {
                                 </div>
                             )}
                             {selectedField === 'insurances' && (
-                                <InsurancesConfig />
+                                <InsurancesConfig setLoadingGet={setLoadingGet} />
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className="max-w-lg">

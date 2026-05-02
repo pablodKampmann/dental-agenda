@@ -37,10 +37,10 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
         if (expanded === id) { setExpanded(null); return; }
         setExpanded(id);
         if (!plans[id]) {
-            setLoadingPlans(prev => ({ ...prev, [id]: true }));
+            setLoadingGet(true);
             const result = await getInsurancePlans(id);
             setPlans(prev => ({ ...prev, [id]: result ?? [] }));
-            setLoadingPlans(prev => ({ ...prev, [id]: false }));
+            setLoadingGet(false);
         }
     }
 
@@ -76,10 +76,8 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
         if (ok) setPlans(prev => ({ ...prev, [insuranceId]: prev[insuranceId].filter(p => p.id !== planId) }));
     }
 
-    if (!insurances) {
-        return <div className="flex justify-center mt-8"><ScaleLoader color="#0f766e" height={24} width={2} margin={2} speedMultiplier={1.4} /></div>;
-    }
-console.log('insurances:', insurances);
+    if (!insurances) return null;
+
     return (
         <div className="max-w-lg">
             <h1 className="text-base font-bold tracking-wide mb-3">Obras Sociales</h1>
@@ -110,51 +108,45 @@ console.log('insurances:', insurances);
 
                         {expanded === ins.id && (
                             <div className="px-4 py-3 border-t border-gray-200 bg-white">
-                                {loadingPlans[ins.id] ? (
-                                    <div className="flex justify-center py-2"><ScaleLoader color="#0f766e" height={16} width={2} margin={2} speedMultiplier={1.4} /></div>
+                                {(plans[ins.id] ?? []).length === 0 ? (
+                                    <p className="text-xs text-gray-400 mb-2">Sin planes cargados.</p>
                                 ) : (
-                                    <>
-                                        {(plans[ins.id] ?? []).length === 0 ? (
-                                            <p className="text-xs text-gray-400 mb-2">Sin planes cargados.</p>
-                                        ) : (
-                                            <div className="flex flex-col gap-1 mb-3">
-                                                {plans[ins.id].map((p) => (
-                                                    <div key={p.id} className="flex items-center justify-between py-0.5 px-2 rounded-lg hover:bg-gray-100 group">
-                                                        <span className="text-sm text-black">{p.name}</span>
-                                                        {confirmDeletePlan[ins.id] === p.id ? (
-                                                            <div className="flex items-center gap-1.5 text-xs">
-                                                                <span className="text-red-600 font-semibold">¿Borrar?</span>
-                                                                <button onClick={() => { setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null })); handleDeletePlan(ins.id, p.id); }} className="text-red-600 font-bold hover:underline">Sí</button>
-                                                                <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null }))} className="text-gray-500 hover:underline">No</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: p.id }))} className="text-gray-300 group-hover:text-red-500 transition duration-150">
-                                                                <FaCircleXmark size={15} />
-                                                            </button>
-                                                        )}
+                                    <div className="flex flex-col gap-1 mb-3">
+                                        {plans[ins.id].map((p) => (
+                                            <div key={p.id} className="flex items-center justify-between py-0.5 px-2 rounded-lg hover:bg-gray-100 group">
+                                                <span className="text-sm text-black">{p.name}</span>
+                                                {confirmDeletePlan[ins.id] === p.id ? (
+                                                    <div className="flex items-center gap-1.5 text-xs">
+                                                        <span className="text-red-600 font-semibold">¿Borrar?</span>
+                                                        <button onClick={() => { setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null })); handleDeletePlan(ins.id, p.id); }} className="text-red-600 font-bold hover:underline">Sí</button>
+                                                        <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null }))} className="text-gray-500 hover:underline">No</button>
                                                     </div>
-                                                ))}
+                                                ) : (
+                                                    <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: p.id }))} className="text-gray-300 group-hover:text-red-500 transition duration-150">
+                                                        <FaCircleXmark size={15} />
+                                                    </button>
+                                                )}
                                             </div>
-                                        )}
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Nuevo plan..."
-                                                value={newPlanName[ins.id] ?? ""}
-                                                onChange={(e) => setNewPlanName(prev => ({ ...prev, [ins.id]: e.target.value }))}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPlan(ins.id); } }}
-                                                className={INPUT_CLS}
-                                            />
-                                            <button
-                                                onClick={() => handleAddPlan(ins.id)}
-                                                disabled={addingPlan[ins.id]}
-                                                className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap disabled:opacity-50"
-                                            >
-                                                + Agregar
-                                            </button>
-                                        </div>
-                                    </>
+                                        ))}
+                                    </div>
                                 )}
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Nuevo plan..."
+                                        value={newPlanName[ins.id] ?? ""}
+                                        onChange={(e) => setNewPlanName(prev => ({ ...prev, [ins.id]: e.target.value }))}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPlan(ins.id); } }}
+                                        className={INPUT_CLS}
+                                    />
+                                    <button
+                                        onClick={() => handleAddPlan(ins.id)}
+                                        disabled={addingPlan[ins.id]}
+                                        className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap disabled:opacity-50"
+                                    >
+                                        + Agregar
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
