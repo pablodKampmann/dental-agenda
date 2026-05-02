@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+import { db } from "@/lib/firebase";
 import { ref, update } from "firebase/database";
 
 export async function updatePro(clinicId: string, key: string, nameComplete: string) {

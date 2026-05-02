@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+import { db } from "@/lib/firebase";
 import { ref, get, remove } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 

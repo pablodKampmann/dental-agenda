@@ -13,7 +13,7 @@ import { ModalCreatePatient } from './../components/patients/ui/modalCreatePatie
 import { SheetCreatePatient } from './../components/patients/ui/createPatient/sheetCreatePatient';
 import { useMediaQuery } from './../hooks/useMediaQuery';
 import { useRouter } from 'next/navigation';
-import { auth } from './firebase';
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { BiRightArrow, BiLeftArrow, BiSolidBookAdd, BiSolidBellRing } from 'react-icons/bi';
 import { MdUpdate, MdDeleteForever } from 'react-icons/md';
@@ -34,7 +34,7 @@ import { AppointmentsTable } from '@/components/appointments/ui/AppointmentsTabl
 import { AddAppointmentForm } from '@/components/appointments/ui/AddAppointmentForm';
 import { RemainingAppointments } from '@/components/appointments/ui/RemainingAppointments';
 
-export type { dateData } from '@/services/appointments/appointmentUtils';
+export type { dateData } from '@/components/appointments/appointmentUtils';
 
 interface CustomDayjs extends Dayjs {
   $d: Date;

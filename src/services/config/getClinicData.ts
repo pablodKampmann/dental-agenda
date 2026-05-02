@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+import { db } from "@/lib/firebase";
 import { get, ref } from "firebase/database";
 
 export async function getClinicData(clinicId: string, table: string) {

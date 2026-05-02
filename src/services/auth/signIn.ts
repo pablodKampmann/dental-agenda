@@ -1,4 +1,4 @@
-import { db, auth } from "./../../app/firebase";
+import { db, auth } from "@/lib/firebase";
 import { get, ref } from "firebase/database";
 import { signInWithEmailAndPassword } from "firebase/auth";
 

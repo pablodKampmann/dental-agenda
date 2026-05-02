@@ -3,7 +3,7 @@ import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePa
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "./../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Loading } from "./../../components/general/loading";
 import { getChapter } from "./../../services/practices/getChapter";

@@ -1,6 +1,6 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { get, ref } from "firebase/database";
-import { db, auth } from "./../../app/firebase";
+import { db, auth } from "@/lib/firebase";
 
 export async function getUser(getOnlyClinicId: boolean) {
     return new Promise((resolve, reject) => {

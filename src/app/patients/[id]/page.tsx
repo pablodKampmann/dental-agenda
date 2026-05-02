@@ -7,7 +7,7 @@ import { BsFillPhoneFill} from 'react-icons/bs';
 import { updatePatient } from "./../../../services/patients/updatePatient";
 import { BiPlusMedical } from 'react-icons/bi';
 import { Alert } from "./../../../components/general/alert";
-import { auth } from "../../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'

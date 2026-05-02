@@ -1,4 +1,4 @@
-import { db } from "../../app/firebase";
+import { db } from "@/lib/firebase";
 import { ref, update, get } from "firebase/database";
 
 export async function setClinicInfoChanges(clinicId: string, field: string, value: string) {

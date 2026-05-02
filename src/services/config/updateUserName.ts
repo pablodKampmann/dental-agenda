@@ -1,4 +1,4 @@
-import { db } from "./../../app/firebase";
+import { db } from "@/lib/firebase";
 import { ref, get, update } from "firebase/database";
 
 export async function updateUserName(newUserName: string, uid: string): Promise<'ok' | 'already-in-use' | 'error'> {

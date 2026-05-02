@@ -1,4 +1,4 @@
-﻿import { db } from "./../../../app/firebase";
+﻿import { db } from "@/lib/firebase";
 import { get, ref, query, orderByChild, limitToLast } from "firebase/database";
 
 export async function getPatients(quantity: number, clinicId: string) {

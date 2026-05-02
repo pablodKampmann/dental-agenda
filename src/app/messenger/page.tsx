@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react';
-import { auth } from "../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Loading } from "./../../components/general/loading";
 // import { BsChatSquareText } from "react-icons/bs";

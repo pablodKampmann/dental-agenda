@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { Loading } from "../../components/general/loading";
 import { useRouter } from 'next/navigation'
-import { auth } from "../firebase";
+import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getUser } from "../../services/auth/getUser";
 import { MdVisibilityOff } from "react-icons/md";

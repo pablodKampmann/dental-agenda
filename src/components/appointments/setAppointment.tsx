@@ -1,4 +1,4 @@
-﻿import { db } from "../../app/firebase";
+﻿import { db } from "@/lib/firebase";
 import { ref, set, get, push } from "firebase/database";
 import { dateData } from "./../../app/page";
 import { getUser } from "./../auth/getUser";
