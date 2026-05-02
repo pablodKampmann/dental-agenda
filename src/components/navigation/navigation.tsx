@@ -1,9 +1,9 @@
 'use client'
 
-import { useMediaQuery } from "./../../../hooks/useMediaQuery";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { DesktopVersion } from "./desktopVersion";
 import { MobileVersion } from "./mobileVersion";
-import { LogOutAlert } from '../dialogAlerts/logOutAlert';
+import { LogOutAlert } from '../shared/dialogAlerts/logOutAlert';
 import React, { useState, useEffect } from 'react';
 
 export function Navigation() {

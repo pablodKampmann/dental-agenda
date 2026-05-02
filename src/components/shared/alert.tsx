@@ -1,14 +1,14 @@
 ﻿import { MdPersonRemoveAlt1 } from 'react-icons/md';
 import { FaRunning } from 'react-icons/fa';
-import { deletePatient } from "../patients/db/deletePatient";
+import { deletePatient } from "@/services/patients/deletePatient";
 import { ClipLoader } from "react-spinners";
 import React, { useState } from 'react';
 import { deleteAppointment } from "../appointments/deleteAppointment";
 import { FaUser } from "react-icons/fa";
 import { IoTimeSharp, IoLogoUsd } from "react-icons/io5";
 import { AiFillPushpin } from "react-icons/ai";
-import { deletePractice } from "../practices/deletePractice";
-import { logOut } from "../auth/logOut";
+import { deletePractice } from "@/services/practices/deletePractice";
+import { logOut } from "@/services/auth/logOut";
 interface ModalSettProps {
     onCloseAlert?: () => void;
     onSuccess?: () => void;

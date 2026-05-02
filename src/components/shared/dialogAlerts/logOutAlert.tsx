@@ -1,4 +1,4 @@
-import {
+Ôªøimport {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/shared/ui/alert-dialog"
-import { logOut } from "../../auth/logOut";
+import { logOut } from "@/services/auth/logOut";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 interface props {
   open: boolean;
@@ -21,9 +21,9 @@ export function LogOutAlert({ open, setOpen }: props) {
   async function handleLogOut() {
     const result = await logOut();
     if (result === null) {
-      console.log("Error al cerrar sesiÛn");
+      console.log("Error al cerrar sesi¬æn");
     } else {
-      console.log("SesiÛn cerrada exitosamente");
+      console.log("Sesi¬æn cerrada exitosamente");
     }
   }
 
@@ -32,9 +32,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 w-[80%] rounded-xl border-red-950">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative ">øEst·s seguro(a) de que deseas cerrar sesiÛn?</AlertDialogTitle>
+            <AlertDialogTitle className="relative ">‚îêEst√üs seguro(a) de que deseas cerrar sesi¬æn?</AlertDialogTitle>
             <AlertDialogDescription className=" pl-2">
-              Deber·s volver a ingresar tus credenciales para acceder nuevamente.
+              Deber√üs volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -49,9 +49,9 @@ export function LogOutAlert({ open, setOpen }: props) {
       <AlertDialog open={open}>
         <AlertDialogContent className="text-black border-2 border-black">
           <AlertDialogHeader>
-            <AlertDialogTitle className="relative">øEst·s seguro(a) de que deseas cerrar sesiÛn?</AlertDialogTitle>
+            <AlertDialogTitle className="relative">‚îêEst√üs seguro(a) de que deseas cerrar sesi¬æn?</AlertDialogTitle>
             <AlertDialogDescription className="w-[80%] pl-2">
-              Deber·s volver a ingresar tus credenciales para acceder nuevamente.
+              Deber√üs volver a ingresar tus credenciales para acceder nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -7,9 +7,9 @@ import { IoLogOutSharp, IoSettingsOutline } from 'react-icons/io5';
 import { IoMdArrowDropdown, IoMdArrowDropup, IoLogoWhatsapp } from 'react-icons/io';
 import { MdNotificationsNone } from 'react-icons/md';
 import { RiUserSettingsFill } from 'react-icons/ri';
-import { useCheckRoutine } from "../../../hooks/useCheckRoutine";
-import { useReloadPhotoURL } from "../../../hooks/useReloadPhotoURL";
-import { useOutsideClick } from './../../../hooks/useOutsideClick'; // Ruta correcta a tu hook personalizado
+import { useCheckRoutine } from "../../hooks/useCheckRoutine";
+import { useReloadPhotoURL } from "../../hooks/useReloadPhotoURL";
+import { useOutsideClick } from '../../hooks/useOutsideClick'; // Ruta correcta a tu hook personalizado
 import { BsCalendar2WeekFill } from "react-icons/bs";
 import { BsArrowBarRight, BsArrowBarLeft } from "react-icons/bs";
 

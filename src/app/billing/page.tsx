@@ -1,4 +1,4 @@
-"use client";
+Ôªø"use client";
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
@@ -283,9 +283,9 @@ export default function Page() {
                   updatePractices();
                   setShowResult("good-delete-practice");
                 }}
-                action={"Eliminar Pr·ctica"}
+                action={"Eliminar Pr√üctica"}
                 firstProp={
-                  "øEst·s seguro/a de que deseas eliminar esta pr·ctica?"
+                  "‚îêEst√üs seguro/a de que deseas eliminar esta pr√üctica?"
                 }
                 secondProp={practiceName}
                 thirdProp={price}
@@ -307,17 +307,17 @@ export default function Page() {
                   <option value={"CONSULTAS"}>CONSULTAS</option>
                   <option value={"OPERATORIA DENTAL"}>OPERATORIA DENTAL</option>
                   <option value={"ENDODONCIA"}>ENDODONCIA</option>
-                  <option value={"PR”TESIS"}>PR”TESIS</option>
-                  <option value={"ODONTOLOGÕA PREVENTIVA"}>
-                    ODONTOLOGÕA PREVENTIVA
+                  <option value={"PR√ãTESIS"}>PR√ãTESIS</option>
+                  <option value={"ODONTOLOG‚ïêA PREVENTIVA"}>
+                    ODONTOLOG‚ïêA PREVENTIVA
                   </option>
                   <option value={"ORTODONCIA Y ORTOPEDIA FUNCIONAL"}>
                     ORTODONCIA Y ORTOPEDIA FUNCIONAL
                   </option>
-                  <option value={"ODONTOPEDIATRÕA"}>ODONTOPEDIATRÕA</option>
+                  <option value={"ODONTOPEDIATR‚ïêA"}>ODONTOPEDIATR‚ïêA</option>
                   <option value={"PERIODONCIA"}>PERIODONCIA</option>
-                  <option value={"RADIOLOGÕA"}>RADIOLOGÕA</option>
-                  <option value={"CIRUGÕA"}>CIRUGÕA</option>
+                  <option value={"RADIOLOG‚ïêA"}>RADIOLOG‚ïêA</option>
+                  <option value={"CIRUG‚ïêA"}>CIRUG‚ïêA</option>
                 </select>
                 {isLoadData && <ClipLoader className="ml-4" />}
               </div>
@@ -340,7 +340,7 @@ export default function Page() {
                 ) : (
                   <div className="flex justify-center items-center">
                     <HiFolderAdd className="mr-2" size={28} />
-                    Agregar Pr·ctica
+                    Agregar Pr√üctica
                   </div>
                 )}
               </button>
@@ -359,7 +359,7 @@ export default function Page() {
                   <h1>
                     Aranceles{" "}
                     <span className=" text-white font-black text-xl">
-                      (CapÌtulo {chapterNum})
+                      (Cap√ùtulo {chapterNum})
                     </span>
                   </h1>
                   {showResult === "good-practice" && (
@@ -367,7 +367,7 @@ export default function Page() {
                       <div className="flex justify-start items-center">
                         <BsClipboardCheck className="text-black" size={26} />
                         <p className="ml-2 text-black font-semibold text-lg select-none">
-                          Pr·ctica agregada exitosamente
+                          Pr√üctica agregada exitosamente
                         </p>
                       </div>
                     </div>
@@ -377,7 +377,7 @@ export default function Page() {
                       <div className="flex justify-start items-center">
                         <TiDocumentDelete className="text-black" size={28} />
                         <p className="ml-1 text-black font-semibold text-lg select-none">
-                          La pr·ctica a sido eliminada
+                          La pr√üctica a sido eliminada
                         </p>
                       </div>
                     </div>
@@ -397,7 +397,7 @@ export default function Page() {
                       <div className="flex justify-start items-center">
                         <RiAlertFill className="text-black" size={24} />
                         <p className="ml-1 text-black font-semibold text-lg select-none">
-                          No tienes practÌcas cargadas
+                          No tienes pract√ùcas cargadas
                         </p>
                       </div>
                     </div>
@@ -416,9 +416,9 @@ export default function Page() {
                 <table className="w-full select-none  ">
                   <thead>
                     <tr className="border-b-2 border-gray-600 bg-white select-none text-left text-xs font-semibold uppercase tracking-widest text-black">
-                      <th className="flex justify-center py-3">N˙mero</th>
+                      <th className="flex justify-center py-3">N¬∑mero</th>
                       <th className="pl-2 border-r-2 border-l-2 border-gray-600 ">
-                        Nombre de Pr·ctica
+                        Nombre de Pr√üctica
                       </th>
                       <th className="pl-5 py-3 w-56">Precio</th>
                       <th className=" px-1 border-l-2 border-gray-600 py-3">
@@ -525,7 +525,7 @@ export default function Page() {
                     <div className="w-full border-2 border-gray-600 relative  bg-gray-300 bg-opacity-30 shadow-lg rounded-lg ">
                       <div className="flex-col items-center ">
                         <h1 className="bg-teal-600 rounded-t-md py-1 px-2 text-center text-3xl select-none font-medium border-b-2 border-gray-600">
-                          Agregar Pr·ctica
+                          Agregar Pr√üctica
                         </h1>
                         <div className="flex py-4 px-4">
                           <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">
@@ -533,7 +533,7 @@ export default function Page() {
                           </div>
                           <div className="block font-semibold text-xl text-black ml-3">
                             <h2 className="text-2xl font-light leading-tight select-none">
-                              CapÌtulo {chapterNum} ({chapterName})
+                              Cap√ùtulo {chapterNum} ({chapterName})
                             </h2>
                             <p className="text-sm  font-light leading-tight select-none">
                               Por favor, completa los datos del formulario.
@@ -546,7 +546,7 @@ export default function Page() {
                           <div className="flex flex-col mt-1 w-36 mx-2">
                             <div className="flex select-none">
                               <label className="text-black select-none text-lg ">
-                                N˙m.
+                                N¬∑m.
                               </label>
                               {alreadyExists && (
                                 <div className="animate-alredy-exists bg-red-500  rounded-lg px-1 text-xs text-center flex h-6 items-center">
@@ -608,7 +608,7 @@ export default function Page() {
                         <div className="flex flex-col mt-2 w-full pr-4 mx-2">
                           <div className="flex">
                             <label className="text-black select-none text-lg ml-1">
-                              Nombre de pr·ctica
+                              Nombre de pr√üctica
                             </label>
                           </div>
                           <div className="relative text-gray-400 ">
@@ -664,19 +664,19 @@ export default function Page() {
                         />
                         {percentage > 0 ? (
                           <h1 className="text-md px-1 tracking-wide mt-1 text-center">
-                            øEst·s seguro/a de que deseas aumentar un{" "}
+                            ‚îêEst√üs seguro/a de que deseas aumentar un{" "}
                             <span className="font-semibold">
                               {percentageVisible}
                             </span>{" "}
-                            el valor de todas las pr·cticas del capÌtulo?
+                            el valor de todas las pr√ücticas del cap√ùtulo?
                           </h1>
                         ) : (
                           <h1 className="text-md px-1 tracking-wide mt-1 text-center">
-                            øEst·s seguro/a de que deseas disminuir un{" "}
+                            ‚îêEst√üs seguro/a de que deseas disminuir un{" "}
                             <span className="font-semibold">
                               {percentageVisible}
                             </span>{" "}
-                            el valor de todas las pr·cticas del capÌtulo?
+                            el valor de todas las pr√ücticas del cap√ùtulo?
                           </h1>
                         )}
                         <div className="flex mt-16 text-xl font-medium w-full">
@@ -759,7 +759,7 @@ export default function Page() {
                             className="flex w-full justify-center border-b-2 border-gray-600 items-center focus:outline-none bg-transparent h-12 text-center text-lg font-medium"
                             placeholder="X%"
                             type="text"
-                            pattern="[0-9]*" // Solo permite n˙meros
+                            pattern="[0-9]*" // Solo permite n¬∑meros
                             onChange={(event) => {
                               const inputValue = event.target.value;
                               const numericValue = inputValue.replace(

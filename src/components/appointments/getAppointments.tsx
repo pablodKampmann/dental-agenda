@@ -1,6 +1,6 @@
 ﻿import { db } from "@/lib/firebase";
 import { get, ref } from "firebase/database";
-import { getUser } from "./../auth/getUser";
+import { getUser } from "@/services/auth/getUser";
 
 export async function getAppointments(date: string | null) {
     try {

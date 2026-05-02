@@ -1,4 +1,4 @@
-'use client'
+Ôªø'use client'
 
 import Image from 'next/image'
 import * as React from 'react';
@@ -322,9 +322,9 @@ export default function Page() {
                         <div className='pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none'>
                             <button onClick={() => setSelectedField('profile')} className={`${selectedField === 'profile' ? ' bg-white  duration-300' : ' hover:text-black hover:text-opacity-50'} mx-4  py-1 px-4 uppercase`}>Perfil</button>
                             <button onClick={handleGetPros} className={`${selectedField === 'pros' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Profesionales</button>
-                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>ConfiguraciÛn del Consultorio</button>
+                            <button onClick={handleGetClinicConfig} className={`${selectedField === 'clinicConfig' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Configuraci¬æn del Consultorio</button>
                             <button onClick={() => setSelectedField('insurances')} className={`${selectedField === 'insurances' ? 'bg-white duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Obras Sociales</button>
-                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>EstadÌsticas</button>
+                            <button onClick={() => setSelectedField('stats')} className={`${selectedField === 'stats' ? 'bg-white   duration-300' : 'hover:text-black hover:text-opacity-50'} mx-4 py-1 px-4 uppercase`}>Estad√ùsticas</button>
                         </div>
                         <div className='rounded-full absolute top-8 left-8 mb-8 group' onClick={() => imageInputRef.current?.click()}>
                             <input accept="image/*" onChange={(e) => handleChangePicture(e)} ref={imageInputRef} type="file" style={{ display: 'none' }} />
@@ -339,7 +339,7 @@ export default function Page() {
                     <div className='ml-56 text-black pt-4 overflow-y-auto flex-1 pb-8 config-scroll'>
                             {selectedField === 'profile' && (
                                 <div className="max-w-lg">
-                                    <h1 className="text-base font-bold tracking-wide mb-3">B·sico:</h1>
+                                    <h1 className="text-base font-bold tracking-wide mb-3">B√üsico:</h1>
                                     <div className="flex flex-col gap-2 mb-4">
                                         {/* Nombre visible */}
                                         <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
@@ -367,9 +367,9 @@ export default function Page() {
                                             <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
                                                 {editRow === 'email' ? (
                                                     <div className="flex items-center gap-2 flex-1">
-                                                        <span className="text-sm text-gray-500 flex-shrink-0">{openInputCredential ? 'ContraseÒa actual:' : 'Email:'}</span>
+                                                        <span className="text-sm text-gray-500 flex-shrink-0">{openInputCredential ? 'Contrase¬±a actual:' : 'Email:'}</span>
                                                         {openInputCredential ? (
-                                                            <input autoFocus type="password" placeholder="Confirm· con tu contraseÒa" onChange={(e) => setUserCredential(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
+                                                            <input autoFocus type="password" placeholder="Confirm√ü con tu contrase¬±a" onChange={(e) => setUserCredential(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         ) : (
                                                             <input autoFocus defaultValue={user.email} onChange={(e) => setChanges(e.target.value)} onKeyDown={(e: any) => handleKeyPress(e, 'email', changes)} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         )}
@@ -388,12 +388,12 @@ export default function Page() {
                                             </div>
                                             {showAlert === 'wrong-password' && editRow === 'email' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> ContraseÒa incorrecta.
+                                                    <RiErrorWarningLine size={14} /> Contrase¬±a incorrecta.
                                                 </div>
                                             )}
                                             {showAlert === 'invalid-email' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Email inv·lido.
+                                                    <RiErrorWarningLine size={14} /> Email inv√ülido.
                                                 </div>
                                             )}
                                         </div>
@@ -435,13 +435,13 @@ export default function Page() {
                                                 </div>
                                             )}
                                         </div>
-                                        {/* ContraseÒa */}
+                                        {/* Contrase¬±a */}
                                         <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                             <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
                                                 {editRow === 'password' ? (
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <span className="text-sm text-gray-500 flex-shrink-0">
-                                                            {passwordStep === 1 ? 'ContraseÒa actual:' : passwordStep === 2 ? 'Nueva contraseÒa:' : 'Repetir nueva:'}
+                                                            {passwordStep === 1 ? 'Contrase¬±a actual:' : passwordStep === 2 ? 'Nueva contrase¬±a:' : 'Repetir nueva:'}
                                                         </span>
                                                         <input key={passwordStep} value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); else if (e.key === 'Enter') handlePasswordStep(e); }} autoFocus type="password" className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1" />
                                                         <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
@@ -450,7 +450,7 @@ export default function Page() {
                                                 ) : (
                                                     <>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-500">ContraseÒa:</span>
+                                                            <span className="text-sm text-gray-500">Contrase¬±a:</span>
                                                             <span className="text-sm font-semibold text-black">?????????????</span>
                                                         </div>
                                                         <button onClick={() => { setEditRow('password'); setPasswordStep(1); }} className="text-gray-400 hover:text-teal-700 transition duration-150"><TbPencilCog size={18} /></button>
@@ -459,17 +459,17 @@ export default function Page() {
                                             </div>
                                             {showAlert === 'wrong-password' && editRow === 'password' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> ContraseÒa incorrecta.
+                                                    <RiErrorWarningLine size={14} /> Contrase¬±a incorrecta.
                                                 </div>
                                             )}
                                             {showAlert === 'password-too-short' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> MÌnimo 6 caracteres.
+                                                    <RiErrorWarningLine size={14} /> M√ùnimo 6 caracteres.
                                                 </div>
                                             )}
                                             {showAlert === 'password-mismatch' && (
                                                 <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                                                    <RiErrorWarningLine size={14} /> Las contraseÒas no coinciden.
+                                                    <RiErrorWarningLine size={14} /> Las contrase¬±as no coinciden.
                                                 </div>
                                             )}
                                         </div>
@@ -544,8 +544,8 @@ export default function Page() {
                                                             <div className="flex items-center gap-2">
                                                                 {confirmDeletePro === professional.key ? (
                                                                     <div className="flex items-center gap-2 text-xs">
-                                                                        <span className="text-red-600 font-semibold">øBorrar?</span>
-                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">SÌ</button>
+                                                                        <span className="text-red-600 font-semibold">‚îêBorrar?</span>
+                                                                        <button onClick={() => { setConfirmDeletePro(null); deletePro(user.clinicId, professional.key).then(() => setPros(pros.filter(p => p.key !== professional.key))); }} className="text-red-600 font-bold hover:underline">S√ù</button>
                                                                         <button onClick={() => setConfirmDeletePro(null)} className="text-gray-500 hover:underline">No</button>
                                                                     </div>
                                                                 ) : (
@@ -604,12 +604,12 @@ export default function Page() {
                             )}
                             {selectedField === 'clinicConfig' && loadingGet === false && clinicInfo && (
                                 <div className="max-w-lg">
-                                    <h1 className="text-base font-bold tracking-wide mb-3">B·sico:</h1>
+                                    <h1 className="text-base font-bold tracking-wide mb-3">B√üsico:</h1>
                                     <div className="flex flex-col gap-2 mb-4">
                                         {([
                                             { key: 'name', label: 'Nombre', value: clinicInfo.name },
-                                            { key: 'country', label: 'PaÌs', value: clinicInfo.country },
-                                            { key: 'address', label: 'DirecciÛn', value: clinicInfo.address },
+                                            { key: 'country', label: 'Pa√ùs', value: clinicInfo.country },
+                                            { key: 'address', label: 'Direcci¬æn', value: clinicInfo.address },
                                         ] as { key: string; label: string; value: string }[]).map(({ key, label, value }) => (
                                             <div key={key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                                 <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
@@ -639,7 +639,7 @@ export default function Page() {
                                                     <div className="flex items-center gap-2 flex-1">
                                                         <span className="text-sm text-gray-500 flex-shrink-0">Horarios:</span>
                                                         <input autoFocus defaultValue={clinicInfo.initialSchedule} placeholder="inicio" onChange={(e) => setScheduleChanges(prev => ({ ...prev, initial: e.target.value }))} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20" />
-                                                        <span className="text-gray-400">ó</span>
+                                                        <span className="text-gray-400">√π</span>
                                                         <input defaultValue={clinicInfo.finalSchedule} placeholder="fin" onChange={(e) => setScheduleChanges(prev => ({ ...prev, final: e.target.value }))} onKeyDown={(e: any) => { if (e.key === 'Escape') reset(); }} className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20" />
                                                         <FaCircleXmark onClick={(e: any) => handleCancelEditRow(e)} className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
                                                         <FaCircleCheck onClick={async (e: any) => { e.stopPropagation(); setLoadingGet(true); await setClinicInfoChanges(user.clinicId, 'initialSchedule', scheduleChanges.initial); await setClinicInfoChanges(user.clinicId, 'finalSchedule', scheduleChanges.final); const result = await getClinicData(user.clinicId, 'info'); if (result) setClinicInfo(result); reset(); }} className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0" size={20} />
@@ -647,8 +647,8 @@ export default function Page() {
                                                 ) : (
                                                     <>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm text-gray-500">Horarios de atenciÛn:</span>
-                                                            <span className="text-sm font-semibold text-black">{clinicInfo.initialSchedule} ó {clinicInfo.finalSchedule}</span>
+                                                            <span className="text-sm text-gray-500">Horarios de atenci¬æn:</span>
+                                                            <span className="text-sm font-semibold text-black">{clinicInfo.initialSchedule} √π {clinicInfo.finalSchedule}</span>
                                                         </div>
                                                         <button onClick={() => { setChanges(null); setEditRow('schedule'); setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule }); }} className="text-gray-400 hover:text-teal-700 transition duration-150"><TbPencilCog size={18} /></button>
                                                     </>
@@ -660,9 +660,9 @@ export default function Page() {
                                     <h1 className="text-base font-bold tracking-wide mb-3">Contacto:</h1>
                                     <div className="flex flex-col gap-2">
                                         {([
-                                            { key: 'telContact', label: 'TÈl de contacto', value: clinicInfo.telContact, saveKey: 'telContact' },
-                                            { key: 'secondTelContact', label: 'TÈl auxiliar', value: clinicInfo.secondTelContact, saveKey: 'secondTelContact' },
-                                            { key: 'clinicEmail', label: 'Correo electrÛnico', value: clinicInfo.email, saveKey: 'email' },
+                                            { key: 'telContact', label: 'T√öl de contacto', value: clinicInfo.telContact, saveKey: 'telContact' },
+                                            { key: 'secondTelContact', label: 'T√öl auxiliar', value: clinicInfo.secondTelContact, saveKey: 'secondTelContact' },
+                                            { key: 'clinicEmail', label: 'Correo electr¬ænico', value: clinicInfo.email, saveKey: 'email' },
                                         ] as { key: string; label: string; value: string; saveKey: string }[]).map(({ key, label, value, saveKey }) => (
                                             <div key={key} className="border-2 border-gray-300 rounded-xl overflow-hidden">
                                                 <div className="flex items-center justify-between px-3 py-2 bg-gray-50">

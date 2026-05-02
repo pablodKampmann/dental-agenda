@@ -1,6 +1,6 @@
 ﻿import { db } from "@/lib/firebase";
 import { ref, get, remove } from "firebase/database";
-import { getUser } from "./../auth/getUser";
+import { getUser } from "@/services/auth/getUser";
 
 export async function deleteAppointment(id: number, date: string) {
     try {
