@@ -36,6 +36,7 @@ export async function SetPatients(
             plan,
             planId,
             affiliateNum: affiliate,
+            timestamp: Date.now(),
         });
     } catch (error) {
         console.error(error);
