@@ -12,11 +12,13 @@ interface props {
     setListOfPatients: (value: any) => void;
     handleGetPatients: (quantity: number) => void;
     setIsOpenSheetCreatePatient: (value: boolean) => void;
-    clinicId: string | null; 
+    clinicId: string | null;
 }
 
 export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient, clinicId }: props) {
     const [selectedField, setSelectedField] = useState('name');
+
+    const [isSearching, setIsSearching] = useState(false);
 
     //SEARCH PATIENTS LOGIC
     useEffect(() => {
@@ -27,12 +29,18 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
         let isCancelled = false;
 
         if (searchContent.length < 1) {
-            handleGetPatients(20);
+            setIsSearching(true);
+            setIsSearching(true);
+            Promise.resolve(handleGetPatients(20)).then(() => {
+                if (!isCancelled) setIsSearching(false);
+            });
         } else {
             const searchPatients = async () => {
+                setIsSearching(true);
                 const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
                 if (!isCancelled) {
                     setListOfPatients(patientsFilter);
+                    setIsSearching(false);
                 }
             };
             searchPatients();
@@ -76,7 +84,7 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
                     <div className='h-full w-0.5 bg-gray-600'></div>
                     <button onClick={() => setSelectedField('dni')} className={`${selectedField === 'dni' ? 'bg-teal-600 text-white' : ' hover:bg-teal-800 bg-white hover:text-white  '} h-full border-y-2 border-r-2 focus:outline-none border-gray-600 transition duration-150  rounded-r-lg  md:w-16 px-2`}>DNI</button>
                 </div>
-                {(loadRow !== null || searchContent !== '') && (
+                {isSearching && (
                     <div className='ml-2 flex justify-center items-center'>
                         <ClipLoader speedMultiplier={1.7} color='black' size={30} />
                     </div>
