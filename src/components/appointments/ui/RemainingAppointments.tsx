@@ -54,7 +54,7 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
                 <div className={`flex-col ${isPast ? 'line-through' : ''}`}>
                   <p className='text-xs font-bold'>{appt.time} - {endTime}</p>
                   <p className='text-sm font-semibold'>{appt.patientData?.name} {appt.patientData?.lastName}</p>
-                  {appt.reason && <p className='text-xs text-gray-500'>{appt.reason}</p>}
+                  {appt.reason && <p className='text-xs text-gray-500'>{appt.reason?.name ?? appt.reason}</p>}
                 </div>
                 {isOngoing && (
                   <span className='text-xs font-bold text-white bg-teal-600 px-2 py-0.5 rounded-full select-none'>En transcurso</span>

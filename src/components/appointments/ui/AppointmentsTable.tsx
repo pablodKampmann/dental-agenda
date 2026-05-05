@@ -39,7 +39,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                           : timeCalc(time)
               ) : timeCalc(time);
 
-             
+
 
               if (isSecondarySlot) {
                 return (
@@ -114,7 +114,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                           {appointment.reason && (
                             <div className='flex flex-col gap-0.5'>
                               <p className='text-xs text-gray-500'>Motivo</p>
-                              <p className='text-xs font-semibold'>{appointment.reason}</p>
+                              <p className='text-xs font-semibold'>{appointment.reason?.name ?? appointment.reason}</p>
                             </div>
                           )}
                           {appointment.observations && (
