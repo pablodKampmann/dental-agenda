@@ -300,7 +300,7 @@ export default function PatientId() {
                         {/*Gender*/}
                         <EditableRow
                           label="Género"
-                          value={patient.gender}
+                          value={patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : '-'}
                           rowKey="gender"
                           category="basic"
                           rowModify={rowModify}
@@ -312,8 +312,8 @@ export default function PatientId() {
                           changes={changes}
                           renderInput={
                             <select defaultValue={patient.gender} onChange={(e) => setChanges(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitChanges(changes, 'gender', 'basic'); else if (e.key === 'Escape') setRowModify(''); }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
-                              <option value="male">Hombre</option>
-                              <option value="female">Mujer</option>
+                              <option value="male">Masculino</option>
+                              <option value="female">Femenino</option>
                             </select>
                           }
                         />
