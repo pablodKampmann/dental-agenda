@@ -27,7 +27,7 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
         let isCancelled = false;
 
         if (searchContent.length < 1) {
-            handleGetPatients(10);
+            handleGetPatients(20);
         } else {
             const searchPatients = async () => {
                 const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
