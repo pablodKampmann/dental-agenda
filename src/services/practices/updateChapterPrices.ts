@@ -20,6 +20,7 @@ export async function updateChapterPrices(updatedChapterData: any, chapter: any)
                     }
                 }
             }
+            return true;
         }
     } catch (error) {
         console.error(error);
