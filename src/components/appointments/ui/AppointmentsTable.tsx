@@ -39,6 +39,8 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                           : timeCalc(time)
               ) : timeCalc(time);
 
+
+
               if (isSecondarySlot) {
                 return (
                   <tr key={time}>
@@ -49,59 +51,78 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                 );
               }
 
+              const paddingClass = {
+                1: 'py-2',
+                2: 'py-4',
+                3: 'py-6',
+                4: 'py-8',
+                5: 'py-10',
+                6: 'py-12',
+              }[rowSpan] ?? 'py-4';
+
+              const isSelected = !!(
+                appointmentDate &&
+                appointmentDate.date === date &&
+                (appointmentDate.time === time ||
+                  appointmentDate.time2 === time ||
+                  appointmentDate.time3 === time ||
+                  appointmentDate.time4 === time ||
+                  appointmentDate.time5 === time ||
+                  appointmentDate.time6 === time)
+              );
+
               return (
                 <tr key={time}>
-                  <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
+                  <td className={`w-px whitespace-nowrap text-black select-none cursor-default align-top px-4 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
                     {time}
                   </td>
                   <td
                     rowSpan={rowSpan}
+                    style={{ minHeight: `${rowSpan * 60}px` }}
                     className={`
-                      ${appointment ? 'bg-teal-600 bg-opacity-20 pt-1 pb-1 px-2 hover:bg-opacity-70 hover:bg-teal-600' : 'p-8'}
-                      ${appointmentDate && appointmentDate.date === date &&
-                        (appointmentDate.time === time || appointmentDate.time2 === time || appointmentDate.time3 === time ||
-                          appointmentDate.time4 === time || appointmentDate.time5 === time || appointmentDate.time6 === time)
-                        ? 'animate-breathe bg-gray-400'
-                        : 'hover:bg-gray-900 hover:bg-opacity-30'
+  ${appointment
+                        ? `bg-teal-600 bg-opacity-20 hover:bg-opacity-70 hover:bg-teal-600 ${paddingClass} px-2`
+                        : isSelected ? 'slot-selected p-8' : 'p-8 hover:bg-gray-900 hover:bg-opacity-30'
                       }
                       ${index === array.length - 1 ? '' : 'border-b'}
-                      select-none w-full border-gray-600 text-center cursor-pointer items-center`}
+                      select-none border-gray-600 cursor-pointer 
+                    `}
                     onClick={(e) => onRowClick(time, e)}
                   >
                     {appointment && (
-                      <div className='flex justify-between'>
-                        <div className='flex-col'>
-                          <p className='text-left text-xs font-bold'>{time}-{endTime}</p>
-                          <div className='flex mt-2'>
-                            <p className='text-left text-sm ml-2'>Paciente:</p>
-                            <p className='text-left text-sm font-semibold ml-1'>
-                              {appointment.patientData.name}{' '}{appointment.patientData.lastName}
-                            </p>
-                          </div>
-                          <div className='flex'>
-                            <p className='text-left text-sm ml-2'>DNI:</p>
-                            <p className='text-left text-sm font-semibold ml-1'>{appointment.patientData.dni}</p>
-                          </div>
-                          <div className='flex'>
-                            <p className='text-left text-sm ml-2'>Contacto:</p>
-                            <p className='text-left text-sm font-semibold ml-1'>
-                              {appointment.patientData.num} <br /> {appointment.patientData.email}
-                            </p>
-                          </div>
+                      <div className='flex flex-col justify-between h-full px-3 py-2 gap-2'>
+                        {/* Header */}
+                        <div className='flex justify-between items-center'>
+                          <p className='text-sm font-bold'>
+                            {appointment.patientData.name} {appointment.patientData.lastName}
+                          </p>
+                          <p className='text-xs font-semibold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full'>
+                            {time} – {endTime}
+                          </p>
                         </div>
-                        <div className='mt-auto'>
-                          <div className='flex'>
-                            <p className='text-left text-sm ml-2'>Razón de turno:</p>
-                            <p className='text-left text-sm font-semibold ml-1'>{appointment.reason}</p>
+                        {/* Info */}
+                        <div className='flex gap-6 flex-wrap'>
+                          <div className='flex flex-col gap-0.5'>
+                            <p className='text-xs text-gray-500'>DNI</p>
+                            <p className='text-xs font-semibold'>{appointment.patientData.dni}</p>
                           </div>
-                          <div className='flex'>
-                            <p className='text-left text-sm ml-2'>Observaciones:</p>
-                            {appointment.observations ? (
-                              <p className='text-left text-sm font-semibold ml-1'>{appointment.observations}</p>
-                            ) : (
-                              <p className='text-left text-sm font-semibold ml-1'>Ninguna</p>
-                            )}
+                          <div className='flex flex-col gap-0.5'>
+                            <p className='text-xs text-gray-500'>Contacto</p>
+                            <p className='text-xs font-semibold'>{appointment.patientData.num}</p>
+                            <p className='text-xs font-semibold'>{appointment.patientData.email}</p>
                           </div>
+                          {appointment.reason && (
+                            <div className='flex flex-col gap-0.5'>
+                              <p className='text-xs text-gray-500'>Motivo</p>
+                              <p className='text-xs font-semibold'>{appointment.reason?.name ?? appointment.reason}</p>
+                            </div>
+                          )}
+                          {appointment.observations && (
+                            <div className='flex flex-col gap-0.5'>
+                              <p className='text-xs text-gray-500'>Observaciones</p>
+                              <p className='text-xs font-semibold'>{appointment.observations}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
