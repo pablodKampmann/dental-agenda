@@ -11,7 +11,7 @@ import {
 } from "react-icons/io";
 import { MdNotificationsNone } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
-import { useCheckRoutine } from "../../hooks/useCheckRoutine";
+import { useAuth } from "../../context/AuthContext";
 import { useReloadPhotoURL } from "../../hooks/useReloadPhotoURL";
 //import toast, { Toaster } from 'react-hot-toast';
 import { BsCalendar2WeekFill } from "react-icons/bs";
@@ -26,8 +26,8 @@ interface props {
 export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
   const pathname = usePathname();
   const [openUserMenu, setOpenUserMenu] = useState(false);
-  const data = useCheckRoutine(false);
-  const reloadImage = useReloadPhotoURL(data?.userUid);
+  const { user: data } = useAuth();
+  const reloadImage = useReloadPhotoURL(data?.userUid ?? "");
   //const notify = () => toast.success('Successfully toasted!');
 
   return (
