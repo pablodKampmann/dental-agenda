@@ -23,7 +23,7 @@ export async function changeImage(userUid: string, file: File) {
         const snapshot = await get(dbRef);
         if (snapshot) {            
             const randomString = generateRandomString();
-            set(dbRef, randomString)
+            await set(dbRef, randomString)
         }
 
 
