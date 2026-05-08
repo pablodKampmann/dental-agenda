@@ -22,10 +22,8 @@ export default function Page() {
   const [isLoad, setIsLoad] = useState(true);
   const [loading, setLoading] = useState(false);
   const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
-  const [alreadyExists, setAlreadyExists] = useState(false);
   const [chapterName, setChapterName] = useState("CONSULTAS");
   const [chapterData, setChapterData] = useState<any>(null);
-  const [chapterNum, setChapterNum] = useState<any>("");
   const [id, setId] = useState<any>(null);
   const [price, setPrice] = useState<any>(null);
   const [percentage, setPercentage] = useState<any>(null);
@@ -56,27 +54,14 @@ export default function Page() {
     updatePractices();
   }, [chapterName]);
 
-  function formattedIdFromRoman(numberInRoman: string) {
-    const romanNumeralMap: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-    let decimal = 0;
-    for (let i = 0; i < numberInRoman.length; i++) {
-      const cur = romanNumeralMap[numberInRoman[i]];
-      const next = romanNumeralMap[numberInRoman[i + 1]];
-      if (next && cur < next) { decimal += next - cur; i++; }
-      else { decimal += cur; }
-    }
-    return decimal < 10 ? `0${decimal}` : `${decimal}`;
-  }
-
   async function updatePractices() {
     setIsLoadData(true);
-    const { data, chapterNum } = await getChapter(chapterName);
+    const { data } = await getChapter(chapterName);
     if (Array.isArray(data)) {
       const filteredData = data
         .filter((item) => !Object.values(item).every((value) => value === undefined))
         .sort((a, b) => a.id && b.id ? parseInt(a.id) - parseInt(b.id) : 0);
       setChapterData(filteredData);
-      setChapterNum(chapterNum);
     }
     setIsLoadData(false);
   }
@@ -99,11 +84,6 @@ export default function Page() {
       }
     }
   }
-
-  useEffect(() => {
-    const t = setTimeout(() => setAlreadyExists(false), 6000);
-    return () => clearTimeout(t);
-  }, [alreadyExists]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowResult(null), 6000);
@@ -227,7 +207,7 @@ export default function Page() {
             <div className="flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full">
               <PracticeTable
                 chapterData={chapterData}
-                chapterNum={chapterNum}
+                chapterName={chapterName}
                 openPriceEdit={openPriceEdit}
                 newPrice={newPrice}
                 setNewPrice={setNewPrice}
@@ -243,11 +223,9 @@ export default function Page() {
                 setPracticeName={setPracticeName}
                 setPrice={setPrice}
                 formatPrice={formatPrice}
-                formattedIdFromRoman={formattedIdFromRoman}
               />
               {openCreatePractice ? (
                 <AddPracticeForm
-                  chapterNum={chapterNum}
                   chapterName={chapterName}
                   price={price}
                   setPrice={setPrice}

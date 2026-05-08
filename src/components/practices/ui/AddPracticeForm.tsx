@@ -2,7 +2,6 @@ import React from 'react';
 import { ClipLoader } from "react-spinners";
 
 interface Props {
-    chapterNum: string;
     chapterName: string;
     price: any;
     setPrice: (value: any) => void;
@@ -13,8 +12,7 @@ interface Props {
     onCancel: () => void;
 }
 
-export function AddPracticeForm({
-    chapterNum, chapterName, price, setPrice,
+export function AddPracticeForm({ chapterName, price, setPrice,
     practiceName, setPracticeName, loading, onSubmit, onCancel
 }: Props) {
     return (
@@ -28,7 +26,7 @@ export function AddPracticeForm({
                         <div className="flex py-4 px-4">
                             <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-3xl font-mono">i</div>
                             <div className="block font-semibold text-xl text-black ml-3">
-                                <h2 className="text-2xl font-light leading-tight select-none">Capítulo {chapterNum} ({chapterName})</h2>
+                                <h2 className="text-2xl font-light leading-tight select-none">{chapterName}</h2>
                                 <p className="text-sm font-light leading-tight select-none">Por favor, completa los datos del formulario.</p>
                             </div>
                         </div>

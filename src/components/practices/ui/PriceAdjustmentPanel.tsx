@@ -32,11 +32,11 @@ export function PriceAdjustmentPanel({
                         <PiSealWarningThin className="text-gray-600" size={80} />
                         {percentage > 0 ? (
                             <h1 className="text-md px-1 tracking-wide mt-1 text-center">
-                                ¿Estás seguro/a de que deseas aumentar un <span className="font-semibold">{percentageVisible}</span> el valor de todas las prácticas del capítulo?
+                                ¿Estás seguro/a de que deseas aumentar un <span className="font-semibold">{percentageVisible}</span> el valor de todas las prácticas del área?
                             </h1>
                         ) : (
                             <h1 className="text-md px-1 tracking-wide mt-1 text-center">
-                                ¿Estás seguro/a de que deseas disminuir un <span className="font-semibold">{percentageVisible}</span> el valor de todas las prácticas del capítulo?
+                                ¿Estás seguro/a de que deseas disminuir un <span className="font-semibold">{percentageVisible}</span> el valor de todas las prácticas del área?
                             </h1>
                         )}
                         <div className="flex mt-16 text-xl font-medium w-full">
