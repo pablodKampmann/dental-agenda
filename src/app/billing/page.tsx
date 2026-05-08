@@ -142,7 +142,7 @@ export default function Page() {
     setNewPrice(null);
   }
 
-  async function handleUpdatePrice(practiceId: number) {
+  async function handleUpdatePrice(practiceId: string) {
     if (newPrice !== null) {
       const priceNumber = parseFloat(newPrice.replace(/\./g, ""));
       const result = await updatePracticePrice(chapterName, practiceId, priceNumber);
@@ -153,7 +153,7 @@ export default function Page() {
     }
   }
 
-  function handleKeyPress(event: any, practiceId: number) {
+  function handleKeyPress(event: any, practiceId: string) {
     if (event.key === "Enter") { newPrice !== null ? handleUpdatePrice(practiceId) : cancelEdit(); }
     else if (event.key === "Escape") { cancelEdit(); }
   }
@@ -162,19 +162,13 @@ export default function Page() {
     e.preventDefault();
     setLoading(true);
     const priceNumber = parseFloat(price.replace(/\./g, ""));
-    const result = await setPractice(id, priceNumber, practiceName, chapterName);
+    const result = await setPractice(priceNumber, practiceName, chapterName);
     if (result !== null) {
-      if (result === "already-exists") {
-        setLoading(false);
-        setAlreadyExists(true);
-      } else {
-        setOpenCreatePractice(false);
-        setId(null);
-        setPrice(null);
-        setPracticeName(null);
-        setShowResult("good-practice");
-        updatePractices();
-      }
+      setOpenCreatePractice(false);
+      setPrice(null);
+      setPracticeName(null);
+      setShowResult("good-practice");
+      updatePractices();
     }
   }
 
@@ -255,15 +249,11 @@ export default function Page() {
                 <AddPracticeForm
                   chapterNum={chapterNum}
                   chapterName={chapterName}
-                  id={id}
-                  setId={setId}
                   price={price}
                   setPrice={setPrice}
                   practiceName={practiceName}
                   setPracticeName={setPracticeName}
                   loading={loading}
-                  alreadyExists={alreadyExists}
-                  formattedIdFromRoman={formattedIdFromRoman}
                   onSubmit={HandleSubmit}
                   onCancel={() => setOpenCreatePractice(false)}
                 />

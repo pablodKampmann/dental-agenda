@@ -2,7 +2,7 @@ import { db } from "@/lib/firebase";
 import { set, ref, get } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
-export async function updatePracticePrice(name: string, id: number, price: number) {
+export async function updatePracticePrice(name: string, id: string, price: number) {
     try {
         if (!navigator.onLine) {
             throw new Error();
