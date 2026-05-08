@@ -14,11 +14,14 @@ export async function getChapter(name: string) {
             let chapterNum: string = '';
             if (snapshot.exists()) {
                 Object.keys(snapshot.val()).forEach((key) => {
-                    data.push({
-                        id: snapshot.val()[key].id,
-                        name: snapshot.val()[key].name,
-                        price: snapshot.val()[key].price
-                    });
+                    const entry = snapshot.val()[key];
+                    if (entry && typeof entry === 'object' && entry.name !== undefined) {
+                        data.push({
+                            id: key,
+                            name: entry.name,
+                            price: entry.price
+                        });
+                    }
                 });
                 chapterNum = snapshot.val().chapterNum;
             }

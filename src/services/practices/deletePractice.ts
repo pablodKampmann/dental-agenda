@@ -2,7 +2,7 @@ import { db } from "@/lib/firebase";
 import { ref, get, remove } from "firebase/database";
 import { getUser } from "./../auth/getUser";
 
-export async function deletePractice(id: any, chapter: string) {
+export async function deletePractice(id: string, chapter: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();

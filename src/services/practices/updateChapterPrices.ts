@@ -13,8 +13,7 @@ export async function updateChapterPrices(updatedChapterData: any, chapter: any)
             if (snapshot.exists()) {
                 const snapshotVal = snapshot.val();
                 for (const key in snapshotVal) {
-                    const chapterData = snapshotVal[key];
-                    const updatedData = updatedChapterData.find((data: any) => data.id === chapterData.id);
+                    const updatedData = updatedChapterData.find((data: any) => data.id === key);
                     if (updatedData) {
                         await set(ref(db, `/clinics/${clinicId}/priceTariffs/${chapter}/${key}/price`), updatedData.price);
                     }

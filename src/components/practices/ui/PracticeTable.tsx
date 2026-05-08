@@ -18,8 +18,8 @@ interface Props {
     showResult: string | null;
     togglePriceEdit: (index: number) => void;
     cancelEdit: () => void;
-    handleUpdatePrice: (practiceId: number) => void;
-    handleKeyPress: (event: any, practiceId: number) => void;
+    handleUpdatePrice: (practiceId: string) => void;
+    handleKeyPress: (event: any, practiceId: string) => void;
     setOpenAlert: (value: string) => void;
     setId: (value: any) => void;
     setPracticeName: (value: any) => void;

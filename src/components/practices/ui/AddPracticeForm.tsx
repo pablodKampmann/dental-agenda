@@ -1,27 +1,21 @@
 import React from 'react';
 import { ClipLoader } from "react-spinners";
-import { ImCancelCircle } from "react-icons/im";
 
 interface Props {
     chapterNum: string;
     chapterName: string;
-    id: any;
-    setId: (value: any) => void;
     price: any;
     setPrice: (value: any) => void;
     practiceName: any;
     setPracticeName: (value: any) => void;
     loading: boolean;
-    alreadyExists: boolean;
-    formattedIdFromRoman: (numberInRoman: string) => string;
     onSubmit: (e: any) => void;
     onCancel: () => void;
 }
 
 export function AddPracticeForm({
-    chapterNum, chapterName, id, setId, price, setPrice,
-    practiceName, setPracticeName, loading, alreadyExists,
-    formattedIdFromRoman, onSubmit, onCancel
+    chapterNum, chapterName, price, setPrice,
+    practiceName, setPracticeName, loading, onSubmit, onCancel
 }: Props) {
     return (
         <div className="overflow-hidden">
@@ -41,25 +35,6 @@ export function AddPracticeForm({
                     </div>
                     <div className="pb-4 px-4">
                         <div className="flex justify-between">
-                            <div className="flex flex-col mt-1 w-36 mx-2">
-                                <div className="flex select-none">
-                                    <label className="text-black select-none text-lg">Núm.</label>
-                                    {alreadyExists && (
-                                        <div className="animate-alredy-exists bg-red-500 rounded-lg px-1 text-xs text-center flex h-6 items-center">Ocupado</div>
-                                    )}
-                                </div>
-                                <div className="flex justify-center items-center">
-                                    <p className="text-black bg-teal-600 rounded-l-md py-1.5 px-2 font-semibold text-lg select-none">{formattedIdFromRoman(chapterNum)}.</p>
-                                    <input
-                                        placeholder="08"
-                                        type="text"
-                                        className={`${alreadyExists ? "bg-red-500 bg-opacity-70" : "bg-white"} h-10 px-3 select-none py-2 w-16 border focus:ring-gray-500 focus:border-gray-600 text-md font-bold border-gray-300 rounded-r-md focus:outline-none text-black`}
-                                        required
-                                        value={id}
-                                        onChange={(e) => setId(e.target.value)}
-                                    />
-                                </div>
-                            </div>
                             <div className="flex flex-col mt-1 w-full mx-2">
                                 <label className="text-black select-none text-lg ml-2">Precio</label>
                                 <div className="flex justify-center items-center">
