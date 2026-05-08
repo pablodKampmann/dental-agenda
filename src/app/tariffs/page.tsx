@@ -2,8 +2,7 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "./../../context/AuthContext";
 import { Loading } from "./../../components/shared/loading";
 import { getChapter } from "./../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
@@ -19,7 +18,7 @@ import { PriceAdjustmentPanel } from "./../../components/practices/ui/PriceAdjus
 
 export default function Page() {
   const router = useRouter();
-  const [isLoad, setIsLoad] = useState(true);
+  const { loading: isLoad } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
   const [chapterName, setChapterName] = useState("CONSULTAS");
@@ -40,14 +39,6 @@ export default function Page() {
   const billingTargetRef = useRef<any>(null);
   const [openPercentageEdit, setOpenPercentageEdit] = useState("");
   const [percentageEditValue, setPercentageEditValue] = useState<any>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) { setIsLoad(false); }
-      else { router.push("/notSign"); }
-    });
-    return () => unsubscribe();
-  }, [router]);
 
   useEffect(() => {
     setOpenPriceEdit(Array(chapterData?.length).fill(false));
