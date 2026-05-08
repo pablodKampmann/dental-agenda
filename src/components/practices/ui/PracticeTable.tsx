@@ -8,8 +8,8 @@ import { TiDocumentDelete } from "react-icons/ti";
 import { RiAlertFill } from "react-icons/ri";
 
 interface Props {
+    chapterName: string;
     chapterData: any[];
-    chapterNum: string;
     openPriceEdit: boolean[];
     newPrice: any;
     setNewPrice: (value: any) => void;
@@ -25,15 +25,14 @@ interface Props {
     setPracticeName: (value: any) => void;
     setPrice: (value: any) => void;
     formatPrice: (price: number) => string;
-    formattedIdFromRoman: (numberInRoman: string) => string;
 }
 
 export function PracticeTable({
-    chapterData, chapterNum, openPriceEdit, newPrice, setNewPrice,
+    chapterData, chapterName, openPriceEdit, newPrice, setNewPrice,
     billingTagetOverflowActived, billingTargetRef, showResult,
     togglePriceEdit, cancelEdit, handleUpdatePrice, handleKeyPress,
     setOpenAlert, setId, setPracticeName, setPrice,
-    formatPrice, formattedIdFromRoman
+    formatPrice
 }: Props) {
     return (
         <div
@@ -44,7 +43,7 @@ export function PracticeTable({
                 ref={billingTargetRef}
                 className={`${billingTagetOverflowActived ? "rounded-tl-md" : "rounded-t-md"} bg-teal-600 relative text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}
             >
-                <h1>Aranceles <span className="text-white font-black text-xl">(Capítulo {chapterNum})</span></h1>
+                <h1>Aranceles <span className="text-white font-black text-xl">({chapterName})</span></h1>
                 {showResult === "good-practice" && (
                     <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right">
                         <BsClipboardCheck className="text-black" size={26} />
@@ -93,7 +92,7 @@ export function PracticeTable({
                         >
                             <td className="pl-4 px-4 whitespace-nowrap border-r-2 border-gray-600 w-16">
                                 <div className="text-center text-white items-center justify-center flex rounded-full w-fit bg-teal-600 text-sm font-semibold">
-                                    <p className="ml-1.5 mr-1.5">{formattedIdFromRoman(chapterNum)}.{practice.id}</p>
+                                    <p className="ml-1.5 mr-1.5">{practice.id}</p>
                                 </div>
                             </td>
                             <td className="px-2 py-4 whitespace-normal text-black text-sm border-r-2 border-gray-600">
