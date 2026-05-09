@@ -2,8 +2,7 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "./../../context/AuthContext";
 import { Loading } from "./../../components/shared/loading";
 import { getChapter } from "./../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
@@ -17,15 +16,19 @@ import { PracticeTable } from "./../../components/practices/ui/PracticeTable";
 import { AddPracticeForm } from "./../../components/practices/ui/AddPracticeForm";
 import { PriceAdjustmentPanel } from "./../../components/practices/ui/PriceAdjustmentPanel";
 
+const ALL_AREAS = [
+  "CONSULTAS", "OPERATORIA DENTAL", "ENDODONCIA", "PRÓTESIS",
+  "ODONTOLOGÍA PREVENTIVA", "ORTODONCIA Y ORTOPEDIA FUNCIONAL",
+  "ODONTOPEDIATRÍA", "PERIODONCIA", "RADIOLOGÍA", "CIRUGÍA",
+];
+
 export default function Page() {
   const router = useRouter();
-  const [isLoad, setIsLoad] = useState(true);
+  const { loading: isLoad } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
-  const [alreadyExists, setAlreadyExists] = useState(false);
   const [chapterName, setChapterName] = useState("CONSULTAS");
   const [chapterData, setChapterData] = useState<any>(null);
-  const [chapterNum, setChapterNum] = useState<any>("");
   const [id, setId] = useState<any>(null);
   const [price, setPrice] = useState<any>(null);
   const [percentage, setPercentage] = useState<any>(null);
@@ -42,41 +45,25 @@ export default function Page() {
   const billingTargetRef = useRef<any>(null);
   const [openPercentageEdit, setOpenPercentageEdit] = useState("");
   const [percentageEditValue, setPercentageEditValue] = useState<any>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) { setIsLoad(false); }
-      else { router.push("/notSign"); }
-    });
-    return () => unsubscribe();
-  }, [router]);
+  const [globalPercentage, setGlobalPercentage] = useState<number | null>(null);
+  const [globalPercentageVisible, setGlobalPercentageVisible] = useState<string | null>(null);
+  const [openGlobalFormPercentages, setOpenGlobalFormPercentages] = useState(false);
+  const [loadingGlobal, setLoadingGlobal] = useState(false);
+  const [globalResult, setGlobalResult] = useState<{ updated: number; areas: number; failed: string[] } | null>(null);
 
   useEffect(() => {
     setOpenPriceEdit(Array(chapterData?.length).fill(false));
     updatePractices();
   }, [chapterName]);
 
-  function formattedIdFromRoman(numberInRoman: string) {
-    const romanNumeralMap: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
-    let decimal = 0;
-    for (let i = 0; i < numberInRoman.length; i++) {
-      const cur = romanNumeralMap[numberInRoman[i]];
-      const next = romanNumeralMap[numberInRoman[i + 1]];
-      if (next && cur < next) { decimal += next - cur; i++; }
-      else { decimal += cur; }
-    }
-    return decimal < 10 ? `0${decimal}` : `${decimal}`;
-  }
-
   async function updatePractices() {
     setIsLoadData(true);
-    const { data, chapterNum } = await getChapter(chapterName);
+    const { data } = await getChapter(chapterName);
     if (Array.isArray(data)) {
       const filteredData = data
         .filter((item) => !Object.values(item).every((value) => value === undefined))
         .sort((a, b) => a.id && b.id ? parseInt(a.id) - parseInt(b.id) : 0);
       setChapterData(filteredData);
-      setChapterNum(chapterNum);
     }
     setIsLoadData(false);
   }
@@ -101,11 +88,6 @@ export default function Page() {
   }
 
   useEffect(() => {
-    const t = setTimeout(() => setAlreadyExists(false), 6000);
-    return () => clearTimeout(t);
-  }, [alreadyExists]);
-
-  useEffect(() => {
     const t = setTimeout(() => setShowResult(null), 6000);
     return () => clearTimeout(t);
   }, [showResult]);
@@ -124,12 +106,6 @@ export default function Page() {
     }
   }, [isLoadData, chapterName]);
 
-  useEffect(() => {
-    if (billingTargetRef.current) {
-      billingTargetRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [chapterData]);
-
   function togglePriceEdit(index: any) {
     cancelEdit();
     const newOpenPriceEdit = [...openPriceEdit];
@@ -142,7 +118,7 @@ export default function Page() {
     setNewPrice(null);
   }
 
-  async function handleUpdatePrice(practiceId: number) {
+  async function handleUpdatePrice(practiceId: string) {
     if (newPrice !== null) {
       const priceNumber = parseFloat(newPrice.replace(/\./g, ""));
       const result = await updatePracticePrice(chapterName, practiceId, priceNumber);
@@ -153,28 +129,60 @@ export default function Page() {
     }
   }
 
-  function handleKeyPress(event: any, practiceId: number) {
+  function handleKeyPress(event: any, practiceId: string) {
     if (event.key === "Enter") { newPrice !== null ? handleUpdatePrice(practiceId) : cancelEdit(); }
     else if (event.key === "Escape") { cancelEdit(); }
+  }
+
+  async function handleGlobalUpdate() {
+    if (globalPercentage === null) return;
+    setLoadingGlobal(true);
+    let totalUpdated = 0;
+    let areasSucceeded = 0;
+    const failed: string[] = [];
+
+    for (const area of ALL_AREAS) {
+      try {
+        const { data } = await getChapter(area);
+        if (Array.isArray(data)) {
+          const filteredData = data.filter((item) => !Object.values(item).every((v) => v === undefined));
+          if (filteredData.length === 0) { areasSucceeded++; continue; }
+          const updatedData = filteredData.map((practice: { price: number;[key: string]: unknown }) => ({
+            ...practice,
+            price: Math.round(practice.price + practice.price * globalPercentage),
+          }));
+          const result = await updateChapterPrices(updatedData, area);
+          if (result !== null) {
+            totalUpdated += filteredData.length;
+            areasSucceeded++;
+          } else {
+            failed.push(area);
+          }
+        } else {
+          areasSucceeded++;
+        }
+      } catch {
+        failed.push(area);
+      }
+    }
+
+    setGlobalResult({ updated: totalUpdated, areas: areasSucceeded, failed });
+    setLoadingGlobal(false);
+    setOpenGlobalFormPercentages(false);
+    updatePractices();
   }
 
   async function HandleSubmit(e: any) {
     e.preventDefault();
     setLoading(true);
     const priceNumber = parseFloat(price.replace(/\./g, ""));
-    const result = await setPractice(id, priceNumber, practiceName, chapterName);
+    const result = await setPractice(priceNumber, practiceName?.trim() ?? '', chapterName);
     if (result !== null) {
-      if (result === "already-exists") {
-        setLoading(false);
-        setAlreadyExists(true);
-      } else {
-        setOpenCreatePractice(false);
-        setId(null);
-        setPrice(null);
-        setPracticeName(null);
-        setShowResult("good-practice");
-        updatePractices();
-      }
+      setOpenCreatePractice(false);
+      setPrice(null);
+      setPracticeName(null);
+      setShowResult("good-practice");
+      updatePractices();
     }
   }
 
@@ -233,7 +241,7 @@ export default function Page() {
             <div className="flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full">
               <PracticeTable
                 chapterData={chapterData}
-                chapterNum={chapterNum}
+                chapterName={chapterName}
                 openPriceEdit={openPriceEdit}
                 newPrice={newPrice}
                 setNewPrice={setNewPrice}
@@ -249,27 +257,23 @@ export default function Page() {
                 setPracticeName={setPracticeName}
                 setPrice={setPrice}
                 formatPrice={formatPrice}
-                formattedIdFromRoman={formattedIdFromRoman}
+                onAddPractice={() => { setOpenCreatePractice(true); setOpenFormPercentages(false); }}
               />
               {openCreatePractice ? (
                 <AddPracticeForm
-                  chapterNum={chapterNum}
                   chapterName={chapterName}
-                  id={id}
-                  setId={setId}
                   price={price}
                   setPrice={setPrice}
                   practiceName={practiceName}
                   setPracticeName={setPracticeName}
                   loading={loading}
-                  alreadyExists={alreadyExists}
-                  formattedIdFromRoman={formattedIdFromRoman}
                   onSubmit={HandleSubmit}
                   onCancel={() => setOpenCreatePractice(false)}
                 />
               ) : (
                 <PriceAdjustmentPanel
                   chapterData={chapterData}
+                  chapterName={chapterName}
                   openFormPercentages={openFormPercentages}
                   setOpenFormPercentages={setOpenFormPercentages}
                   percentage={percentage}
@@ -277,11 +281,18 @@ export default function Page() {
                   setPercentage={setPercentage}
                   setPercentageVisible={setPercentageVisible}
                   loadingIncreaseOrDecrease={loadingIncreaseOrDecrease}
-                  openPercentageEdit={openPercentageEdit}
-                  setOpenPercentageEdit={setOpenPercentageEdit}
-                  percentageEditValue={percentageEditValue}
-                  setPercentageEditValue={setPercentageEditValue}
                   handleIncreaseOrDecrease={handleIncreaseOrDecrease}
+                  globalPercentage={globalPercentage}
+                  globalPercentageVisible={globalPercentageVisible}
+                  setGlobalPercentage={setGlobalPercentage}
+                  setGlobalPercentageVisible={setGlobalPercentageVisible}
+                  openGlobalFormPercentages={openGlobalFormPercentages}
+                  setOpenGlobalFormPercentages={setOpenGlobalFormPercentages}
+                  loadingGlobal={loadingGlobal}
+                  globalResult={globalResult}
+                  setGlobalResult={setGlobalResult}
+                  handleGlobalUpdate={handleGlobalUpdate}
+                  formatPrice={formatPrice}
                 />
               )}
             </div>

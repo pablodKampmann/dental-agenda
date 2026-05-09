@@ -1,67 +1,76 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getUser } from '../services/auth/getUser';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getUser } from "../services/auth/getUser";
 
 interface AuthUser {
-    userUid: string;
-    displayName: string;
-    photoURL: string;
-    clinicId: string;
-    [key: string]: any;
+  userUid: string;
+  displayName: string;
+  clinicId: string;
+  [key: string]: any;
 }
 
 interface AuthContextType {
-    user: AuthUser | null;
-    loading: boolean;
+  user: AuthUser | null;
+  loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-    user: null,
-    loading: true,
+  user: null,
+  loading: true,
+  refreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<AuthUser | null>(null);
-    const [loading, setLoading] = useState(true);
-    const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-    useEffect(() => {
-        let isMounted = true;
+  async function refreshUser() {
+    try {
+      const userData = (await getUser(false)) as AuthUser;
+      setUser(userData);
+    } catch (error) {
+      router.replace("/notSign");
+    }
+  }
 
-        async function handleGetUser() {
-            try {
-                const userData = await getUser(false) as AuthUser;
-                if (isMounted) {
-                    setUser(userData);
-                }
-            } catch (error) {
-                // Usuario no autenticado — redirigir a /notSign
-                if (isMounted) {
-                    router.replace('/notSign');
-                }
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
-            }
+  useEffect(() => {
+    let isMounted = true;
+
+    async function handleGetUser() {
+      try {
+        const userData = (await getUser(false)) as AuthUser;
+        if (isMounted) {
+          setUser(userData);
         }
+      } catch (error) {
+        if (isMounted) {
+          router.replace("/notSign");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
 
-        handleGetUser();
+    handleGetUser();
 
-        return () => {
-            isMounted = false;
-        };
-    }, [router]);
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
-    return (
-        <AuthContext.Provider value={{ user, loading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ user, loading, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextType {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
