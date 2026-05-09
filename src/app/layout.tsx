@@ -3,12 +3,11 @@ import type { Metadata } from 'next'
 import { Navigation } from '../components/navigation/navigation'
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '../context/AuthContext'
-import { DM_Sans } from "next/font/google"
+import { Inter as FontSans } from "next/font/google"
 
-const fontSans = DM_Sans({
+const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ['300', '400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
