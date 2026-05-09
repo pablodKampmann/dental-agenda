@@ -1,13 +1,14 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Navigation } from '../components/navigation/navigation'
-import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '../context/AuthContext'
+import { DM_Sans } from "next/font/google"
 
-const fontSans = FontSans({
+const fontSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
