@@ -10,7 +10,7 @@ import {
 } from "react-icons/io";
 import { MdNotificationsNone } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
-import { useCheckRoutine } from "../../hooks/useCheckRoutine";
+import { useAuth } from "../../context/AuthContext";
 import { useOutsideClick } from "../../hooks/useOutsideClick"; // Ruta correcta a tu hook personalizado
 import { BsCalendar2WeekFill } from "react-icons/bs";
 import { BsArrowBarRight, BsArrowBarLeft } from "react-icons/bs";
@@ -25,7 +25,7 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
   const pathname = usePathname();
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const [openSideBar, setOpenSideBar] = useState(false);
-  const data = useCheckRoutine(false);
+  const { user: data } = useAuth();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(sidebarRef, () => {

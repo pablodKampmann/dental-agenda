@@ -149,6 +149,7 @@ export default function Page() {
           if (result !== null) {
             const user = await getUser(false);
             setUser(user);
+            await refreshUser();
           }
           break;
         case "language":
