@@ -252,3 +252,12 @@ input[type=number] {
   }
 }
 
+@keyframes slot-selected-pulse {
+  0%, 100% { background-color: rgba(13, 148, 136, 0.08); }
+  50% { background-color: rgba(13, 148, 136, 0.18); }
+}
+
+.slot-selected {
+  border-left: 4px solid rgb(13, 148, 136);
+  animation: slot-selected-pulse 2s ease-in-out infinite;
+}

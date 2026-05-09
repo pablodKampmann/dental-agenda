@@ -54,7 +54,7 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
     return (
         <div className="flex flex-wrap md:h-10 md:space-y-0 space-y-3 h-8">
             <div className="flex h-full">
-                <div className='rounded-xl flex justify-between h-full border-2 border-gray-600 '>
+                <div className='rounded-xl flex justify-start w-72 h-full border-2 border-gray-600 '>
                     <div className='flex justify-center items-center'>
                         <TbUserSearch
                             className="text-teal-600 bg-transparent mx-1"
@@ -65,7 +65,7 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
                         autoComplete="off"
                         type="text"
                         placeholder="Busca un paciente                      Por:"
-                        className="pl-1 md:w-60 w-36 h-full bg-transparent rounded-r-md  font-semibold focus:outline-none text-black md:text-sm text-xs"
+                        className="bg-red-500 pl-2 md:w-60 w-36 h-full bg-transparent rounded-r-md  font-semibold focus:outline-none text-black md:text-sm text-xs"
                         name='search'
                         value={searchContent}
                         onChange={(e) => {
