@@ -16,6 +16,12 @@ import { PracticeTable } from "./../../components/practices/ui/PracticeTable";
 import { AddPracticeForm } from "./../../components/practices/ui/AddPracticeForm";
 import { PriceAdjustmentPanel } from "./../../components/practices/ui/PriceAdjustmentPanel";
 
+const ALL_AREAS = [
+  "CONSULTAS", "OPERATORIA DENTAL", "ENDODONCIA", "PRÓTESIS",
+  "ODONTOLOGÍA PREVENTIVA", "ORTODONCIA Y ORTOPEDIA FUNCIONAL",
+  "ODONTOPEDIATRÍA", "PERIODONCIA", "RADIOLOGÍA", "CIRUGÍA",
+];
+
 export default function Page() {
   const router = useRouter();
   const { loading: isLoad } = useAuth();
@@ -39,6 +45,11 @@ export default function Page() {
   const billingTargetRef = useRef<any>(null);
   const [openPercentageEdit, setOpenPercentageEdit] = useState("");
   const [percentageEditValue, setPercentageEditValue] = useState<any>(null);
+  const [globalPercentage, setGlobalPercentage] = useState<number | null>(null);
+  const [globalPercentageVisible, setGlobalPercentageVisible] = useState<string | null>(null);
+  const [openGlobalFormPercentages, setOpenGlobalFormPercentages] = useState(false);
+  const [loadingGlobal, setLoadingGlobal] = useState(false);
+  const [globalResult, setGlobalResult] = useState<{ updated: number; areas: number; failed: string[] } | null>(null);
 
   useEffect(() => {
     setOpenPriceEdit(Array(chapterData?.length).fill(false));
@@ -95,12 +106,6 @@ export default function Page() {
     }
   }, [isLoadData, chapterName]);
 
-  useEffect(() => {
-    if (billingTargetRef.current) {
-      billingTargetRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [chapterData]);
-
   function togglePriceEdit(index: any) {
     cancelEdit();
     const newOpenPriceEdit = [...openPriceEdit];
@@ -129,11 +134,49 @@ export default function Page() {
     else if (event.key === "Escape") { cancelEdit(); }
   }
 
+  async function handleGlobalUpdate() {
+    if (globalPercentage === null) return;
+    setLoadingGlobal(true);
+    let totalUpdated = 0;
+    let areasSucceeded = 0;
+    const failed: string[] = [];
+
+    for (const area of ALL_AREAS) {
+      try {
+        const { data } = await getChapter(area);
+        if (Array.isArray(data)) {
+          const filteredData = data.filter((item) => !Object.values(item).every((v) => v === undefined));
+          if (filteredData.length === 0) { areasSucceeded++; continue; }
+          const updatedData = filteredData.map((practice: { price: number;[key: string]: unknown }) => ({
+            ...practice,
+            price: Math.round(practice.price + practice.price * globalPercentage),
+          }));
+          const result = await updateChapterPrices(updatedData, area);
+          if (result !== null) {
+            totalUpdated += filteredData.length;
+            areasSucceeded++;
+          } else {
+            failed.push(area);
+          }
+        } else {
+          areasSucceeded++;
+        }
+      } catch {
+        failed.push(area);
+      }
+    }
+
+    setGlobalResult({ updated: totalUpdated, areas: areasSucceeded, failed });
+    setLoadingGlobal(false);
+    setOpenGlobalFormPercentages(false);
+    updatePractices();
+  }
+
   async function HandleSubmit(e: any) {
     e.preventDefault();
     setLoading(true);
     const priceNumber = parseFloat(price.replace(/\./g, ""));
-    const result = await setPractice(priceNumber, practiceName, chapterName);
+    const result = await setPractice(priceNumber, practiceName?.trim() ?? '', chapterName);
     if (result !== null) {
       setOpenCreatePractice(false);
       setPrice(null);
@@ -214,6 +257,7 @@ export default function Page() {
                 setPracticeName={setPracticeName}
                 setPrice={setPrice}
                 formatPrice={formatPrice}
+                onAddPractice={() => { setOpenCreatePractice(true); setOpenFormPercentages(false); }}
               />
               {openCreatePractice ? (
                 <AddPracticeForm
@@ -229,6 +273,7 @@ export default function Page() {
               ) : (
                 <PriceAdjustmentPanel
                   chapterData={chapterData}
+                  chapterName={chapterName}
                   openFormPercentages={openFormPercentages}
                   setOpenFormPercentages={setOpenFormPercentages}
                   percentage={percentage}
@@ -236,11 +281,18 @@ export default function Page() {
                   setPercentage={setPercentage}
                   setPercentageVisible={setPercentageVisible}
                   loadingIncreaseOrDecrease={loadingIncreaseOrDecrease}
-                  openPercentageEdit={openPercentageEdit}
-                  setOpenPercentageEdit={setOpenPercentageEdit}
-                  percentageEditValue={percentageEditValue}
-                  setPercentageEditValue={setPercentageEditValue}
                   handleIncreaseOrDecrease={handleIncreaseOrDecrease}
+                  globalPercentage={globalPercentage}
+                  globalPercentageVisible={globalPercentageVisible}
+                  setGlobalPercentage={setGlobalPercentage}
+                  setGlobalPercentageVisible={setGlobalPercentageVisible}
+                  openGlobalFormPercentages={openGlobalFormPercentages}
+                  setOpenGlobalFormPercentages={setOpenGlobalFormPercentages}
+                  loadingGlobal={loadingGlobal}
+                  globalResult={globalResult}
+                  setGlobalResult={setGlobalResult}
+                  handleGlobalUpdate={handleGlobalUpdate}
+                  formatPrice={formatPrice}
                 />
               )}
             </div>
