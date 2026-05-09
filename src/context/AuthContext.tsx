@@ -7,7 +7,6 @@ import { getUser } from "../services/auth/getUser";
 interface AuthUser {
   userUid: string;
   displayName: string;
-  photoURL: string;
   clinicId: string;
   [key: string]: any;
 }

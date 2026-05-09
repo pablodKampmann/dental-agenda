@@ -12,7 +12,6 @@ export async function getUser(getOnlyClinicId: boolean) {
         if (snapshot.exists()) {
           let data = snapshot.val();
           data.userUid = user.uid;
-          data.photoURL = `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/userImages%2F${user.uid}.jpg?alt=media`;
           if (getOnlyClinicId) {
             resolve(data.clinicId);
           } else {

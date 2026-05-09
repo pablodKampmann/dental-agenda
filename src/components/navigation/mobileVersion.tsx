@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
@@ -12,7 +11,6 @@ import {
 import { MdNotificationsNone } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { useCheckRoutine } from "../../hooks/useCheckRoutine";
-import { useReloadPhotoURL } from "../../hooks/useReloadPhotoURL";
 import { useOutsideClick } from "../../hooks/useOutsideClick"; // Ruta correcta a tu hook personalizado
 import { BsCalendar2WeekFill } from "react-icons/bs";
 import { BsArrowBarRight, BsArrowBarLeft } from "react-icons/bs";
@@ -28,7 +26,6 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const [openSideBar, setOpenSideBar] = useState(false);
   const data = useCheckRoutine(false);
-  const reloadImage = useReloadPhotoURL(data?.userUid);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   useOutsideClick(sidebarRef, () => {
@@ -90,9 +87,7 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
               </div>
               <Link className="focus:outline-none" href={"/config"}>
                 <AvatarFallback
-                  photoURL={data.photoURL}
                   displayName={data.displayName}
-                  reloadKey={reloadImage}
                 />
               </Link>
             </div>
