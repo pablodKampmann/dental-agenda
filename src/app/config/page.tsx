@@ -1,9 +1,8 @@
 ﻿"use client";
 
-import Image from "next/image";
 import * as React from "react";
 import { AvatarFallback } from "../../components/shared/AvatarFallback";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Loading } from "../../components/shared/loading";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
@@ -13,11 +12,9 @@ import { MdVisibilityOff } from "react-icons/md";
 import { TbPencilCog } from "react-icons/tb";
 import { getClinicData } from "../../services/config/getClinicData";
 import { InsurancesConfig } from "../../components/config/insurancesConfig";
-import { ScaleLoader, MoonLoader } from "react-spinners";
+import { ScaleLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../../services/config/setRowChanges";
-import { changeImage } from "../../services/config/changeImage";
-import { RxUpdate } from "react-icons/rx";
 import { updateUserEmail } from "../../services/config/updateUserEmail";
 import { RiErrorWarningLine } from "react-icons/ri";
 import { updateUserName } from "../../services/config/updateUserName";
@@ -45,9 +42,6 @@ export default function Page() {
   const [pros, setPros] = useState<null | any[]>(null);
   const [editRow, setEditRow] = useState<string>("");
   const [changes, setChanges] = useState<string | null>(null);
-  const [loadingImage, setLoadingImage] = useState(false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [reloadImage, setReloadImage] = useState(Date.now());
   const [openInputCredential, setOpenInputCredential] = useState(false);
   const [userCredential, setUserCredential] = useState<string>("");
   const [showAlert, setShowAlert] = useState<string>("");
@@ -306,19 +300,6 @@ export default function Page() {
     }
   }, [editRow]);
 
-  //IMAGE FUNCTIONS
-
-  async function handleChangePicture(e: any) {
-    if (e.target.files[0]) {
-      setLoadingImage(true);
-      const file = e.target.files[0];
-      const result = await changeImage(userUid, file);
-      if (result !== null) {
-        setReloadImage(Date.now());
-      }
-    }
-  }
-
   return (
     <div className="h-screen flex flex-col overflow-hidden flex-1">
       {isLoad ? (
@@ -383,40 +364,12 @@ export default function Page() {
                 Estadísticas
               </button>
             </div>
-            <div
-              className="rounded-full absolute top-8 left-8 mb-8 group"
-              onClick={() => imageInputRef.current?.click()}
-            >
-              <input
-                accept="image/*"
-                onChange={(e) => handleChangePicture(e)}
-                ref={imageInputRef}
-                type="file"
-                style={{ display: "none" }}
-              />
+            <div className="rounded-full absolute top-8 left-8 mb-8">
               <AvatarFallback
-                photoURL={user.photoURL}
                 displayName={user.displayName}
-                reloadKey={reloadImage}
                 size={160}
-                className="rounded-full bg-white object-cover border-4 w-[160px] h-[160px] border-white shadow-2xl select-none transition duration-300 group-hover:cursor-pointer group-hover:blur-[2px]"
+                className="rounded-full border-4 w-[160px] h-[160px] border-white shadow-2xl select-none"
               />
-              {loadingImage ? (
-                <div className="absolute top-0 justify-center flex opacity-100">
-                  <MoonLoader
-                    speedMultiplier={1.4}
-                    color="#042f2e"
-                    size={126}
-                  />
-                </div>
-              ) : (
-                <div className="absolute top-[47px] left-[48px] justify-center flex group-hover:opacity-100 opacity-0">
-                  <RxUpdate
-                    className="cursor-pointer text-white text-opacity-40"
-                    size={64}
-                  />
-                </div>
-              )}
             </div>
           </div>
           <div className="ml-56 text-black pt-4 overflow-y-auto flex-1 pb-16 config-scroll">

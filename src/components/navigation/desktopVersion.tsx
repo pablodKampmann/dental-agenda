@@ -12,7 +12,6 @@ import {
 import { MdNotificationsNone } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
-import { useReloadPhotoURL } from "../../hooks/useReloadPhotoURL";
 //import toast, { Toaster } from 'react-hot-toast';
 import { BsCalendar2WeekFill } from "react-icons/bs";
 //import { PiCloudCheckFill } from "react-icons/pi";
@@ -27,7 +26,6 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
   const pathname = usePathname();
   const [openUserMenu, setOpenUserMenu] = useState(false);
   const { user: data } = useAuth();
-  const reloadImage = useReloadPhotoURL(data?.userUid ?? "");
   //const notify = () => toast.success('Successfully toasted!');
 
   return (
@@ -89,9 +87,7 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
               </div>
               <Link className="focus:outline-none" href={"/config"}>
                 <AvatarFallback
-                  photoURL={data.photoURL}
                   displayName={data.displayName}
-                  reloadKey={reloadImage}
                 />
               </Link>
             </div>
