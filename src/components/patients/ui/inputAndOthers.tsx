@@ -30,24 +30,24 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
 
         if (searchContent.length < 1) {
             setIsSearching(true);
-            setIsSearching(true);
             Promise.resolve(handleGetPatients(20)).then(() => {
                 if (!isCancelled) setIsSearching(false);
             });
-        } else {
-            const searchPatients = async () => {
-                setIsSearching(true);
-                const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
-                if (!isCancelled) {
-                    setListOfPatients(patientsFilter);
-                    setIsSearching(false);
-                }
-            };
-            searchPatients();
+            return () => { isCancelled = true; };
         }
+
+        const debounceTimer = setTimeout(async () => {
+            setIsSearching(true);
+            const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
+            if (!isCancelled) {
+                setListOfPatients(patientsFilter);
+                setIsSearching(false);
+            }
+        }, 300);
 
         return () => {
             isCancelled = true;
+            clearTimeout(debounceTimer);
         };
     }, [searchContent, selectedField]);
 

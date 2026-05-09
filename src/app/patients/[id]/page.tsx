@@ -3,12 +3,10 @@
 import { getPatient } from "./../../../services/patients/getPatient";
 import React, { useState, useEffect, useRef } from 'react';
 import { ImAccessibility } from 'react-icons/im';
-import { BsFillPhoneFill} from 'react-icons/bs';
+import { BsFillPhoneFill } from 'react-icons/bs';
 import { updatePatient } from "./../../../services/patients/updatePatient";
 import { BiPlusMedical } from 'react-icons/bi';
 import { Alert } from "./../../../components/shared/alert";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { FaQuestionCircle } from "react-icons/fa";
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
@@ -22,7 +20,7 @@ import dayjs from 'dayjs';
 import { Loading } from "./../../../components/shared/loading";
 import { MoonLoader } from "react-spinners";
 import { FaCheck } from "react-icons/fa6";
-import { getUser } from "./../../../services/auth/getUser";
+import { useAuth } from "@/context/AuthContext";
 
 import { EditableRow } from "@/components/patients/ui/editableRow";
 
@@ -39,26 +37,19 @@ export default function PatientId() {
   const [changes, setChanges] = useState<any>('');
   const [openAlert, setOpenAlert] = useState(false);
   const [openInfo, setOpenInfo] = useState(false);
-  const [insuranceOptions, setInsuranceOptions] = useState<null | {id: string, name: string}[]>(null);
-  const [planOptions, setPlanOptions] = useState<{id: string, name: string}[]>([]);
+  const [insuranceOptions, setInsuranceOptions] = useState<null | { id: string, name: string }[]>(null);
+  const [planOptions, setPlanOptions] = useState<{ id: string, name: string }[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  const [insuranceDraft, setInsuranceDraft] = useState<{id: string, name: string} | null>(null);
-  const [planDraft, setPlanDraft] = useState<{id: string, name: string} | null>(null);
+  const [insuranceDraft, setInsuranceDraft] = useState<{ id: string, name: string } | null>(null);
+  const [planDraft, setPlanDraft] = useState<{ id: string, name: string } | null>(null);
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
 
-  const [clinicId, setClinicId] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const clinicId = user?.clinicId ?? null;
 
-  //CHECK IF THE USER IS LOGGED IN && GET USER
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push("/notSign");
-      }
-    });
-    return () => unsubscribe();
-}, [router]);
+
 
   useEffect(() => {
     if (!clinicId) return;
@@ -167,20 +158,10 @@ export default function PatientId() {
 
   }, [date]);
 
-  useEffect(() => {
-    async function fetchClinicId() {
-      const id = await getUser(true);
-      setClinicId(id as string);
-    }
-    fetchClinicId();
-  }, []);
-
-
-
   if (id !== null) {
     return (
       <div>
-        {isLoad ? (
+        {authLoading || isLoad ? (
           <Loading />
         ) : (
           <div className='ml-2 p-4 mt-16 mr-2 relative'>
