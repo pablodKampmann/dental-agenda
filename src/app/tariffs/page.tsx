@@ -2,19 +2,19 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "./../../context/AuthContext";
-import { Loading } from "./../../components/shared/loading";
-import { getChapter } from "./../../services/practices/getChapter";
+import { useAuth } from "../../context/AuthContext";
+import { Loading } from "../../components/shared/loading";
+import { getChapter } from "../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd } from "react-icons/hi";
-import { Alert } from "./../../components/shared/alert";
+import { Alert } from "../../components/shared/alert";
 import { ImCancelCircle } from "react-icons/im";
-import { updatePracticePrice } from "./../../services/practices/updatePracticePrice";
-import { setPractice } from "./../../services/practices/setPractice";
-import { updateChapterPrices } from "./../../services/practices/updateChapterPrices";
-import { PracticeTable } from "./../../components/practices/ui/PracticeTable";
-import { AddPracticeForm } from "./../../components/practices/ui/AddPracticeForm";
-import { PriceAdjustmentPanel } from "./../../components/practices/ui/PriceAdjustmentPanel";
+import { updatePracticePrice } from "../../services/practices/updatePracticePrice";
+import { setPractice } from "../../services/practices/setPractice";
+import { updateChapterPrices } from "../../services/practices/updateChapterPrices";
+import { PracticeTable } from "../../components/practices/ui/PracticeTable";
+import { AddPracticeForm } from "../../components/practices/ui/AddPracticeForm";
+import { PriceAdjustmentPanel } from "../../components/practices/ui/PriceAdjustmentPanel";
 
 const ALL_AREAS = [
   "CONSULTAS", "OPERATORIA DENTAL", "ENDODONCIA", "PRÓTESIS",
@@ -24,7 +24,8 @@ const ALL_AREAS = [
 
 export default function Page() {
   const router = useRouter();
-  const { loading: isLoad } = useAuth();
+  const { user, loading: isLoad } = useAuth();
+  const clinicId = user?.clinicId ?? '';
   const [loading, setLoading] = useState(false);
   const [loadingIncreaseOrDecrease, setLoadingIncreaseOrDecrease] = useState(false);
   const [chapterName, setChapterName] = useState("CONSULTAS");
@@ -58,7 +59,7 @@ export default function Page() {
 
   async function updatePractices() {
     setIsLoadData(true);
-    const { data } = await getChapter(chapterName);
+    const { data } = await getChapter(chapterName, clinicId);
     if (Array.isArray(data)) {
       const filteredData = data
         .filter((item) => !Object.values(item).every((value) => value === undefined))
@@ -75,7 +76,7 @@ export default function Page() {
         ...chapter,
         price: Math.round(chapter.price + chapter.price * percentage),
       }));
-      const result = await updateChapterPrices(updatedChapterData, chapterName);
+      const result = await updateChapterPrices(updatedChapterData, chapterName, clinicId);
       if (result === null) {
         setLoadingIncreaseOrDecrease(false);
       } else {
@@ -121,7 +122,7 @@ export default function Page() {
   async function handleUpdatePrice(practiceId: string) {
     if (newPrice !== null) {
       const priceNumber = parseFloat(newPrice.replace(/\./g, ""));
-      const result = await updatePracticePrice(chapterName, practiceId, priceNumber);
+      const result = await updatePracticePrice(chapterName, practiceId, priceNumber, clinicId);
       cancelEdit();
       if (result !== null) { updatePractices(); setShowResult("good-price-update"); }
     } else {
@@ -143,7 +144,7 @@ export default function Page() {
 
     for (const area of ALL_AREAS) {
       try {
-        const { data } = await getChapter(area);
+        const { data } = await getChapter(area, clinicId);
         if (Array.isArray(data)) {
           const filteredData = data.filter((item) => !Object.values(item).every((v) => v === undefined));
           if (filteredData.length === 0) { areasSucceeded++; continue; }
@@ -151,7 +152,7 @@ export default function Page() {
             ...practice,
             price: Math.round(practice.price + practice.price * globalPercentage),
           }));
-          const result = await updateChapterPrices(updatedData, area);
+          const result = await updateChapterPrices(updatedData, area, clinicId);
           if (result !== null) {
             totalUpdated += filteredData.length;
             areasSucceeded++;
@@ -176,7 +177,7 @@ export default function Page() {
     e.preventDefault();
     setLoading(true);
     const priceNumber = parseFloat(price.replace(/\./g, ""));
-    const result = await setPractice(priceNumber, practiceName?.trim() ?? '', chapterName);
+    const result = await setPractice(priceNumber, practiceName?.trim() ?? '', chapterName, clinicId);
     if (result !== null) {
       setOpenCreatePractice(false);
       setPrice(null);
@@ -201,6 +202,7 @@ export default function Page() {
                 thirdProp={price}
                 fourthProp={id}
                 fifthProp={chapterName}
+                clinicId={clinicId}
               />
             </div>
           )}
@@ -293,6 +295,7 @@ export default function Page() {
                   setGlobalResult={setGlobalResult}
                   handleGlobalUpdate={handleGlobalUpdate}
                   formatPrice={formatPrice}
+                  clinicId={clinicId}
                 />
               )}
             </div>

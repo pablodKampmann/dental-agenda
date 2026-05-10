@@ -1,13 +1,10 @@
 import { db } from "@/lib/firebase";
 import { get, ref } from "firebase/database";
-import { getUser } from "./../auth/getUser";
 
-export async function getChapter(name: string) {
+export async function getChapter(name: string, clinicId: string) {
     try {
-        if (!navigator.onLine) {
-            throw new Error();
-        } else {
-            const clinicId = await getUser(true);
+        if (!navigator.onLine) throw new Error();
+
             const dbRef = ref(db, `/clinics/${clinicId}/priceTariffs/${name}/`)
             const snapshot = await get(dbRef);
             const data: any[] = [];
@@ -26,7 +23,6 @@ export async function getChapter(name: string) {
                 chapterNum = snapshot.val().chapterNum;
             }
             return { data, chapterNum };
-        }
     } catch (error) {
         console.error(error);
         return { data: [], chapterNum: '' };
