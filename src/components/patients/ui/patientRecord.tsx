@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation';
 import { AvatarFallback } from '../../shared/AvatarFallback';
 import { FaMale, FaFemale, FaWhatsapp } from 'react-icons/fa';
+import { BiSolidBookAdd } from 'react-icons/bi';
 import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin, MdOutlineMailOutline } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
@@ -111,7 +112,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             }}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 select-none"
                         >
-                            Dar cita
+                            <BiSolidBookAdd size={16} /> Dar cita
                         </button>
                         {patient.num && (
                             <a

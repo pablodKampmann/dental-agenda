@@ -15,7 +15,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
       <h1 className='text-center bg-teal-600 border-t-2 border-b-2 border-l-2 border-gray-600 rounded-bl-lg rounded-tl-lg shadow-xl text-white font-semibold text-4xl select-none px-4 pt-2'>
         A <br /> G <br />E <br />N <br />D <br />A
       </h1>
-      <div className='bg-gray-300 bg-opacity-30 shadow-xl flex-1 transition-width border-2 border-gray-600 rounded-r-lg overflow-y-auto'>
+      <div className='scroll-rounded bg-gray-300 bg-opacity-30 shadow-xl flex-1 transition-width border-2 border-gray-600 rounded-r-lg overflow-y-auto'>
         <table className='w-full'>
           <tbody className='text-black'>
             {TIME_SLOTS.map((time, index, array) => {
