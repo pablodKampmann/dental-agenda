@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { getUser } from '@/services/auth/getUser';
 import { Loading } from "./../../components/shared/loading";
 import { InputAndOthers } from "./../../components/patients/ui/inputAndOthers";
 import { Table } from "./../../components/patients/ui/table";
@@ -10,6 +9,7 @@ import { SheetCreatePatient } from "../../components/patients/ui/createPatient/s
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { FaUserGroup } from "react-icons/fa6";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Patients() {
     const [isLoad, setIsLoad] = useState(true);
@@ -21,15 +21,8 @@ export default function Patients() {
     const [loadMorePatientsButtom, setLoadMorePatientsButtom] = useState(true);
     const [searchContent, setSearchContent] = useState('');
     const [loadRow, setLoadRow] = useState<number | null>(null);
-    const [clinicId, setClinicId] = useState<string | null>(null);
-
-    useEffect(() => {
-        async function fetchClinicId() {
-            const id = await getUser(true);
-            setClinicId(id as string);
-        }
-        fetchClinicId();
-    }, []);
+    const { user } = useAuth();
+    const clinicId = user?.clinicId ?? null;
 
     useEffect(() => {
         if (clinicId) {
