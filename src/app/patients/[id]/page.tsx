@@ -11,15 +11,25 @@ import { usePathname } from 'next/navigation';
 import { PatientRecord } from './../../../components/patients/ui/patientRecord';
 import { getInsuranceOptions } from './../../../services/options/getInsuranceOpt';
 import { getInsurancePlans } from './../../../services/options/getInsurancePlans';
+import { getPatientAppointments } from './../../../services/appointments/getPatientAppointments';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { Loading } from './../../../components/shared/loading';
-import { ScaleLoader } from 'react-spinners';
-import { FaCheck } from 'react-icons/fa6';
+import { ScaleLoader, ClipLoader } from 'react-spinners';
+import { FaCheck, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
 import { getUser } from './../../../services/auth/getUser';
 import { EditableRow } from '@/components/patients/ui/editableRow';
+import { TbPencilCog } from 'react-icons/tb';
+import { BiArrowBack } from 'react-icons/bi';
+import Link from 'next/link';
+import { BsCalendarCheck, BsCalendarX } from 'react-icons/bs';
+
+function parseApptDate(dateStr: string): Date {
+  const [d, m, y] = dateStr.split('/');
+  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+}
 
 export default function PatientId() {
   const router = useRouter();
@@ -40,6 +50,8 @@ export default function PatientId() {
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
   const [clinicId, setClinicId] = useState<string | null>(null);
+  const [patientAppointments, setPatientAppointments] = useState<any[] | null>(null);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -64,6 +76,15 @@ export default function PatientId() {
     }
     get();
   }, [id, clinicId]);
+
+  useEffect(() => {
+    if (!patient?.id) return;
+    setLoadingAppointments(true);
+    getPatientAppointments(patient.id).then(appts => {
+      setPatientAppointments(appts);
+      setLoadingAppointments(false);
+    });
+  }, [patient?.id]);
 
   async function submitInsuranceChanges() {
     if (!insuranceDraft) { setRowModify(''); return; }
@@ -146,9 +167,18 @@ export default function PatientId() {
     fetchClinicId();
   }, []);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const sortedAppointments = [...(patientAppointments || [])].sort(
+    (a, b) => parseApptDate(a.date).getTime() - parseApptDate(b.date).getTime()
+  );
+  const nextAppointment = sortedAppointments.find(a => parseApptDate(a.date) >= today) ?? null;
+  const lastAppointment = [...sortedAppointments].reverse().find(a => parseApptDate(a.date) < today) ?? null;
+
   if (id !== null) {
     return (
-      <div className="flex-1 overflow-y-auto">
+      <div className="h-[calc(100vh-68px)] overflow-y-auto">
         {isLoad ? (
           <Loading />
         ) : (
@@ -168,7 +198,64 @@ export default function PatientId() {
 
             {patient && (
               <div>
+                {/* Back arrow */}
+                <Link href="/patients">
+                  <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-700 transition duration-150 mb-3 select-none">
+                    <BiArrowBack size={16} /> Pacientes
+                  </button>
+                </Link>
+
                 <PatientRecord patient={patient} />
+
+                {/* Appointments panel */}
+                <div className="border-2 border-gray-300 rounded-xl overflow-hidden mb-4">
+                  <div className="flex divide-x divide-gray-200">
+                    {/* Last visit */}
+                    <div className="flex-1 px-4 py-3 bg-gray-50">
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
+                        <BsCalendarX size={13} /> Última Visita
+                      </h3>
+                      {loadingAppointments ? (
+                        <ClipLoader size={14} color="#9ca3af" />
+                      ) : lastAppointment ? (
+                        <>
+                          <p className="text-sm font-semibold text-black">
+                            {lastAppointment.dayComplete} · {lastAppointment.time}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {typeof lastAppointment.reason === 'string'
+                              ? lastAppointment.reason
+                              : lastAppointment.reason?.name || 'Sin motivo registrado'}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Sin visitas anteriores</p>
+                      )}
+                    </div>
+                    {/* Next appointment */}
+                    <div className="flex-1 px-4 py-3">
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
+                        <BsCalendarCheck size={13} /> Próximo Turno
+                      </h3>
+                      {loadingAppointments ? (
+                        <ClipLoader size={14} color="#9ca3af" />
+                      ) : nextAppointment ? (
+                        <>
+                          <p className="text-sm font-semibold text-teal-700">
+                            {nextAppointment.dayComplete} · {nextAppointment.time}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {typeof nextAppointment.reason === 'string'
+                              ? nextAppointment.reason
+                              : nextAppointment.reason?.name || 'Sin motivo registrado'}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Sin próximo turno</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Section header with save indicator */}
                 <div className="flex items-center justify-between mb-3 select-none">
@@ -427,6 +514,54 @@ export default function PatientId() {
                           </>
                         )}
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="mt-4">
+                  <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Observaciones</h3>
+                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                    <div className="flex items-start justify-between px-3 py-2 bg-gray-50 gap-2">
+                      {rowModify === 'notes' ? (
+                        <div className="flex flex-col gap-2 flex-1">
+                          <textarea
+                            autoFocus
+                            defaultValue={patient.notes}
+                            onChange={(e) => setChanges(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Escape') setRowModify(''); }}
+                            rows={3}
+                            className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black resize-none w-full"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <FaCircleXmark
+                              onClick={() => setRowModify('')}
+                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer"
+                              size={20}
+                            />
+                            <FaCircleCheck
+                              onClick={() => submitChanges(changes, 'notes', 'notes')}
+                              className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer"
+                              size={20}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm text-black flex-1 whitespace-pre-wrap min-h-[2rem]">
+                            {patient.notes
+                              ? patient.notes
+                              : <span className="text-gray-400 italic">Sin observaciones</span>
+                            }
+                          </p>
+                          <button
+                            onClick={() => { setRowModify('notes'); setChanges(patient.notes ?? ''); }}
+                            className="text-gray-400 hover:text-teal-700 transition duration-150 flex-shrink-0 mt-0.5"
+                          >
+                            <TbPencilCog size={18} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
