@@ -1,6 +1,5 @@
 import { TbPencilCog } from 'react-icons/tb';
-import { BsFillCheckCircleFill } from 'react-icons/bs';
-import { useRef } from 'react';
+import { FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
 
 interface props {
     label: string;
@@ -8,27 +7,15 @@ interface props {
     rowKey: string;
     category: string;
     rowModify: string;
-    hovered: string;
     setRowModify: (value: string) => void;
-    setHovered: (value: string) => void;
     setChanges: (value: string) => void;
     submitChanges: (changes: string, table: string, category: string) => void;
     changes: string;
     renderInput?: React.ReactNode;
 }
 
-export function EditableRow({ label, value, rowKey, category, rowModify, hovered, setRowModify, setHovered, setChanges, submitChanges, changes, renderInput }: props) {
-    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-    function handleTextArea() {
-        if (textareaRef.current) {
-            const textarea = textareaRef.current;
-            textarea.focus();
-            textarea.selectionStart = textarea.value.length;
-        }
-    }
-
-    function handleKeyPress(event: any) {
+export function EditableRow({ label, value, rowKey, category, rowModify, setRowModify, setChanges, submitChanges, changes, renderInput }: props) {
+    function handleKeyPress(event: React.KeyboardEvent) {
         if (event.key === 'Enter') {
             submitChanges(changes, rowKey, category);
         } else if (event.key === 'Escape') {
@@ -37,41 +24,46 @@ export function EditableRow({ label, value, rowKey, category, rowModify, hovered
     }
 
     return (
-        <div
-            onClick={() => {
-                if (rowModify !== rowKey) {
-                    setRowModify(rowKey);
-                    setChanges('');
-                }
-            }}
-            onMouseEnter={() => setHovered(rowKey)}
-            onMouseLeave={() => setHovered('')}
-            className={`transition duration-100 hover:cursor-pointer w-[25rem] border-2 border-gray-500 border-dashed ml-4 mb-1 flex items-center rounded-lg p-1 ${hovered === rowKey || rowModify === rowKey ? '' : 'border-transparent'} ${rowModify === rowKey ? 'border-teal-600' : ''}`}
-        >
-            <h1 className='text-md text-black font-semibold'>{label}:</h1>
-            {rowModify === rowKey ? (
-                renderInput ?? (
-                    <textarea
-                        onKeyDown={handleKeyPress}
-                        ref={textareaRef}
-                        onMouseEnter={handleTextArea}
-                        autoFocus
-                        defaultValue={value}
-                        className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-7 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4"
-                        onChange={(e) => setChanges(e.target.value)}
-                    />
-                )
-            ) : (
-                <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>{value || '-'}</p>
-            )}
-            <div className='ml-auto'>
-                {hovered === rowKey && rowModify !== rowKey && <TbPencilCog size={26} className="text-gray-600" />}
+        <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
+                {rowModify === rowKey ? (
+                    <div className="flex items-center gap-2 flex-1">
+                        <span className="text-sm text-gray-500 flex-shrink-0">{label}:</span>
+                        {renderInput ?? (
+                            <input
+                                autoFocus
+                                defaultValue={value}
+                                onChange={(e) => setChanges(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                            />
+                        )}
+                        <FaCircleXmark
+                            onClick={() => setRowModify('')}
+                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
+                            size={20}
+                        />
+                        <FaCircleCheck
+                            onClick={() => submitChanges(changes, rowKey, category)}
+                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
+                            size={20}
+                        />
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">{label}:</span>
+                            <span className="text-sm font-semibold text-black">{value || '-'}</span>
+                        </div>
+                        <button
+                            onClick={() => { setRowModify(rowKey); setChanges(''); }}
+                            className="text-gray-400 hover:text-teal-700 transition duration-150"
+                        >
+                            <TbPencilCog size={18} />
+                        </button>
+                    </>
+                )}
             </div>
-            {rowModify === rowKey && (
-                <button className="ml-auto" onClick={() => submitChanges(changes, rowKey, category)}>
-                    <BsFillCheckCircleFill className="hover:scale-125 duration-150 ease-in-out mr-1 text-teal-600" size={30} />
-                </button>
-            )}
         </div>
     );
 }
