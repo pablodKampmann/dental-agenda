@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation';
 import { AvatarFallback } from '../../shared/AvatarFallback';
-import { FaMale, FaFemale } from 'react-icons/fa';
+import { FaMale, FaFemale, FaWhatsapp } from 'react-icons/fa';
 import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin, MdOutlineMailOutline } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
@@ -92,26 +92,38 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             )}
                         </div>
                     </div>
-                    <button
-                        onClick={() => {
-                            const patientParam = encodeURIComponent(JSON.stringify({
-                                id: patient.id,
-                                name: patient.name,
-                                lastName: patient.lastName,
-                                dni: patient.dni,
-                                birthDate: patient.birthDate,
-                                num: patient.num,
-                                email: patient.email,
-                                insurance: patient.insurance,
-                                plan: patient.plan,
-                                affiliateNum: patient.affiliateNum
-                            }));
-                            router.push(`/?patient=${patientParam}`);
-                        }}
-                        className="flex-shrink-0 px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 select-none"
-                    >
-                        Dar cita
-                    </button>
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => {
+                                const patientParam = encodeURIComponent(JSON.stringify({
+                                    id: patient.id,
+                                    name: patient.name,
+                                    lastName: patient.lastName,
+                                    dni: patient.dni,
+                                    birthDate: patient.birthDate,
+                                    num: patient.num,
+                                    email: patient.email,
+                                    insurance: patient.insurance,
+                                    plan: patient.plan,
+                                    affiliateNum: patient.affiliateNum
+                                }));
+                                router.push(`/?patient=${patientParam}`);
+                            }}
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 select-none"
+                        >
+                            Dar cita
+                        </button>
+                        {patient.num && (
+                            <a
+                                href={`https://wa.me/549${patient.num.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-500 transition duration-150 select-none"
+                            >
+                                <FaWhatsapp size={15} /> WhatsApp
+                            </a>
+                        )}
+                    </div>
                 </div>
 
                 {/* Tab navigation */}
