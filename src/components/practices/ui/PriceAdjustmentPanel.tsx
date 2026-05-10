@@ -32,6 +32,7 @@ interface Props {
     setGlobalResult: (value: GlobalResult | null) => void;
     handleGlobalUpdate: () => void;
     formatPrice: (price: number) => string;
+    clinicId: string | null;
 }
 
 const ALL_AREAS = [
@@ -48,7 +49,7 @@ export function PriceAdjustmentPanel({
     globalPercentageVisible, setGlobalPercentage, setGlobalPercentageVisible,
     openGlobalFormPercentages, setOpenGlobalFormPercentages,
     loadingGlobal, globalResult, setGlobalResult, handleGlobalUpdate,
-    formatPrice,
+    formatPrice, clinicId,
 }: Props) {
     const [scope, setScope] = useState<'area' | 'global'>('area');
     const [customValue, setCustomValue] = useState('');
@@ -65,7 +66,7 @@ export function PriceAdjustmentPanel({
         (async () => {
             let total = 0;
             for (const area of ALL_AREAS) {
-                const { data } = await getChapter(area);
+                const { data } = await getChapter(area, clinicId ?? '');
                 if (Array.isArray(data)) {
                     total += data.filter((item) => !Object.values(item).every((v) => v === undefined)).length;
                 }

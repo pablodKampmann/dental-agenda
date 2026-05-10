@@ -500,6 +500,7 @@ export default function Page() {
                 onSetAppoint={handleSetAppoint}
                 onOpenCreatePatient={() => isMobile ? setOpenSheetCreatePatient(true) : setOpenModalCreatePatient(true)}
                 setShowResult={setShowResult}
+                clinicId={clinicId}
               />
             ) : (
               <div className='w-[fit] h-full flex overflow-x-hidden'>

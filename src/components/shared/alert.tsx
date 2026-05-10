@@ -17,10 +17,11 @@ interface ModalSettProps {
     secondProp?: any | null;
     thirdProp?: any | null;
     fourthProp?: any | null;
-    fifthProp?: any | null
+    fifthProp?: any | null;
+    clinicId?: string
 }
 
-export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp }: ModalSettProps) {
+export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, thirdProp, fourthProp, fifthProp, clinicId }: ModalSettProps) {
     const [loading, setLoading] = useState(false);
 
     function handleCloseAlert() {
@@ -68,7 +69,7 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
 
     async function handleDeletePractice() {
         setLoading(true);
-        const result = await deletePractice(fourthProp, fifthProp);
+        const result = await deletePractice(fourthProp, fifthProp, clinicId ?? '');
         if (result === null) {
             setLoading(false);
         } else {

@@ -30,6 +30,7 @@ interface Props {
   onSetAppoint: (patientId: number, dateData: dateData, reason: any, observations?: string) => void;
   onOpenCreatePatient: () => void;
   setShowResult: (v: any) => void;
+  clinicId: string | null;
 }
 
 const CHAPTERS = [
@@ -46,6 +47,7 @@ export function AddAppointmentForm({
   reason, setReason,
   observations, setObservations,
   onSetAppoint, onOpenCreatePatient, setShowResult,
+  clinicId,
 }: Props) {
   const [step, setStep] = useState(1);
   const [chapterName, setChapterName] = useState('CONSULTAS');
@@ -57,7 +59,7 @@ export function AddAppointmentForm({
   useEffect(() => {
     async function fetchChapter() {
       setLoadingChapter(true);
-      const { data } = await getChapter(chapterName);
+      const { data } = await getChapter(chapterName, clinicId ?? '');
       if (data) {
         const filtered = data
           .filter((item: any) => !Object.values(item).every(v => v === undefined))
