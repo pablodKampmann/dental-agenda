@@ -32,7 +32,7 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
 
     return (
         <div className="h-full overflow-hidden w-full">
-            <div className="rounded-xl w-full border-2 border-gray-600 overflow-y-auto overflow-x-hidden h-full bg-gray-50">
+            <div className="scroll-rounded rounded-xl w-full border-2 border-gray-600 overflow-y-auto overflow-x-hidden h-full bg-gray-50">
                 <table className="w-full select-none">
                     <thead className="sticky top-0 z-10">
                         <tr className="bg-teal-600 h-10 border-b-2 border-gray-600 text-left text-xs font-semibold uppercase tracking-widest text-white">

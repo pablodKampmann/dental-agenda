@@ -1,55 +1,64 @@
 'use client'
 
-import { getPatient } from "./../../../services/patients/getPatient";
-import React, { useState, useEffect, useRef } from 'react';
-import { ImAccessibility } from 'react-icons/im';
-import { BsFillPhoneFill } from 'react-icons/bs';
-import { updatePatient } from "./../../../services/patients/updatePatient";
-import { BiPlusMedical } from 'react-icons/bi';
-import { Alert } from "./../../../components/shared/alert";
-import { FaQuestionCircle } from "react-icons/fa";
-import { useRouter } from 'next/navigation'
-import { usePathname } from 'next/navigation'
-import { PatientRecord } from "./../../../components/patients/ui/patientRecord";
-import { getInsuranceOptions } from "./../../../services/options/getInsuranceOpt";
-import { getInsurancePlans } from "./../../../services/options/getInsurancePlans";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { getPatient } from './../../../services/patients/getPatient';
+import React, { useState, useEffect } from 'react';
+import { updatePatient } from './../../../services/patients/updatePatient';
+import { Alert } from './../../../components/shared/alert';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { PatientRecord } from './../../../components/patients/ui/patientRecord';
+import { getInsuranceOptions } from './../../../services/options/getInsuranceOpt';
+import { getInsurancePlans } from './../../../services/options/getInsurancePlans';
+import { getPatientAppointments } from './../../../services/appointments/getPatientAppointments';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import { Loading } from "./../../../components/shared/loading";
-import { MoonLoader } from "react-spinners";
-import { FaCheck } from "react-icons/fa6";
-import { useAuth } from "@/context/AuthContext";
+import { Loading } from './../../../components/shared/loading';
+import { ScaleLoader, ClipLoader } from 'react-spinners';
+import { FaCheck, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
+import { getUser } from './../../../services/auth/getUser';
+import { EditableRow } from '@/components/patients/ui/editableRow';
+import { TbPencilCog } from 'react-icons/tb';
+import { BiArrowBack } from 'react-icons/bi';
+import Link from 'next/link';
+import { BsCalendarCheck, BsCalendarX } from 'react-icons/bs';
 
-import { EditableRow } from "@/components/patients/ui/editableRow";
+function parseApptDate(dateStr: string): Date {
+  const [d, m, y] = dateStr.split('/');
+  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+}
 
 export default function PatientId() {
-  const router = useRouter()
+  const router = useRouter();
   const [isLoad, setIsLoad] = useState(true);
   const [loadingCategory, setLoadingCategory] = useState('');
   const [check, setCheck] = useState(false);
-  const pathname = usePathname()
+  const pathname = usePathname();
   const id = (pathname.split('/').pop() || null) as string | null;
   const [patient, setPatient] = useState<any>(null);
-  const [hovered, setHovered] = useState('');
   const [rowModify, setRowModify] = useState('');
   const [changes, setChanges] = useState<any>('');
   const [openAlert, setOpenAlert] = useState(false);
-  const [openInfo, setOpenInfo] = useState(false);
-  const [insuranceOptions, setInsuranceOptions] = useState<null | { id: string, name: string }[]>(null);
-  const [planOptions, setPlanOptions] = useState<{ id: string, name: string }[]>([]);
+  const [insuranceOptions, setInsuranceOptions] = useState<null | { id: string; name: string }[]>(null);
+  const [planOptions, setPlanOptions] = useState<{ id: string; name: string }[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  const [insuranceDraft, setInsuranceDraft] = useState<{ id: string, name: string } | null>(null);
-  const [planDraft, setPlanDraft] = useState<{ id: string, name: string } | null>(null);
+  const [insuranceDraft, setInsuranceDraft] = useState<{ id: string; name: string } | null>(null);
+  const [planDraft, setPlanDraft] = useState<{ id: string; name: string } | null>(null);
   const [date, setDate] = useState<null | any>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
+  const [clinicId, setClinicId] = useState<string | null>(null);
+  const [patientAppointments, setPatientAppointments] = useState<any[] | null>(null);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
-  const { user, loading: authLoading } = useAuth();
-  const clinicId = user?.clinicId ?? null;
-
-
-
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) router.push('/notSign');
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -57,13 +66,10 @@ export default function PatientId() {
       try {
         const data = await getPatient(id, clinicId as string);
         setPatient(data);
-        const date = dayjs(data.birthDate, "DD/MM/YYYY");
-        setDateFormatted(date);
+        setDateFormatted(dayjs(data.birthDate, 'DD/MM/YYYY'));
         setIsLoad(false);
         const options = await getInsuranceOptions();
-        if (options) {
-          setInsuranceOptions(options);
-        }
+        if (options) setInsuranceOptions(options);
       } catch (error) {
         console.error(error);
       }
@@ -71,11 +77,19 @@ export default function PatientId() {
     get();
   }, [id, clinicId]);
 
+  useEffect(() => {
+    if (!patient?.id) return;
+    setLoadingAppointments(true);
+    getPatientAppointments(patient.id).then(appts => {
+      setPatientAppointments(appts);
+      setLoadingAppointments(false);
+    });
+  }, [patient?.id]);
+
   async function submitInsuranceChanges() {
     if (!insuranceDraft) { setRowModify(''); return; }
     setLoadingCategory('medic');
     setRowModify('');
-    setHovered('');
     setChanges('');
     const newPatient = await updatePatient(
       { insurance: insuranceDraft.name, insuranceId: insuranceDraft.id, plan: '', planId: '' },
@@ -89,7 +103,6 @@ export default function PatientId() {
     if (!planDraft?.id) { setRowModify(''); setPlanDraft(null); return; }
     setLoadingCategory('medic');
     setRowModify('');
-    setHovered('');
     setChanges('');
     const newPatient = await updatePatient(
       { plan: planDraft.name, planId: planDraft.id },
@@ -104,27 +117,18 @@ export default function PatientId() {
     if (table === 'plan') { await submitPlanChanges(); return; }
     setLoadingCategory(category);
     setRowModify('');
-    setHovered('')
-    setChanges('')
+    setChanges('');
     if (changes !== '') {
       const newPatient = await updatePatient(changes, table, id, clinicId as string);
-      if (newPatient) {
-        setPatient(newPatient);
-        setCheck(true);
-      } else {
-        setLoadingCategory('')
-      }
+      if (newPatient) { setPatient(newPatient); setCheck(true); }
+      else setLoadingCategory('');
     } else {
-      setLoadingCategory('')
+      setLoadingCategory('');
     }
   }
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setLoadingCategory('');
-      setCheck(false);
-    }, 2000);
-
+    const timeoutId = setTimeout(() => { setLoadingCategory(''); setCheck(false); }, 2000);
     return () => clearTimeout(timeoutId);
   }, [check]);
 
@@ -151,320 +155,431 @@ export default function PatientId() {
 
   useEffect(() => {
     if (date) {
-      const formattedDate = dayjs(date.$d);
-      const formattedDateString = formattedDate.format('DD/MM/YYYY');
-      setChanges(formattedDateString)
+      setChanges(dayjs(date.$d).format('DD/MM/YYYY'));
     }
-
   }, [date]);
+
+  useEffect(() => {
+    async function fetchClinicId() {
+      const cid = await getUser(true);
+      setClinicId(cid as string);
+    }
+    fetchClinicId();
+  }, []);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const sortedAppointments = [...(patientAppointments || [])].sort(
+    (a, b) => parseApptDate(a.date).getTime() - parseApptDate(b.date).getTime()
+  );
+  const nextAppointment = sortedAppointments.find(a => parseApptDate(a.date) >= today) ?? null;
+  const lastAppointment = [...sortedAppointments].reverse().find(a => parseApptDate(a.date) < today) ?? null;
 
   if (id !== null) {
     return (
-      <div>
-        {authLoading || isLoad ? (
+      <div className="h-[calc(100vh-68px)] overflow-y-auto">
+        {isLoad ? (
           <Loading />
         ) : (
-          <div className='ml-2 p-4 mt-16 mr-2 relative'>
+          <div className="px-4 py-4">
             {openAlert && (
-              <div className='fixed inset-0 backdrop-blur-sm ml-56 z-10'>
-                <Alert onCloseAlert={() => setOpenAlert(false)} onSuccess={() => { setOpenAlert(false); router.push('/patients'); }} action={'Eliminar Paciente'} firstProp={'¿Estás seguro/a de que deseas eliminar a este paciente?'} secondProp={'Esta accion sera permanente y no se podra volver atras'} thirdProp={id} />
+              <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
+                <Alert
+                  onCloseAlert={() => setOpenAlert(false)}
+                  onSuccess={() => { setOpenAlert(false); router.push('/patients'); }}
+                  action="Eliminar Paciente"
+                  firstProp="¿Estás seguro/a de que deseas eliminar a este paciente?"
+                  secondProp="Esta acción será permanente y no se podrá volver atrás"
+                  thirdProp={id}
+                />
               </div>
             )}
+
             {patient && (
               <div>
+                {/* Back arrow */}
+                <Link href="/patients">
+                  <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-700 transition duration-150 mb-3 select-none">
+                    <BiArrowBack size={16} /> Pacientes
+                  </button>
+                </Link>
+
                 <PatientRecord patient={patient} />
-                <div onMouseEnter={() => setOpenInfo(true)} onMouseLeave={() => setOpenInfo(false)} className="hover:scale-125 transition duration-100 w-7 -translate-y-5 mr-2 ml-auto relative" style={{ zIndex: 1000 }}>
-                  <FaQuestionCircle className="text-teal-600 cursor-pointer" size={26} />
-                  {openInfo ? (
-                    <div className="top-0 -translate-x-[324px] mr-2 bg-teal-600 border-2 border-gray-600 rounded-lg px-2 py-1 text-xs w-80 absolute" style={{ zIndex: 1001 }}>
-                      Para actualizar los datos de un paciente, simplemente coloca el mouse sobre el dato que deseas modificar. <br />
-                      Si deseas eliminar un paciente, encontrarás un botón correspondiente en la parte inferior de la página.
-                    </div>
-                  ) : null}
-                </div>
-                <div className='flex'>
-                  <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-1/2 relative'>
-                    <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
-                      {loadingCategory === 'basic' ? (
-                        <div>
-                          <div className={`${check ? 'opacity-100 animate-move-from-bottom' : 'opacity-0'} duration-[1000ms] transition-opacity `}>
-                            <FaCheck size={40} />
-                          </div>
-                          {check !== true && (
-                            <MoonLoader className="mb-10" color="white" size={50} />
-                          )}
-                        </div>
+
+                {/* Appointments panel */}
+                <div className="border-2 border-gray-300 rounded-xl overflow-hidden mb-4">
+                  <div className="flex divide-x divide-gray-200">
+                    {/* Last visit */}
+                    <div className="flex-1 px-4 py-3 bg-gray-50">
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
+                        <BsCalendarX size={13} /> Última Visita
+                      </h3>
+                      {loadingAppointments ? (
+                        <ClipLoader size={14} color="#9ca3af" />
+                      ) : lastAppointment ? (
+                        <>
+                          <p className="text-sm font-semibold text-black">
+                            {lastAppointment.dayComplete} · {lastAppointment.time}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {typeof lastAppointment.reason === 'string'
+                              ? lastAppointment.reason
+                              : lastAppointment.reason?.name || 'Sin motivo registrado'}
+                          </p>
+                        </>
                       ) : (
-                        <ImAccessibility size={60} className="text-teal-600" />
+                        <p className="text-sm text-gray-400 italic">Sin visitas anteriores</p>
                       )}
                     </div>
-                    <div className='flex'>
-                      <div>
-                        <h1 className='mb-2 text-xl font-semibold text-white border-b-4 border-r-2 border-gray-600 bg-teal-600 w-full rounded-tl-md  rounded-br-3xl pl-6 py-0.5 select-none'>INFORMACIÓN BÁSICA</h1>
-                        {/*name*/}
+                    {/* Next appointment */}
+                    <div className="flex-1 px-4 py-3">
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
+                        <BsCalendarCheck size={13} /> Próximo Turno
+                      </h3>
+                      {loadingAppointments ? (
+                        <ClipLoader size={14} color="#9ca3af" />
+                      ) : nextAppointment ? (
+                        <>
+                          <p className="text-sm font-semibold text-teal-700">
+                            {nextAppointment.dayComplete} · {nextAppointment.time}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {typeof nextAppointment.reason === 'string'
+                              ? nextAppointment.reason
+                              : nextAppointment.reason?.name || 'Sin motivo registrado'}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Sin próximo turno</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section header with save indicator */}
+                <div className="flex items-center justify-between mb-3 select-none">
+                  <h2 className="text-base font-bold tracking-wide text-black">Datos del paciente</h2>
+                  {loadingCategory && (
+                    <div className="flex items-center gap-2">
+                      {check ? (
+                        <span className="flex items-center gap-1.5 text-sm text-teal-700 font-semibold">
+                          <FaCheck size={13} /> Guardado
+                        </span>
+                      ) : (
+                        <ScaleLoader margin={2} color="#0d9488" width={2} height={18} speedMultiplier={1.4} />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Two-column data layout */}
+                <div className="flex gap-4">
+                  {/* Left: Información Básica */}
+                  <div className="flex-1">
+                    <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Información Básica</h3>
+                    <div className="flex flex-col gap-2">
+                      <EditableRow
+                        label="Nombre"
+                        value={patient.name}
+                        rowKey="name"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                      />
+                      <EditableRow
+                        label="Apellido"
+                        value={patient.lastName}
+                        rowKey="lastName"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                      />
+                      <EditableRow
+                        label="DNI"
+                        value={patient.dni}
+                        rowKey="dni"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                      />
+                      <EditableRow
+                        label="Domicilio"
+                        value={patient.address}
+                        rowKey="address"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                      />
+                      <EditableRow
+                        label="Nacimiento"
+                        value={patient.birthDate}
+                        rowKey="birthDate"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                        renderInput={
+                          <div
+                            className="flex-1"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') submitChanges(changes, 'birthDate', 'basic');
+                              else if (e.key === 'Escape') setRowModify('');
+                            }}
+                          >
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                              <DatePicker
+                                defaultValue={dateFormatted}
+                                onChange={(newDate) => setDate(newDate)}
+                                format="DD/MM/YYYY"
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                              />
+                            </LocalizationProvider>
+                          </div>
+                        }
+                      />
+                      <EditableRow
+                        label="Género"
+                        value={patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : '-'}
+                        rowKey="gender"
+                        category="basic"
+                        rowModify={rowModify}
+                        setRowModify={setRowModify}
+                        setChanges={setChanges}
+                        submitChanges={submitChanges}
+                        changes={changes}
+                        renderInput={
+                          <select
+                            defaultValue={patient.gender}
+                            onChange={(e) => setChanges(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') submitChanges(changes, 'gender', 'basic');
+                              else if (e.key === 'Escape') setRowModify('');
+                            }}
+                            autoFocus
+                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                          >
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                          </select>
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: Contacto + Salud */}
+                  <div className="flex-1 flex flex-col gap-4">
+                    {/* Contacto */}
+                    <div>
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Contacto</h3>
+                      <div className="flex flex-col gap-2">
                         <EditableRow
-                          label="Nombre"
-                          value={patient.name}
-                          rowKey="name"
-                          category="basic"
+                          label="Teléfono"
+                          value={patient.num}
+                          rowKey="num"
+                          category="contact"
                           rowModify={rowModify}
-                          hovered={hovered}
                           setRowModify={setRowModify}
-                          setHovered={setHovered}
                           setChanges={setChanges}
                           submitChanges={submitChanges}
                           changes={changes}
                         />
-                        {/*lastName*/}
                         <EditableRow
-                          label="Apellido"
-                          value={patient.lastName}
-                          rowKey="lastName"
-                          category="basic"
+                          label="Correo"
+                          value={patient.email}
+                          rowKey="email"
+                          category="contact"
                           rowModify={rowModify}
-                          hovered={hovered}
                           setRowModify={setRowModify}
-                          setHovered={setHovered}
                           setChanges={setChanges}
                           submitChanges={submitChanges}
                           changes={changes}
                         />
-                        {/*DNI*/}
+                      </div>
+                    </div>
+
+                    {/* Salud */}
+                    <div>
+                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Salud</h3>
+                      <div className="flex flex-col gap-2">
                         <EditableRow
-                          label="DNI"
-                          value={patient.dni}
-                          rowKey="dni"
-                          category="basic"
+                          label="Obra Social"
+                          value={patient.insurance}
+                          rowKey="insurance"
+                          category="medic"
                           rowModify={rowModify}
-                          hovered={hovered}
                           setRowModify={setRowModify}
-                          setHovered={setHovered}
-                          setChanges={setChanges}
-                          submitChanges={submitChanges}
-                          changes={changes}
-                        />
-                        {/*Address*/}
-                        <EditableRow
-                          label="Domicilio"
-                          value={patient.address}
-                          rowKey="address"
-                          category="basic"
-                          rowModify={rowModify}
-                          hovered={hovered}
-                          setRowModify={setRowModify}
-                          setHovered={setHovered}
-                          setChanges={setChanges}
-                          submitChanges={submitChanges}
-                          changes={changes}
-                        />
-                        {/*birthDate*/}
-                        <EditableRow
-                          label="Nacimiento"
-                          value={patient.birthDate}
-                          rowKey="birthDate"
-                          category="basic"
-                          rowModify={rowModify}
-                          hovered={hovered}
-                          setRowModify={setRowModify}
-                          setHovered={setHovered}
                           setChanges={setChanges}
                           submitChanges={submitChanges}
                           changes={changes}
                           renderInput={
-                            <div className="relative text-gray-400 ml-2 mr-2" onKeyDown={(e) => { if (e.key === 'Enter') submitChanges(changes, 'birthDate', 'basic'); else if (e.key === 'Escape') setRowModify(''); }}>
-                              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <DatePicker defaultValue={dateFormatted} onChange={(newDate) => setDate(newDate)} format="DD/MM/YYYY" slotProps={{ textField: { size: 'small' } }} className="px-3 py-2 w-full border text-sm border-gray-300 rounded-md focus:outline-none bg-teal-600 bg-opacity-20 text-black" />
-                              </LocalizationProvider>
-                            </div>
-                          }
-                        />
-                        {/*Gender*/}
-                        <EditableRow
-                          label="Género"
-                          value={patient.gender === 'male' ? 'Masculino' : patient.gender === 'female' ? 'Femenino' : '-'}
-                          rowKey="gender"
-                          category="basic"
-                          rowModify={rowModify}
-                          hovered={hovered}
-                          setRowModify={setRowModify}
-                          setHovered={setHovered}
-                          setChanges={setChanges}
-                          submitChanges={submitChanges}
-                          changes={changes}
-                          renderInput={
-                            <select defaultValue={patient.gender} onChange={(e) => setChanges(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitChanges(changes, 'gender', 'basic'); else if (e.key === 'Escape') setRowModify(''); }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
-                              <option value="male">Masculino</option>
-                              <option value="female">Femenino</option>
+                            <select
+                              value={insuranceDraft?.id ?? ''}
+                              onChange={(e) => {
+                                const opt = insuranceOptions?.find(o => o.id === e.target.value);
+                                if (opt) setInsuranceDraft(opt);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') submitInsuranceChanges();
+                                else if (e.key === 'Escape') { setRowModify(''); setInsuranceDraft(null); }
+                              }}
+                              autoFocus
+                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                            >
+                              {insuranceOptions?.map((opt) => (
+                                <option key={opt.id} value={opt.id}>{opt.name}</option>
+                              ))}
                             </select>
                           }
                         />
-                      </div>
-                    </div>
-                  </div>
-                  <div className='w-1/2'>
-                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-full relative'>
-                      <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
-                        {loadingCategory === 'contact' ? (
-                          <div>
-                            <div className={`${check ? 'opacity-100 animate-move-from-bottom' : 'opacity-0'} duration-[1000ms] transition-opacity `}>
-                              <FaCheck size={40} />
+
+                        {patient.insurance === 'Particular' ? (
+                          <>
+                            <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50">
+                                <span className="text-sm text-gray-500">Plan:</span>
+                                <span className="text-sm font-semibold text-black">-</span>
+                              </div>
                             </div>
-                            {check !== true && (
-                              <MoonLoader className="mb-10" color="white" size={50} />
-                            )}
-                          </div>
-                        ) : (
-                          <BsFillPhoneFill size={55} className=' text-teal-600' />
-                        )}
-                      </div>
-                      <div className=''>
-                        <div className='flex'>
-                          <div>
-                            <h1 className='mb-2 text-xl font-semibold text-white border-b-4 border-r-2 border-gray-600 bg-teal-600  w-full rounded-tl-md  rounded-br-3xl px-6 py-0.5 select-none'>CONTACTO</h1>
-                            {/*num*/}
-                            <EditableRow
-                              label="Núm.Telefono"
-                              value={patient.num}
-                              rowKey="num"
-                              category="contact"
-                              rowModify={rowModify}
-                              hovered={hovered}
-                              setRowModify={setRowModify}
-                              setHovered={setHovered}
-                              setChanges={setChanges}
-                              submitChanges={submitChanges}
-                              changes={changes}
-                            />
-                            {/*email*/}
-                            <EditableRow
-                              label="Correo"
-                              value={patient.email}
-                              rowKey="email"
-                              category="contact"
-                              rowModify={rowModify}
-                              hovered={hovered}
-                              setRowModify={setRowModify}
-                              setHovered={setHovered}
-                              setChanges={setChanges}
-                              submitChanges={submitChanges}
-                              changes={changes}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='mr-4 border-2 rounded-lg border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg w-full mt-4 relative'>
-                      <div className="ml-auto top-0 right-0 mt-2 mr-2 bg-teal-950 bg-opacity-80 rounded-full w-20 h-20 flex justify-center items-center shadow-lg absolute">
-                        {loadingCategory === 'medic' ? (
-                          <div>
-                            <div className={`${check ? 'opacity-100 animate-move-from-bottom' : 'opacity-0'} duration-[1000ms] transition-opacity `}>
-                              <FaCheck size={40} />
+                            <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50">
+                                <span className="text-sm text-gray-500">Núm. Afiliado:</span>
+                                <span className="text-sm font-semibold text-black">-</span>
+                              </div>
                             </div>
-                            {check !== true && (
-                              <MoonLoader className="mb-10" color="white" size={50} />
-                            )}
-                          </div>
+                          </>
                         ) : (
-                          <BiPlusMedical size={60} className="text-teal-600" />
-                        )}
-                      </div>
-                      <div className=''>
-                        <div className='flex'>
-                          <div>
-                            <h1 className='mb-2 text-xl font-semibold text-white border-b-4 border-r-2 border-gray-600 bg-teal-600  w-full rounded-tl-md rounded-br-3xl px-6 py-0.5 select-none'>SALUD</h1>
+                          <>
                             <EditableRow
-                              label="ObraSocial"
-                              value={patient.insurance}
-                              rowKey="insurance"
+                              label="Plan"
+                              value={patient.plan}
+                              rowKey="plan"
                               category="medic"
                               rowModify={rowModify}
-                              hovered={hovered}
                               setRowModify={setRowModify}
-                              setHovered={setHovered}
                               setChanges={setChanges}
                               submitChanges={submitChanges}
                               changes={changes}
                               renderInput={
-                                <select value={insuranceDraft?.id ?? ''} onChange={(e) => { const opt = insuranceOptions?.find(o => o.id === e.target.value); if (opt) setInsuranceDraft(opt); }} onKeyDown={(e) => { if (e.key === 'Enter') submitInsuranceChanges(); else if (e.key === 'Escape') { setRowModify(''); setInsuranceDraft(null); } }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
-                                  {insuranceOptions?.map((opt) => (
-                                    <option key={opt.id} value={opt.id}>{opt.name}</option>
-                                  ))}
-                                </select>
+                                loadingPlans ? (
+                                  <span className="text-sm text-gray-400 flex-1">Cargando...</span>
+                                ) : (
+                                  <select
+                                    value={planDraft?.id ?? ''}
+                                    onChange={(e) => {
+                                      const opt = planOptions.find(o => o.id === e.target.value);
+                                      if (opt) setPlanDraft(opt);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') submitPlanChanges();
+                                      else if (e.key === 'Escape') { setRowModify(''); setPlanDraft(null); }
+                                    }}
+                                    autoFocus
+                                    className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                                  >
+                                    {!planDraft?.id && <option value="" disabled>Seleccionar...</option>}
+                                    {planOptions.length === 0 && planDraft?.id && <option value="" disabled>Sin planes</option>}
+                                    {planOptions.map((opt) => (
+                                      <option key={opt.id} value={opt.id}>{opt.name}</option>
+                                    ))}
+                                  </select>
+                                )
                               }
                             />
-                            {patient.insurance === 'Particular' ? (
-                              <div>
-                                <div className="transition duration-100 w-[25rem] border-2 border-transparent ml-4 mb-1 flex items-center rounded-lg p-1">
-                                  <h1 className='text-md text-black font-semibold'>Plan:</h1>
-                                  <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
-                                </div>
-                                <div className="transition duration-100 w-[25rem] border-2 border-transparent ml-4 mb-1 flex items-center rounded-lg p-1">
-                                  <h1 className='text-md text-black font-semibold'>Núm.Afiliado:</h1>
-                                  <p className='ml-2 text-gray-700 text-lg w-4/6 overflow-auto'>-</p>
-                                </div>
-                              </div>
-                            ) : (
-                              <div>
-                                {/*plan*/}
-                                <EditableRow
-                                  label="Plan"
-                                  value={patient.plan}
-                                  rowKey="plan"
-                                  category="medic"
-                                  rowModify={rowModify}
-                                  hovered={hovered}
-                                  setRowModify={setRowModify}
-                                  setHovered={setHovered}
-                                  setChanges={setChanges}
-                                  submitChanges={submitChanges}
-                                  changes={changes}
-                                  renderInput={
-                                    loadingPlans ? (
-                                      <span className="ml-4 text-sm text-gray-400">Cargando...</span>
-                                    ) : (
-                                      <select value={planDraft?.id ?? ''} onChange={(e) => { const opt = planOptions.find(o => o.id === e.target.value); if (opt) setPlanDraft(opt); }} onKeyDown={(e) => { if (e.key === 'Enter') submitPlanChanges(); else if (e.key === 'Escape') { setRowModify(''); setPlanDraft(null); } }} autoFocus className="rounded-md text-black bg-teal-600 bg-opacity-20 pl-1 flex h-8 font-semibold focus:outline-transparent focus:text-black text-lg overflow-auto w-full ml-4 mr-4">
-                                        {!planDraft?.id && <option value="" disabled>Seleccionar...</option>}
-                                        {planOptions.length === 0 && planDraft?.id && <option value="" disabled>Sin planes</option>}
-                                        {planOptions.map((opt) => (
-                                          <option key={opt.id} value={opt.id}>{opt.name}</option>
-                                        ))}
-                                      </select>
-                                    )
-                                  }
-                                />
-                                {/*affiliateNum*/}
-                                <EditableRow
-                                  label="Núm.Afiliado"
-                                  value={patient.affiliateNum}
-                                  rowKey="affiliateNum"
-                                  category="medic"
-                                  rowModify={rowModify}
-                                  hovered={hovered}
-                                  setRowModify={setRowModify}
-                                  setHovered={setHovered}
-                                  setChanges={setChanges}
-                                  submitChanges={submitChanges}
-                                  changes={changes}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                            <EditableRow
+                              label="Núm. Afiliado"
+                              value={patient.affiliateNum}
+                              rowKey="affiliateNum"
+                              category="medic"
+                              rowModify={rowModify}
+                              setRowModify={setRowModify}
+                              setChanges={setChanges}
+                              submitChanges={submitChanges}
+                              changes={changes}
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-center">
-                  <div onClick={() => setOpenAlert(true)} className='select-none mt-4 border-2 rounded-lg border-red-600 bg-gray-300 bg-opacity-30 shadow-lg w-full relative text-center transition duration-200 cursor-pointer hover:text-white hover:bg-red-900 border-opacity-30 hover:bg-opacity-70 px-2 py-1 text-black text-xl font-medium'>
-                    Eliminar Paciente Permanentemente
+
+                {/* Notes */}
+                <div className="mt-4">
+                  <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Observaciones</h3>
+                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+                    <div className="flex items-start justify-between px-3 py-2 bg-gray-50 gap-2">
+                      {rowModify === 'notes' ? (
+                        <div className="flex flex-col gap-2 flex-1">
+                          <textarea
+                            autoFocus
+                            defaultValue={patient.notes}
+                            onChange={(e) => setChanges(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Escape') setRowModify(''); }}
+                            rows={3}
+                            className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black resize-none w-full"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <FaCircleXmark
+                              onClick={() => setRowModify('')}
+                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer"
+                              size={20}
+                            />
+                            <FaCircleCheck
+                              onClick={() => submitChanges(changes, 'notes', 'notes')}
+                              className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer"
+                              size={20}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm text-black flex-1 whitespace-pre-wrap min-h-[2rem]">
+                            {patient.notes
+                              ? patient.notes
+                              : <span className="text-gray-400 italic">Sin observaciones</span>
+                            }
+                          </p>
+                          <button
+                            onClick={() => { setRowModify('notes'); setChanges(patient.notes ?? ''); }}
+                            className="text-gray-400 hover:text-teal-700 transition duration-150 flex-shrink-0 mt-0.5"
+                          >
+                            <TbPencilCog size={18} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
+                </div>
+
+                {/* Delete */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setOpenAlert(true)}
+                    className="w-full py-2 px-4 text-sm font-semibold text-red-600 border-2 border-red-200 rounded-xl hover:bg-red-50 transition duration-200 select-none"
+                  >
+                    Eliminar Paciente Permanentemente
+                  </button>
                 </div>
               </div>
             )}
           </div>
-        )
-        }
-      </div >
+        )}
+      </div>
     );
   }
 }

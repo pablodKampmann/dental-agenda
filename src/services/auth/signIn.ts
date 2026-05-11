@@ -23,9 +23,11 @@ export async function signIn(user: string, password: string) {
                             return ('all-good');
                         }
                     } catch (error) {
-                        if ((error as any).code === 'auth/wrong-password') {
-                            return ('wrong-password')
+                        const code = (error as any).code;
+                        if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+                            return 'wrong-password';
                         }
+                        throw error;
                     }
                 } else {
                     return ('wrong-userName')
