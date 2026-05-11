@@ -100,8 +100,12 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
                             {/* Footer: cargar más o estado de búsqueda */}
                             {searchContent === '' ? (
                                 <tr
-                                    onClick={loadMorePatients}
-                                    className={`${isListOfPatientsComplete !== true ? 'bg-teal-600 hover:bg-opacity-85 cursor-pointer' : 'bg-teal-600'} border-t-2 border-gray-600 transition duration-150`}
+                                    onClick={!loadMorePatientsButtom ? loadMorePatients : undefined}
+                                    className={`
+        ${isListOfPatientsComplete !== true ? 'bg-teal-600 cursor-pointer' : 'bg-teal-600'}
+        ${loadMorePatientsButtom ? 'opacity-70 pointer-events-none' : 'hover:bg-opacity-85'}
+        border-t-2 border-gray-600 transition duration-150
+    `}
                                 >
                                     <td colSpan={6}>
                                         {loadMorePatientsButtom ? (
