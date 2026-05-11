@@ -1,11 +1,28 @@
 'use client'
 import { useState } from "react";
 import { runSeedPatients, SEED_PATIENTS } from "../../dev/seedPatients";
+import { runMigrateAddTimestamps } from "../../dev/migrateAddTimestamps";
 
 export default function DevPage() {
     const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
     const [result, setResult] = useState<{ ok: number; failed: string[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [migrateStatus, setMigrateStatus] = useState<"idle" | "running" | "done">("idle");
+    const [migrateResult, setMigrateResult] = useState<{ updated: number; skipped: number; failed: string[] } | null>(null);
+    const [migrateError, setMigrateError] = useState<string | null>(null);
+
+    async function handleMigrate() {
+        setMigrateStatus("running");
+        setMigrateResult(null);
+        setMigrateError(null);
+        try {
+            const res = await runMigrateAddTimestamps();
+            setMigrateResult(res);
+        } catch (e: any) {
+            setMigrateError(e.message ?? "Error desconocido");
+        }
+        setMigrateStatus("done");
+    }
 
     async function handleSeed() {
         setStatus("running");
@@ -21,7 +38,7 @@ export default function DevPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-10 text-black">
+        <div className="h-screen bg-gray-50 p-10 pb-20 text-black overflow-y-auto">
             <div className="max-w-2xl mx-auto">
                 <div className="mb-6 border-l-4 border-teal-600 pl-4">
                     <h1 className="text-2xl font-bold">Dev — Seed Pacientes</h1>
@@ -77,6 +94,40 @@ export default function DevPage() {
                                 <p className="font-semibold text-red-600">✗ {result.failed.length} fallidos:</p>
                                 <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
                                     {result.failed.map((f, i) => <li key={i}>{f}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* --- Migración: agregar timestamps --- */}
+                <div className="mt-10 border-l-4 border-orange-500 pl-4 mb-6">
+                    <h2 className="text-xl font-bold">Migración — Agregar timestamps</h2>
+                    <p className="text-sm text-gray-500 mt-1">Asigna timestamps secuenciales a pacientes que no tienen el campo.</p>
+                </div>
+
+                <button
+                    onClick={handleMigrate}
+                    disabled={migrateStatus === "running"}
+                    className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {migrateStatus === "running" ? "Migrando..." : "Ejecutar migración de timestamps"}
+                </button>
+                <p className="text-xs text-orange-500 mt-1">⚠ Puede demorar unos segundos dependiendo de la cantidad de pacientes.</p>
+
+                {migrateError && (
+                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                        {migrateError}
+                    </div>
+                )}
+
+                {migrateResult && (
+                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                        <p className="font-semibold text-orange-600">✓ {migrateResult.updated} actualizados · {migrateResult.skipped} salteados</p>
+                        {migrateResult.failed.length > 0 && (
+                            <div className="mt-2">
+                                <p className="font-semibold text-red-600">✗ {migrateResult.failed.length} fallidos:</p>
+                                <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                    {migrateResult.failed.map((f, i) => <li key={i}>{f}</li>)}
                                 </ul>
                             </div>
                         )}
