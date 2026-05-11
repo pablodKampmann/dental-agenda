@@ -64,7 +64,9 @@ export default function Patients() {
                     </div>
                     {listOfPatients && (
                         <span className="text-sm font-semibold text-gray-500 hidden md:block">
-                            {listOfPatients.length} {listOfPatients.length === 1 ? 'paciente cargado' : 'pacientes cargados'}
+                            {isListOfPatientsComplete
+                                ? `${listOfPatients.length} pacientes en total`
+                                : `Mostrando ${listOfPatients.length} pacientes`}
                         </span>
                     )}
                 </div>
