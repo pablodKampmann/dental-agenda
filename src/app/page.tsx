@@ -42,6 +42,9 @@ import { AppointmentsTable } from "@/components/appointments/ui/AppointmentsTabl
 import { AddAppointmentForm } from "@/components/appointments/ui/AddAppointmentForm";
 import { RemainingAppointments } from "@/components/appointments/ui/RemainingAppointments";
 
+import { Toast } from '@/components/shared/Toast';
+import type { ToastVariant } from '@/components/shared/Toast';
+
 export type { dateData } from "@/components/appointments/appointmentUtils";
 
 interface CustomDayjs extends Dayjs {
@@ -117,7 +120,7 @@ export default function Page() {
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [openSheetCreatePatient, setOpenSheetCreatePatient] = useState(false);
   const isMobile = !useMediaQuery("(min-width: 768px)");
-  const [showResult, setShowResult] = useState<any>(null);
+  const [showResult, setShowResult] = useState<ToastVariant | null>(null);
   const [freeSpaces, setFreeSpaces] = useState<any>(null);
   const [time, setTime] = useState(getCurrentTime());
   const [clinicId, setClinicId] = useState<string | null>(null);
@@ -716,6 +719,7 @@ export default function Page() {
           </div>
         </div>
       )}
+      <Toast variant={showResult} />
     </div>
   );
 }

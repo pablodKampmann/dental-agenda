@@ -15,6 +15,8 @@ import { updateChapterPrices } from "../../services/practices/updateChapterPrice
 import { PracticeTable } from "../../components/practices/ui/PracticeTable";
 import { AddPracticeForm } from "../../components/practices/ui/AddPracticeForm";
 import { PriceAdjustmentPanel } from "../../components/practices/ui/PriceAdjustmentPanel";
+import { Toast } from '@/components/shared/Toast';
+import type { ToastVariant } from '@/components/shared/Toast';
 
 const ALL_AREAS = [
   "CONSULTAS", "OPERATORIA DENTAL", "ENDODONCIA", "PRÓTESIS",
@@ -39,7 +41,7 @@ export default function Page() {
   const [openPriceEdit, setOpenPriceEdit] = useState(Array(chapterData?.length).fill(false));
   const [openCreatePractice, setOpenCreatePractice] = useState(false);
   const [openFormPercentages, setOpenFormPercentages] = useState(false);
-  const [showResult, setShowResult] = useState<any>(null);
+  const [showResult, setShowResult] = useState<ToastVariant | null>(null);
   const [openAlert, setOpenAlert] = useState("");
   const [billingTagetOverflowActived, setBillingTagetOverflowActived] = useState(false);
   const [newPrice, setNewPrice] = useState<any>(null);
@@ -249,7 +251,6 @@ export default function Page() {
                 setNewPrice={setNewPrice}
                 billingTagetOverflowActived={billingTagetOverflowActived}
                 billingTargetRef={billingTargetRef}
-                showResult={showResult}
                 togglePriceEdit={togglePriceEdit}
                 cancelEdit={cancelEdit}
                 handleUpdatePrice={handleUpdatePrice}
@@ -302,6 +303,7 @@ export default function Page() {
           ) : null}
         </div>
       )}
+      <Toast variant={showResult} />
     </div>
   );
 }
