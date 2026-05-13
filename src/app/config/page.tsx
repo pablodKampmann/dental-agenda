@@ -309,7 +309,7 @@ export default function Page() {
         <>
           <div className="bg-white w-full relative text-black flex-shrink-0">
             {loadingGet ? (
-              <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold  ">
+              <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white font-bold  ">
                 <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
                   {user.displayName}
                 </span>{" "}
@@ -325,7 +325,7 @@ export default function Page() {
             ) : (
               <h1
                 onClick={() => setShowAlert("wrong-password")}
-                className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  "
+                className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white  "
               >
                 {" "}
                 <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
