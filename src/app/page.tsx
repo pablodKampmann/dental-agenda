@@ -398,6 +398,7 @@ export default function Page() {
           (a: { time: string }) => a && a.time === time,
         );
         setAppointmentSelect(appointment);
+        console.log('appointmentSelect:', appointment);
         setOpenModalAppointment(true);
         const modalHeight = 140;
         const spaceBelow = window.innerHeight - event.clientY;
