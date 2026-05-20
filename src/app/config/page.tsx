@@ -29,6 +29,8 @@ import { setPro } from "../../services/config/setPro";
 import { updatePro } from "../../services/config/updatePro";
 import { deletePro } from "../../services/config/deletePro";
 import { useAuth } from "../../context/AuthContext";
+import { Toast } from '@/components/shared/Toast';
+import type { ToastVariant } from '@/components/shared/Toast';
 
 export default function Page() {
   const router = useRouter();
@@ -44,7 +46,7 @@ export default function Page() {
   const [changes, setChanges] = useState<string | null>(null);
   const [openInputCredential, setOpenInputCredential] = useState(false);
   const [userCredential, setUserCredential] = useState<string>("");
-  const [showAlert, setShowAlert] = useState<string>("");
+  const [showAlert, setShowAlert] = useState<string | ToastVariant>("");
   const [passwordStep, setPasswordStep] = useState<number>(0);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [currentPassword, setCurrentPassword] = useState<string>("");
@@ -89,6 +91,7 @@ export default function Page() {
     const result = await getClinicData(user.clinicId, "info");
     if (result) setClinicInfo(result);
     reset();
+    setShowAlert("saved");
   }
 
   //FUNCTIONS GETS
@@ -191,7 +194,6 @@ export default function Page() {
 
   async function handleChangeEmail(e: any, table: string, changes: any) {
     e.stopPropagation();
-    reset();
 
     if (changes !== null) {
       setLoadingGet(true);
@@ -207,15 +209,15 @@ export default function Page() {
         } else if (result.message === "Firebase: Error (auth/invalid-email).") {
           setShowAlert("invalid-email");
         }
+        setLoadingGet(false);
       } else {
         const user = await getUser(false);
         setUser(user);
+        reset();
+        setShowAlert("saved");
       }
     }
-
-    reset();
-  }
-
+}
   async function handleChangeUserName(e: any) {
     e.stopPropagation();
 
@@ -444,6 +446,7 @@ export default function Page() {
                             <input
                               autoFocus
                               type="password"
+                              autoComplete="off"
                               placeholder="Confirmá con tu contraseña"
                               onChange={(e) =>
                                 setUserCredential(e.target.value)
@@ -1183,6 +1186,7 @@ export default function Page() {
           </div>
         </>
       )}
+      <Toast variant={showAlert === "saved" ? "saved" : null} />
     </div>
   );
 }
