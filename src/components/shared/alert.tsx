@@ -155,7 +155,9 @@ export function Alert({ onCloseAlert, onSuccess, action, firstProp, secondProp, 
                         <h2 className="mt-2 text-lg font-semibold text-gray-800 select-none">Ojo!</h2>
                         <p className="select-none mt-2 text-md text-gray-600 leading-relaxed">{firstProp}</p>
                         <p className="select-none font-bold mb-2 mt-1 text-md text-gray-600 leading-relaxed flex justify-center items-center"><FaUser size={16} className="mr-1" /> {secondProp.patientData.name} {secondProp.patientData.lastName}</p>
-                        <p className="select-none font-bold mb-2 text-md text-gray-600 leading-relaxed flex justify-center items-center"><AiFillPushpin size={20} className="mr-1" />{secondProp.reason}</p>
+                        <p className="select-none font-bold mb-2 text-md text-gray-600 leading-relaxed flex justify-center items-center"> <AiFillPushpin size={20} className="mr-1" />
+                            {typeof secondProp.reason === 'object' ? secondProp.reason.name : secondProp.reason}
+                        </p>
                         <p className="select-none font-bold mb-2 text-md text-gray-600 leading-relaxed flex justify-center items-center"><IoTimeSharp size={20} className="mr-1" />{secondProp.dayComplete}, {secondProp.time}-{timeCalc(secondProp.time)}</p>
                     </div>
                     <div className="flex items-center mt-3">
