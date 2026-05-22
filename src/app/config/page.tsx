@@ -59,6 +59,16 @@ export default function Page() {
   const [newPro, setNewPro] = useState<string>("");
   const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
 
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert("");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert]);
+
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -153,12 +163,14 @@ export default function Page() {
             const user = await getUser(false);
             setUser(user);
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         case "language":
           result = await setRowChanges(table, changes, userUid);
           if (result !== null) {
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         default:
@@ -769,6 +781,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -795,6 +808,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -819,13 +833,14 @@ export default function Page() {
                                       deletePro(
                                         user.clinicId,
                                         professional.key,
-                                      ).then(() =>
+                                      ).then(() => {
                                         setPros(
                                           pros.filter(
                                             (p) => p.key !== professional.key,
                                           ),
-                                        ),
-                                      );
+                                        );
+                                        setShowAlert("good-professional-deleted");
+                                      });
                                     }}
                                     className="text-red-600 font-bold hover:underline"
                                   >
@@ -880,6 +895,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
@@ -895,6 +911,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
@@ -1186,7 +1203,7 @@ export default function Page() {
           </div>
         </>
       )}
-      <Toast variant={showAlert === "saved" ? "saved" : null} />
+      <Toast variant={showAlert as ToastVariant | null} />
     </div>
   );
 }
