@@ -59,6 +59,16 @@ export default function Page() {
   const [newPro, setNewPro] = useState<string>("");
   const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
 
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert("");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert]);
+
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -1193,7 +1203,7 @@ export default function Page() {
           </div>
         </>
       )}
-      <Toast variant={showAlert === "saved" ? "saved" : null} />
+      <Toast variant={showAlert as ToastVariant | null} />
     </div>
   );
 }
