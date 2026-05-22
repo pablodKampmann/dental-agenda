@@ -153,12 +153,14 @@ export default function Page() {
             const user = await getUser(false);
             setUser(user);
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         case "language":
           result = await setRowChanges(table, changes, userUid);
           if (result !== null) {
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         default:
@@ -769,6 +771,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -795,6 +798,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -819,13 +823,14 @@ export default function Page() {
                                       deletePro(
                                         user.clinicId,
                                         professional.key,
-                                      ).then(() =>
+                                      ).then(() => {
                                         setPros(
                                           pros.filter(
                                             (p) => p.key !== professional.key,
                                           ),
-                                        ),
-                                      );
+                                        );
+                                        setShowAlert("good-professional-deleted");
+                                      });
                                     }}
                                     className="text-red-600 font-bold hover:underline"
                                   >
@@ -880,6 +885,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
@@ -895,6 +901,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
