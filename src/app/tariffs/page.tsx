@@ -15,8 +15,8 @@ import { updateChapterPrices } from "../../services/practices/updateChapterPrice
 import { PracticeTable } from "../../components/practices/ui/PracticeTable";
 import { AddPracticeForm } from "../../components/practices/ui/AddPracticeForm";
 import { PriceAdjustmentPanel } from "../../components/practices/ui/PriceAdjustmentPanel";
-import { Toast } from '@/components/shared/Toast';
-import type { ToastVariant } from '@/components/shared/Toast';
+import { Toast } from "@/components/shared/Toast";
+import type { ToastVariant } from "@/components/shared/Toast";
 
 const ALL_AREAS = [
   "CONSULTAS",
@@ -276,26 +276,22 @@ export default function Page() {
           <div className="ml-2 mr-2 p-4">
             <div className="flex justify-between select-none">
               <div className="flex items-center">
-                <select
-                  value={chapterName}
-                  onChange={(e) => setChapterName(e.target.value)}
-                  className="cursor-pointer hover:border-gray-600 hover:border-y-2 border-x-2 border-x-gray-600 border-x-transparent transition duration-300 bg-gray-300 bg-opacity-30 w-80 h-10 outline-none text-black text-xl font-bold border-y-4 px-4 border-teal-600 rounded-3xl shadow-lg flex justify-center items-center"
-                >
-                  <option value="CONSULTAS">CONSULTAS</option>
-                  <option value="OPERATORIA DENTAL">OPERATORIA DENTAL</option>
-                  <option value="ENDODONCIA">ENDODONCIA</option>
-                  <option value="PRÓTESIS">PRÓTESIS</option>
-                  <option value="ODONTOLOGÍA PREVENTIVA">
-                    ODONTOLOGÍA PREVENTIVA
-                  </option>
-                  <option value="ORTODONCIA Y ORTOPEDIA FUNCIONAL">
-                    ORTODONCIA Y ORTOPEDIA FUNCIONAL
-                  </option>
-                  <option value="ODONTOPEDIATRÍA">ODONTOPEDIATRÍA</option>
-                  <option value="PERIODONCIA">PERIODONCIA</option>
-                  <option value="RADIOLOGÍA">RADIOLOGÍA</option>
-                  <option value="CIRUGÍA">CIRUGÍA</option>
-                </select>
+                <div className="flex gap-2 overflow-x-auto pb-1 max-w-2xl">
+                  {ALL_AREAS.map((area) => (
+                    <button
+                      key={area}
+                      onClick={() => setChapterName(area)}
+                      className={`whitespace-nowrap px-4 py-2 rounded-full border-2 font-semibold text-sm transition duration-200 flex-shrink-0
+        ${
+          chapterName === area
+            ? "bg-teal-600 border-teal-600 text-white shadow-lg"
+            : "bg-gray-300 bg-opacity-30 border-teal-600 text-black hover:bg-teal-600 hover:text-white"
+        }`}
+                    >
+                      {area}
+                    </button>
+                  ))}
+                </div>
                 {isLoadData && <ClipLoader className="ml-4" />}
                 <input
                   type="text"
