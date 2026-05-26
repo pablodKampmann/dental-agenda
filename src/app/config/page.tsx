@@ -296,6 +296,8 @@ export default function Page() {
       const result = await updateUserPassword(newPassword, currentPassword);
       if (result === "wrong-password") {
         setShowAlert("wrong-password");
+      } else{
+        setShowAlert("saved");
       }
       reset();
     }
@@ -1072,6 +1074,7 @@ export default function Page() {
                                   "info",
                                 );
                                 if (result) setClinicInfo(result);
+                                setShowAlert("saved");
                                 reset();
                               }}
                               className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
