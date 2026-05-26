@@ -4,9 +4,6 @@ import { FaPen } from "react-icons/fa";
 import { IoLogoUsd } from "react-icons/io5";
 import { FaRegCircleCheck, FaRegCircleXmark } from "react-icons/fa6";
 import { BsClipboardCheck } from "react-icons/bs";
-import { TiDocumentDelete } from "react-icons/ti";
-import { RiAlertFill } from "react-icons/ri";
-
 interface Props {
     chapterName: string;
     chapterData: any[];
@@ -15,7 +12,6 @@ interface Props {
     setNewPrice: (value: any) => void;
     billingTagetOverflowActived: boolean;
     billingTargetRef: React.RefObject<any>;
-    showResult: string | null;
     togglePriceEdit: (index: number) => void;
     cancelEdit: () => void;
     handleUpdatePrice: (practiceId: string) => void;
@@ -30,8 +26,7 @@ interface Props {
 
 export function PracticeTable({
     chapterData, chapterName, openPriceEdit, newPrice, setNewPrice,
-    billingTagetOverflowActived, billingTargetRef, showResult,
-    togglePriceEdit, cancelEdit, handleUpdatePrice, handleKeyPress,
+    billingTagetOverflowActived, billingTargetRef, togglePriceEdit, cancelEdit, handleUpdatePrice, handleKeyPress,
     setOpenAlert, setId, setPracticeName, setPrice,
     formatPrice, onAddPractice
 }: Props) {
@@ -48,36 +43,6 @@ export function PracticeTable({
                 className={`${billingTagetOverflowActived ? "rounded-tl-md" : "rounded-t-md"} sticky top-0 z-20 bg-teal-600 text-3xl pb-1.5 text-center py-1 select-none font-medium border-b-2 border-gray-600`}
             >
                 <h1>Aranceles <span className="text-white font-black text-xl">({chapterName})</span></h1>
-                {showResult === "good-practice" && (
-                    <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right">
-                        <BsClipboardCheck className="text-black" size={26} />
-                        <p className="ml-2 text-black font-semibold text-lg select-none">Práctica agregada exitosamente</p>
-                    </div>
-                )}
-                {showResult === "good-delete-practice" && (
-                    <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right">
-                        <TiDocumentDelete className="text-black" size={28} />
-                        <p className="ml-1 text-black font-semibold text-lg select-none">La práctica fue eliminada</p>
-                    </div>
-                )}
-                {showResult === "good-prices-update" && (
-                    <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right">
-                        <IoLogoUsd className="text-black" size={24} />
-                        <p className="ml-1 text-black font-semibold text-lg select-none">Los precios han sido actualizados</p>
-                    </div>
-                )}
-                {showResult === "no-practices" && (
-                    <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-red-500 transform animate-messagge-from-right">
-                        <RiAlertFill className="text-black" size={24} />
-                        <p className="ml-1 text-black font-semibold text-lg select-none">No tenés prácticas cargadas</p>
-                    </div>
-                )}
-                {showResult === "good-price-update" && (
-                    <div className="absolute top-0 right-0 h-full rounded-l-xl flex justify-center items-center py-2 px-4 border-2 border-black rounded-tr-md bg-emerald-400 transform animate-messagge-from-right">
-                        <IoLogoUsd className="text-black" size={24} />
-                        <p className="ml-1 text-black font-semibold text-lg select-none">El precio fue actualizado</p>
-                    </div>
-                )}
             </div>
 
             <table className="w-full select-none">
