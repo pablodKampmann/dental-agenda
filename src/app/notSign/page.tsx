@@ -60,7 +60,7 @@ export default function NotSing() {
         </div>
       ) : null}
       <div className="relative max-w-lg w-full p-8">
-        <h1 className="flex justify-center text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-teal-100 to-white select-none">
+        <h1 className="flex justify-center text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-teal-100 to-white select-none">
           Admin Panel
         </h1>
         <h1 className="flex justify-center mb-16 text-md font-extralight select-none">
@@ -68,7 +68,7 @@ export default function NotSing() {
         </h1>
         <div className="mb-16 rounded-lg bg-teal-900 shadow-2xl transition duration-500 h-80">
           <div className="p-6">
-            <h1 className="flex mb-4 text-3xl font-medium select-none">
+            <h1 className="flex mb-4 text-2xl font-medium select-none">
               <span>Iniciar</span>
               <span className="text-teal-500 ml-2">Sesion</span>
               <BiSolidLogInCircle size={40} className="text-teal-500 ml-2" />

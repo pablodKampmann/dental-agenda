@@ -29,6 +29,8 @@ import { setPro } from "../../services/config/setPro";
 import { updatePro } from "../../services/config/updatePro";
 import { deletePro } from "../../services/config/deletePro";
 import { useAuth } from "../../context/AuthContext";
+import { Toast } from '@/components/shared/Toast';
+import type { ToastVariant } from '@/components/shared/Toast';
 
 export default function Page() {
   const router = useRouter();
@@ -44,7 +46,7 @@ export default function Page() {
   const [changes, setChanges] = useState<string | null>(null);
   const [openInputCredential, setOpenInputCredential] = useState(false);
   const [userCredential, setUserCredential] = useState<string>("");
-  const [showAlert, setShowAlert] = useState<string>("");
+  const [showAlert, setShowAlert] = useState<string | ToastVariant>("");
   const [passwordStep, setPasswordStep] = useState<number>(0);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [currentPassword, setCurrentPassword] = useState<string>("");
@@ -56,6 +58,16 @@ export default function Page() {
   const { refreshUser } = useAuth();
   const [newPro, setNewPro] = useState<string>("");
   const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert("");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert]);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
@@ -151,12 +163,14 @@ export default function Page() {
             const user = await getUser(false);
             setUser(user);
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         case "language":
           result = await setRowChanges(table, changes, userUid);
           if (result !== null) {
             await refreshUser();
+            setShowAlert("saved");
           }
           break;
         default:
@@ -192,7 +206,6 @@ export default function Page() {
 
   async function handleChangeEmail(e: any, table: string, changes: any) {
     e.stopPropagation();
-    reset();
 
     if (changes !== null) {
       setLoadingGet(true);
@@ -208,15 +221,15 @@ export default function Page() {
         } else if (result.message === "Firebase: Error (auth/invalid-email).") {
           setShowAlert("invalid-email");
         }
+        setLoadingGet(false);
       } else {
         const user = await getUser(false);
         setUser(user);
+        reset();
+        setShowAlert("saved");
       }
     }
-
-    reset();
-  }
-
+}
   async function handleChangeUserName(e: any) {
     e.stopPropagation();
 
@@ -310,7 +323,7 @@ export default function Page() {
         <>
           <div className="bg-white w-full relative text-black flex-shrink-0">
             {loadingGet ? (
-              <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white font-bold  ">
+              <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white font-bold  ">
                 <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
                   {user.displayName}
                 </span>{" "}
@@ -326,7 +339,7 @@ export default function Page() {
             ) : (
               <h1
                 onClick={() => setShowAlert("wrong-password")}
-                className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-3xl tracking-wide  pl-56 text-white  "
+                className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white  "
               >
                 {" "}
                 <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
@@ -445,6 +458,7 @@ export default function Page() {
                             <input
                               autoFocus
                               type="password"
+                              autoComplete="off"
                               placeholder="Confirmá con tu contraseña"
                               onChange={(e) =>
                                 setUserCredential(e.target.value)
@@ -767,6 +781,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -793,6 +808,7 @@ export default function Page() {
                                       ),
                                     );
                                     reset();
+                                    setShowAlert("good-professional-updated");
                                   });
                                 }
                               }}
@@ -817,13 +833,14 @@ export default function Page() {
                                       deletePro(
                                         user.clinicId,
                                         professional.key,
-                                      ).then(() =>
+                                      ).then(() => {
                                         setPros(
                                           pros.filter(
                                             (p) => p.key !== professional.key,
                                           ),
-                                        ),
-                                      );
+                                        );
+                                        setShowAlert("good-professional-deleted");
+                                      });
                                     }}
                                     className="text-red-600 font-bold hover:underline"
                                   >
@@ -878,6 +895,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
@@ -893,6 +911,7 @@ export default function Page() {
                             },
                           );
                           setNewPro("");
+                          setShowAlert("good-professional-added");
                         });
                       }
                     }}
@@ -1189,6 +1208,7 @@ export default function Page() {
           </div>
         </>
       )}
+      <Toast variant={showAlert as ToastVariant | null} />
     </div>
   );
 }
