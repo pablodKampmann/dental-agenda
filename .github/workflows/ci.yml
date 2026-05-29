@@ -17,7 +17,7 @@ jobs:
           node-version: 20
           cache: 'npm'               # ← cachea node_modules entre runs
 
-      - run: npm ci                  # ← cambiamos install por ci (más rápido y determinístico)
+      - run: npm ci --legacy-peer-deps
 
       - run: npm run build
         env:
