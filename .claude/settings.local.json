@@ -17,7 +17,14 @@
       "Bash(Remove-Item \"src\\\\components\\\\appointments\\\\deleteAppointment.tsx\", \"src\\\\components\\\\appointments\\\\getAppointments.tsx\", \"src\\\\components\\\\appointments\\\\getPatientAppointments.tsx\", \"src\\\\components\\\\appointments\\\\setAppointment.tsx\")",
       "Bash(npm run *)",
       "Bash(Remove-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\hooks\\\\useReloadPhotoURL.tsx\")",
-      "Bash(Remove-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\services\\\\config\\\\changeImage.ts\")"
+      "Bash(Remove-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\services\\\\config\\\\changeImage.ts\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\" -File)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\.github\" -ErrorAction SilentlyContinue)",
+      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\lib\")",
+      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\components\")",
+      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\patients\")",
+      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\appointments\")"
     ]
   }
 }
