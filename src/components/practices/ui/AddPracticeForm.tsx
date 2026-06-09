@@ -59,7 +59,7 @@ export function AddPracticeForm({ chapterName, price, setPrice,
                             i
                         </div>
                         <div>
-                            <p className="text-xs text-gray-500 leading-tight">La práctica se agregará al capítulo <span className="font-semibold text-teal-700">{chapterName}</span></p>
+                            <p className="text-xs text-gray-500 leading-tight">La práctica se agregará a la categoría <span className="font-semibold text-teal-700">{chapterName}</span></p>
                         </div>
                     </div>
 

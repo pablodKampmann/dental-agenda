@@ -1,7 +1,15 @@
 'use client'
 
 import { IoTimeOutline } from 'react-icons/io5';
+import { MdOutlineTimer } from 'react-icons/md';
 import { timeCalc } from '../appointmentUtils';
+
+function formatCountdown(diffMins: number): string {
+  if (diffMins < 60) return `${diffMins}min`;
+  const h = Math.floor(diffMins / 60);
+  const m = diffMins % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}min`;
+}
 
 interface Props {
   appointments: any[] | null;
@@ -45,6 +53,9 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
 
             const isPast = endTotal <= nowTotal;
             const isOngoing = startTotal <= nowTotal && nowTotal < endTotal;
+            const diffMins = startTotal - nowTotal;
+            const isUpcoming = !isPast && !isOngoing;
+            const isUrgent = isUpcoming && diffMins <= 30;
 
             return (
               <div
@@ -61,6 +72,13 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
                 )}
                 {isPast && (
                   <span className='text-xs font-medium text-gray-400 select-none'>Finalizado</span>
+                )}
+                {isUpcoming && (
+                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold select-none
+                    ${isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                    <MdOutlineTimer size={10} />
+                    {formatCountdown(diffMins)}
+                  </span>
                 )}
               </div>
             );

@@ -50,13 +50,14 @@ export function AddAppointmentForm({
   clinicId,
 }: Props) {
   const [step, setStep] = useState(1);
-  const [chapterName, setChapterName] = useState('CONSULTAS');
+  const [chapterName, setChapterName] = useState('');
   const [chapterData, setChapterData] = useState<any>(null);
   const [loadingChapter, setLoadingChapter] = useState(false);
 
   // Si viene paciente por URL, ya está seteado en el padre — no hace falta lógica extra acá
 
   useEffect(() => {
+    if (!chapterName) return;
     async function fetchChapter() {
       setLoadingChapter(true);
       const { data } = await getChapter(chapterName, clinicId ?? '');
@@ -133,11 +134,11 @@ export function AddAppointmentForm({
         </div>
 
         {/* Step content */}
-        <div className='flex-1 overflow-y-auto'>
+        <div className='flex-1 overflow-hidden flex flex-col'>
 
           {/* ── STEP 1: Horario ── */}
           {step === 1 && (
-            <div className='p-4 flex flex-col gap-4'>
+            <div className='p-4 flex flex-col gap-4 overflow-y-auto h-full'>
               {appointmentDate ? (
                 <div className='flex flex-col gap-3'>
                   <div className='bg-white border-2 border-gray-600 rounded-xl p-3 flex justify-between items-start shadow'>
@@ -189,7 +190,7 @@ export function AddAppointmentForm({
 
           {/* ── STEP 2: Paciente ── */}
           {step === 2 && (
-            <div className='p-4 flex flex-col gap-3'>
+            <div className='p-4 flex flex-col gap-3 h-full'>
               {patient ? (
                 <div className='flex flex-col gap-3'>
                   <div className='bg-white border-2 border-gray-600 rounded-xl p-3 flex justify-between items-start shadow'>
@@ -210,7 +211,7 @@ export function AddAppointmentForm({
                   </button>
                 </div>
               ) : (
-                <div className='flex flex-col gap-3'>
+                <div className='flex flex-col gap-3 flex-1 min-h-0'>
                   {/* Search bar */}
                   <div className='flex '>
                     <input
@@ -238,7 +239,7 @@ export function AddAppointmentForm({
                   </div>
 
                   {/* Results */}
-                  <div className='bg-white border-2 border-gray-600 rounded-xl overflow-hidden shadow max-h-52 overflow-y-auto'>
+                  <div className='bg-white border-2 border-gray-600 rounded-xl overflow-hidden shadow flex-1 min-h-0 overflow-y-auto'>
                     {listPatients && typeof listPatients !== 'string' ? (
                       listPatients.map((p: any, i: number) => (
                         <div
@@ -273,7 +274,7 @@ export function AddAppointmentForm({
 
           {/* ── STEP 3: Confirmar ── */}
           {step === 3 && (
-            <div className='p-4 flex flex-col gap-3'>
+            <div className='p-4 flex flex-col gap-3 overflow-y-auto h-full'>
 
               {/* Resumen horario */}
               <div className='bg-white border-2 border-gray-600 rounded-xl overflow-hidden shadow'>
@@ -338,26 +339,29 @@ export function AddAppointmentForm({
                       onChange={(e) => { setChapterName(e.target.value); setChapterData(null); }}
                       className='w-full rounded-lg border-2 border-gray-300 px-2 py-1.5 text-black text-xs font-semibold cursor-pointer focus:outline-none bg-white hover:border-teal-500 transition'
                     >
+                      <option value=''>— Seleccionar categoría —</option>
                       {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <div className='border border-gray-200 rounded-lg overflow-hidden max-h-36 overflow-y-auto'>
-                      {loadingChapter ? (
-                        <div className='flex justify-center py-4'><ClipLoader color='rgb(20 184 166)' size={20} /></div>
-                      ) : chapterData && chapterData.length > 0 ? (
-                        chapterData.map((practice: any, i: number) => (
-                          <div
-                            key={i}
-                            onClick={() => setReason(practice)}
-                            className='flex justify-between items-center px-3 py-1.5 text-xs text-black border-b border-gray-100 last:border-none hover:bg-teal-50 cursor-pointer transition'
-                          >
-                            <span>{practice.name}</span>
-                            <span className='font-bold text-gray-500'>${formatPrice(practice.price)}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className='text-xs text-gray-400 p-3 text-center'>Sin prácticas en este capítulo</p>
-                      )}
-                    </div>
+                    {chapterName && (
+                      <div className='border border-gray-200 rounded-lg overflow-hidden max-h-36 overflow-y-auto'>
+                        {loadingChapter ? (
+                          <div className='flex justify-center py-4'><ClipLoader color='rgb(20 184 166)' size={20} /></div>
+                        ) : chapterData && chapterData.length > 0 ? (
+                          chapterData.map((practice: any, i: number) => (
+                            <div
+                              key={i}
+                              onClick={() => setReason(practice)}
+                              className='flex justify-between items-center px-3 py-1.5 text-xs text-black border-b border-gray-100 last:border-none hover:bg-teal-50 cursor-pointer transition'
+                            >
+                              <span>{practice.name}</span>
+                              <span className='font-bold text-gray-500'>${formatPrice(practice.price)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className='text-xs text-gray-400 p-3 text-center'>Sin prácticas en esta categoría</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

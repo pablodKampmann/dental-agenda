@@ -1,6 +1,11 @@
 'use client'
 
+import { MdPhone, MdOutlineEmail, MdOutlinePermIdentity } from 'react-icons/md';
 import { timeCalc, TIME_SLOTS } from '../appointmentUtils';
+
+function getInitials(name: string, lastName: string): string {
+  return `${name?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
+}
 
 interface Props {
   appointments: any[] | null;
@@ -44,7 +49,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
               if (isSecondarySlot) {
                 return (
                   <tr key={time}>
-                    <td className={`text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
+                    <td className={`bg-white text-black select-none cursor-default align-top px-3 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
                       {time}
                     </td>
                   </tr>
@@ -52,13 +57,13 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
               }
 
               const paddingClass = {
-                1: 'py-2',
-                2: 'py-4',
-                3: 'py-6',
-                4: 'py-8',
-                5: 'py-10',
-                6: 'py-12',
-              }[rowSpan] ?? 'py-4';
+                1: 'py-5',
+                2: 'py-8',
+                3: 'py-12',
+                4: 'py-16',
+                5: 'py-20',
+                6: 'py-24',
+              }[rowSpan] ?? 'py-8';
 
               const isSelected = !!(
                 appointmentDate &&
@@ -73,56 +78,68 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
 
               return (
                 <tr key={time}>
-                  <td className={`w-px whitespace-nowrap text-black select-none cursor-default align-top px-4 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
+                  <td className={`bg-white w-px whitespace-nowrap text-black select-none cursor-default align-top px-4 text-xs font-semibold pt-2 border-r ${index === array.length - 1 ? '' : 'border-b'} border-gray-600`}>
                     {time}
                   </td>
                   <td
                     rowSpan={rowSpan}
                     style={{ minHeight: `${rowSpan * 60}px` }}
                     className={`
-  ${appointment
-                        ? `bg-teal-600 bg-opacity-20 hover:bg-opacity-70 hover:bg-teal-600 ${paddingClass} px-2`
+                      ${appointment
+                        ? `bg-white hover:bg-teal-50 border-l-[3px] border-teal-500 ${paddingClass} px-3`
                         : isSelected ? 'slot-selected p-8' : 'p-8 hover:bg-gray-900 hover:bg-opacity-30'
                       }
                       ${index === array.length - 1 ? '' : 'border-b'}
-                      select-none border-gray-600 cursor-pointer 
+                      select-none border-gray-600 cursor-pointer
                     `}
                     onClick={(e) => onRowClick(time, e)}
                   >
                     {appointment && (
-                      <div className='flex flex-col justify-between h-full px-3 py-2 gap-2'>
-                        {/* Header */}
-                        <div className='flex justify-between items-center'>
-                          <p className='text-sm font-bold'>
-                            {appointment.patientData.name} {appointment.patientData.lastName}
-                          </p>
-                          <p className='text-xs font-semibold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full'>
-                            {time} – {endTime}
-                          </p>
+                      <div className='flex items-start gap-3 h-full'>
+                        {/* Avatar */}
+                        <div className='w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5'>
+                          {getInitials(appointment.patientData.name, appointment.patientData.lastName)}
                         </div>
-                        {/* Info */}
-                        <div className='flex gap-6 flex-wrap'>
-                          <div className='flex flex-col gap-0.5'>
-                            <p className='text-xs text-gray-500'>DNI</p>
-                            <p className='text-xs font-semibold'>{appointment.patientData.dni}</p>
-                          </div>
-                          <div className='flex flex-col gap-0.5'>
-                            <p className='text-xs text-gray-500'>Contacto</p>
-                            <p className='text-xs font-semibold'>{appointment.patientData.num}</p>
-                            <p className='text-xs font-semibold'>{appointment.patientData.email}</p>
-                          </div>
-                          {appointment.reason && (
-                            <div className='flex flex-col gap-0.5'>
-                              <p className='text-xs text-gray-500'>Motivo</p>
-                              <p className='text-xs font-semibold'>{appointment.reason?.name ?? appointment.reason}</p>
+                        {/* Content */}
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex justify-between items-start gap-2'>
+                            <div className='min-w-0'>
+                              <p className='text-sm font-bold text-black leading-tight truncate'>
+                                {appointment.patientData.name} {appointment.patientData.lastName}
+                              </p>
+                              {appointment.reason && (
+                                <p className='text-xs font-semibold text-teal-700 mt-0.5 truncate'>
+                                  {appointment.reason?.name ?? appointment.reason}
+                                </p>
+                              )}
                             </div>
-                          )}
-                          {appointment.observations && (
-                            <div className='flex flex-col gap-0.5'>
-                              <p className='text-xs text-gray-500'>Observaciones</p>
-                              <p className='text-xs font-semibold'>{appointment.observations}</p>
-                            </div>
-                          )}
+                            <span className='text-xs font-semibold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full flex-shrink-0'>
+                              {time} – {endTime}
+                            </span>
+                          </div>
+                          <div className='flex gap-4 mt-1.5 flex-wrap'>
+                            <span className='flex items-center gap-1 text-xs text-gray-400'>
+                              <MdOutlinePermIdentity size={13} />
+                              {appointment.patientData.dni}
+                            </span>
+                            {appointment.patientData.num && (
+                              <span className='flex items-center gap-1 text-xs text-gray-400'>
+                                <MdPhone size={13} />
+                                {appointment.patientData.num}
+                              </span>
+                            )}
+                            {appointment.patientData.email && (
+                              <span className='flex items-center gap-1 text-xs text-gray-400'>
+                                <MdOutlineEmail size={13} />
+                                {appointment.patientData.email}
+                              </span>
+                            )}
+                            {appointment.observations && (
+                              <span className='text-xs text-gray-400 italic truncate'>
+                                "{appointment.observations}"
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
