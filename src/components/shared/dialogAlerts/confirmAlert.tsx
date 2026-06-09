@@ -11,20 +11,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/shared/ui/alert-dialog";
-import { logOut } from "@/services/auth/logOut";
 
 interface Props {
   open: boolean;
   setOpen: (value: boolean) => void;
+  title: string;
+  description: string | React.ReactNode;
+  onConfirm: () => void | Promise<void>;
+  confirmText?: string;
+  cancelText?: string;
 }
 
-export function LogOutAlert({ open, setOpen }: Props) {
+export function ConfirmAlert({
+  open,
+  setOpen,
+  title,
+  description,
+  onConfirm,
+  confirmText = "Eliminar",
+  cancelText = "Cancelar",
+}: Props) {
   const [loading, setLoading] = useState(false);
 
-  async function handleLogOut() {
+  async function handleConfirm() {
     setLoading(true);
     try {
-      await logOut();
+      await onConfirm();
       setOpen(false);
     } finally {
       setLoading(false);
@@ -35,9 +47,9 @@ export function LogOutAlert({ open, setOpen }: Props) {
     <AlertDialog open={open}>
       <AlertDialogContent className="text-black border-2 border-gray-300 rounded-xl w-[90%] sm:w-full">
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription className="pl-1">
-            Deberás volver a ingresar tus credenciales para acceder nuevamente.
+            {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -46,11 +58,11 @@ export function LogOutAlert({ open, setOpen }: Props) {
             onClick={() => setOpen(false)}
             disabled={loading}
           >
-            Cancelar
+            {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-800 rounded-xl focus:outline-none shadow-sm hover:bg-red-900 min-w-[80px]"
-            onClick={handleLogOut}
+            onClick={handleConfirm}
             disabled={loading}
           >
             {loading ? (
@@ -58,7 +70,7 @@ export function LogOutAlert({ open, setOpen }: Props) {
                 <ClipLoader color="white" size={18} />
               </div>
             ) : (
-              "Cerrar sesión"
+              confirmText
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

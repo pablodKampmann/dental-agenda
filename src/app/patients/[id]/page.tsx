@@ -3,7 +3,8 @@
 import { getPatient } from './../../../services/patients/getPatient';
 import React, { useState, useEffect, useRef } from 'react';
 import { updatePatient } from './../../../services/patients/updatePatient';
-import { Alert } from './../../../components/shared/alert';
+import { ConfirmAlert } from './../../../components/shared/dialogAlerts/confirmAlert';
+import { deletePatient } from './../../../services/patients/deletePatient';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -197,19 +198,20 @@ export default function PatientId() {
         {isLoad ? (
           <Loading />
         ) : (
-          <div className="ml-4 mr-2 px-4 pb-4 pt-6">
-            {openAlert && (
-              <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
-                <Alert
-                  onCloseAlert={() => setOpenAlert(false)}
-                  onSuccess={() => { setOpenAlert(false); showToast("success", "Paciente eliminado correctamente"); router.push('/patients'); }}
-                  action="Eliminar Paciente"
-                  firstProp="¿Estás seguro/a de que deseas eliminar a este paciente?"
-                  secondProp="Esta acción será permanente y no se podrá volver atrás"
-                  thirdProp={id}
-                />
-              </div>
-            )}
+          <div className="ml-4 mr-2 px-4 pb-4 pt-6 animate-page-drop">
+            <ConfirmAlert
+              open={openAlert}
+              setOpen={setOpenAlert}
+              title="¿Eliminar paciente?"
+              description="Esta acción es permanente y no se puede deshacer."
+              onConfirm={async () => {
+                await deletePatient(id);
+                setOpenAlert(false);
+                showToast("success", "Paciente eliminado correctamente");
+                router.push('/patients');
+              }}
+              confirmText="Eliminar"
+            />
 
             {patient && (
               <div>

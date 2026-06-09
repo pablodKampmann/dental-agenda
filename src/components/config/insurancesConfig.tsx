@@ -8,6 +8,7 @@ import { deleteInsurance } from "@/services/options/deleteInsurance";
 import { deleteInsurancePlan } from "@/services/options/deleteInsurancePlan";
 import { FaCircleXmark } from "react-icons/fa6";
 import { IoChevronDownOutline, IoChevronUpOutline } from "react-icons/io5";
+import { ConfirmAlert } from "@/components/shared/dialogAlerts/confirmAlert";
 
 interface InsuranceOption { id: string; name: string; }
 interface PlanOption { id: string; name: string; }
@@ -26,7 +27,7 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
     const [addingPlan, setAddingPlan] = useState<Record<string, boolean>>({});
 
     const [confirmDeleteInsurance, setConfirmDeleteInsurance] = useState<string | null>(null);
-    const [confirmDeletePlan, setConfirmDeletePlan] = useState<Record<string, string | null>>({});
+    const [confirmDeletePlan, setConfirmDeletePlan] = useState<{ insuranceId: string; planId: string } | null>(null);
 
     useEffect(() => {
         setLoadingGet(true);
@@ -76,10 +77,51 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
         if (ok) setPlans(prev => ({ ...prev, [insuranceId]: prev[insuranceId].filter(p => p.id !== planId) }));
     }
 
+    const insuranceToDelete = insurances?.find(i => i.id === confirmDeleteInsurance);
+    const planToDelete = confirmDeletePlan
+        ? plans[confirmDeletePlan.insuranceId]?.find(p => p.id === confirmDeletePlan.planId)
+        : null;
+
     if (!insurances) return null;
 
     return (
         <div className="max-w-lg pb-4">
+            <ConfirmAlert
+                open={confirmDeleteInsurance !== null}
+                setOpen={(v) => { if (!v) setConfirmDeleteInsurance(null); }}
+                title="¿Eliminar obra social?"
+                description={
+                    insuranceToDelete
+                        ? <span>Se eliminará <strong>{insuranceToDelete.name}</strong> junto con todos sus planes.</span>
+                        : "Esta acción es permanente."
+                }
+                onConfirm={async () => {
+                    if (confirmDeleteInsurance) {
+                        await handleDeleteInsurance(confirmDeleteInsurance);
+                        setConfirmDeleteInsurance(null);
+                    }
+                }}
+                confirmText="Eliminar"
+            />
+
+            <ConfirmAlert
+                open={confirmDeletePlan !== null}
+                setOpen={(v) => { if (!v) setConfirmDeletePlan(null); }}
+                title="¿Eliminar plan?"
+                description={
+                    planToDelete
+                        ? <span>Se eliminará el plan <strong>{planToDelete.name}</strong>.</span>
+                        : "Esta acción es permanente."
+                }
+                onConfirm={async () => {
+                    if (confirmDeletePlan) {
+                        await handleDeletePlan(confirmDeletePlan.insuranceId, confirmDeletePlan.planId);
+                        setConfirmDeletePlan(null);
+                    }
+                }}
+                confirmText="Eliminar"
+            />
+
             <h1 className="text-base font-bold tracking-wide mb-3">Obras Sociales</h1>
 
             <div className="flex flex-col gap-2 mb-4">
@@ -93,17 +135,12 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
                                 {expanded === ins.id ? <IoChevronUpOutline size={16} /> : <IoChevronDownOutline size={16} />}
                                 {ins.name}
                             </button>
-                            {confirmDeleteInsurance === ins.id ? (
-                                <div className="flex items-center gap-2 text-xs">
-                                    <span className="text-red-600 font-semibold">¿Borrar?</span>
-                                    <button onClick={() => { setConfirmDeleteInsurance(null); handleDeleteInsurance(ins.id); }} className="text-red-600 font-bold hover:underline">Sí</button>
-                                    <button onClick={() => setConfirmDeleteInsurance(null)} className="text-gray-500 hover:underline">No</button>
-                                </div>
-                            ) : (
-                                <button onClick={() => setConfirmDeleteInsurance(ins.id)} className="text-gray-400 hover:text-red-600 transition duration-150">
-                                    <FaCircleXmark size={18} />
-                                </button>
-                            )}
+                            <button
+                                onClick={() => setConfirmDeleteInsurance(ins.id)}
+                                className="text-gray-400 hover:text-red-600 transition duration-150"
+                            >
+                                <FaCircleXmark size={18} />
+                            </button>
                         </div>
 
                         {expanded === ins.id && (
@@ -115,17 +152,12 @@ export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean
                                         {plans[ins.id].map((p) => (
                                             <div key={p.id} className="flex items-center justify-between py-0.5 px-2 rounded-lg hover:bg-gray-100 group">
                                                 <span className="text-sm text-black">{p.name}</span>
-                                                {confirmDeletePlan[ins.id] === p.id ? (
-                                                    <div className="flex items-center gap-1.5 text-xs">
-                                                        <span className="text-red-600 font-semibold">¿Borrar?</span>
-                                                        <button onClick={() => { setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null })); handleDeletePlan(ins.id, p.id); }} className="text-red-600 font-bold hover:underline">Sí</button>
-                                                        <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: null }))} className="text-gray-500 hover:underline">No</button>
-                                                    </div>
-                                                ) : (
-                                                    <button onClick={() => setConfirmDeletePlan(prev => ({ ...prev, [ins.id]: p.id }))} className="text-gray-300 group-hover:text-red-500 transition duration-150">
-                                                        <FaCircleXmark size={15} />
-                                                    </button>
-                                                )}
+                                                <button
+                                                    onClick={() => setConfirmDeletePlan({ insuranceId: ins.id, planId: p.id })}
+                                                    className="text-gray-300 group-hover:text-red-500 transition duration-150"
+                                                >
+                                                    <FaCircleXmark size={15} />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
