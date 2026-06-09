@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { getUser } from "../services/auth/getUser";
 
 interface AuthUser {
@@ -27,13 +27,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   async function refreshUser() {
     try {
       const userData = (await getUser(false)) as AuthUser;
       setUser(userData);
     } catch {
-      router.replace("/notSign");
+      if (pathname !== "/notSign") router.replace("/notSign");
     }
   }
 
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (attempt < MAX_RETRIES) continue;
           if (isMounted) {
             setLoading(false);
-            router.replace("/notSign");
+            if (pathname !== "/notSign") router.replace("/notSign");
           }
         }
       }

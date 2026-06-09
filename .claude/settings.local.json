@@ -26,7 +26,13 @@
       "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\patients\")",
       "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\appointments\")",
       "Bash(node -e \"const pkg = require\\('./package.json'\\); console.log\\(pkg.dependencies['react-hot-toast'] || 'NOT INSTALLED'\\)\")",
-      "Bash(node -e \"const pkg = require\\('./node_modules/firebase/package.json'\\); console.log\\(pkg.version\\)\")"
+      "Bash(node -e \"const pkg = require\\('./node_modules/firebase/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\agenda\" -Force)",
+      "Bash(Out-Null)",
+      "Bash(Copy-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\page.tsx\" \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\agenda\\\\page.tsx\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\page.tsx\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\agenda\" -Force)",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\page.tsx\" \"c:\\\\Users\\\\pablo\\\\Desktop\\\\dental-agenda\\\\src\\\\app\\\\agenda\\\\page.tsx\")"
     ]
   }
 }

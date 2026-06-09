@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getUser } from "../../services/auth/getUser";
-import { MdVisibilityOff } from "react-icons/md";
+import { MdVisibilityOff, MdPerson, MdGroups, MdBusiness, MdHealthAndSafety } from "react-icons/md";
 import { TbPencilCog } from "react-icons/tb";
 import { getClinicData } from "../../services/config/getClinicData";
 import { InsurancesConfig } from "../../components/config/insurancesConfig";
@@ -327,12 +327,26 @@ export default function Page() {
     }
   }, [editRow]);
 
+  const NAV_ITEMS = [
+    { id: "profile",      label: "Perfil",          icon: MdPerson,           action: () => setSelectedField("profile") },
+    { id: "pros",         label: "Profesionales",   icon: MdGroups,           action: handleGetPros },
+    { id: "clinicConfig", label: "Consultorio",     icon: MdBusiness,         action: handleGetClinicConfig },
+    { id: "insurances",   label: "Obras Sociales",  icon: MdHealthAndSafety,  action: () => setSelectedField("insurances") },
+  ] as const;
+
+  const SECTION_TITLE: Record<string, string> = {
+    profile:      "Perfil",
+    pros:         "Profesionales",
+    clinicConfig: "Consultorio",
+    insurances:   "Obras Sociales",
+  };
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden flex-1">
+    <div className="h-[calc(100vh-68px)] flex flex-col overflow-hidden bg-gray-50">
       {isLoad ? (
         <Loading />
       ) : (
-        <>
+        <div className="flex flex-col h-full animate-page-drop">
           <ConfirmAlert
             open={confirmDeletePro !== null}
             setOpen={(v) => { if (!v) setConfirmDeletePro(null); }}
@@ -343,66 +357,60 @@ export default function Page() {
             }}
             confirmText="Eliminar"
           />
-          <div className="bg-white w-full relative text-black flex-shrink-0">
-            {loadingGet ? (
-              <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white font-bold  ">
-                <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
-                  {user.displayName}
-                </span>{" "}
-                <ScaleLoader
-                  margin={3}
-                  className="ml-4"
-                  color="white"
-                  width={2}
-                  height={26}
-                  speedMultiplier={1.4}
-                />
-              </h1>
-            ) : (
-              <h1
-                className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white  "
-              >
-                {" "}
-                <span className="bg-teal-300 shadow-lg bg-opacity-35 rounded-xl px-3 py-1">
-                  {user.displayName}
-                </span>
-              </h1>
-            )}
-            <div className="pl-52 bg-emerald-400 bg-opacity-20 text-black transition select-none">
-              <button
-                onClick={() => setSelectedField("profile")}
-                className={`${selectedField === "profile" ? " bg-white  duration-300" : " hover:text-black hover:text-opacity-50"} mx-4  py-1 px-4 uppercase`}
-              >
-                Perfil
-              </button>
-              <button
-                onClick={handleGetPros}
-                className={`${selectedField === "pros" ? "bg-white   duration-300" : "hover:text-black hover:text-opacity-50"} mx-4 py-1 px-4 uppercase`}
-              >
-                Profesionales
-              </button>
-              <button
-                onClick={handleGetClinicConfig}
-                className={`${selectedField === "clinicConfig" ? "bg-white   duration-300" : "hover:text-black hover:text-opacity-50"} mx-4 py-1 px-4 uppercase`}
-              >
-                Configuración del Consultorio
-              </button>
-              <button
-                onClick={() => setSelectedField("insurances")}
-                className={`${selectedField === "insurances" ? "bg-white duration-300" : "hover:text-black hover:text-opacity-50"} mx-4 py-1 px-4 uppercase`}
-              >
-                Obras Sociales
-              </button>
+
+          {/* Page header */}
+          <div className="shrink-0 px-6 pt-6 pb-4 flex items-center justify-between select-none">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-black tracking-tight">Configuración</h1>
+              {loadingGet && (
+                <ScaleLoader margin={2} color="#0F766E" width={2} height={18} speedMultiplier={1.4} />
+              )}
             </div>
-            <div className="rounded-full absolute top-8 left-8 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-sm font-semibold text-black leading-tight">{user.displayName}</p>
+                <p className="text-xs text-gray-400 leading-tight">{user.email}</p>
+              </div>
               <AvatarFallback
                 displayName={user.displayName}
-                size={160}
-                className="rounded-full border-4 w-[160px] h-[160px] border-white shadow-2xl select-none"
+                size={40}
+                className="rounded-full border-2 border-white shadow-md select-none shrink-0"
               />
             </div>
           </div>
-          <div className="ml-56 text-black pt-4 overflow-y-auto flex-1 pb-16 config-scroll">
+
+          {/* Body: left nav + right card */}
+          <div className="flex flex-1 min-h-0 gap-4 px-6 pb-6">
+
+            {/* Left nav card */}
+            <div className="w-52 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-200 p-2 flex flex-col gap-0.5 select-none">
+              {NAV_ITEMS.map(({ id, label, icon: Icon, action }) => (
+                <button
+                  key={id}
+                  onClick={action}
+                  className={`flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition duration-150 ${
+                    selectedField === id
+                      ? "bg-teal-700 text-white shadow-sm"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-black"
+                  }`}
+                >
+                  <Icon size={18} className="shrink-0" />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Content card */}
+            <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-y-auto">
+              {/* Card header */}
+              <div className="px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
+                <h2 className="text-base font-bold text-black tracking-tight">
+                  {SECTION_TITLE[selectedField]}
+                </h2>
+              </div>
+
+              {/* Card body */}
+              <div className="px-6 pt-5 pb-8 text-black">
             {selectedField === "profile" && (
               <div className="max-w-lg">
                 <h1 className="text-base font-bold tracking-wide mb-3">
@@ -1089,8 +1097,10 @@ export default function Page() {
                   </div>
                 </div>
               )}
+              </div>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

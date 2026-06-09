@@ -13,9 +13,11 @@ interface props {
     handleGetPatients: (quantity: number) => void;
     setIsOpenSheetCreatePatient: (value: boolean) => void;
     clinicId: string | null;
+    loadedCount: number;
+    isComplete: boolean;
 }
 
-export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient, clinicId }: props) {
+export function InputAndOthers({ searchContent, setSearchContent, loadRow, setListOfPatients, handleGetPatients, setIsOpenSheetCreatePatient, clinicId, loadedCount, isComplete }: props) {
     const [selectedField, setSelectedField] = useState('name');
 
     const [isSearching, setIsSearching] = useState(false);
@@ -90,7 +92,14 @@ export function InputAndOthers({ searchContent, setSearchContent, loadRow, setLi
                     </div>
                 )}
             </div>
-            <button onClick={() => setIsOpenSheetCreatePatient(true)} type="button" className="shadow-lg h-full md:w-fit w-full  md:my-0 my-4 md:ml-auto text-black hover:bg-teal-600 hover:border-gray-600 hover:text-white md:text-base text-sm font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-xl flex items-center justify-center transition duration-150">
+            {loadedCount > 0 && (
+                <span className="md:ml-auto ml-2 self-center text-xs text-gray-400 font-medium select-none whitespace-nowrap">
+                    {isComplete
+                        ? `${loadedCount} pacientes`
+                        : `${loadedCount} cargados`}
+                </span>
+            )}
+            <button onClick={() => setIsOpenSheetCreatePatient(true)} type="button" className="shadow-lg h-full md:w-fit w-full  md:my-0 my-4 md:ml-2 text-black hover:bg-teal-600 hover:border-gray-600 hover:text-white md:text-base text-sm font-semibold  px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-xl flex items-center justify-center transition duration-150">
                 <BsPersonFillAdd className="mr-2" size={20} />
                 Agregar Paciente
             </button>

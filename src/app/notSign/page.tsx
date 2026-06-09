@@ -33,7 +33,7 @@ export default function NotSing() {
       const result = await signIn(userName.trim(), password);
 
       if (result === "all-good") {
-        router.push("/");
+        router.push("/agenda");
         return;
       }
 
@@ -82,11 +82,11 @@ export default function NotSing() {
           Admin Panel
         </h1>
         <h1 className="flex justify-center mb-16 text-md font-extralight select-none">
-          Consultorio Odontológico Dra. Karina Alvarez
+          Panel de gestión para consultorios odontológicos
         </h1>
         <div className="mb-16 rounded-lg bg-teal-900 shadow-2xl transition duration-500 h-80">
           <div className="p-6">
-            <h1 className="flex mb-4 text-2xl font-medium select-none">
+            <h1 className="flex items-center mb-4 text-2xl font-medium select-none">
               <span>Iniciar</span>
               <span className="text-teal-500 ml-2">Sesion</span>
               <BiSolidLogInCircle size={40} className="text-teal-500 ml-2" />
