@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Loading } from "../../components/shared/loading";
 import { getChapter } from "../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
-import { HiFolderAdd } from "react-icons/hi";
+import { HiFolderAdd, HiTag, HiSearch } from "react-icons/hi";
 import { Alert } from "../../components/shared/alert";
 import { ImCancelCircle } from "react-icons/im";
 import { updatePracticePrice } from "../../services/practices/updatePracticePrice";
@@ -274,33 +274,38 @@ export default function Page() {
             </div>
           )}
           <div className="ml-2 mr-2 p-4">
+            {/* Toolbar */}
             <div className="flex justify-between select-none">
-              <div className="flex items-center">
-                <div className="flex gap-2 overflow-x-auto pb-1 max-w-2xl">
-                  {ALL_AREAS.map((area) => (
-                    <button
-                      key={area}
-                      onClick={() => setChapterName(area)}
-                      className={`whitespace-nowrap px-4 py-2 rounded-full border-2 font-semibold text-sm transition duration-200 flex-shrink-0
-        ${
-          chapterName === area
-            ? "bg-teal-600 border-teal-600 text-white shadow-lg"
-            : "bg-gray-300 bg-opacity-30 border-teal-600 text-black hover:bg-teal-600 hover:text-white"
-        }`}
-                    >
-                      {area}
-                    </button>
-                  ))}
+              <div className="flex items-center gap-3">
+                {/* Category select */}
+                <div className="flex items-center gap-2 h-10 px-3 border-2 border-teal-600 rounded-lg bg-gray-300 bg-opacity-30">
+                  <HiTag size={16} className="text-teal-600 shrink-0" />
+                  <select
+                    value={chapterName}
+                    onChange={(e) => setChapterName(e.target.value)}
+                    className="bg-transparent outline-none text-black font-semibold text-sm cursor-pointer w-40"
+                  >
+                    {ALL_AREAS.map((area) => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
                 </div>
-                {isLoadData && <ClipLoader className="ml-4" />}
-                <input
-                  type="text"
-                  placeholder="Buscar práctica..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="ml-4 h-10 px-4 border-2 border-teal-600 rounded-3xl bg-gray-300 bg-opacity-30 outline-none text-black font-medium w-64"
-                />
+
+                {/* Search */}
+                <div className="flex items-center gap-2 h-10 px-4 border-2 border-teal-600 rounded-3xl bg-gray-300 bg-opacity-30">
+                  <HiSearch size={16} className="text-gray-500 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Buscar práctica..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent outline-none text-black font-medium w-36"
+                  />
+                </div>
+
+                {isLoadData && <ClipLoader size={20} />}
               </div>
+
               <button
                 onClick={() => {
                   setOpenCreatePractice(!openCreatePractice);

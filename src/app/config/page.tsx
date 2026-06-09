@@ -374,12 +374,6 @@ export default function Page() {
               >
                 Obras Sociales
               </button>
-              <button
-                onClick={() => setSelectedField("stats")}
-                className={`${selectedField === "stats" ? "bg-white   duration-300" : "hover:text-black hover:text-opacity-50"} mx-4 py-1 px-4 uppercase`}
-              >
-                Estadísticas
-              </button>
             </div>
             <div className="rounded-full absolute top-8 left-8 mb-8">
               <AvatarFallback

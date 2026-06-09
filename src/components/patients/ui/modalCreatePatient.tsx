@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getInsuranceOptions } from "@/services/options/getInsuranceOpt";
 import { getInsurancePlans } from "@/services/options/getInsurancePlans";
 import { addInsurance } from "@/services/options/addInsurance";
@@ -6,10 +6,8 @@ import { addInsurancePlan } from "@/services/options/addInsurancePlan";
 import { SetPatients } from "@/services/patients/setPatients";
 import PhoneInput, { formatPhoneNumberIntl } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from 'dayjs';
+import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
 import { ClipLoader } from "react-spinners";
 
 interface InsuranceOption { id: string; name: string; }
@@ -47,6 +45,8 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     const [openPlanModal, setOpenPlanModal] = useState(false);
     const [newPlanName, setNewPlanName] = useState("");
 
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const datePickerRef = useRef<HTMLDivElement>(null);
     const [mounted, setMounted] = useState(false);
     const [insuranceMounted, setInsuranceMounted] = useState(false);
     const [planMounted, setPlanMounted] = useState(false);
@@ -89,6 +89,17 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
         });
     }, [insuranceId]);
 
+    useEffect(() => {
+        if (!showDatePicker) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+                setShowDatePicker(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showDatePicker]);
+
     function handleSelectInsurance(id: string, insuranceName: string) {
         setInsuranceId(id);
         setInsurance(insuranceName);
@@ -106,7 +117,7 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
         e.preventDefault();
         if (!date) return;
         setLoading(true);
-        const formattedDate = dayjs(date.$d).format('DD/MM/YYYY');
+        const formattedDate = date.format('DD/MM/YYYY');
         const newNum = formatPhoneNumberIntl(num);
         const result = await SetPatients(name, lastName, gender, formattedDate, dni, newNum, address, email, insurance, insuranceId, plan, planId, affiliate);
         if (result !== "error") {
@@ -152,9 +163,10 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     return (
         <>
             <div className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} onClick={HandleCloseModal} />
-            <div className="fixed inset-0 z-50 flex items-center justify-center mt-12">
+            <div className="fixed inset-0 z-50 flex items-center justify-center mt-12" onClick={HandleCloseModal}>
                 <form
                     onSubmit={HandleSubmit}
+                    onClick={(e) => e.stopPropagation()}
                     className={`relative py-2 w-[700px] transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                 >
                     <div className="w-full border-4 border-gray-600 relative px-4 py-4 bg-white shadow-xl rounded-xl">
@@ -187,18 +199,23 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                             <div className="flex justify-between items-center mt-2">
                                 <div className="flex flex-col mt-1 w-1/3 mx-2">
                                     <div className='flex'><label className="text-black select-none text-lg ml-1">Nacimiento</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        <DatePicker
-                                            value={date}
-                                            onChange={(newDate) => setDate(newDate)}
-                                            format="DD/MM/YYYY"
-                                            slotProps={{
-                                                textField: { size: 'small' },
-                                                desktopPaper: { sx: { backgroundColor: 'rgba(209,213,219,0.85)', backdropFilter: 'blur(4px)' } }
-                                            }}
-                                            className="h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-40 text-black"
-                                        />
-                                    </LocalizationProvider>
+                                    <div className="relative" ref={datePickerRef}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDatePicker(!showDatePicker)}
+                                            className={`${INPUT_CLS} text-left ${date ? 'text-black' : 'text-gray-400'}`}
+                                        >
+                                            {date ? date.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
+                                        </button>
+                                        {showDatePicker && (
+                                            <div className="absolute top-full left-0 z-50 mt-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64">
+                                                <MiniCalendar
+                                                    value={date}
+                                                    onChange={(d) => { setDate(d); setShowDatePicker(false); }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="flex flex-col mt-1 w-1/3 mx-2">
                                     <div className='flex'><label className="text-black select-none text-lg ml-1">Dni</label><p className='text-red-500 ml-1 text-lg'>*</p></div>

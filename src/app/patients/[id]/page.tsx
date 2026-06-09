@@ -1,7 +1,7 @@
 'use client'
 
 import { getPatient } from './../../../services/patients/getPatient';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { updatePatient } from './../../../services/patients/updatePatient';
 import { Alert } from './../../../components/shared/alert';
 import { auth } from '@/lib/firebase';
@@ -12,9 +12,7 @@ import { PatientRecord } from './../../../components/patients/ui/patientRecord';
 import { getInsuranceOptions } from './../../../services/options/getInsuranceOpt';
 import { getInsurancePlans } from './../../../services/options/getInsurancePlans';
 import { getPatientAppointments } from './../../../services/appointments/getPatientAppointments';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { MiniCalendar } from '@/components/appointments/ui/MiniCalendar';
 import dayjs from 'dayjs';
 import { Loading } from './../../../components/shared/loading';
 import { ScaleLoader, ClipLoader } from 'react-spinners';
@@ -48,6 +46,8 @@ export default function PatientId() {
   const [insuranceDraft, setInsuranceDraft] = useState<{ id: string; name: string } | null>(null);
   const [planDraft, setPlanDraft] = useState<{ id: string; name: string } | null>(null);
   const [date, setDate] = useState<null | any>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
   const [clinicId, setClinicId] = useState<string | null>(null);
   const [patientAppointments, setPatientAppointments] = useState<any[] | null>(null);
@@ -155,9 +155,20 @@ export default function PatientId() {
 
   useEffect(() => {
     if (date) {
-      setChanges(dayjs(date.$d).format('DD/MM/YYYY'));
+      setChanges(date.format('DD/MM/YYYY'));
     }
   }, [date]);
+
+  useEffect(() => {
+    if (!showDatePicker) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setShowDatePicker(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDatePicker]);
 
   useEffect(() => {
     async function fetchClinicId() {
@@ -334,21 +345,22 @@ export default function PatientId() {
                         submitChanges={submitChanges}
                         changes={changes}
                         renderInput={
-                          <div
-                            className="flex-1"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') submitChanges(changes, 'birthDate', 'basic');
-                              else if (e.key === 'Escape') setRowModify('');
-                            }}
-                          >
-                            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                              <DatePicker
-                                defaultValue={dateFormatted}
-                                onChange={(newDate) => setDate(newDate)}
-                                format="DD/MM/YYYY"
-                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                              />
-                            </LocalizationProvider>
+                          <div className="flex-1 relative" ref={datePickerRef}>
+                            <button
+                              type="button"
+                              onClick={() => setShowDatePicker(!showDatePicker)}
+                              className="w-full text-left border-2 border-gray-300 rounded-lg px-3 py-1 text-sm bg-gray-100 text-black"
+                            >
+                              {date ? date.format('DD/MM/YYYY') : dateFormatted ? dateFormatted.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
+                            </button>
+                            {showDatePicker && (
+                              <div className="absolute bottom-full left-0 z-50 mb-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64">
+                                <MiniCalendar
+                                  value={date ?? dateFormatted}
+                                  onChange={(d) => { setDate(d); setShowDatePicker(false); }}
+                                />
+                              </div>
+                            )}
                           </div>
                         }
                       />

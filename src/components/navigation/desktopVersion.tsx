@@ -9,7 +9,7 @@ import {
   IoMdArrowDropup,
   IoLogoWhatsapp,
 } from "react-icons/io";
-import { MdNotificationsNone } from "react-icons/md";
+import { MdNotificationsNone, MdBarChart } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
 //import toast, { Toaster } from 'react-hot-toast';
@@ -142,6 +142,14 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
           >
             <FaDollarSign size={26} />
             <p className="flex-1 ml-3 select-none">Aranceles</p>
+          </Link>
+          <Link
+            href="/estadisticas"
+            prefetch={true}
+            className={`${pathname === "/estadisticas" ? "bg-teal-950" : "bg-white bg-opacity-5 hover:bg-opacity-10"} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl w-full transition duration-150`}
+          >
+            <MdBarChart size={26} />
+            <p className="flex-1 ml-3 select-none">Estadísticas</p>
           </Link>
           <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
         </div>

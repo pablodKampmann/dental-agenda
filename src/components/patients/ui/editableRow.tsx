@@ -24,8 +24,8 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
     }
 
     return (
-        <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
+        <div className="border-2 border-gray-300 rounded-xl">
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-[10px]">
                 {rowModify === rowKey ? (
                     <div className="flex items-center gap-2 flex-1">
                         <span className="text-sm text-gray-500 flex-shrink-0">{label}:</span>

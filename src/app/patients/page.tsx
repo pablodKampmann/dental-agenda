@@ -8,7 +8,6 @@ import { getPatients } from "./../../services/patients/getPatients";
 import { SheetCreatePatient } from "../../components/patients/ui/createPatient/sheetCreatePatient";
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
-import { FaUserGroup } from "react-icons/fa6";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Patients() {
@@ -68,23 +67,6 @@ export default function Patients() {
       <div
         className={`${isLoad ? "opacity-0" : "opacity-100"} transition-opacity duration-150 flex flex-col h-full gap-3`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between select-none shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-teal-600 p-2 rounded-lg shadow-md">
-              <FaUserGroup size={20} className="text-white" />
-            </div>
-            <h1 className="text-xl font-bold text-black">Pacientes</h1>
-          </div>
-          {listOfPatients && (
-            <span className="text-sm font-semibold text-gray-500 hidden md:block">
-              {isListOfPatientsComplete
-                ? `${listOfPatients.length} pacientes en total`
-                : `Mostrando ${listOfPatients.length} pacientes`}
-            </span>
-          )}
-        </div>
-
         {/* Barra de búsqueda y acciones */}
         <div className="shrink-0">
           <InputAndOthers
