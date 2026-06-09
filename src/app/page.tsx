@@ -456,7 +456,7 @@ export default function Page() {
       {isLoad ? (
         <Loading />
       ) : (
-        <div className="ml-4 mr-2 p-4">
+        <div className="ml-4 mr-2 p-4 animate-page-drop">
           <div className="mt-2">
             {isMobile ? (
               <SheetCreatePatient

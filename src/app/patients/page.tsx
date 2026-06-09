@@ -51,7 +51,7 @@ export default function Patients() {
   }, [listOfPatients]);
 
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col px-4 pb-4 pt-3 w-full overflow-hidden">
+    <div className="h-[calc(100vh-68px)] flex flex-col ml-4 mr-2 px-4 pb-4 pt-6 overflow-hidden">
       {isLoad && <Loading />}
       {isMobile ? (
         <SheetCreatePatient
@@ -67,7 +67,7 @@ export default function Patients() {
         />
       )}
       <div
-        className={`${isLoad ? "opacity-0" : "opacity-100"} transition-opacity duration-150 flex flex-col h-full gap-3`}
+        className={`${isLoad ? "opacity-0" : "animate-page-drop"} transition-opacity duration-150 flex flex-col h-full gap-6`}
       >
         {/* Barra de búsqueda y acciones */}
         <div className="shrink-0">

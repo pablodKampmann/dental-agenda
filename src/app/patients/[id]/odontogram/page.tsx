@@ -65,7 +65,7 @@ export default function Odontogram() {
                         </div>
                     </div>
                 ) : (
-                    <div className='ml-2 p-4 mt-16 mr-2 relative'>
+                    <div className='ml-4 px-4 pb-4 pt-6 mr-2 relative'>
                         <PatientRecord patient={patient} />
                         <div className="justify-center items-center border-2 select-none mt-8 border-gray-600 rounded-lg shadow-lg">
                             <h1 className="bg-teal-600 text-xl text-center rounded-t-md border-b-2 border-gray-600">ODONTOGRAMA</h1>

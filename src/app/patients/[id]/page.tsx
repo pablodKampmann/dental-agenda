@@ -197,7 +197,7 @@ export default function PatientId() {
         {isLoad ? (
           <Loading />
         ) : (
-          <div className="px-4 py-4">
+          <div className="ml-4 mr-2 px-4 pb-4 pt-6">
             {openAlert && (
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <Alert
