@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userData = (await getUser(false)) as AuthUser;
       setUser(userData);
-    } catch (error) {
+    } catch {
       router.replace("/notSign");
     }
   }
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (isMounted) {
           setUser(userData);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) {
           router.replace("/notSign");
         }
@@ -62,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser }}>
