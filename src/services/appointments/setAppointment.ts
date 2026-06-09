@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebase";
 import { ref, set, get, push } from "firebase/database";
-import { dateData } from "./../../app/page";
+import type { dateData } from "@/components/appointments/appointmentUtils";
 import { getUser } from "./../auth/getUser";
 
 export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string) {

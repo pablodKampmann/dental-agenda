@@ -107,9 +107,9 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
       >
         <div className="h-full pb-4 space-y-2 mx-3 font-medium overflow-y-auto tracking-tight">
           <Link
-            href="/"
+            href="/agenda"
             prefetch={true}
-            className={`${pathname === "/" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2   border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
+            className={`${pathname === "/agenda" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2   border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
           >
             <BsCalendar2WeekFill size={22} />
             <p className="flex-1 ml-3 select-none">Agenda</p>
@@ -141,6 +141,7 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
             <IoLogoWhatsapp size={26} />
             <p className="flex-1 ml-3 select-none">Mensajeria</p>
           </Link>
+          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
           <Link
             href="/estadisticas"
             prefetch={true}

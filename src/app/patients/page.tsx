@@ -78,6 +78,8 @@ export default function Patients() {
             loadRow={loadRow}
             setListOfPatients={setListOfPatients}
             handleGetPatients={handleGetPatients}
+            loadedCount={Array.isArray(listOfPatients) ? listOfPatients.length : 0}
+            isComplete={isListOfPatientsComplete}
             setIsOpenSheetCreatePatient={(v) =>
               isMobile
                 ? setIsOpenSheetCreatePatient(v)
