@@ -86,6 +86,7 @@ const config = {
         'breathe': 'breathe 2s infinite ease-in-out',
         'modal-appointment': 'modal-appointment 0.2s ease-in',
         'alredy-exists': 'alredy-exists 0.1s ease-out',
+        'page-drop': 'page-drop 0.3s ease-out',
         'move-from-left': 'move-from-left 0.3s ease-in-out',
       },
       keyframes: {
@@ -209,6 +210,10 @@ const config = {
           '0%': { opacity: '0', transform: 'translateY(-110%)' },
           '60%': { opacity: '1', transform: 'translateY(6px)' },
           '80%': { opacity: '1', transform: 'translateY(-3px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'page-drop': {
+          '0%':   { opacity: '0', transform: 'translateY(-12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'move-from-left': {

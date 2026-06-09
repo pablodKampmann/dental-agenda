@@ -246,155 +246,153 @@ export default function Page() {
       item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
     ) ?? [];
   return (
-    <div className="h-screen overflow-hidden flex-1">
-      {isLoad ? (
-        <Loading />
-      ) : (
-        <div className="h-full py-2">
-          {openAlert === "delete" && (
-            <div className="absolute inset-0 backdrop-blur-sm ml-56 z-10">
-              <Alert
-                onCloseAlert={() => setOpenAlert("")}
-                onSuccess={() => {
-                  setOpenAlert("");
-                  updatePractices();
-                  showToast("success", "La práctica fue eliminada");
-                }}
-                action={"Eliminar Práctica"}
-                firstProp={
-                  "¿Estás seguro/a de que deseas eliminar esta práctica?"
-                }
-                secondProp={practiceName}
-                thirdProp={price}
-                fourthProp={id}
-                fifthProp={chapterName}
-                clinicId={clinicId}
-              />
-            </div>
-          )}
-          <div className="ml-2 mr-2 p-4">
-            {/* Toolbar */}
-            <div className="flex justify-between select-none">
-              <div className="flex items-center gap-3">
-                {/* Category select */}
-                <div className="flex items-center gap-2 h-10 px-3 border-2 border-teal-600 rounded-lg bg-gray-300 bg-opacity-30">
-                  <HiTag size={16} className="text-teal-600 shrink-0" />
-                  <select
-                    value={chapterName}
-                    onChange={(e) => setChapterName(e.target.value)}
-                    className="bg-transparent outline-none text-black font-semibold text-sm cursor-pointer w-40"
-                  >
-                    {ALL_AREAS.map((area) => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Search */}
-                <div className="flex items-center gap-2 h-10 px-4 border-2 border-teal-600 rounded-3xl bg-gray-300 bg-opacity-30">
-                  <HiSearch size={16} className="text-gray-500 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Buscar práctica..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent outline-none text-black font-medium w-36"
-                  />
-                </div>
-
-                {isLoadData && <ClipLoader size={20} />}
-              </div>
-
-              <button
-                onClick={() => {
-                  setOpenCreatePractice(!openCreatePractice);
-                  setId(null);
-                  setPrice(null);
-                  setOpenFormPercentages(false);
-                  setPracticeName(null);
-                  setLoading(false);
-                }}
-                className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-xl font-semibold px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200"
-              >
-                {openCreatePractice ? (
-                  <div className="flex justify-center items-center">
-                    <ImCancelCircle className="mr-2" size={24} />
-                    Cancelar
-                  </div>
-                ) : (
-                  <div className="flex justify-center items-center">
-                    <HiFolderAdd className="mr-2" size={28} />
-                    Agregar Práctica
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
-          {chapterData ? (
-            <div className="flex justify-between h-screen pb-44 mt-2 overflow-y-hidden w-full">
-              <PracticeTable
-                chapterData={filteredChapterData}
-                chapterName={chapterName}
-                openPriceEdit={openPriceEdit}
-                newPrice={newPrice}
-                setNewPrice={setNewPrice}
-                billingTagetOverflowActived={billingTagetOverflowActived}
-                billingTargetRef={billingTargetRef}
-                togglePriceEdit={togglePriceEdit}
-                cancelEdit={cancelEdit}
-                handleUpdatePrice={handleUpdatePrice}
-                handleKeyPress={handleKeyPress}
-                setOpenAlert={setOpenAlert}
-                setId={setId}
-                setPracticeName={setPracticeName}
-                setPrice={setPrice}
-                formatPrice={formatPrice}
-                onAddPractice={() => {
-                  setOpenCreatePractice(true);
-                  setOpenFormPercentages(false);
-                }}
-              />
-              {openCreatePractice ? (
-                <AddPracticeForm
-                  chapterName={chapterName}
-                  price={price}
-                  setPrice={setPrice}
-                  practiceName={practiceName}
-                  setPracticeName={setPracticeName}
-                  loading={loading}
-                  onSubmit={HandleSubmit}
-                  onCancel={() => setOpenCreatePractice(false)}
-                />
-              ) : (
-                <PriceAdjustmentPanel
-                  chapterData={chapterData}
-                  chapterName={chapterName}
-                  openFormPercentages={openFormPercentages}
-                  setOpenFormPercentages={setOpenFormPercentages}
-                  percentage={percentage}
-                  percentageVisible={percentageVisible}
-                  setPercentage={setPercentage}
-                  setPercentageVisible={setPercentageVisible}
-                  loadingIncreaseOrDecrease={loadingIncreaseOrDecrease}
-                  handleIncreaseOrDecrease={handleIncreaseOrDecrease}
-                  globalPercentage={globalPercentage}
-                  globalPercentageVisible={globalPercentageVisible}
-                  setGlobalPercentage={setGlobalPercentage}
-                  setGlobalPercentageVisible={setGlobalPercentageVisible}
-                  openGlobalFormPercentages={openGlobalFormPercentages}
-                  setOpenGlobalFormPercentages={setOpenGlobalFormPercentages}
-                  loadingGlobal={loadingGlobal}
-                  globalResult={globalResult}
-                  setGlobalResult={setGlobalResult}
-                  handleGlobalUpdate={handleGlobalUpdate}
-                  formatPrice={formatPrice}
-                  clinicId={clinicId}
-                />
-              )}
-            </div>
-          ) : null}
+    <div className="h-[calc(100vh-68px)] flex flex-col pb-4 pt-6 overflow-hidden">
+      {isLoad ? <Loading /> : (<>
+      {openAlert === "delete" && (
+        <div className="fixed inset-0 backdrop-blur-sm sm:left-56 z-10">
+          <Alert
+            onCloseAlert={() => setOpenAlert("")}
+            onSuccess={() => {
+              setOpenAlert("");
+              updatePractices();
+              showToast("success", "La práctica fue eliminada");
+            }}
+            action={"Eliminar Práctica"}
+            firstProp={"¿Estás seguro/a de que deseas eliminar esta práctica?"}
+            secondProp={practiceName}
+            thirdProp={price}
+            fourthProp={id}
+            fifthProp={chapterName}
+            clinicId={clinicId}
+          />
         </div>
       )}
+      <div className="flex flex-col h-full gap-6 animate-page-drop">
+        {/* Toolbar */}
+        <div className="shrink-0 ml-4 mr-2 px-4">
+          <div className="flex justify-between select-none">
+            <div className="flex items-center gap-3">
+              {/* Category select */}
+              <div className="flex items-center gap-2 h-10 px-3 border-2 border-gray-600 rounded-xl bg-gray-300 bg-opacity-30">
+                <HiTag size={16} className="text-teal-600 shrink-0" />
+                <select
+                  value={chapterName}
+                  onChange={(e) => setChapterName(e.target.value)}
+                  className="bg-transparent outline-none text-black font-semibold text-sm cursor-pointer w-40"
+                >
+                  {ALL_AREAS.map((area) => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search */}
+              <div className="flex items-center gap-2 h-10 px-3 border-2 border-gray-600 rounded-xl bg-gray-300 bg-opacity-30">
+                <HiSearch size={16} className="text-gray-500 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Buscar práctica..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent outline-none text-black font-medium w-36"
+                />
+              </div>
+
+              {isLoadData && <ClipLoader size={20} />}
+            </div>
+
+            <button
+              onClick={() => {
+                setOpenCreatePractice(!openCreatePractice);
+                setId(null);
+                setPrice(null);
+                setOpenFormPercentages(false);
+                setPracticeName(null);
+                setLoading(false);
+              }}
+              className="shadow-lg h-10 text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-base font-semibold px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-xl flex items-center justify-center transition duration-150"
+            >
+              {openCreatePractice ? (
+                <div className="flex justify-center items-center">
+                  <ImCancelCircle className="mr-2" size={20} />
+                  Cancelar
+                </div>
+              ) : (
+                <div className="flex justify-center items-center">
+                  <HiFolderAdd className="mr-2" size={20} />
+                  Agregar Práctica
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        {chapterData ? (
+          <div className="flex-1 min-h-0 flex justify-between overflow-hidden ml-2">
+            <PracticeTable
+              chapterData={filteredChapterData}
+              chapterName={chapterName}
+              openPriceEdit={openPriceEdit}
+              newPrice={newPrice}
+              setNewPrice={setNewPrice}
+              billingTagetOverflowActived={billingTagetOverflowActived}
+              billingTargetRef={billingTargetRef}
+              togglePriceEdit={togglePriceEdit}
+              cancelEdit={cancelEdit}
+              handleUpdatePrice={handleUpdatePrice}
+              handleKeyPress={handleKeyPress}
+              setOpenAlert={setOpenAlert}
+              setId={setId}
+              setPracticeName={setPracticeName}
+              setPrice={setPrice}
+              formatPrice={formatPrice}
+              onAddPractice={() => {
+                setOpenCreatePractice(true);
+                setOpenFormPercentages(false);
+              }}
+            />
+            {openCreatePractice ? (
+              <AddPracticeForm
+                chapterName={chapterName}
+                price={price}
+                setPrice={setPrice}
+                practiceName={practiceName}
+                setPracticeName={setPracticeName}
+                loading={loading}
+                onSubmit={HandleSubmit}
+                onCancel={() => setOpenCreatePractice(false)}
+              />
+            ) : (
+              <PriceAdjustmentPanel
+                chapterData={chapterData}
+                chapterName={chapterName}
+                openFormPercentages={openFormPercentages}
+                setOpenFormPercentages={setOpenFormPercentages}
+                percentage={percentage}
+                percentageVisible={percentageVisible}
+                setPercentage={setPercentage}
+                setPercentageVisible={setPercentageVisible}
+                loadingIncreaseOrDecrease={loadingIncreaseOrDecrease}
+                handleIncreaseOrDecrease={handleIncreaseOrDecrease}
+                globalPercentage={globalPercentage}
+                globalPercentageVisible={globalPercentageVisible}
+                setGlobalPercentage={setGlobalPercentage}
+                setGlobalPercentageVisible={setGlobalPercentageVisible}
+                openGlobalFormPercentages={openGlobalFormPercentages}
+                setOpenGlobalFormPercentages={setOpenGlobalFormPercentages}
+                loadingGlobal={loadingGlobal}
+                globalResult={globalResult}
+                setGlobalResult={setGlobalResult}
+                handleGlobalUpdate={handleGlobalUpdate}
+                formatPrice={formatPrice}
+                clinicId={clinicId}
+              />
+            )}
+          </div>
+        ) : null}
+      </div>
+      </>)}
     </div>
   );
 }

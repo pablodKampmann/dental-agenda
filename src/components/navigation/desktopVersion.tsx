@@ -92,12 +92,10 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
               </Link>
             </div>
           ) : (
-            <div className="flex items-center ">
-              <div className="flex-col w-52 mr-4">
-                <hr className=" border-2 border-teal-600 rounded-full" />
-                <hr className="border-2 mt-4 border-teal-600 rounded-full" />
-              </div>
-              <div className="p-3.5 border-4 border-teal-600 rounded-full"></div>
+            <div className="flex items-center gap-2 animate-pulse">
+              <div className="w-9 h-9 rounded-full bg-white bg-opacity-10" />
+              <div className="w-56 h-8 rounded-xl bg-white bg-opacity-10 mr-2" />
+              <div className="w-10 h-10 rounded-full bg-white bg-opacity-10" />
             </div>
           )}
         </div>
@@ -127,21 +125,21 @@ export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
           </Link>
           <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
           <Link
-            href="/messenger"
-            prefetch={true}
-            className={`${pathname === "/messenger" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
-          >
-            <IoLogoWhatsapp size={26} />
-            <p className="flex-1 ml-3 select-none">Mensajeria</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-          <Link
             href="/tariffs"
             prefetch={true}
             className={`${pathname === "/tariffs" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
           >
             <FaDollarSign size={26} />
             <p className="flex-1 ml-3 select-none">Aranceles</p>
+          </Link>
+          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+          <Link
+            href="/messenger"
+            prefetch={true}
+            className={`${pathname === "/messenger" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
+          >
+            <IoLogoWhatsapp size={26} />
+            <p className="flex-1 ml-3 select-none">Mensajeria</p>
           </Link>
           <Link
             href="/estadisticas"

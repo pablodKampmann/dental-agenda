@@ -59,7 +59,7 @@ export default function ClinicHistory() {
                 {isLoad ? (
                     <Loading />
                 ) : (
-                    <div className='ml-2 p-4 mt-16 mr-2 relative'>
+                    <div className='ml-4 px-4 pb-4 pt-6 mr-2 relative'>
                         <PatientRecord patient={patient} />
                         <p>hola</p>
                     </div>
