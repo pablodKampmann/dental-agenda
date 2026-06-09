@@ -9,6 +9,7 @@ import { SheetCreatePatient } from "../../components/patients/ui/createPatient/s
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 export default function Patients() {
   const [isLoad, setIsLoad] = useState(true);
@@ -25,6 +26,7 @@ export default function Patients() {
   const [loadRow, setLoadRow] = useState<number | null>(null);
   const { user } = useAuth();
   const clinicId = user?.clinicId ?? null;
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (clinicId) {
@@ -55,13 +57,13 @@ export default function Patients() {
         <SheetCreatePatient
           open={isOpenSheetCreatePatient}
           onClose={() => setIsOpenSheetCreatePatient(false)}
-          onSuccess={() => handleGetPatients(20)}
+          onSuccess={() => { showToast("success", "Paciente creado correctamente"); handleGetPatients(20); }}
         />
       ) : (
         <ModalCreatePatient
           open={isOpenModalCreatePatient}
           onClose={() => setIsOpenModalCreatePatient(false)}
-          onSuccess={() => handleGetPatients(20)}
+          onSuccess={() => { showToast("success", "Paciente creado correctamente"); handleGetPatients(20); }}
         />
       )}
       <div

@@ -39,8 +39,7 @@ import { AddAppointmentForm } from "@/components/appointments/ui/AddAppointmentF
 import { RemainingAppointments } from "@/components/appointments/ui/RemainingAppointments";
 import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
 
-import { Toast } from '@/components/shared/Toast';
-import type { ToastVariant } from '@/components/shared/Toast';
+import { useToast } from '@/context/ToastContext';
 
 export type { dateData } from "@/components/appointments/appointmentUtils";
 
@@ -116,7 +115,7 @@ export default function Page() {
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
   const [openSheetCreatePatient, setOpenSheetCreatePatient] = useState(false);
   const isMobile = !useMediaQuery("(min-width: 768px)");
-  const [showResult, setShowResult] = useState<ToastVariant | null>(null);
+  const { showToast } = useToast();
   const [freeSpaces, setFreeSpaces] = useState<any>(null);
   const [time, setTime] = useState(getCurrentTime());
   const [clinicId, setClinicId] = useState<string | null>(null);
@@ -327,11 +326,6 @@ export default function Page() {
   }, [appointmentDate]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => setShowResult(null), 6000);
-    return () => clearTimeout(timeoutId);
-  }, [showResult]);
-
-  useEffect(() => {
     const handleClickOutside = (event: { target: any }) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
         setOpenCalendar(false);
@@ -441,9 +435,9 @@ export default function Page() {
     setAppointments(appts);
     setTimeout(() => setIsLoadAppoints(false), 1500);
     if (result === null) {
-      setShowResult("error");
+      showToast("error", "Error al crear el turno");
     } else {
-      setShowResult("good");
+      showToast("success", "Turno creado correctamente");
     }
   }
 
@@ -454,7 +448,7 @@ export default function Page() {
     const appts = await fetchAppointments(formattedDate);
     setAppointments(appts);
     setIsLoadAppoints(false);
-    setShowResult("good-delete-appointment");
+    showToast("success", "Turno eliminado correctamente");
   }
 
   return (
@@ -469,7 +463,7 @@ export default function Page() {
                 open={openSheetCreatePatient}
                 onClose={() => setOpenSheetCreatePatient(false)}
                 onSuccess={() => {
-                  setShowResult("good-patient");
+                  showToast("success", "Paciente creado correctamente");
                   updateListPatients();
                 }}
               />
@@ -478,7 +472,7 @@ export default function Page() {
                 open={openModalCreatePatient}
                 onClose={() => setOpenModalCreatePatient(false)}
                 onSuccess={() => {
-                  setShowResult("good-patient");
+                  showToast("success", "Paciente creado correctamente");
                   updateListPatients();
                 }}
               />
@@ -523,7 +517,6 @@ export default function Page() {
                     onClick={() => {
                       setOpenModalAppointment(false);
                       setOpenAlertMessage(true);
-                      setShowResult(null);
                     }}
                     className="flex justify-center items-center group hover:text-teal-500"
                   >
@@ -670,7 +663,6 @@ export default function Page() {
                     ? setOpenSheetCreatePatient(true)
                     : setOpenModalCreatePatient(true)
                 }
-                setShowResult={setShowResult}
                 clinicId={clinicId}
               />
             ) : (
@@ -708,7 +700,6 @@ export default function Page() {
           </div>
         </div>
       )}
-      <Toast variant={showResult} />
     </div>
   );
 }

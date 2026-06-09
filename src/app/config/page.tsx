@@ -16,7 +16,6 @@ import { ScaleLoader } from "react-spinners";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../../services/config/setRowChanges";
 import { updateUserEmail } from "../../services/config/updateUserEmail";
-import { RiErrorWarningLine } from "react-icons/ri";
 import { updateUserName } from "../../services/config/updateUserName";
 import { updateUserPassword } from "../../services/config/updateUserPassword";
 import {
@@ -29,8 +28,7 @@ import { setPro } from "../../services/config/setPro";
 import { updatePro } from "../../services/config/updatePro";
 import { deletePro } from "../../services/config/deletePro";
 import { useAuth } from "../../context/AuthContext";
-import { Toast } from '@/components/shared/Toast';
-import type { ToastVariant } from '@/components/shared/Toast';
+import { useToast } from '@/context/ToastContext';
 
 export default function Page() {
   const router = useRouter();
@@ -46,7 +44,6 @@ export default function Page() {
   const [changes, setChanges] = useState<string | null>(null);
   const [openInputCredential, setOpenInputCredential] = useState(false);
   const [userCredential, setUserCredential] = useState<string>("");
-  const [showAlert, setShowAlert] = useState<string | ToastVariant>("");
   const [passwordStep, setPasswordStep] = useState<number>(0);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [currentPassword, setCurrentPassword] = useState<string>("");
@@ -56,18 +53,9 @@ export default function Page() {
     final: string;
   }>({ initial: "", final: "" });
   const { refreshUser } = useAuth();
+  const { showToast } = useToast();
   const [newPro, setNewPro] = useState<string>("");
   const [confirmDeletePro, setConfirmDeletePro] = useState<string | null>(null);
-
-  // Auto-hide toast after 4 seconds
-  useEffect(() => {
-    if (showAlert) {
-      const timer = setTimeout(() => {
-        setShowAlert("");
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [showAlert]);
 
   //CHECK IF THE USER IS LOGGED IN && GET USER
   useEffect(() => {
@@ -101,7 +89,7 @@ export default function Page() {
     const result = await getClinicData(user.clinicId, "info");
     if (result) setClinicInfo(result);
     reset();
-    setShowAlert("saved");
+    showToast("success", "Cambio guardado correctamente");
   }
 
   //FUNCTIONS GETS
@@ -136,6 +124,35 @@ export default function Page() {
     }
   }
 
+  //FUNCTIONS PROFESSIONALS
+
+  async function handleAddPro() {
+    if (!newPro.trim()) return;
+    const name = newPro.trim();
+    setNewPro("");
+    await setPro(user.clinicId, name);
+    const result = await getClinicData(user.clinicId, "pros");
+    if (result) setPros(result);
+    showToast("success", "Profesional agregado exitosamente");
+  }
+
+  async function handleUpdatePro(key: string, name: string) {
+    if (!name) return;
+    await updatePro(user.clinicId, key, name);
+    setPros((prev) =>
+      prev ? prev.map((p) => (p.key === key ? { ...p, nameComplete: name } : p)) : prev,
+    );
+    reset();
+    showToast("success", "Profesional actualizado exitosamente");
+  }
+
+  async function handleDeletePro(key: string) {
+    setConfirmDeletePro(null);
+    await deletePro(user.clinicId, key);
+    setPros((prev) => prev ? prev.filter((p) => p.key !== key) : prev);
+    showToast("success", "Profesional eliminado exitosamente");
+  }
+
   //FUNCTIONS EDIT ROW
 
   function reset() {
@@ -163,14 +180,14 @@ export default function Page() {
             const user = await getUser(false);
             setUser(user);
             await refreshUser();
-            setShowAlert("saved");
+            showToast("success", "Cambio guardado correctamente");
           }
           break;
         case "language":
           result = await setRowChanges(table, changes, userUid);
           if (result !== null) {
             await refreshUser();
-            setShowAlert("saved");
+            showToast("success", "Cambio guardado correctamente");
           }
           break;
         default:
@@ -217,16 +234,16 @@ export default function Page() {
       )) as { message: string };
       if (result) {
         if (result.message === "Firebase: Error (auth/wrong-password).") {
-          setShowAlert("wrong-password");
+          showToast("error", "Contraseña incorrecta");
         } else if (result.message === "Firebase: Error (auth/invalid-email).") {
-          setShowAlert("invalid-email");
+          showToast("error", "El email ingresado no es válido");
         }
         setLoadingGet(false);
       } else {
         const user = await getUser(false);
         setUser(user);
         reset();
-        setShowAlert("saved");
+        showToast("success", "Email actualizado correctamente");
       }
     }
 }
@@ -235,7 +252,7 @@ export default function Page() {
 
     if (!changes || changes.trim() === "") return;
     if (changes.includes(" ")) {
-      setShowAlert("userName-spaces");
+      showToast("warning", "El nombre de usuario no puede contener espacios");
       reset();
       return;
     }
@@ -247,9 +264,9 @@ export default function Page() {
       const updatedUser = await getUser(false);
       setUser(updatedUser);
     } else if (result === "already-in-use") {
-      setShowAlert("userName-in-use");
+      showToast("error", "El nombre de usuario ya está en uso");
     } else {
-      setShowAlert("userName-error");
+      showToast("error", "Error al actualizar el nombre de usuario");
     }
 
     reset();
@@ -274,13 +291,13 @@ export default function Page() {
           setPasswordInput("");
           setPasswordStep(2);
         } catch (error: any) {
-          setShowAlert("wrong-password");
+          showToast("error", "Contraseña incorrecta");
         }
       }
       setLoadingGet(false);
     } else if (passwordStep === 2) {
       if (passwordInput.length < 6) {
-        setShowAlert("password-too-short");
+        showToast("error", "La contraseña debe tener al menos 6 caracteres");
         return;
       }
       setNewPassword(passwordInput);
@@ -288,28 +305,20 @@ export default function Page() {
       setPasswordStep(3);
     } else if (passwordStep === 3) {
       if (passwordInput !== newPassword) {
-        setShowAlert("password-mismatch");
+        showToast("error", "Las contraseñas no coinciden");
         setPasswordInput("");
         return;
       }
       setLoadingGet(true);
       const result = await updateUserPassword(newPassword, currentPassword);
       if (result === "wrong-password") {
-        setShowAlert("wrong-password");
-      } else{
-        setShowAlert("saved");
+        showToast("error", "Contraseña incorrecta");
+      } else {
+        showToast("success", "Contraseña actualizada correctamente");
       }
       reset();
     }
   }
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setShowAlert("");
-    }, 4000);
-
-    return () => clearTimeout(timeoutId);
-  }, [showAlert]);
 
   useEffect(() => {
     if (openInputCredential) {
@@ -340,7 +349,6 @@ export default function Page() {
               </h1>
             ) : (
               <h1
-                onClick={() => setShowAlert("wrong-password")}
                 className="bg-gradient-to-r font-bold from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white  "
               >
                 {" "}
@@ -516,16 +524,6 @@ export default function Page() {
                         </>
                       )}
                     </div>
-                    {showAlert === "wrong-password" && editRow === "email" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> Contraseña incorrecta.
-                      </div>
-                    )}
-                    {showAlert === "invalid-email" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> Email inválido.
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -594,17 +592,6 @@ export default function Page() {
                         </>
                       )}
                     </div>
-                    {showAlert === "userName-in-use" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> Usuario ya en uso.
-                      </div>
-                    )}
-                    {showAlert === "userName-spaces" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> El usuario no puede
-                        tener espacios.
-                      </div>
-                    )}
                   </div>
                   {/* Contraseña */}
                   <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
@@ -663,24 +650,6 @@ export default function Page() {
                         </>
                       )}
                     </div>
-                    {showAlert === "wrong-password" &&
-                      editRow === "password" && (
-                        <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                          <RiErrorWarningLine size={14} /> Contraseña
-                          incorrecta.
-                        </div>
-                      )}
-                    {showAlert === "password-too-short" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> Mínimo 6 caracteres.
-                      </div>
-                    )}
-                    {showAlert === "password-mismatch" && (
-                      <div className="px-3 py-1.5 bg-red-50 border-t border-red-200 text-xs font-semibold text-red-600 flex items-center gap-1">
-                        <RiErrorWarningLine size={14} /> Las contraseñas no
-                        coinciden.
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -763,23 +732,8 @@ export default function Page() {
                               onChange={(e) => setChanges(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === "Escape") reset();
-                                else if (e.key === "Enter" && changes) {
-                                  updatePro(
-                                    user.clinicId,
-                                    professional.key,
-                                    changes,
-                                  ).then(() => {
-                                    setPros(
-                                      pros.map((p) =>
-                                        p.key === professional.key
-                                          ? { ...p, nameComplete: changes }
-                                          : p,
-                                      ),
-                                    );
-                                    reset();
-                                    setShowAlert("good-professional-updated");
-                                  });
-                                }
+                                else if (e.key === "Enter" && changes)
+                                  handleUpdatePro(professional.key, changes);
                               }}
                               className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
                             />
@@ -790,23 +744,7 @@ export default function Page() {
                             />
                             <FaCircleCheck
                               onClick={() => {
-                                if (changes) {
-                                  updatePro(
-                                    user.clinicId,
-                                    professional.key,
-                                    changes,
-                                  ).then(() => {
-                                    setPros(
-                                      pros.map((p) =>
-                                        p.key === professional.key
-                                          ? { ...p, nameComplete: changes }
-                                          : p,
-                                      ),
-                                    );
-                                    reset();
-                                    setShowAlert("good-professional-updated");
-                                  });
-                                }
+                                if (changes) handleUpdatePro(professional.key, changes);
                               }}
                               className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
                               size={20}
@@ -824,20 +762,7 @@ export default function Page() {
                                     ¿Borrar?
                                   </span>
                                   <button
-                                    onClick={() => {
-                                      setConfirmDeletePro(null);
-                                      deletePro(
-                                        user.clinicId,
-                                        professional.key,
-                                      ).then(() => {
-                                        setPros(
-                                          pros.filter(
-                                            (p) => p.key !== professional.key,
-                                          ),
-                                        );
-                                        setShowAlert("good-professional-deleted");
-                                      });
-                                    }}
+                                    onClick={() => handleDeletePro(professional.key)}
                                     className="text-red-600 font-bold hover:underline"
                                   >
                                     Sí
@@ -882,35 +807,15 @@ export default function Page() {
                     value={newPro}
                     onChange={(e) => setNewPro(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && newPro.trim()) {
+                      if (e.key === "Enter") {
                         e.preventDefault();
-                        setPro(user.clinicId, newPro.trim()).then(() => {
-                          getClinicData(user.clinicId, "pros").then(
-                            (result) => {
-                              if (result) setPros(result);
-                            },
-                          );
-                          setNewPro("");
-                          setShowAlert("good-professional-added");
-                        });
+                        handleAddPro();
                       }
                     }}
                     className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
                   />
                   <button
-                    onClick={() => {
-                      if (newPro.trim()) {
-                        setPro(user.clinicId, newPro.trim()).then(() => {
-                          getClinicData(user.clinicId, "pros").then(
-                            (result) => {
-                              if (result) setPros(result);
-                            },
-                          );
-                          setNewPro("");
-                          setShowAlert("good-professional-added");
-                        });
-                      }
-                    }}
+                    onClick={handleAddPro}
                     className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap"
                   >
                     + Agregar
@@ -1068,7 +973,7 @@ export default function Page() {
                                   "info",
                                 );
                                 if (result) setClinicInfo(result);
-                                setShowAlert("saved");
+                                showToast("success", "Horario guardado correctamente");
                                 reset();
                               }}
                               className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
@@ -1200,7 +1105,6 @@ export default function Page() {
           </div>
         </>
       )}
-      <Toast variant={showAlert as ToastVariant | null} />
     </div>
   );
 }

@@ -73,6 +73,7 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        'toast-drop': 'toast-drop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1)',
         'slide-down': 'slide-down 0.3s ease-out',
         'slide-up': 'slide-up 0.5s ease-out',
         'move-from-right': 'move-from-right 0.3s ease-out',
@@ -203,6 +204,12 @@ const config = {
           '75%': { opacity: '1', transform: 'translateY(-10%)' },
           '87.5%': { opacity: '1', transform: 'translateY(0%)' },
           '100%': { opacity: '1', transform: 'translateY(0%)' },
+        },
+        'toast-drop': {
+          '0%': { opacity: '0', transform: 'translateY(-110%)' },
+          '60%': { opacity: '1', transform: 'translateY(6px)' },
+          '80%': { opacity: '1', transform: 'translateY(-3px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'move-from-left': {
           '0%': { opacity: '0.1', transform: 'translateX(-50%)' },
