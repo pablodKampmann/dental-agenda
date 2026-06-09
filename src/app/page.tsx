@@ -26,7 +26,8 @@ import { ImCancelCircle } from "react-icons/im";
 import { BsCalendar2Date } from "react-icons/bs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
-import { Alert } from "./../components/shared/alert";
+import { ConfirmAlert } from "./../components/shared/dialogAlerts/confirmAlert";
+import { deleteAppointment } from "./../services/appointments/deleteAppointment";
 import { getUser } from "@/services/auth/getUser";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -442,7 +443,6 @@ export default function Page() {
   }
 
   async function handleSuccessDeleteAppointment() {
-    setOpenAlertMessage(false);
     setIsLoadAppoints(true);
     const formattedDate = date?.replace(/\//g, "");
     const appts = await fetchAppointments(formattedDate);
@@ -483,17 +483,24 @@ export default function Page() {
                 setShowForm={setShowForm}
               />
             </Suspense>
-            {openAlertMessage && (
-              <div className="absolute inset-0 backdrop-blur-sm ml-56 z-10">
-                <Alert
-                  onCloseAlert={() => setOpenAlertMessage(false)}
-                  onSuccess={handleSuccessDeleteAppointment}
-                  action={"Eliminar Turno"}
-                  firstProp={"¿Estás seguro/a de que deseas eliminar el turno?"}
-                  secondProp={appointmentSelect}
-                />
-              </div>
-            )}
+            <ConfirmAlert
+              open={openAlertMessage}
+              setOpen={setOpenAlertMessage}
+              title="¿Eliminar turno?"
+              description={
+                appointmentSelect ? (
+                  <span>
+                    Se eliminará el turno de <strong>{appointmentSelect.patientData?.name} {appointmentSelect.patientData?.lastName}</strong> del {appointmentSelect.dayComplete} a las {appointmentSelect.time}.
+                  </span>
+                ) : "Esta acción no se puede deshacer."
+              }
+              onConfirm={async () => {
+                const dateUpdate = appointmentSelect.date.replace(/\//g, '');
+                await deleteAppointment(appointmentSelect.id, dateUpdate);
+                await handleSuccessDeleteAppointment();
+              }}
+              confirmText="Eliminar"
+            />
             {openModalAppointment && (
               <div
                 className="bg-black rounded-xl shadow-xl opacity-90 absolute px-2 py-1 select-none animate-modal-appointment"

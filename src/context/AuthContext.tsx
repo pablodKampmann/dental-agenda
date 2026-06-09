@@ -41,18 +41,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     async function handleGetUser() {
-      try {
-        const userData = (await getUser(false)) as AuthUser;
-        if (isMounted) {
-          setUser(userData);
-        }
-      } catch {
-        if (isMounted) {
-          router.replace("/notSign");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
+      const MAX_RETRIES = 2;
+
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const userData = (await getUser(false)) as AuthUser;
+          if (isMounted) {
+            setUser(userData);
+            setLoading(false);
+          }
+          return;
+        } catch {
+          if (attempt < MAX_RETRIES) continue;
+          if (isMounted) {
+            setLoading(false);
+            router.replace("/notSign");
+          }
         }
       }
     }

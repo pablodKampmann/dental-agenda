@@ -29,6 +29,7 @@ import { updatePro } from "../../services/config/updatePro";
 import { deletePro } from "../../services/config/deletePro";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from '@/context/ToastContext';
+import { ConfirmAlert } from "../../components/shared/dialogAlerts/confirmAlert";
 
 export default function Page() {
   const router = useRouter();
@@ -332,6 +333,16 @@ export default function Page() {
         <Loading />
       ) : (
         <>
+          <ConfirmAlert
+            open={confirmDeletePro !== null}
+            setOpen={(v) => { if (!v) setConfirmDeletePro(null); }}
+            title="¿Eliminar profesional?"
+            description="Esta acción es permanente y no se puede deshacer."
+            onConfirm={async () => {
+              if (confirmDeletePro) await handleDeletePro(confirmDeletePro);
+            }}
+            confirmText="Eliminar"
+          />
           <div className="bg-white w-full relative text-black flex-shrink-0">
             {loadingGet ? (
               <h1 className="bg-gradient-to-r from-teal-900 via-teal-700 to-teal-300 flex  items-center select-none py-6 text-2xl tracking-wide  pl-56 text-white font-bold  ">
@@ -756,42 +767,18 @@ export default function Page() {
                               {professional.nameComplete}
                             </span>
                             <div className="flex items-center gap-2">
-                              {confirmDeletePro === professional.key ? (
-                                <div className="flex items-center gap-2 text-xs">
-                                  <span className="text-red-600 font-semibold">
-                                    ¿Borrar?
-                                  </span>
-                                  <button
-                                    onClick={() => handleDeletePro(professional.key)}
-                                    className="text-red-600 font-bold hover:underline"
-                                  >
-                                    Sí
-                                  </button>
-                                  <button
-                                    onClick={() => setConfirmDeletePro(null)}
-                                    className="text-gray-500 hover:underline"
-                                  >
-                                    No
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={() => setEditRow(professional.key)}
-                                    className="text-gray-400 hover:text-teal-700 transition duration-150"
-                                  >
-                                    <TbPencilCog size={18} />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setConfirmDeletePro(professional.key)
-                                    }
-                                    className="text-gray-400 hover:text-red-600 transition duration-150"
-                                  >
-                                    <FaCircleXmark size={18} />
-                                  </button>
-                                </>
-                              )}
+                              <button
+                                onClick={() => setEditRow(professional.key)}
+                                className="text-gray-400 hover:text-teal-700 transition duration-150"
+                              >
+                                <TbPencilCog size={18} />
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeletePro(professional.key)}
+                                className="text-gray-400 hover:text-red-600 transition duration-150"
+                              >
+                                <FaCircleXmark size={18} />
+                              </button>
                             </div>
                           </>
                         )}

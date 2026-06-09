@@ -7,7 +7,8 @@ import { Loading } from "../../components/shared/loading";
 import { getChapter } from "../../services/practices/getChapter";
 import { ClipLoader } from "react-spinners";
 import { HiFolderAdd, HiTag, HiSearch } from "react-icons/hi";
-import { Alert } from "../../components/shared/alert";
+import { ConfirmAlert } from "../../components/shared/dialogAlerts/confirmAlert";
+import { deletePractice } from "../../services/practices/deletePractice";
 import { ImCancelCircle } from "react-icons/im";
 import { updatePracticePrice } from "../../services/practices/updatePracticePrice";
 import { setPractice } from "../../services/practices/setPractice";
@@ -248,25 +249,23 @@ export default function Page() {
   return (
     <div className="h-[calc(100vh-68px)] flex flex-col pb-4 pt-6 overflow-hidden">
       {isLoad ? <Loading /> : (<>
-      {openAlert === "delete" && (
-        <div className="fixed inset-0 backdrop-blur-sm sm:left-56 z-10">
-          <Alert
-            onCloseAlert={() => setOpenAlert("")}
-            onSuccess={() => {
-              setOpenAlert("");
-              updatePractices();
-              showToast("success", "La práctica fue eliminada");
-            }}
-            action={"Eliminar Práctica"}
-            firstProp={"¿Estás seguro/a de que deseas eliminar esta práctica?"}
-            secondProp={practiceName}
-            thirdProp={price}
-            fourthProp={id}
-            fifthProp={chapterName}
-            clinicId={clinicId}
-          />
-        </div>
-      )}
+      <ConfirmAlert
+        open={openAlert === "delete"}
+        setOpen={(v) => { if (!v) setOpenAlert(""); }}
+        title="¿Eliminar práctica?"
+        description={
+          <span>
+            Se eliminará <strong>{practiceName}</strong> (${price}) de forma permanente.
+          </span>
+        }
+        onConfirm={async () => {
+          await deletePractice(id, chapterName, clinicId);
+          setOpenAlert("");
+          updatePractices();
+          showToast("success", "La práctica fue eliminada");
+        }}
+        confirmText="Eliminar"
+      />
       <div className="flex flex-col h-full gap-6 animate-page-drop">
         {/* Toolbar */}
         <div className="shrink-0 ml-4 mr-2 px-4">
