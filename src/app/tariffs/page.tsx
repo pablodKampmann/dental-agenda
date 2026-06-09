@@ -247,7 +247,7 @@ export default function Page() {
     ) ?? [];
   return (
     <div className="h-[calc(100vh-68px)] flex flex-col pb-4 pt-6 overflow-hidden">
-      {isLoad && <Loading />}
+      {isLoad ? <Loading /> : (<>
       {openAlert === "delete" && (
         <div className="fixed inset-0 backdrop-blur-sm sm:left-56 z-10">
           <Alert
@@ -392,6 +392,7 @@ export default function Page() {
           </div>
         ) : null}
       </div>
+      </>)}
     </div>
   );
 }
