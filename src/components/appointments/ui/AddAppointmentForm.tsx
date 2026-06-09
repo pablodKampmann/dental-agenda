@@ -29,7 +29,6 @@ interface Props {
   setObservations: (v: string) => void;
   onSetAppoint: (patientId: number, dateData: dateData, reason: any, observations?: string) => void;
   onOpenCreatePatient: () => void;
-  setShowResult: (v: any) => void;
   clinicId: string | null;
 }
 
@@ -46,7 +45,7 @@ export function AddAppointmentForm({
   listPatients, searchContent, setSearchContent, Field, setField,
   reason, setReason,
   observations, setObservations,
-  onSetAppoint, onOpenCreatePatient, setShowResult,
+  onSetAppoint, onOpenCreatePatient,
   clinicId,
 }: Props) {
   const [step, setStep] = useState(1);
@@ -384,7 +383,6 @@ export function AddAppointmentForm({
                 onClick={() => {
                   if (!patient || !appointmentDate) return;
                   onSetAppoint(patient.id, appointmentDate, reason, observations);
-                  setShowResult(null);
                 }}
                 disabled={!patient || !appointmentDate}
                 className={`w-full py-2.5 text-sm font-bold rounded-lg border-2 border-gray-600 transition duration-150

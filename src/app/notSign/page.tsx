@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RingLoader } from "react-spinners";
 import { BiSolidLogInCircle } from "react-icons/bi";
 import { signIn } from "./../../services/auth/signIn";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
-import { RiAlertFill } from "react-icons/ri";
+import { XCircle } from "lucide-react";
 
 export default function NotSing() {
   const router = useRouter();
@@ -14,51 +14,69 @@ export default function NotSing() {
   const [password, setPassword] = useState("");
   const [load, setLoad] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [result, setResult] = useState("");
   const [error, setError] = useState("");
-  const passwordRef = useRef<HTMLInputElement>(null);
+  const [fieldError, setFieldError] = useState<"user" | "password" | "">("");
 
-  useEffect(() => {
-    setLoad(false);
-    if (error && result === "wrong-password") {
-      passwordRef.current?.focus();
-    }
-    const timeoutId = setTimeout(() => {
-      setError("");
-      setResult("");
-    }, 5000);
-    return () => clearTimeout(timeoutId);
-  }, [error]);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const isSubmitting = useRef(false);
 
   async function handleSignIn() {
-    setLoad(true);
-    const result = await signIn(userName, password);
+    if (isSubmitting.current) return;
+    if (!userName.trim() || !password) return;
 
-    if (result !== undefined) {
-      setResult(result);
+    isSubmitting.current = true;
+    setLoad(true);
+    setError("");
+    setFieldError("");
+
+    try {
+      const result = await signIn(userName.trim(), password);
+
       if (result === "all-good") {
         router.push("/");
-      } else if (result === "wrong-userName") {
+        return;
+      }
+
+      if (result === "wrong-userName") {
+        setFieldError("user");
         setError("El usuario proporcionado es incorrecto.");
       } else if (result === "wrong-password") {
+        setFieldError("password");
         setError("La clave proporcionada no coincide con el usuario.");
+        setTimeout(() => passwordInputRef.current?.focus(), 50);
       } else if (result === "network-error") {
-        setError("Asegúrate de contar con una conexión a Internet.");
+        setFieldError("");
+        setError("Asegurate de contar con una conexión a Internet.");
+      } else {
+        setError("Ocurrió un error inesperado. Intentá de nuevo.");
       }
+    } finally {
+      setLoad(false);
+      isSubmitting.current = false;
     }
+
+    // Auto-clear error after 5 seconds
+    setTimeout(() => {
+      setError("");
+      setFieldError("");
+    }, 5000);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") handleSignIn();
   }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-r from-teal-500 via-emerald-700 to-emerald-900">
-      {error !== "" && error !== "all-good" ? (
-        <div className="fixed top-0 right-0 p-4 border-2 border-red-900 mt-4 mr-2 rounded-lg bg-red-400 bg-opacity-50 transform animate-move-from-right">
-          <div className="flex justify-start items-center">
-            <RiAlertFill className="" size={30} />
-            <p className="ml-2 font-semibold text-md">Error:</p>
-            <p className="ml-1 font-normal text-sm">{error}</p>
-          </div>
+
+      {/* Alert — top-right, slide from right */}
+      {error && (
+        <div className="fixed top-4 right-4 z-[200] flex items-center gap-3 bg-white border border-gray-200 border-l-4 border-l-red-500 rounded-xl shadow-xl px-4 py-3 min-w-[280px] max-w-[400px] animate-messagge-from-right">
+          <XCircle size={20} className="text-red-500 shrink-0" />
+          <p className="text-sm font-semibold text-gray-800 select-none">{error}</p>
         </div>
-      ) : null}
+      )}
+
       <div className="relative max-w-lg w-full p-8">
         <h1 className="flex justify-center text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 via-teal-100 to-white select-none">
           Admin Panel
@@ -75,45 +93,31 @@ export default function NotSing() {
             </h1>
 
             <div>
-              <label
-                htmlFor="text"
-                className=" mb-1 text-sm font-medium select-none"
-              >
+              <label htmlFor="user" className="mb-1 text-sm font-medium select-none">
                 Usuario
               </label>
               <input
-                ref={passwordRef}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSignIn();
-                  }
-                }}
-                autoFocus={result === "wrong-userName"}
+                autoFocus
+                onKeyDown={handleKeyDown}
                 disabled={load}
                 type="text"
                 name="user"
                 id="user"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className={`${load ? "bg-teal-600 text-white" : "bg-gray-50 text-black"} ${result === "wrong-userName" ? "border-red-500 bg-red-300" : "border-teal-600"} border-2 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2  font-semibold transition duration-300`}
+                className={`${load ? "bg-teal-600 text-white" : "bg-gray-50 text-black"} ${fieldError === "user" ? "border-red-500 bg-red-300" : "border-teal-600"} border-2 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 font-semibold transition duration-300`}
                 placeholder="nombre.apellido"
                 required
               />
             </div>
             <div className="mt-4">
-              <label
-                htmlFor="password"
-                className=" mb-1 text-sm font-medium select-none"
-              >
+              <label htmlFor="password" className="mb-1 text-sm font-medium select-none">
                 Clave
               </label>
               <div className="relative">
                 <input
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSignIn();
-                    }
-                  }}
+                  ref={passwordInputRef}
+                  onKeyDown={handleKeyDown}
                   disabled={load}
                   type={showPassword ? "text" : "password"}
                   name="password"
@@ -121,33 +125,32 @@ export default function NotSing() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="•••••••••••••"
-                  className={`${load ? "bg-teal-600 text-white" : "bg-gray-50 text-black"} ${result === "wrong-password" ? "border-red-500 bg-red-300" : "border-teal-600"} border-2 pr-10 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 font-semibold transition duration-300`}
+                  className={`${load ? "bg-teal-600 text-white" : "bg-gray-50 text-black"} ${fieldError === "password" ? "border-red-500 bg-red-300" : "border-teal-600"} border-2 pr-10 text-sm focus:outline-none focus:border-teal-400 rounded-lg w-full p-2 font-semibold transition duration-300`}
                   required
                 />
-                {password === "" ? null : (
-                  <div>
-                    {showPassword ? (
-                      <MdVisibility
-                        onClick={() => setShowPassword(!showPassword)}
-                        size={24}
-                        className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150"
-                      />
-                    ) : (
-                      <MdVisibilityOff
-                        onClick={() => setShowPassword(!showPassword)}
-                        size={24}
-                        className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150"
-                      />
-                    )}
-                  </div>
+                {password && (
+                  showPassword ? (
+                    <MdVisibility
+                      onClick={() => setShowPassword(false)}
+                      size={24}
+                      className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150"
+                    />
+                  ) : (
+                    <MdVisibilityOff
+                      onClick={() => setShowPassword(true)}
+                      size={24}
+                      className="absolute inset-y-0 right-0 mr-2 mt-2 text-teal-900 cursor-pointer transform hover:scale-110 transition duration-150"
+                    />
+                  )
                 )}
               </div>
             </div>
             <div className="flex justify-center">
               <button
                 onClick={handleSignIn}
+                disabled={load}
                 type="button"
-                className={`${load ? "w-12 rounded-full scale-110 flex justify-center" : " scale-100 w-full rounded-lg"} mt-6 bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium text-md py-2 transition duration-500`}
+                className={`${load ? "w-12 rounded-full scale-110 flex justify-center" : "scale-100 w-full rounded-lg"} mt-6 bg-teal-600 hover:bg-teal-500 focus:ring-4 focus:ring-teal-500 focus:outline-none font-medium text-md py-2 transition duration-500`}
               >
                 {load ? (
                   <div className="flex justify-center">

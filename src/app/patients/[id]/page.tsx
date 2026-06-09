@@ -15,6 +15,7 @@ import { getPatientAppointments } from './../../../services/appointments/getPati
 import { MiniCalendar } from '@/components/appointments/ui/MiniCalendar';
 import dayjs from 'dayjs';
 import { Loading } from './../../../components/shared/loading';
+import { useToast } from '@/context/ToastContext';
 import { ScaleLoader, ClipLoader } from 'react-spinners';
 import { FaCheck, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
 import { getUser } from './../../../services/auth/getUser';
@@ -52,6 +53,7 @@ export default function PatientId() {
   const [clinicId, setClinicId] = useState<string | null>(null);
   const [patientAppointments, setPatientAppointments] = useState<any[] | null>(null);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -95,7 +97,8 @@ export default function PatientId() {
       { insurance: insuranceDraft.name, insuranceId: insuranceDraft.id, plan: '', planId: '' },
       null, id, clinicId as string
     );
-    if (newPatient) { setPatient(newPatient); setCheck(true); } else { setLoadingCategory(''); }
+    if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
+    else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
     setInsuranceDraft(null);
   }
 
@@ -108,7 +111,8 @@ export default function PatientId() {
       { plan: planDraft.name, planId: planDraft.id },
       null, id, clinicId as string
     );
-    if (newPatient) { setPatient(newPatient); setCheck(true); } else { setLoadingCategory(''); }
+    if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
+    else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
     setPlanDraft(null);
   }
 
@@ -120,8 +124,8 @@ export default function PatientId() {
     setChanges('');
     if (changes !== '') {
       const newPatient = await updatePatient(changes, table, id, clinicId as string);
-      if (newPatient) { setPatient(newPatient); setCheck(true); }
-      else setLoadingCategory('');
+      if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
+      else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
     } else {
       setLoadingCategory('');
     }
@@ -198,7 +202,7 @@ export default function PatientId() {
               <div className="fixed inset-0 backdrop-blur-sm ml-56 z-10">
                 <Alert
                   onCloseAlert={() => setOpenAlert(false)}
-                  onSuccess={() => { setOpenAlert(false); router.push('/patients'); }}
+                  onSuccess={() => { setOpenAlert(false); showToast("success", "Paciente eliminado correctamente"); router.push('/patients'); }}
                   action="Eliminar Paciente"
                   firstProp="¿Estás seguro/a de que deseas eliminar a este paciente?"
                   secondProp="Esta acción será permanente y no se podrá volver atrás"

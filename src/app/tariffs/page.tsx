@@ -15,8 +15,7 @@ import { updateChapterPrices } from "../../services/practices/updateChapterPrice
 import { PracticeTable } from "../../components/practices/ui/PracticeTable";
 import { AddPracticeForm } from "../../components/practices/ui/AddPracticeForm";
 import { PriceAdjustmentPanel } from "../../components/practices/ui/PriceAdjustmentPanel";
-import { Toast } from "@/components/shared/Toast";
-import type { ToastVariant } from "@/components/shared/Toast";
+import { useToast } from "@/context/ToastContext";
 
 const ALL_AREAS = [
   "CONSULTAS",
@@ -49,9 +48,9 @@ export default function Page() {
   const [openPriceEdit, setOpenPriceEdit] = useState(
     Array(chapterData?.length).fill(false),
   );
+  const { showToast } = useToast();
   const [openCreatePractice, setOpenCreatePractice] = useState(false);
   const [openFormPercentages, setOpenFormPercentages] = useState(false);
-  const [showResult, setShowResult] = useState<ToastVariant | null>(null);
   const [openAlert, setOpenAlert] = useState("");
   const [billingTagetOverflowActived, setBillingTagetOverflowActived] =
     useState(false);
@@ -110,19 +109,15 @@ export default function Page() {
       );
       if (result === null) {
         setLoadingIncreaseOrDecrease(false);
+        showToast("error", "Error al actualizar los precios");
       } else {
         updatePractices();
         setOpenFormPercentages(false);
         setLoadingIncreaseOrDecrease(false);
-        setShowResult("good-prices-update");
+        showToast("success", "Los precios han sido actualizados");
       }
     }
   }
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowResult(null), 6000);
-    return () => clearTimeout(t);
-  }, [showResult]);
 
   function formatPrice(price: number) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -162,7 +157,9 @@ export default function Page() {
       cancelEdit();
       if (result !== null) {
         updatePractices();
-        setShowResult("good-price-update");
+        showToast("success", "El precio fue actualizado");
+      } else {
+        showToast("error", "Error al actualizar el precio");
       }
     } else {
       cancelEdit();
@@ -238,8 +235,10 @@ export default function Page() {
       setOpenCreatePractice(false);
       setPrice(null);
       setPracticeName(null);
-      setShowResult("good-practice");
+      showToast("success", "Práctica agregada exitosamente");
       updatePractices();
+    } else {
+      showToast("error", "Error al agregar la práctica");
     }
   }
   const filteredChapterData =
@@ -259,7 +258,7 @@ export default function Page() {
                 onSuccess={() => {
                   setOpenAlert("");
                   updatePractices();
-                  setShowResult("good-delete-practice");
+                  showToast("success", "La práctica fue eliminada");
                 }}
                 action={"Eliminar Práctica"}
                 firstProp={
@@ -396,7 +395,6 @@ export default function Page() {
           ) : null}
         </div>
       )}
-      <Toast variant={showResult} />
     </div>
   );
 }

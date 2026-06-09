@@ -1,40 +1,48 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { Toast } from '@/components/shared/Toast'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, act } from '@testing-library/react'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 
-describe('Toast', () => {
-  it('renders nothing when variant is null', () => {
-    const { container } = render(<Toast variant={null} />)
-    expect(container.firstChild).toBeNull()
+vi.mock('react-hot-toast', () => ({
+  default: Object.assign(
+    vi.fn(),
+    {
+      success: vi.fn(),
+      error: vi.fn(),
+    }
+  ),
+}))
+
+import toast from 'react-hot-toast'
+
+function ToastTrigger({ type, message }: { type: 'success' | 'error' | 'warning'; message: string }) {
+  const { showToast } = useToast()
+  return <button onClick={() => showToast(type, message)}>trigger</button>
+}
+
+function setup(type: 'success' | 'error' | 'warning', message: string) {
+  return render(
+    <ToastProvider>
+      <ToastTrigger type={type} message={message} />
+    </ToastProvider>,
+  )
+}
+
+describe('useToast', () => {
+  it('calls toast.success for success type', async () => {
+    setup('success', 'Cambio guardado correctamente')
+    await act(async () => { screen.getByText('trigger').click() })
+    expect(toast.success).toHaveBeenCalledWith('Cambio guardado correctamente', expect.any(Object))
   })
 
-  it('renders the correct message for "saved"', () => {
-    render(<Toast variant="saved" />)
-    expect(screen.getByText('Cambio guardado correctamente')).toBeInTheDocument()
+  it('calls toast.error for error type', async () => {
+    setup('error', 'Error al crear el turno')
+    await act(async () => { screen.getByText('trigger').click() })
+    expect(toast.error).toHaveBeenCalledWith('Error al crear el turno', expect.any(Object))
   })
 
-  it('renders the correct message for "good-patient"', () => {
-    render(<Toast variant="good-patient" />)
-    expect(screen.getByText('Paciente creado correctamente')).toBeInTheDocument()
-  })
-
-  it('renders the correct message for "error"', () => {
-    render(<Toast variant="error" />)
-    expect(screen.getByText('Error al crear el turno')).toBeInTheDocument()
-  })
-
-  it('renders error background color for "error" variant', () => {
-    const { container } = render(<Toast variant="error" />)
-    expect(container.firstChild).toHaveClass('bg-red-500')
-  })
-
-  it('renders success background color for "good" variant', () => {
-    const { container } = render(<Toast variant="good" />)
-    expect(container.firstChild).toHaveClass('bg-emerald-400')
-  })
-
-  it('renders the correct message for "good-professional-added"', () => {
-    render(<Toast variant="good-professional-added" />)
-    expect(screen.getByText('Profesional agregado exitosamente')).toBeInTheDocument()
+  it('calls toast with warning icon for warning type', async () => {
+    setup('warning', 'Advertencia')
+    await act(async () => { screen.getByText('trigger').click() })
+    expect(toast).toHaveBeenCalledWith('Advertencia', expect.objectContaining({ icon: '⚠️' }))
   })
 })

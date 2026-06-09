@@ -24,7 +24,8 @@
       "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\lib\")",
       "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\components\")",
       "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\patients\")",
-      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\appointments\")"
+      "Bash(mkdir \"c:\\\\Users\\\\Santiago\\\\Desktop\\\\dentalagenda\\\\dental-agenda\\\\src\\\\__tests__\\\\services\\\\appointments\")",
+      "Bash(node -e \"const pkg = require\\('./package.json'\\); console.log\\(pkg.dependencies['react-hot-toast'] || 'NOT INSTALLED'\\)\")"
     ]
   }
 }

@@ -1,54 +1,37 @@
-import { FaCircleCheck } from "react-icons/fa6";
-import { RiAlertFill, RiErrorWarningLine } from "react-icons/ri";
-import { BsClipboardCheck } from "react-icons/bs";
-import { TiDocumentDelete } from "react-icons/ti";
-import { IoLogoUsd } from "react-icons/io5";
-import { MdPersonAdd } from "react-icons/md";
+"use client";
+import { Toaster } from "react-hot-toast";
 
-export type ToastVariant =
-    | "good"
-    | "error"
-    | "good-delete-appointment"
-    | "good-patient"
-    | "good-practice"
-    | "good-delete-practice"
-    | "good-prices-update"
-    | "good-price-update"
-    | "no-practices"
-    | "saved"
-    |"good-professional-added"  
-    |"good-professional-updated"  
-    |"good-professional-deleted";
-
-const TOAST_CONFIG: Record<ToastVariant, { icon: React.ReactNode; message: string; color: string }> = {
-    "good": { icon: <FaCircleCheck size={22} />, message: "Turno creado correctamente", color: "bg-emerald-400" },
-    "error": { icon: <RiErrorWarningLine size={22} />, message: "Error al crear el turno", color: "bg-red-500" },
-    "good-delete-appointment": { icon: <TiDocumentDelete size={24} />, message: "Turno eliminado correctamente", color: "bg-emerald-400" },
-    "good-patient": { icon: <MdPersonAdd size={22} />, message: "Paciente creado correctamente", color: "bg-emerald-400" },
-    "good-practice": { icon: <BsClipboardCheck size={22} />, message: "Práctica agregada exitosamente", color: "bg-emerald-400" },
-    "good-delete-practice": { icon: <TiDocumentDelete size={24} />, message: "La práctica fue eliminada", color: "bg-emerald-400" },
-    "good-prices-update": { icon: <IoLogoUsd size={22} />, message: "Los precios han sido actualizados", color: "bg-emerald-400" },
-    "good-price-update": { icon: <IoLogoUsd size={22} />, message: "El precio fue actualizado", color: "bg-emerald-400" },
-      "no-practices": { icon: <RiAlertFill size={22} />, message: "No tenés prácticas cargadas", color: "bg-red-500" },
-    "saved": { icon: <FaCircleCheck size={22} />, message: "Cambio guardado correctamente", color: "bg-emerald-400" },
-    "good-professional-added": { icon: <MdPersonAdd size={22} />, message: "Profesional agregado exitosamente", color: "bg-emerald-400" },
-    "good-professional-updated": { icon: <BsClipboardCheck size={22} />, message: "Profesional actualizado exitosamente", color: "bg-emerald-400" },
-    "good-professional-deleted": { icon: <TiDocumentDelete size={24} />, message: "Profesional eliminado exitosamente", color: "bg-emerald-400" },
+const BASE: React.CSSProperties = {
+  background: "white",
+  color: "#1f2937",
+  fontWeight: "600",
+  fontSize: "14px",
+  lineHeight: "1.25",
+  borderRadius: "12px",
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.12), 0 4px 10px -5px rgb(0 0 0 / 0.08)",
+  padding: "12px 16px",
+  minWidth: "300px",
+  maxWidth: "480px",
 };
 
-interface ToastProps {
-    variant: ToastVariant | null;
-}
-
-export function Toast({ variant }: ToastProps) {
-    if (!variant) return null;
-    const config = TOAST_CONFIG[variant];
-    if (!config) return null;
-
-    return (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-black shadow-xl text-black font-semibold text-base animate-messagge-from-right ${config.color}`}>
-            {config.icon}
-            <p className="select-none">{config.message}</p>
-        </div>
-    );
+export function ToastContainer() {
+  return (
+    <Toaster
+      position="top-center"
+      containerStyle={{ top: 8 }}
+      toastOptions={{
+        duration: 5000,
+        style: BASE,
+        success: {
+          iconTheme: { primary: "#0d9488", secondary: "white" },
+          style: { ...BASE, borderLeft: "4px solid #0d9488" },
+        },
+        error: {
+          iconTheme: { primary: "#ef4444", secondary: "white" },
+          style: { ...BASE, borderLeft: "4px solid #ef4444" },
+        },
+      }}
+    />
+  );
 }

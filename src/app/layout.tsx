@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { Navigation } from '../components/navigation/navigation'
 import { cn } from "@/lib/utils"
 import { AuthProvider } from '../context/AuthContext'
+import { ToastProvider } from '../context/ToastContext'
+import { ToastContainer } from '../components/shared/Toast'
 import { Inter as FontSans } from "next/font/google"
 
 const fontSans = FontSans({
@@ -36,12 +38,15 @@ export default async function RootLayout({
         )}
       >
         <AuthProvider>
-          <div className='w-full h-screen overflow-y-hidden'>
-            <Navigation />
-            <div className='mt-[68px] sm:ml-56'>
-              {children}
+          <ToastProvider>
+            <div className='w-full h-screen overflow-y-hidden'>
+              <Navigation />
+              <div className='mt-[68px] sm:ml-56'>
+                {children}
+              </div>
             </div>
-          </div>
+            <ToastContainer />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
