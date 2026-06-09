@@ -24,10 +24,6 @@ import {
 import { MdUpdate, MdDeleteForever } from "react-icons/md";
 import { ImCancelCircle } from "react-icons/im";
 import { BsCalendar2Date } from "react-icons/bs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { Alert } from "./../components/shared/alert";
@@ -41,6 +37,7 @@ import {
 import { AppointmentsTable } from "@/components/appointments/ui/AppointmentsTable";
 import { AddAppointmentForm } from "@/components/appointments/ui/AddAppointmentForm";
 import { RemainingAppointments } from "@/components/appointments/ui/RemainingAppointments";
+import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
 
 import { Toast } from '@/components/shared/Toast';
 import type { ToastVariant } from '@/components/shared/Toast';
@@ -95,7 +92,6 @@ export default function Page() {
   const [openCalendar, setOpenCalendar] = useState(false);
   const [openModalAppointment, setOpenModalAppointment] = useState(false);
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
-  const [isLoadingCalendar] = useState(false);
   const [mousePosition, setMousePosition] = useState({
     x: 0,
     y: 0,
@@ -597,19 +593,12 @@ export default function Page() {
                   </h1>
                 </div>
                 {openCalendar && (
-                  <div className="select-none absolute bg-white text-black border-2 border-gray-600 rounded-lg top-10 z-10">
-                    <LocalizationProvider
-                      dateAdapter={AdapterDayjs}
-                      adapterLocale="es"
-                    >
-                      <DemoContainer components={["DateCalendar"]}>
-                        <DateCalendar
-                          value={calendarValue}
-                          onChange={(newValue) => setCalendarValue(newValue)}
-                          views={["day", "year"]}
-                        />
-                      </DemoContainer>
-                    </LocalizationProvider>
+                  <div className="select-none absolute bg-white text-black border-2 border-gray-600 rounded-xl top-11 z-10 shadow-xl w-72">
+                    <MiniCalendar
+                      value={calendarValue}
+                      onChange={(newValue) => setCalendarValue(newValue)}
+                      compact
+                    />
                   </div>
                 )}
               </div>
@@ -687,26 +676,25 @@ export default function Page() {
             ) : (
               <div className="w-[fit] h-full flex overflow-x-hidden">
                 <div className="flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden">
-                  <div className="w-full justify-center flex flex-col select-none bg-gray-200 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg shadow-xl">
-                    <h1 className="text-center bg-teal-600 rounded-t-lg text-white font-semibold text-xl border-b-2 border-gray-600">
-                      Calendario
-                    </h1>
-                    <div className="flex justify-center">
-                      <LocalizationProvider
-                        dateAdapter={AdapterDayjs}
-                        adapterLocale="es"
-                      >
-                        <DemoContainer components={["DateCalendar"]}>
-                          <DateCalendar
-                            loading={isLoadingCalendar}
-                            className="bg-transparent rounded-lg"
-                            value={calendarValue}
-                            onChange={(newValue) => setCalendarValue(newValue)}
-                            views={["day", "year"]}
-                          />
-                        </DemoContainer>
-                      </LocalizationProvider>
+                  <div className="w-full justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg shadow-xl">
+                    <div className="relative flex items-center justify-center bg-teal-600 rounded-t-xl border-b-2 border-gray-600">
+                      <h1 className="text-center text-white font-semibold text-2xl">Calendario</h1>
+                      {!isToday(today) && (
+                        <button
+                          onClick={() => {
+                            setToday(new Date());
+                            setCalendarValue(dayjs(new Date()));
+                          }}
+                          className="absolute right-2 text-xs text-teal-100 hover:text-white border border-teal-400 hover:border-white px-2 py-0.5 rounded-md transition-colors"
+                        >
+                          Hoy
+                        </button>
+                      )}
                     </div>
+                    <MiniCalendar
+                      value={calendarValue}
+                      onChange={(newValue) => setCalendarValue(newValue)}
+                    />
                   </div>
                   <RemainingAppointments
                     appointments={appointments}
