@@ -1,4 +1,4 @@
-<h1 align="center">🦷 Dental Agenda</h1>
+<h1 align="center">🦷 Dental Agenda</h1> 
 
 <p align="center">
     Administrative platform for dental clinics
