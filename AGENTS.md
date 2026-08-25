@@ -58,7 +58,8 @@ src/
 │   └── AuthContext.tsx           # useAuth() → { user, loading, refreshUser }
 ├── hooks/                         # useMediaQuery, useOutsideClick, useCheckRoutine, useReloadPhotoURL
 ├── lib/
-│   └── firebase.ts                # init de Firebase desde variables de entorno
+│   ├── firebase.ts                # init de Firebase desde variables de entorno
+│   └── odontograma/               # dominio puro del odontograma — sin Firebase ni React
 ├── services/                      # TODAS las operaciones contra Firebase, por feature
 │   ├── appointments/, patients/, practices/, config/, auth/, options/ (obras sociales)
 ├── dev/                            # scripts de seed/migración usados por app/dev/page.tsx
@@ -66,6 +67,8 @@ src/
 ```
 
 Path alias `@/*` → `src/*`. `cn()` en `src/lib/utils.ts` para mergear clases Tailwind (clsx + tailwind-merge).
+
+`src/lib/odontograma/` es la excepción a la regla de que la lógica vive en `services/`: es el dominio del odontograma en funciones y constantes puras, sin Firebase, sin React y testeable sin mocks. Los services de `odontograma/` lo consumen; nunca al revés. Plan de trabajo completo en `docs/odontograma-backend.md` (se documenta acá cuando el módulo esté cerrado).
 
 ---
 
