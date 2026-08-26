@@ -103,7 +103,9 @@ Las issues lo referencian en vez de repetirlo.
 
   eventos/                              # append-only
     {pushId}: { ts, uid, alcance: "CARA"|"DIENTE"|"MULTI", capa: "existente"|"requerida",
-                diente: "t16", cara: "OCLUSAL_INCISAL"|null,
+                diente: "t16"|null,               # null cuando el alcance es MULTI
+                piezas: { t45: true, … }|null,    # solo cuando el alcance es MULTI
+                cara: "OCLUSAL_INCISAL"|null,     # solo cuando el alcance es CARA
                 de: "obturacion"|null, a: "caries"|null }
 ```
 
@@ -112,6 +114,8 @@ Las issues lo referencian en vez de repetirlo.
 **Claves con prefijo `t`.** Si son enteras (`"16"`, `"46"`) el SDK convierte el objeto en un array de JavaScript al leerlo, y la forma del dato cambia según cuántos dientes haya cargados. No es opcional.
 
 **Solo se persiste lo anómalo.** Un diente sin hallazgos no existe en el árbol.
+
+**Un evento `MULTI` guarda el tramo entero en `piezas`, no una pieza suelta en `diente`.** Un puente abarca varias piezas y el log tiene que poder reconstruir cuáles: elegir una arbitraria haría que el asiento no represente lo que pasó. Por eso `diente` es nulable y aparece `piezas` — se llena uno o el otro, según el alcance.
 
 **`CodigoPieza` y `ClavePieza` ya existen** en `src/lib/odontograma/piezas.ts` (B1-1, commit `02e59e5`), como uniones de literales derivadas de la tabla. Se re-exportan, no se redeclaran: dos tipos que parecen iguales y no lo son es peor que uno solo.
 
@@ -233,6 +237,7 @@ Expone `hallazgosPorAlcance(alcance)` para que el picker se arme filtrado: al cl
 - [ ] `hallazgosPorAlcance('CARA')` devuelve caries, obturación, sellante y fractura.
 - [ ] `no_erupcionada` y `ausente` comparten grafismo `cross` — se distinguen por la capa, no por el dibujo.
 - [ ] Agregar una entrada no requiere cambios fuera de este archivo y su grafismo.
+- [ ] Hay un test de aserciones de tipo que tipa el árbol de ejemplo del contrato contra `EstadoDiente`, `Vinculo` y `EventoOdontograma`. Hasta acá nada verifica que los tipos de B1-2 encajen con el árbol documentado — el build solo comprueba que las declaraciones sean válidas.
 
 **Nota.** El catálogo es el único lugar donde se decide qué hallazgos ofrece el sistema. Los servicios validan `tipo` contra él pero no lo conocen entrada por entrada: sumar o sacar hallazgos no toca la persistencia.
 
@@ -279,7 +284,7 @@ Depende: B1-1, B1-2, B1-4
 **Qué hace.** Las funciones puras que el componente necesita para preguntarle cosas al estado, sin meter lógica de dominio adentro del render.
 
 ```ts
-filasDelArco(denticion): ClavePieza[][]        // 2 filas en permanente, 4 en mixta
+filasDelArco(vista: VistaArcada): ClavePieza[][]  // 'PERMANENTE' → 2 filas, 'MIXTA' → 4
 hallazgoDeCara(estado, pieza, posicion, capa)  // resuelve la cara semántica por dentro
 hallazgoDeDiente(estado, pieza, capa)
 tieneHallazgos(estado, pieza): boolean          // para el estado vacío del diente
@@ -288,6 +293,7 @@ capasVisibles(estado, pieza, visibilidad)       // para el conmutador de capas
 
 **Criterios de aceptación**
 
+- [ ] `VistaArcada` es un tipo propio (`'PERMANENTE' | 'MIXTA'`), **no** `Denticion`: mixta no es una dentición, es un modo de vista. `Denticion` en `piezas.ts` sigue siendo `'PERMANENTE' | 'TEMPORARIA'` y describe a la pieza, no a la pantalla.
 - [ ] `filasDelArco('PERMANENTE')` devuelve 2 filas de 16 en el orden del papel.
 - [ ] `filasDelArco('MIXTA')` devuelve las 4 filas en el orden **1, 3, 4, 2**: en la ficha las temporarias van *entre* las permanentes, así que el número de fila no es el orden de render.
 - [ ] `hallazgoDeCara(estado, 16, 'left', capa)` lee de `DISTAL`, y `hallazgoDeCara(estado, 26, 'left', capa)` lee de `MESIAL`. El componente pasa posiciones y nunca ve la cara semántica.
@@ -319,7 +325,7 @@ Depende: —
 "eventos": {
   "$evt": {
     ".write": "!data.exists()",
-    ".validate": "newData.hasChildren(['ts','uid','alcance','diente'])"
+    ".validate": "newData.hasChildren(['ts','uid','alcance','capa'])"
   }
 }
 ```
@@ -411,7 +417,7 @@ Depende: B1-3, B2-3
 - [ ] Todas las piezas de un vínculo son de la **misma arcada**. Un puente no cruza de arriba abajo.
 - [ ] Las piezas son **contiguas** según `ordenVisual` — un puente no salta piezas sueltas.
 - [ ] Rechazar un vínculo inválido devuelve un error legible, no revienta.
-- [ ] Alta y baja generan su evento, igual que los hallazgos.
+- [ ] Alta y baja generan su evento con **el tramo completo en `piezas`**, no una pieza suelta en `diente`. El log tiene que poder reconstruir qué piezas abarcaba el puente.
 
 **Nota.** Esto estaba planificado para una fase posterior. La ficha en papel lo tiene en la lista principal, así que va en la v1.
 
