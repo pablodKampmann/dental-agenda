@@ -21,6 +21,8 @@ Los criterios de aceptación del documento son la definición de terminado.
 Antes de escribir código, decime si algo del contrato te resulta ambiguo.
 ```
 
+**Una rama por issue, y se mergea a `dev` antes de arrancar la siguiente.** Muchas issues declaran `Depende`, así que la tentación es sacar cada rama de la anterior y encadenarlas. No lo hagan: con tres ramas apiladas el PR de la última muestra los commits de las tres, y un comentario de review sobre la primera obliga a rebasear toda la cadena. Si la issue que sigue necesita código de la anterior, ese es el momento de mergear la anterior, no de apilar.
+
 **Por qué el prompt es tan corto.** El Paso 4 de la metodología pide contexto de negocio, no instrucciones técnicas: el agente decide la implementación. Pegarle el issue entero sería dictarle la solución; resumírselo perdería los criterios de aceptación. La salida es que el contrato viva en el repo y el prompt apunte a él. Con `AGENTS.md` y este documento, el agente tiene todo.
 
 La última línea —«decime si algo te resulta ambiguo»— es la que evita que invente cuando el documento no alcanza. Si la usa, esa ambigüedad es un cambio a este documento, no una decisión del agente.
