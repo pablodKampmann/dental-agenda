@@ -8,21 +8,11 @@
 
 ## Cómo trabaja el equipo con esto
 
-**Las issues se cargan solas.** `scripts/crear-issues-gitlab.mjs` lee este documento y crea una issue en GitLab por cada `### B\d-\d`. El documento es la única fuente de verdad: el script no tiene los issues adentro, los parsea.
+**Las issues se cargan a mano en GitLab.** `docs/issues-para-pegar.md` tiene los 16 bloques ya armados: título, labels y body. Las labels son `odontograma`, `backend` y la de la iteración (`B1`…`B4`); GitLab las crea solas la primera vez que se usan.
 
-```bash
-export GITLAB_TOKEN=glpat-xxxxxxxxxxxx
-export GITLAB_PROJECT=grupo/dental-agenda     # o el ID numérico
+Los criterios de aceptación van como `- [ ]` a propósito: GitLab los renderiza como task list con contador de progreso, así que no hay que convertirlos a viñetas al pegar.
 
-node scripts/crear-issues-gitlab.mjs --dry    # previsualiza, no toca nada
-node scripts/crear-issues-gitlab.mjs          # crea las que falten
-```
-
-Es idempotente: antes de crear busca si ya existe una issue con ese título, así que correrlo dos veces no duplica nada. Si el documento cambia, se vuelve a correr y las nuevas se agregan.
-
-Cada issue creada lleva labels `odontograma`, `backend` y la de su iteración (`B1`…`B4`). Lo único que queda a mano es enlazar las dependencias, porque el campo «Depende» es texto.
-
-**Cada issue trae adentro cómo se implementa.** Al final del cuerpo, el script le agrega el prompt exacto para el agente. Nadie tiene que acordarse del procedimiento ni preguntarle a nadie: agarrás la issue, copiás el bloque y listo.
+**Cada issue trae adentro cómo se implementa.** Al final del body está el prompt exacto para el agente. El que agarra la issue copia ese bloque y no tiene que acordarse del procedimiento ni preguntarle a nadie:
 
 ```
 Leé AGENTS.md y docs/odontograma-backend.md.
