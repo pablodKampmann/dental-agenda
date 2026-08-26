@@ -8,7 +8,7 @@
 
 ## Cómo trabaja el equipo con esto
 
-**Las issues se cargan a mano en GitLab.** `docs/issues-para-pegar.md` tiene los 16 bloques ya armados: título, labels y body. Las labels son `odontograma`, `backend` y la de la iteración (`B1`…`B4`); GitLab las crea solas la primera vez que se usan.
+**Las issues se cargan a mano en GitLab.** `docs/issues-para-pegar.md` tiene los 16 bloques ya armados: título en inglés, labels y body. Las labels siguen la convención del tablero: scope `/odontogram` más el tipo (`feat`, `chore` o `docs`), y `Sprint #N` al planificar. La iteración no lleva label — ya está en el prefijo del título (`B1-1 ·`).
 
 Los criterios de aceptación van como `- [ ]` a propósito: GitLab los renderiza como task list con contador de progreso, así que no hay que convertirlos a viñetas al pegar.
 
@@ -113,13 +113,15 @@ Las issues lo referencian en vez de repetirlo.
 
 **Solo se persiste lo anómalo.** Un diente sin hallazgos no existe en el árbol.
 
+**`CodigoPieza` y `ClavePieza` ya existen** en `src/lib/odontograma/piezas.ts` (B1-1, commit `02e59e5`), como uniones de literales derivadas de la tabla. Se re-exportan, no se redeclaran: dos tipos que parecen iguales y no lo son es peor que uno solo.
+
 ### Tipos
 
 ```ts
 type Cara = 'MESIAL' | 'DISTAL' | 'VESTIBULAR' | 'LINGUAL_PALATINO' | 'OCLUSAL_INCISAL'
 type Capa = 'existente' | 'requerida'          // el prototipo las llama layers
 type Alcance = 'CARA' | 'DIENTE' | 'MULTI'
-type ClavePieza = `t${number}`                  // t11 … t48
+type ClavePieza = `t${CodigoPieza}`             // unión de los 52 literales, no `t${number}`
 
 // posiciones geométricas — las mismas que usa el prototipo
 type FacePosition = 'top' | 'right' | 'bottom' | 'left' | 'center'
