@@ -115,6 +115,8 @@ Las issues lo referencian en vez de repetirlo.
 
 **Solo se persiste lo anómalo.** Un diente sin hallazgos no existe en el árbol.
 
+**En Realtime Database `null` es ausencia de clave, no un valor.** Escribir `diente: null` no guarda un nulo: no guarda nada. Al leer, el SDK devuelve `undefined`, no `null`. Los tipos que modelan el evento pueden decir `null` del lado del dominio, pero la lectura de B2-5 tiene que normalizar, y las reglas de B2-1 no pueden exigir una clave que a veces no existe.
+
 **Un evento `MULTI` guarda el tramo entero en `piezas`, no una pieza suelta en `diente`.** Un puente abarca varias piezas y el log tiene que poder reconstruir cuáles: elegir una arbitraria haría que el asiento no represente lo que pasó. Por eso `diente` es nulable y aparece `piezas` — se llena uno o el otro, según el alcance.
 
 **`CodigoPieza` y `ClavePieza` ya existen** en `src/lib/odontograma/piezas.ts` (B1-1, commit `02e59e5`), como uniones de literales derivadas de la tabla. Se re-exportan, no se redeclaran: dos tipos que parecen iguales y no lo son es peor que uno solo.
@@ -137,21 +139,27 @@ colorDe(capa) = capa === 'existente' ? ROJO : AZUL
 
 Unión de los nueve del prototipo con los que faltaban de la ficha. `grafismo` usa los mismos valores que el `render` del prototipo, para que no haya tabla de traducción.
 
-| Código | Nombre | Alcance | Grafismo | Capa por defecto | De dónde sale |
-|---|---|---|---|---|---|
-| `caries` | Caries | CARA | `fill` | requerida | ambos |
-| `obturacion` | Obturación | CARA | `fill` | existente | ambos |
-| `sellante` | Sellante | CARA | `fill` | existente | prototipo |
-| `fractura` | Fractura | CARA | `fill` | existente | prototipo |
-| `ausente` | Pieza ausente | DIENTE | `cross` | existente | ambos |
-| `corona` | Corona | DIENTE | `box` | existente | ambos |
-| `endodoncia` | Endodoncia | DIENTE | `letter` | existente | prototipo |
-| `implante` | Implante | DIENTE | `screw` | existente | prototipo |
-| `remanente` | Remanente radicular | DIENTE | `stump` | existente | prototipo |
-| `extraccion` | Extracción | DIENTE | `equals` ⚠️ | requerida | ficha |
-| `no_erupcionada` | Pieza no erupcionada | DIENTE | `cross` | requerida | ficha |
-| `protesis_fija` | Prótesis fija | MULTI | `span` ⚠️ | existente | ficha |
-| `protesis_removible` | Prótesis removible | MULTI | `span` ⚠️ | existente | ficha |
+| Código | Nombre | `abrev` | Alcance | Grafismo | Capa por defecto | De dónde sale |
+|---|---|---|---|---|---|---|
+| `caries` | Caries | `C` | CARA | `fill` | requerida | ambos |
+| `obturacion` | Obturación | `O` | CARA | `fill` | existente | ambos |
+| `sellante` | Sellante | `S` | CARA | `fill` | existente | prototipo |
+| `fractura` | Fractura | `F` | CARA | `fill` | existente | prototipo |
+| `ausente` | Pieza ausente | `X` | DIENTE | `cross` | existente | ambos |
+| `corona` | Corona | `Co` | DIENTE | `box` | existente | ambos |
+| `endodoncia` | Endodoncia | `E` | DIENTE | `letter` | existente | prototipo |
+| `implante` | Implante | `I` | DIENTE | `screw` | existente | prototipo |
+| `remanente` | Remanente radicular | `RR` | DIENTE | `stump` | existente | prototipo |
+| `extraccion` | Extracción | `Ex` | DIENTE | `equals` ⚠️ | requerida | ficha |
+| `no_erupcionada` | Pieza no erupcionada | `NE` | DIENTE | `cross` | requerida | ficha |
+| `protesis_fija` | Prótesis fija | `PF` | MULTI | `span` ⚠️ | existente | ficha |
+| `protesis_removible` | Prótesis removible | `PR` | MULTI | `span` ⚠️ | existente | ficha |
+
+**Las primeras nueve `abrev` salen del prototipo**, de `data/findings.ts`, y se copian tal cual: adoptamos su catálogo, así que sus abreviaturas ya estaban decididas. Las cuatro últimas no existen ahí y las completo con la costumbre de siglas de la propia ficha.
+
+`abrev` **no se persiste** — es presentación, la usa el grafismo `letter` y las etiquetas del picker. Si la odontóloga tiene sus propias siglas, se cambian después sin tocar un solo dato guardado.
+
+**Las 13 aceptan las dos capas.** `capaPorDefecto` solo preselecciona en el picker; el selector de capa queda siempre habilitado. Es lo que hace el prototipo —endodoncia tiene default existente y en su demo aparece como planificada— y evita bloquear a la odontóloga por una regla clínica que nadie le preguntó. Por eso el catálogo **no lleva `capasPermitidas`**: si todas aceptan las dos, el campo es redundante con «siempre ambas». Cuando aparezca un hallazgo que de verdad necesite restricción, se agrega ahí.
 
 ⚠️ Los tres grafismos marcados **no existen todavía en el prototipo** y hay que dibujarlos: `equals` es el signo `=` de la ficha, y `span` es el rectángulo que abarca el tramo de piezas de una prótesis.
 
@@ -224,7 +232,7 @@ Toca:   src/lib/odontograma/catalogo.ts (nuevo)
 Depende: B1-2
 ```
 
-**Qué hace.** La constante tipada con las 13 entradas de la tabla del contrato. Cada entrada declara `codigo`, `nombre`, `abrev`, `alcance`, `grafismo`, `capaPorDefecto` y `capasPermitidas`.
+**Qué hace.** La constante tipada con las 13 entradas de la tabla del contrato. Cada entrada declara `codigo`, `nombre`, `abrev`, `alcance`, `grafismo` y `capaPorDefecto`.
 
 `grafismo` usa **los mismos valores que el `render` del prototipo** (`fill`, `cross`, `box`, `letter`, `screw`, `stump`, más `equals` y `span` que hay que agregar), para que el front consuma el catálogo sin tabla de traducción.
 
@@ -236,7 +244,8 @@ Expone `hallazgosPorAlcance(alcance)` para que el picker se arme filtrado: al cl
 - [ ] Exactamente dos entradas tienen alcance `MULTI`, y son las dos prótesis.
 - [ ] `hallazgosPorAlcance('CARA')` devuelve caries, obturación, sellante y fractura.
 - [ ] `no_erupcionada` y `ausente` comparten grafismo `cross` — se distinguen por la capa, no por el dibujo.
-- [ ] Agregar una entrada no requiere cambios fuera de este archivo y su grafismo.
+- [ ] Agregar una entrada toca **exactamente dos archivos** —el catálogo y la unión de códigos de `tipos.ts`— más su grafismo. La persistencia y los servicios no se tocan.
+- [ ] El desajuste entre los dos es un **error de build**, no un hallazgo que aparece en el picker y después no se puede guardar. La unión de códigos vive en `tipos.ts` a propósito: es vocabulario persistido, y `catalogo.ts` ya depende de ahí — derivarla al revés invertiría la dependencia.
 - [ ] Hay un test de aserciones de tipo que tipa el árbol de ejemplo del contrato contra `EstadoDiente`, `Vinculo` y `EventoOdontograma`. Hasta acá nada verifica que los tipos de B1-2 encajen con el árbol documentado — el build solo comprueba que las declaraciones sean válidas.
 
 **Nota.** El catálogo es el único lugar donde se decide qué hallazgos ofrece el sistema. Los servicios validan `tipo` contra él pero no lo conocen entrada por entrada: sumar o sacar hallazgos no toca la persistencia.
@@ -325,7 +334,8 @@ Depende: —
 "eventos": {
   "$evt": {
     ".write": "!data.exists()",
-    ".validate": "newData.hasChildren(['ts','uid','alcance','capa'])"
+    ".validate": "newData.hasChildren(['ts','uid','alcance','capa'])
+                   && (newData.hasChild('diente') || newData.hasChild('piezas'))"
   }
 }
 ```
@@ -334,6 +344,8 @@ Depende: —
 
 - [ ] Un cliente autenticado puede **crear** un evento.
 - [ ] Un cliente autenticado **no** puede editar ni borrar un evento existente. Probado a mano contra la base de desarrollo.
+- [ ] Un evento `MULTI` —que escribe `piezas` y no `diente`— **entra**. La regla no puede exigir `diente`: en Realtime Database `null` es ausencia de clave, así que pedirlo rechazaría todo evento de prótesis.
+- [ ] Un evento sin `diente` **ni** `piezas` se rechaza.
 - [ ] `actual/` sigue siendo escribible normalmente.
 - [ ] El acceso está scopeado por `clinicId` como el resto del árbol.
 
