@@ -86,6 +86,13 @@ export interface EstadoDiente {
 }
 
 /**
+ * Set de piezas tal como lo guarda Firebase: `{ t45: true, t46: true, t47: true }`.
+ * No es un array — el orden de las piezas lo da `ordenVisual` de la tabla FDI, no el
+ * JSON, y las claves llevan el prefijo `t` por la misma razón que en `dientes`.
+ */
+export type PiezasSet = Partial<Record<ClavePieza, true>>
+
+/**
  * Prótesis fija o removible: un hallazgo que abarca varias piezas. Es un nodo aparte
  * porque no pertenece a ninguna pieza en particular.
  */
@@ -93,11 +100,9 @@ export interface Vinculo {
   readonly tipo: CodigoHallazgoMulti
   readonly capa: Capa
   /**
-   * Set de Firebase (`{ t45: true, t46: true, t47: true }`), no un array: el orden lo
-   * da `ordenVisual` de la tabla FDI. Que sean al menos dos, contiguas y de la misma
-   * arcada lo valida el servicio de B2-4.
+   * Que sean al menos dos, contiguas y de la misma arcada lo valida el servicio de B2-4.
    */
-  readonly piezas: Partial<Record<ClavePieza, true>>
+  readonly piezas: PiezasSet
 }
 
 /** Versión del esquema con la que se escribe hoy. Un solo lugar donde vive el número. */
@@ -132,29 +137,58 @@ export interface OdontogramaActual {
 }
 
 /**
- * Asiento del log append-only. Registra la transición (`de` → `a`) para poder
+ * Lo que comparte todo asiento del log. `de` → `a` registra la transición, para poder
  * reconstruir la historia clínica: un borrado es un evento con `a: null`, no la
  * desaparición del evento anterior.
+ *
+ * El parámetro es el subconjunto del catálogo que puede aparecer en ese alcance: un
+ * evento de cara no puede asentar una corona.
  */
-export interface EventoOdontograma {
+interface EventoBase<C extends CodigoHallazgo> {
   /**
    * Resuelto por `serverTimestamp()`. Al escribir, el servicio manda el placeholder
    * del SDK en este campo; lo que queda guardado y se lee es el número.
    */
   readonly ts: number
   readonly uid: string
-  readonly alcance: Alcance
   readonly capa: Capa
-  /**
-   * La pieza del asiento. En un evento `MULTI` el tramo son varias piezas y este campo
-   * no las representa: cómo las identifica el evento de un vínculo lo define B2-4.
-   * Las reglas de B2-1 exigen que el campo esté presente.
-   */
-  readonly diente: ClavePieza
-  /** La cara afectada en un evento `CARA`; `null` cuando el alcance es DIENTE o MULTI. */
-  readonly cara: Cara | null
   /** El hallazgo que había en esa hoja, o `null` si estaba vacía. */
-  readonly de: CodigoHallazgo | null
+  readonly de: C | null
   /** El hallazgo que quedó, o `null` si fue un borrado. */
-  readonly a: CodigoHallazgo | null
+  readonly a: C | null
 }
+
+/** Asiento sobre una cara: la única variante que lleva `cara`. */
+export interface EventoCara extends EventoBase<CodigoHallazgoCara> {
+  readonly alcance: 'CARA'
+  readonly diente: ClavePieza
+  readonly cara: Cara
+  readonly piezas: null
+}
+
+/** Asiento sobre la pieza entera: corona, ausente, endodoncia, extracción. */
+export interface EventoDiente extends EventoBase<CodigoHallazgoDiente> {
+  readonly alcance: 'DIENTE'
+  readonly diente: ClavePieza
+  readonly cara: null
+  readonly piezas: null
+}
+
+/**
+ * Asiento de un vínculo multi-pieza. Guarda el **tramo entero** en `piezas` y deja
+ * `diente` en `null`: un puente abarca varias piezas y elegir una arbitraria haría que
+ * el asiento no represente lo que pasó.
+ */
+export interface EventoMulti extends EventoBase<CodigoHallazgoMulti> {
+  readonly alcance: 'MULTI'
+  readonly diente: null
+  readonly cara: null
+  readonly piezas: PiezasSet
+}
+
+/**
+ * Asiento del log append-only, discriminado por `alcance`. La unión es lo que hace
+ * cumplir la regla del contrato —se llena `diente` o `piezas`, según el alcance— sin
+ * que ningún servicio tenga que acordarse de chequearla.
+ */
+export type EventoOdontograma = EventoCara | EventoDiente | EventoMulti
