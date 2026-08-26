@@ -76,6 +76,21 @@ export interface Pieza {
 const ARCADAS_SUPERIORES: readonly Cuadrante[] = [1, 2, 5, 6]
 const HEMIARCADAS_DERECHAS: readonly Cuadrante[] = [1, 4, 5, 8]
 
+/**
+ * Lado del paciente al que pertenece un cuadrante. Es del paciente, no de quien mira la
+ * pantalla: el cuadrante 1 se dibuja a la izquierda y es el lado DERECHO.
+ *
+ * Vive acá y no en `caras.ts` porque es una propiedad de la pieza, y `crearPieza()` la
+ * usa para poblar `pieza.hemiarcada`: con una sola definición, la tabla FDI y la
+ * geometría de caras no pueden discrepar.
+ *
+ * Aplica igual a las temporarias — 5 y 8 son derechas, 6 y 7 izquierdas—, que es
+ * justamente lo que se pierde si alguien razona en términos de «cuadrantes 1 a 4».
+ */
+export function hemiarcadaDe(cuadrante: Cuadrante): Hemiarcada {
+  return HEMIARCADAS_DERECHAS.includes(cuadrante) ? 'DERECHA' : 'IZQUIERDA'
+}
+
 function tipoDe(posicion: number, denticion: Denticion): TipoPieza {
   if (posicion <= 2) return 'INCISIVO'
   if (posicion === 3) return 'CANINO'
@@ -96,7 +111,7 @@ function crearPieza(codigo: CodigoPieza, fila: Fila, ordenVisual: number): Pieza
     posicion,
     denticion,
     arcada: ARCADAS_SUPERIORES.includes(cuadrante) ? 'SUPERIOR' : 'INFERIOR',
-    hemiarcada: HEMIARCADAS_DERECHAS.includes(cuadrante) ? 'DERECHA' : 'IZQUIERDA',
+    hemiarcada: hemiarcadaDe(cuadrante),
     tipo: tipoDe(posicion, denticion),
     fila,
     ordenVisual,

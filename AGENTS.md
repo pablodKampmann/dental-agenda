@@ -70,6 +70,8 @@ Path alias `@/*` → `src/*`. `cn()` en `src/lib/utils.ts` para mergear clases T
 
 `src/lib/odontograma/` es la excepción a la regla de que la lógica vive en `services/`: es el dominio del odontograma en funciones y constantes puras, sin Firebase, sin React y testeable sin mocks. Los services de `odontograma/` lo consumen; nunca al revés. Plan de trabajo completo en `docs/odontograma-backend.md` (se documenta acá cuando el módulo esté cerrado).
 
+Dos reglas de ese módulo que valen para cualquiera que lo toque, UI incluida: la traducción entre la posición que se clickea (`left`, `right`) y la cara que se persiste (mesial, distal) la hace **solo** `caraSemantica()` en `caras.ts` —`left` es distal en la hemiarcada derecha del paciente (cuadrantes 1, 4, 5 y 8) y mesial en la izquierda—, y el color de un hallazgo lo decide **solo** `colorDe(capa)` en el mismo archivo: existente rojo, requerida azul, devuelto como clases de Tailwind (`fill-*`, `text-*`, …) y nunca como hex. Ningún componente del odontograma escribe un color propio.
+
 ---
 
 ## Modelo de datos — Firebase Realtime Database
