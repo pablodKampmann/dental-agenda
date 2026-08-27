@@ -66,15 +66,23 @@ update(24, { faces: { left: { existente: 'caries' }, center: { planificado: 'car
 |---|---|---|
 | Estado | `Record<number, ToothState>` | `Record<ClavePieza, EstadoDiente>` con claves `t16` |
 | Caras | `left: 'Mesial'` fijo para las 32 piezas | Cara semántica resuelta por cuadrante |
+| Caras (vertical) | vestibular arriba en las dos arcadas | Resuelto por arcada |
 | Capas | `existente` / `planificado` | `existente` / `requerida`, como dice la ficha |
 | Colores | existente azul, planificado rojo | **existente rojo, requerida azul** |
 | Estilo | Tailwind suelto, paleta slate | Tokens del proyecto, `teal-600`, `border-gray-300`, `rounded-xl` |
 
-### Dos cosas para tener a mano al portar
+### Tres cosas para tener a mano al portar
 
 **El color está al revés.** `LAYER_COLORS` tiene `existente: '#2563eb'` (azul) y `planificado: '#dc2626'` (rojo). La ficha de la odontóloga dice lo contrario. El prototipo salió con la convención MINSA, que es la que aparece si preguntás en general — pero acá manda el papel. Si se porta tal cual, la pantalla dice lo opuesto a lo que ella viene anotando hace años.
 
 **`FACE_LABELS` está mal para media boca.** Mapea `left: 'Mesial'` y `right: 'Distal'` para las 32 piezas, y `Tooth.tsx` no tiene ninguna lógica de cuadrante — no aparece la palabra en todo el archivo. En los cuadrantes 1 y 4 la cara izquierda es **distal**. Visualmente no se nota; clínicamente es un dato falso. La función de B1-4 es la que lo resuelve, y el componente portado la tiene que usar tanto para guardar como para etiquetar el popover.
+
+**El vestibular está siempre arriba.** `Tooth.tsx` dibuja el cuadrado igual en las dos
+arcadas, con el vestibular en la mitad superior. En la arcada inferior el vestibular va
+**abajo**: es la cara que da hacia afuera de la boca, y el odontograma dibuja las dos
+arcadas enfrentadas. Es el mismo error que `FACE_LABELS` pero en el eje vertical, y se
+corrige igual: `caraSemantica()` de B1-4 resuelve `top`/`bottom` por arcada, y el
+componente portado la tiene que usar tanto para guardar como para pintar.
 
 ### Lo que el prototipo no tiene
 
@@ -274,7 +282,9 @@ Depende: B1-2
 
 - [ ] En los cuadrantes **1 y 4**: `caraSemantica('left', q)` da `DISTAL` y `caraSemantica('right', q)` da `MESIAL`.
 - [ ] En los cuadrantes **2 y 3**: `caraSemantica('left', q)` da `MESIAL` y `caraSemantica('right', q)` da `DISTAL`.
-- [ ] `top` siempre es `VESTIBULAR`, `bottom` siempre `LINGUAL_PALATINO`, `center` siempre `OCLUSAL_INCISAL`.
+- [ ] En los cuadrantes **1, 2, 5 y 6** (arcada superior): `caraSemantica('top', q)` da `VESTIBULAR` y `caraSemantica('bottom', q)` da `LINGUAL_PALATINO`.
+- [ ] En los cuadrantes **3, 4, 7 y 8** (arcada inferior): al revés — `top` da `LINGUAL_PALATINO` y `bottom` da `VESTIBULAR`. El vestibular da hacia la cara **externa** del odontograma, no siempre hacia arriba del cuadrado: el arco se dibuja con las dos arcadas enfrentadas.
+- [ ] `center` siempre es `OCLUSAL_INCISAL`.
 - [ ] Ida y vuelta: `posicionGeometrica(caraSemantica(p, q), q) === p` para las 5 posiciones por los 8 cuadrantes.
 - [ ] `colorDe('existente')` da rojo y `colorDe('requerida')` da azul — la convención de la ficha, **invertida respecto del prototipo actual**.
 - [ ] Ningún otro archivo del proyecto decide un color de hallazgo.
