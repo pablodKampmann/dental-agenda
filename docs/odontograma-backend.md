@@ -4,6 +4,8 @@
 > Fuente de verdad del dominio: **la ficha en papel de la odontóloga** (foto del 25/08/2026).
 > El prototipo de front (`dental-agenda-main/project`) es **referencia**: tomamos sus componentes y los reescribimos con los estándares de la web.
 
+**Pendientes abiertos: [`docs/odontograma-pendientes.md`](./odontograma-pendientes.md).** Lo que se detectó leyendo el código ya mergeado y **no** se arregló en el momento, con el motivo de por qué no. Es la lista que hay que mirar antes de mergear a `dev`, antes de planificar el front y antes de dar por cerrada una iteración.
+
 ---
 
 ## Cómo trabaja el equipo con esto
