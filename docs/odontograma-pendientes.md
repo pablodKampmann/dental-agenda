@@ -26,16 +26,7 @@ on:
 build. Cuando la rama de integración se mergee a `dev` y se borre, esa línea queda
 apuntando a una rama que no existe. Sacarla en ese mismo PR.
 
-### 1.2 `Toast.test.tsx` — 2 tests fallando
-
-Vienen de antes del odontograma: fallan en `dev` sin ninguno de estos cambios.
-Ninguna issue del odontograma los toca, así que el PR de integración va a llegar a `dev`
-con el check en rojo si no se resuelven antes.
-
-**Decidir:** issue aparte para arreglarlos, o dejarlos documentados como conocidos.
-No mergear a `dev` sin haber decidido cuál de las dos.
-
-### 1.3 `.claude/settings.local.json` está trackeado y gitignoreado a la vez
+### 1.2 `.claude/settings.local.json` está trackeado y gitignoreado a la vez
 
 El archivo está en el repo, y `.claude` aparece dos veces en `.gitignore` (una como
 archivo, una como directorio). O sea que git lo sigue porque ya estaba trackeado, pero
@@ -47,7 +38,7 @@ todo el equipo. Lo que hay que arreglar es el `.gitignore`, no el archivo.
 
 Es una decisión de equipo porque afecta a todos los repos de la gente. Hablarlo antes de tocar.
 
-### 1.4 `tsc --noEmit` está en rojo y `npm run build` no lo ve
+### 1.3 `tsc --noEmit` está en rojo y `npm run build` no lo ve
 
 `tsc --noEmit` falla con un error en `src/__tests__/services/patients/searchPatient.test.ts`
 (`VitestUtils` no asignable a `Awaitable<HookCleanupCallback>`). `npm run build` pasa
@@ -97,23 +88,28 @@ consuma esto, o se agrega una variante `fondoSuave`, o se cambia `fondo` a la ve
 clara y se renombra la actual. No se tocó antes porque no hay consumidor y la forma
 correcta se ve recién con el componente en la mano.
 
-### 3.2 El guard de "un solo lugar decide el color" tiene un agujero de ruta
+### 3.2 El guard de color escanea una lista explícita: hay que mantenerla
 
-El test de `caras.test.ts` escanea los archivos cuya **ruta** matchea `/odontogram/i`.
-Un componente en `src/components/odontograma/Tooth.tsx` queda cubierto; uno en
-`src/components/dental/Tooth.tsx` **no**, y el guard pasa en verde sin haber mirado nada.
+Ya no escanea "los archivos cuya ruta matchea `/odontogram/i`" —ese criterio dejaba afuera
+`src/app/patients/[id]/odontogram/page.tsx`, que es la pantalla donde se monta— sino la
+lista declarada arriba del `describe` en `caras.test.ts`: `src/lib/odontograma/`,
+`src/components/odontograma/` (contemplado, todavía no existe) y los archivos sueltos.
+Si algo de la lista se mueve o se renombra, el guard rompe en vez de dejar de mirarlo.
 
-Cuando se defina dónde viven los componentes del odontograma, revisar que caigan adentro
-del escaneo — o cambiar el criterio de "la ruta dice odontogram" a una lista explícita.
+**Lo que queda abierto:** un componente creado en un directorio **no declarado** —el
+ejemplo de siempre, `src/components/dental/Tooth.tsx`— sigue sin ser escaneado, igual que
+antes. La lista explícita no arregla eso, solo lo hace declarable.
 
-### 3.3 La lista de familias de color del guard está incompleta
+Dos cosas lo acotan hoy: los literales de cara sí se escanean en todo `src`, así que un
+componente perdido que reimplemente la traducción se caza igual; y el template de PR
+pregunta por los colores a mano. Lo que falta es el color en un directorio no declarado.
 
-Misma regex: cubre `red|blue|rose|sky|indigo|violet|orange|amber|green|emerald` y omite
-`purple`, `pink`, `cyan`, `yellow`, `lime`, `fuchsia`. `teal` está omitido a propósito
-(es el color de la app). El riesgo real es rojo/azul, así que no es urgente, pero si
-alguien pinta un hallazgo en `text-purple-600` el guard no se entera.
+Cierre posible cuando exista el primer componente: unir a la lista los archivos que
+**importan** de `@/lib/odontograma/`. Cualquier componente que dibuje el odontograma tiene
+que importar `colorDe()` o los selectores, así que caería adentro del escaneo por sí solo,
+esté donde esté. No se hizo ahora porque sin un consumidor real no hay con qué probarlo.
 
-### 3.4 `filasDelArco` devuelve claves y el render va a necesitar la pieza entera
+### 3.3 `filasDelArco` devuelve claves y el render va a necesitar la pieza entera
 
 `selectores.ts` devuelve `ClavePieza[][]`, que es lo que indexa el estado. Pero el
 componente necesita `cuadrante`, `arcada` y `tipo` de cada pieza —para `etiquetaCara()` y
@@ -122,14 +118,14 @@ para dibujar— o sea un `piezaDeClave()` por diente en cada render.
 Cumple el contrato tal como está escrito. Si al escribir el componente resulta molesto,
 cambiarlo a devolver `Pieza[][]` es contenido y no toca la persistencia.
 
-### 3.5 `tieneHallazgos` y `capasVisibles` preguntan lo mismo
+### 3.4 `tieneHallazgos` y `capasVisibles` preguntan lo mismo
 
 `tieneHallazgos(e, p)` es equivalente a `capasVisibles(e, p).length > 0`. Comparten el
 recorrido así que no cuesta performance, pero son dos formas de preguntar una cosa.
 
 Cuando el componente esté escrito, si usa una sola, borrar la otra.
 
-### 3.6 `capasVisibles` es el único selector sin consumidor probado
+### 3.5 `capasVisibles` es el único selector sin consumidor probado
 
 La semántica es la intersección entre lo prendido en el conmutador y lo que la pieza tiene
 cargado, en orden `existente, requerida` (para que lo requerido quede dibujado encima de lo
@@ -138,7 +134,7 @@ existente). Está razonada pero se inventó sin un componente que la use.
 Es la primera candidata a cambiar de forma cuando el conmutador exista de verdad. Que
 cambie no es una regresión.
 
-### 3.7 Al portar `Tooth.tsx` hay **dos** espejados que corregir
+### 3.6 Al portar `Tooth.tsx` hay **dos** espejados que corregir
 
 Está en `docs/odontograma-backend.md`, sección "Tres cosas para tener a mano al portar",
 pero se repite acá porque es el error más caro de la feature:
