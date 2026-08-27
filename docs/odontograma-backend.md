@@ -66,15 +66,23 @@ update(24, { faces: { left: { existente: 'caries' }, center: { planificado: 'car
 |---|---|---|
 | Estado | `Record<number, ToothState>` | `Record<ClavePieza, EstadoDiente>` con claves `t16` |
 | Caras | `left: 'Mesial'` fijo para las 32 piezas | Cara semántica resuelta por cuadrante |
+| Caras (vertical) | vestibular arriba en las dos arcadas | Resuelto por arcada |
 | Capas | `existente` / `planificado` | `existente` / `requerida`, como dice la ficha |
 | Colores | existente azul, planificado rojo | **existente rojo, requerida azul** |
 | Estilo | Tailwind suelto, paleta slate | Tokens del proyecto, `teal-600`, `border-gray-300`, `rounded-xl` |
 
-### Dos cosas para tener a mano al portar
+### Tres cosas para tener a mano al portar
 
 **El color está al revés.** `LAYER_COLORS` tiene `existente: '#2563eb'` (azul) y `planificado: '#dc2626'` (rojo). La ficha de la odontóloga dice lo contrario. El prototipo salió con la convención MINSA, que es la que aparece si preguntás en general — pero acá manda el papel. Si se porta tal cual, la pantalla dice lo opuesto a lo que ella viene anotando hace años.
 
 **`FACE_LABELS` está mal para media boca.** Mapea `left: 'Mesial'` y `right: 'Distal'` para las 32 piezas, y `Tooth.tsx` no tiene ninguna lógica de cuadrante — no aparece la palabra en todo el archivo. En los cuadrantes 1 y 4 la cara izquierda es **distal**. Visualmente no se nota; clínicamente es un dato falso. La función de B1-4 es la que lo resuelve, y el componente portado la tiene que usar tanto para guardar como para etiquetar el popover.
+
+**El vestibular está siempre arriba.** `Tooth.tsx` dibuja el cuadrado igual en las dos
+arcadas, con el vestibular en la mitad superior. En la arcada inferior el vestibular va
+**abajo**: es la cara que da hacia afuera de la boca, y el odontograma dibuja las dos
+arcadas enfrentadas. Es el mismo error que `FACE_LABELS` pero en el eje vertical, y se
+corrige igual: `caraSemantica()` de B1-4 resuelve `top`/`bottom` por arcada, y el
+componente portado la tiene que usar tanto para guardar como para pintar.
 
 ### Lo que el prototipo no tiene
 
