@@ -376,6 +376,12 @@ describe('Cara no sale de este modulo', () => {
   )
   const SIN_COMENTARIOS = FUENTE.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
 
+  // Los word boundaries no son decorativos: son lo que hace pasar este test hoy.
+  // `selectores.ts` importa `CodigoHallazgoCara` y exporta `hallazgoDeCara()`, y las dos
+  // cosas tienen que seguir estando. No matchean porque el `\b` de adelante exige que
+  // el caracter previo no sea de palabra, y ahi `Cara` viene pegada a una letra. Si
+  // alguien "simplifica" esto a /Cara/, el test empieza a fallar contra codigo correcto
+  // y va a parecer que el modulo se rompio.
   it('no nombra el tipo Cara en ninguna firma', () => {
     expect(SIN_COMENTARIOS).not.toMatch(/\bCara\b/)
   })

@@ -47,6 +47,21 @@ todo el equipo. Lo que hay que arreglar es el `.gitignore`, no el archivo.
 
 Es una decisión de equipo porque afecta a todos los repos de la gente. Hablarlo antes de tocar.
 
+### 1.4 `tsc --noEmit` está en rojo y `npm run build` no lo ve
+
+`tsc --noEmit` falla con un error en `src/__tests__/services/patients/searchPatient.test.ts`
+(`VitestUtils` no asignable a `Awaitable<HookCleanupCallback>`). `npm run build` pasa
+limpio sobre el mismo árbol.
+
+Los tests **están** en el `include` del `tsconfig.json`, así que las dos cosas no deberían
+diferir. Sea cual sea el motivo, la consecuencia es la que importa: **el build no es un
+gate de tipos confiable**, y un error de tipos en un archivo de test no lo detecta nadie
+hasta que alguien corre `tsc` a mano.
+
+Decidir: o el CI corre `tsc --noEmit` además del build —y entonces hay que arreglar ese
+error primero—, o se documenta que el typecheck real es el build y se saca `tsc` del
+vocabulario del equipo. Hoy conviven las dos cosas y dan resultados distintos.
+
 ---
 
 ## 2. Para B2-2 · Lectura del odontograma
@@ -139,23 +154,11 @@ espejado, y el dato clínico queda falso en media boca.
 
 ---
 
-## 4. Nits
-
-Se arreglan cuando alguien pase por el archivo. No justifican un commit propio.
-
-- **`caras.ts`**: el comentario de `colorDe` dice "las cuatro formas" y son cinco
-  (`texto`, `fondo`, `borde`, `relleno`, `trazo`).
-- **`selectores.test.ts`**: el test `\bCara\b` depende de los word boundaries para no dar
-  falso positivo sobre `CodigoHallazgoCara`. Si alguien lo "arregla" a `/Cara/` empieza a
-  fallar y va a parecer que el módulo está mal. Dejar un comentario diciéndolo.
-
----
-
-## 5. Preguntas abiertas
+## 4. Preguntas abiertas
 
 No son deuda técnica: son decisiones que faltan y que bloquean issues futuras.
 
-### 5.1 ¿Quién firma cada asiento de auditoría?
+### 4.1 ¿Quién firma cada asiento de auditoría?
 
 El evento guarda `uid`. En una historia clínica odontológica lo que suele hacer falta es el
 profesional y su matrícula, no el usuario del sistema — y no necesariamente son la misma
@@ -163,7 +166,7 @@ persona (una secretaria puede cargar lo que dictó la odontóloga).
 
 **Bloquea:** B2-3. Preguntarle al PO.
 
-### 5.2 ¿El odontograma alimenta el presupuesto?
+### 4.2 ¿El odontograma alimenta el presupuesto?
 
 La capa `requerida` es, literalmente, el plan de tratamiento. El sistema ya tiene
 `priceTariffs`. Si el presupuesto tiene que salir del odontograma, eso es una issue que no
@@ -171,7 +174,7 @@ está en el plan y cambia el alcance.
 
 **Bloquea:** nada hoy. Preguntarlo antes de cerrar B3 para no descubrirlo después.
 
-### 5.3 `serverTimestamp()` vs `number` en el tipo de `ts`
+### 4.3 `serverTimestamp()` vs `number` en el tipo de `ts`
 
 `EventoOdontograma.ts` está tipado `number`, que es lo que se **lee**. Lo que se **escribe**
 es el placeholder del SDK, que no es un número. Al escribir hay que resolverlo de alguna

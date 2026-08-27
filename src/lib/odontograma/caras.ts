@@ -120,11 +120,11 @@ export function etiquetaCara(cara: Cara, arcada: Arcada, tipo: TipoPieza): strin
 }
 
 /**
- * El color de una capa, en las cuatro formas en las que el front lo va a necesitar.
+ * El color de una capa, en las cinco formas en las que el front lo va a necesitar.
  *
  * Son clases de Tailwind y no hex porque es el estándar del proyecto: el color se
  * declara con la paleta (`text-teal-700`, `bg-red-50`) y el hex queda reservado para
- * props de librerías externas que piden un string de color. Las cuatro variantes están
+ * props de librerías externas que piden un string de color. Las cinco variantes están
  * porque el mismo hallazgo se pinta como SVG (`relleno` para las formas y el texto del
  * grafismo `letter`, `trazo` para los contornos) y como HTML (`texto` y `fondo` en el
  * picker, la leyenda y la historia clínica). Si faltara alguna, el que la necesite la

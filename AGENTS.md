@@ -68,7 +68,7 @@ src/
 
 Path alias `@/*` → `src/*`. `cn()` en `src/lib/utils.ts` para mergear clases Tailwind (clsx + tailwind-merge).
 
-`src/lib/odontograma/` es la excepción a la regla de que la lógica vive en `services/`: es el dominio del odontograma en funciones y constantes puras, sin Firebase, sin React y testeable sin mocks. Los services de `odontograma/` lo consumen; nunca al revés. Plan de trabajo completo en `docs/odontograma-backend.md` (se documenta acá cuando el módulo esté cerrado).
+`src/lib/odontograma/` es la excepción a la regla de que la lógica vive en `services/`: es el dominio del odontograma en funciones y constantes puras, sin Firebase, sin React y testeable sin mocks. Los services de `odontograma/` lo consumen; nunca al revés. Plan de trabajo completo en `docs/odontograma-backend.md` (se documenta acá cuando el módulo esté cerrado). Lo detectado revisando el código ya mergeado y **no** arreglado en el momento, con el motivo de por qué no, está en `docs/odontograma-pendientes.md` — mirala antes de tocar el módulo, para no re-descubrir algo que ya está anotado ni "arreglar" algo que está así a propósito.
 
 Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
