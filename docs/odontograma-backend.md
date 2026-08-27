@@ -274,7 +274,9 @@ Depende: B1-2
 
 - [ ] En los cuadrantes **1 y 4**: `caraSemantica('left', q)` da `DISTAL` y `caraSemantica('right', q)` da `MESIAL`.
 - [ ] En los cuadrantes **2 y 3**: `caraSemantica('left', q)` da `MESIAL` y `caraSemantica('right', q)` da `DISTAL`.
-- [ ] `top` siempre es `VESTIBULAR`, `bottom` siempre `LINGUAL_PALATINO`, `center` siempre `OCLUSAL_INCISAL`.
+- [ ] En los cuadrantes **1, 2, 5 y 6** (arcada superior): `caraSemantica('top', q)` da `VESTIBULAR` y `caraSemantica('bottom', q)` da `LINGUAL_PALATINO`.
+- [ ] En los cuadrantes **3, 4, 7 y 8** (arcada inferior): al revés — `top` da `LINGUAL_PALATINO` y `bottom` da `VESTIBULAR`. El vestibular da hacia la cara **externa** del odontograma, no siempre hacia arriba del cuadrado: el arco se dibuja con las dos arcadas enfrentadas.
+- [ ] `center` siempre es `OCLUSAL_INCISAL`.
 - [ ] Ida y vuelta: `posicionGeometrica(caraSemantica(p, q), q) === p` para las 5 posiciones por los 8 cuadrantes.
 - [ ] `colorDe('existente')` da rojo y `colorDe('requerida')` da azul — la convención de la ficha, **invertida respecto del prototipo actual**.
 - [ ] Ningún otro archivo del proyecto decide un color de hallazgo.

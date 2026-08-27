@@ -77,6 +77,20 @@ const ARCADAS_SUPERIORES: readonly Cuadrante[] = [1, 2, 5, 6]
 const HEMIARCADAS_DERECHAS: readonly Cuadrante[] = [1, 4, 5, 8]
 
 /**
+ * Arcada a la que pertenece un cuadrante.
+ *
+ * Vive acá por la misma razón que `hemiarcadaDe()`: es una propiedad de la pieza que
+ * `crearPieza()` usa para poblar `pieza.arcada`, y `caras.ts` la necesita para resolver
+ * la geometría. Con una sola definición, la tabla FDI y la geometría no pueden discrepar.
+ *
+ * En la geometría de caras decide `top` y `bottom`: el vestibular da hacia la cara
+ * externa del odontograma, que es arriba en la arcada superior y abajo en la inferior.
+ */
+export function arcadaDe(cuadrante: Cuadrante): Arcada {
+  return ARCADAS_SUPERIORES.includes(cuadrante) ? 'SUPERIOR' : 'INFERIOR'
+}
+
+/**
  * Lado del paciente al que pertenece un cuadrante. Es del paciente, no de quien mira la
  * pantalla: el cuadrante 1 se dibuja a la izquierda y es el lado DERECHO.
  *
@@ -110,7 +124,7 @@ function crearPieza(codigo: CodigoPieza, fila: Fila, ordenVisual: number): Pieza
     cuadrante,
     posicion,
     denticion,
-    arcada: ARCADAS_SUPERIORES.includes(cuadrante) ? 'SUPERIOR' : 'INFERIOR',
+    arcada: arcadaDe(cuadrante),
     hemiarcada: hemiarcadaDe(cuadrante),
     tipo: tipoDe(posicion, denticion),
     fila,

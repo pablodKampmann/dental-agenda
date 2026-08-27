@@ -30,6 +30,10 @@ const CARAS: readonly Cara[] = [
 const CUADRANTES_DERECHOS: readonly Cuadrante[] = [1, 4, 5, 8]
 const CUADRANTES_IZQUIERDOS: readonly Cuadrante[] = [2, 3, 6, 7]
 
+/** Idem para la arcada, que es el otro eje: decide `top` y `bottom`. */
+const CUADRANTES_SUPERIORES: readonly Cuadrante[] = [1, 2, 5, 6]
+const CUADRANTES_INFERIORES: readonly Cuadrante[] = [3, 4, 7, 8]
+
 describe('caraSemantica', () => {
   it.each([1, 4] as const)(
     'en el cuadrante %i (hemiarcada derecha) left es DISTAL y right es MESIAL',
@@ -70,9 +74,49 @@ describe('caraSemantica', () => {
     expect(cubiertos).toEqual([...CUADRANTES])
   })
 
-  it.each(CUADRANTES)('top, bottom y center son invariantes en el cuadrante %i', (cuadrante) => {
-    expect(caraSemantica('top', cuadrante)).toBe('VESTIBULAR')
-    expect(caraSemantica('bottom', cuadrante)).toBe('LINGUAL_PALATINO')
+  /**
+   * El vestibular da hacia la cara externa del odontograma, no siempre hacia arriba del
+   * cuadrado: el arco se dibuja con las dos arcadas enfrentadas, asi que en la superior
+   * "afuera" es arriba y en la inferior es abajo.
+   *
+   * Las cuatro combinaciones van escritas a mano, sin derivarlas de la funcion: el
+   * criterio original del contrato decia "top siempre es VESTIBULAR" y era incorrecto en
+   * la arcada inferior, o sea en media ficha.
+   */
+  it.each([1, 2, 5, 6] as const)(
+    'en el cuadrante %i (arcada superior) top es VESTIBULAR y bottom es LINGUAL_PALATINO',
+    (cuadrante) => {
+      expect(caraSemantica('top', cuadrante)).toBe('VESTIBULAR')
+      expect(caraSemantica('bottom', cuadrante)).toBe('LINGUAL_PALATINO')
+    }
+  )
+
+  it.each([3, 4, 7, 8] as const)(
+    'en el cuadrante %i (arcada inferior) top es LINGUAL_PALATINO y bottom es VESTIBULAR',
+    (cuadrante) => {
+      expect(caraSemantica('top', cuadrante)).toBe('LINGUAL_PALATINO')
+      expect(caraSemantica('bottom', cuadrante)).toBe('VESTIBULAR')
+    }
+  )
+
+  it('no deja ningun cuadrante fuera de la regla de arcada', () => {
+    const cubiertos = [...CUADRANTES_SUPERIORES, ...CUADRANTES_INFERIORES].sort()
+    expect(cubiertos).toEqual([...CUADRANTES])
+  })
+
+  /**
+   * Los dos ejes son independientes: la arcada no puede estar resolviendose con la
+   * hemiarcada por casualidad. El 2 es superior e izquierdo y el 4 es inferior y derecho,
+   * asi que si alguien confundiera una funcion con la otra, estos dos romperian.
+   */
+  it('resuelve arcada y hemiarcada por separado', () => {
+    expect(caraSemantica('top', 2)).toBe('VESTIBULAR')
+    expect(caraSemantica('left', 2)).toBe('MESIAL')
+    expect(caraSemantica('top', 4)).toBe('LINGUAL_PALATINO')
+    expect(caraSemantica('left', 4)).toBe('DISTAL')
+  })
+
+  it.each(CUADRANTES)('center es OCLUSAL_INCISAL en el cuadrante %i', (cuadrante) => {
     expect(caraSemantica('center', cuadrante)).toBe('OCLUSAL_INCISAL')
   })
 
@@ -89,6 +133,15 @@ describe('caraSemantica', () => {
     for (const pieza of PIEZAS) {
       const haciaLaLineaMedia: FacePosition = pieza.hemiarcada === 'DERECHA' ? 'right' : 'left'
       expect(caraSemantica(haciaLaLineaMedia, pieza.cuadrante)).toBe('MESIAL')
+    }
+  })
+
+  it('coincide con la arcada de las 52 piezas de la tabla FDI', () => {
+    for (const pieza of PIEZAS) {
+      const haciaAfuera: FacePosition = pieza.arcada === 'SUPERIOR' ? 'top' : 'bottom'
+      const haciaAdentro: FacePosition = pieza.arcada === 'SUPERIOR' ? 'bottom' : 'top'
+      expect(caraSemantica(haciaAfuera, pieza.cuadrante)).toBe('VESTIBULAR')
+      expect(caraSemantica(haciaAdentro, pieza.cuadrante)).toBe('LINGUAL_PALATINO')
     }
   })
 })
@@ -111,6 +164,13 @@ describe('posicionGeometrica', () => {
     expect(posicionGeometrica('MESIAL', 2)).toBe('left')
     expect(posicionGeometrica('DISTAL', 5)).toBe('left')
     expect(posicionGeometrica('DISTAL', 6)).toBe('right')
+  })
+
+  it('pinta vestibular arriba o abajo segun la arcada', () => {
+    expect(posicionGeometrica('VESTIBULAR', 1)).toBe('top')
+    expect(posicionGeometrica('VESTIBULAR', 4)).toBe('bottom')
+    expect(posicionGeometrica('LINGUAL_PALATINO', 6)).toBe('bottom')
+    expect(posicionGeometrica('LINGUAL_PALATINO', 7)).toBe('top')
   })
 })
 

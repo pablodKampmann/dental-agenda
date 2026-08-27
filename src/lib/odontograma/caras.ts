@@ -6,39 +6,58 @@
  * `center`)— y lo que se persiste: una cara clínica. Y resuelve el color de un hallazgo
  * a partir de su capa.
  *
- * **Este es el único lugar del proyecto donde se hacen esas dos traducciones.** La del
- * lado, porque `left` no significa lo mismo en las dos hemiarcadas y hacerlo inline en
- * el render garantiza que se rompa; la del color, porque la convención de la ficha en
- * papel está invertida respecto del prototipo y no puede quedar duplicada en cada SVG.
+ * **De las cinco posiciones, cuatro dependen del cuadrante, y por dos motivos distintos:**
+ *
+ * - `left` y `right` dependen de la **hemiarcada**, porque mesial es «hacia la línea
+ *   media» y la línea media queda a un lado o al otro según el lado del paciente.
+ * - `top` y `bottom` dependen de la **arcada**, porque el vestibular da hacia la cara
+ *   externa del odontograma: arriba en la superior, abajo en la inferior.
+ * - `center` es la única invariante.
+ *
+ * Los dos ejes son independientes —un cuadrante puede ser superior e izquierdo— y se
+ * resuelven con `arcadaDe()` y `hemiarcadaDe()`, que viven en `piezas.ts` para que la
+ * tabla FDI y esta geometría no puedan discrepar.
+ *
+ * **Este es el único lugar del proyecto donde se hacen esas traducciones.** La de la
+ * posición, porque hacerla inline en el render garantiza que se rompa; la del color,
+ * porque la convención de la ficha en papel está invertida respecto del prototipo y no
+ * puede quedar duplicada en cada SVG.
  *
  * Sin Firebase, sin React y sin `any`.
  */
 
-import { hemiarcadaDe, type Arcada, type Cuadrante, type TipoPieza } from './piezas'
+import { arcadaDe, hemiarcadaDe, type Arcada, type Cuadrante, type TipoPieza } from './piezas'
 import type { Capa, Cara, FacePosition } from './tipos'
 
 /**
  * De la posición clickeada a la cara que se guarda.
  *
- * `top`, `bottom` y `center` son invariantes: el arco se dibuja siempre con el
- * vestibular arriba y el lingual/palatino abajo, en los ocho cuadrantes.
+ * Solo `center` es invariante.
  *
- * `left` y `right` **no lo son**, y ese es el punto de esta función. Mesial es «hacia la
- * línea media» y distal «alejándose de ella»; la línea media cae en el centro de la
- * pantalla, así que en la hemiarcada derecha del paciente —que se dibuja a la
- * izquierda— la cara mesial queda a la derecha del cuadrado, y al revés en la
- * izquierda. Si esto no se aplica, el sistema guarda «caries en mesial» cuando la caries
- * está en distal, en media boca, sin ningún error visible.
+ * `top` y `bottom` se resuelven por **arcada**. El vestibular es la cara que da hacia el
+ * carrillo, o sea hacia afuera de la boca, y el odontograma dibuja las dos arcadas
+ * enfrentadas: en la superior «afuera» es arriba y en la inferior es abajo. Poner el
+ * vestibular siempre arriba lo dejaría hacia adentro en media ficha.
  *
- * El criterio es la hemiarcada, no el rango 1–4: los cuadrantes temporarios 5 y 8 son
- * del lado derecho y se comportan como el 1 y el 4.
+ * `left` y `right` se resuelven por **hemiarcada**. Mesial es «hacia la línea media» y
+ * distal «alejándose de ella»; la línea media cae en el centro de la pantalla, así que
+ * en la hemiarcada derecha del paciente —que se dibuja a la izquierda— la cara mesial
+ * queda a la derecha del cuadrado, y al revés en la izquierda.
+ *
+ * Los dos criterios son geométricos y no rangos de cuadrante: los temporarios entran en
+ * la misma regla —el 5 es superior y derecho, igual que el 1— y por eso se le preguntan
+ * a `piezas.ts` en vez de compararse contra un número.
+ *
+ * Si algo de esto no se aplica, el sistema guarda «caries en mesial» cuando está en
+ * distal, o «en vestibular» cuando está en lingual, en media boca y sin ningún error
+ * visible: el dibujo queda igual de coherente, solo que espejado.
  */
 export function caraSemantica(posicion: FacePosition, cuadrante: Cuadrante): Cara {
   switch (posicion) {
     case 'top':
-      return 'VESTIBULAR'
+      return arcadaDe(cuadrante) === 'SUPERIOR' ? 'VESTIBULAR' : 'LINGUAL_PALATINO'
     case 'bottom':
-      return 'LINGUAL_PALATINO'
+      return arcadaDe(cuadrante) === 'SUPERIOR' ? 'LINGUAL_PALATINO' : 'VESTIBULAR'
     case 'center':
       return 'OCLUSAL_INCISAL'
     case 'left':
@@ -54,13 +73,17 @@ export function caraSemantica(posicion: FacePosition, cuadrante: Cuadrante): Car
  * Es una biyección exacta para cada cuadrante — `posicionGeometrica(caraSemantica(p, q), q)`
  * devuelve `p`—, y tiene que seguir siéndolo: leer y escribir la misma cara por caminos
  * distintos es la forma silenciosa de que el dibujo deje de representar el dato.
+ *
+ * Ojo: que la ida y vuelta cierre **no prueba que el mapeo sea el correcto**. Si las dos
+ * funciones espejan el mismo eje, la biyección se mantiene igual y el error no aparece.
+ * Lo que fija el mapeo son los casos concretos por arcada y por hemiarcada del test.
  */
 export function posicionGeometrica(cara: Cara, cuadrante: Cuadrante): FacePosition {
   switch (cara) {
     case 'VESTIBULAR':
-      return 'top'
+      return arcadaDe(cuadrante) === 'SUPERIOR' ? 'top' : 'bottom'
     case 'LINGUAL_PALATINO':
-      return 'bottom'
+      return arcadaDe(cuadrante) === 'SUPERIOR' ? 'bottom' : 'top'
     case 'OCLUSAL_INCISAL':
       return 'center'
     case 'MESIAL':
