@@ -312,13 +312,19 @@ tieneHallazgos(estado, pieza): boolean          // para el estado vacío del die
 capasVisibles(estado, pieza, visibilidad)       // para el conmutador de capas
 ```
 
+`estado` es el `DientesPorClave` de B1-2 —el mapa de piezas, no el `OdontogramaActual` entero— y `pieza` acepta el código FDI (`16`) o la clave (`'t16'`): `filasDelArco()` devuelve claves porque son las que indexan el estado, y el resto del componente razona en códigos, que es lo que ve la odontóloga.
+
+`capasVisibles` devuelve la **intersección** entre lo que el conmutador tiene prendido y lo que la pieza tiene cargado, en orden fijo `existente, requerida` —lo requerido se pinta encima de lo existente—. Las dos condiciones juntas son el punto: solo con la visibilidad el render pintaría la capa prendida sobre piezas sanas, y solo con el estado el conmutador no apagaría nada. `tieneHallazgos` mira solo el nodo de la pieza: los vínculos multi-pieza no cuelgan de ninguna pieza en particular, así que una pieza dentro de un puente y sin hallazgos propios da `false` y el tramo lo dibuja el vínculo (B2-4).
+
 **Criterios de aceptación**
 
 - [ ] `VistaArcada` es un tipo propio (`'PERMANENTE' | 'MIXTA'`), **no** `Denticion`: mixta no es una dentición, es un modo de vista. `Denticion` en `piezas.ts` sigue siendo `'PERMANENTE' | 'TEMPORARIA'` y describe a la pieza, no a la pantalla.
 - [ ] `filasDelArco('PERMANENTE')` devuelve 2 filas de 16 en el orden del papel.
 - [ ] `filasDelArco('MIXTA')` devuelve las 4 filas en el orden **1, 3, 4, 2**: en la ficha las temporarias van *entre* las permanentes, así que el número de fila no es el orden de render.
 - [ ] `hallazgoDeCara(estado, 16, 'left', capa)` lee de `DISTAL`, y `hallazgoDeCara(estado, 26, 'left', capa)` lee de `MESIAL`. El componente pasa posiciones y nunca ve la cara semántica.
-- [ ] Consultar una pieza sin hallazgos no rompe ni obliga a chequear `undefined` en el render.
+- [ ] Y el eje vertical, que es el otro y es independiente: `hallazgoDeCara(estado, 16, 'top', capa)` lee de `VESTIBULAR` y `hallazgoDeCara(estado, 46, 'top', capa)` lee de `LINGUAL_PALATINO`. Va como criterio aparte porque un selector que hardcodee `top → VESTIBULAR` —que es lo que hace el prototipo para las 32 piezas— pasa el criterio de arriba entero y guarda mal media boca.
+- [ ] `Cara` no aparece en la firma de ninguna función de `selectores.ts`, ni se re-exporta desde ahí. La traducción la hace `caraSemantica()` por dentro; si el módulo devuelve una cara, el render vuelve a tener con qué saltearla.
+- [ ] Consultar una pieza sin hallazgos no rompe ni obliga a chequear `undefined` en el render. **Es el camino normal, no el borde** —un odontograma vacío es `{}`, no 52 entradas— y el contrato es uno solo para los cuatro: los dos `hallazgoDe*` devuelven `undefined`, `tieneHallazgos` devuelve `false` y `capasVisibles` devuelve un array vacío, siempre la misma referencia congelada para no romper un `useMemo` río abajo.
 - [ ] Ninguna de estas funciones toca Firebase ni React.
 
 **Por qué existe.** Cuando el componente se reescriba con nuestros estándares, va a necesitar estas preguntas igual. Que vivan acá —puras y testeadas— en vez de inline en el JSX es lo que evita que la traducción cuadrante ↔ cara se filtre en el render y se rompa la próxima vez que alguien toque el componente.
