@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { ref, update, get } from "firebase/database";
+import { ref, update } from "firebase/database";
 
 export async function setClinicInfoChanges(clinicId: string, field: string, value: string) {
     try {
@@ -7,12 +7,9 @@ export async function setClinicInfoChanges(clinicId: string, field: string, valu
             throw new Error();
         }
         const dbRef = ref(db, `/clinics/${clinicId}/info/`);
-        const snapshot = await get(dbRef);
-        if (snapshot.exists()) {
-            await update(dbRef, {
-                [field]: value
-            });
-        }
+        await update(dbRef, {
+            [field]: value
+        });
     } catch (error) {
         console.error(error);
         return null;

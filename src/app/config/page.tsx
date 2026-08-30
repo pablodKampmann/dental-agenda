@@ -825,6 +825,11 @@ export default function Page() {
               loadingGet === false &&
               clinicInfo && (
                 <div className="max-w-lg">
+                  {showAlert === "saved" && (
+                    <div className="mb-4 px-3 py-2 bg-green-50 border-2 border-green-300 rounded-xl text-sm font-semibold text-green-700 flex items-center gap-1.5">
+                      <FaCircleCheck size={16} /> Cambio guardado correctamente.
+                    </div>
+                  )}
                   <h1 className="text-base font-bold tracking-wide mb-3">
                     Básico:
                   </h1>
