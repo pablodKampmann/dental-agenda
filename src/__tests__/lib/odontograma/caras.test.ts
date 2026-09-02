@@ -501,11 +501,31 @@ describe('colorDe es el unico lugar que decide un color de hallazgo', () => {
  * No pretende ser hermetico: se puede reimplementar la logica sin escribir los literales
  * (interpolando, o usando los tipos). Cubre el caso realista, que es el copy-paste.
  *
- * Alcance y sus dos excepciones, las dos por scope y ninguna por patron:
+ * Alcance y sus excepciones, todas por scope y ninguna por patron:
  *
  * - `src/lib/odontograma/` es el dominio: ahi los literales son la definicion.
  * - `src/__tests__/lib/odontograma/` los asevera, que es lo contrario de reimplementarlos
  *   —este mismo archivo tiene los cinco arriba, en `CARAS`—.
+ * - `src/__tests__/services/odontograma/` — los tests de `setHallazgoCara` y compania —
+ *   quedan afuera por el mismo motivo que el dominio: son fixtures. `setHallazgoCara`
+ *   recibe `cara` como parametro (ya una `Cara`, no una posicion clickeada), y el test
+ *   tiene que pasarle una para poder llamar a la funcion. No es una traduccion
+ *   `FacePosition -> Cara` reimplementada, es un valor de prueba.
+ *
+ * `src/services/odontograma/` (el codigo de produccion, no sus tests) sigue **adentro**
+ * del escaneo a proposito. El invariante que este guard cuida es que la traduccion
+ * `FacePosition -> Cara` pase solo por `caraSemantica()`, y los services estan del otro
+ * lado de ese limite: reciben una `Cara` ya traducida (por el componente, via
+ * `caraSemantica()`) y nunca ven un `FacePosition` — no tienen con que traducirla mal.
+ * El riesgo real esta en los componentes, que si reciben el click crudo. Si algun dia un
+ * service arma una `Cara` por su cuenta en vez de recibirla ya resuelta, es exactamente
+ * el tipo de regresion que este guard tiene que cazar, asi que la carpeta de produccion
+ * no se exceptua.
+ *
+ * Cubierto hoy, en limpio: todos los componentes del odontograma, la pantalla
+ * (`clinicHistory/page.tsx`) y los services de produccion. Afuera: los tests del
+ * dominio y los tests de los services — los dos son fixtures o aserciones, nunca
+ * decisiones.
  *
  * Se busca en todo el archivo, comentarios incluidos. Un componente que necesita hablar
  * de una cara en prosa ya esta razonando sobre caras adentro del render, que es lo que la
@@ -523,7 +543,8 @@ describe('nadie escribe una cara a mano fuera del dominio', () => {
 
   const DOMINIO = join(RAIZ_SRC, 'lib', 'odontograma')
   const TESTS_DEL_DOMINIO = join(RAIZ_SRC, '__tests__', 'lib', 'odontograma')
-  const EXCEPTUADOS: readonly string[] = [DOMINIO, TESTS_DEL_DOMINIO]
+  const TESTS_DE_SERVICES = join(RAIZ_SRC, '__tests__', 'services', 'odontograma')
+  const EXCEPTUADOS: readonly string[] = [DOMINIO, TESTS_DEL_DOMINIO, TESTS_DE_SERVICES]
 
   function fuentesFueraDelDominio(directorio: string): string[] {
     if (EXCEPTUADOS.includes(directorio)) return []
@@ -537,7 +558,7 @@ describe('nadie escribe una cara a mano fuera del dominio', () => {
 
   const archivos = fuentesFueraDelDominio(RAIZ_SRC)
 
-  it('escanea todo src menos el dominio y sus tests', () => {
+  it('escanea todo src menos el dominio y los tests que son fixtures o aserciones', () => {
     expect(archivos.length).toBeGreaterThan(0)
     for (const exceptuado of EXCEPTUADOS) {
       expect(existsSync(exceptuado), `falta ${exceptuado}`).toBe(true)
@@ -559,6 +580,18 @@ describe('nadie escribe una cara a mano fuera del dominio', () => {
     expect(archivos).toContain(
       join(RAIZ_SRC, 'components', 'patients', 'ui', 'patientRecord.tsx')
     )
+  })
+
+  it('los services de produccion del odontograma siguen adentro del escaneo', () => {
+    // A proposito NO exceptuados: reciben una `Cara` ya traducida y nunca ven un
+    // `FacePosition`, pero si alguno empieza a construir una a mano en vez de recibirla,
+    // es la regresion que este guard tiene que cazar.
+    const carpetaServices = join(RAIZ_SRC, 'services', 'odontograma')
+    for (const nombre of ['getOdontograma.ts', 'getEventos.ts', 'setHallazgo.ts', 'removeHallazgo.ts']) {
+      const ruta = join(carpetaServices, nombre)
+      expect(existsSync(ruta), `${nombre} no existe: se movio o se renombro`).toBe(true)
+      expect(archivos, `${nombre} no esta en el escaneo`).toContain(ruta)
+    }
   })
 
   it.each(archivos)('%s no escribe una cara a mano', (ruta) => {
