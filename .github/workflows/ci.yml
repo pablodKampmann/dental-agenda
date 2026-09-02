@@ -30,3 +30,15 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+
+      # Los tests son un gate igual que el build: si esto esta en rojo, el PR no entra.
+      # Ahi viven los guards del odontograma (que nadie decida un color de hallazgo por su
+      # cuenta y que nadie escriba una cara a mano), que sin este paso no verificaban nada.
+      #
+      # Sin bloque `env:` a proposito, y verificado corriendo la suite completa con
+      # `.env.local` fuera del arbol: los 213 tests pasan. Los cinco que tocan Firebase
+      # mockean `@/lib/firebase` con `vi.mock`, asi que el modulo real —el unico que lee
+      # esas variables— nunca se evalua. Si algun dia un test importa el modulo de verdad,
+      # va a fallar con "Can't determine Firebase Database URL" y ahi si hay que replicar
+      # el bloque de arriba.
+      - run: npm run test:run
