@@ -17,7 +17,20 @@ import type { ClavePieza, CodigoPieza } from './piezas'
 export type { ClavePieza, CodigoPieza }
 
 /** Las cinco caras clínicas. Es lo que se persiste, no lo que se clickea. */
-export type Cara = 'MESIAL' | 'DISTAL' | 'VESTIBULAR' | 'LINGUAL_PALATINO' | 'OCLUSAL_INCISAL'
+export const CARAS = ['MESIAL', 'DISTAL', 'VESTIBULAR', 'LINGUAL_PALATINO', 'OCLUSAL_INCISAL'] as const
+export type Cara = (typeof CARAS)[number]
+
+/**
+ * Un `Set` resuelve la pertenencia sin tocar la cadena de prototipos —`.has()` no es
+ * `in`—, así que alcanza con esto. `piezas.ts` necesita `Object.create(null)` porque su
+ * índice se consulta con `in` sobre un objeto; acá no hace falta ese cuidado.
+ */
+const CARAS_VALIDAS: ReadonlySet<string> = new Set<string>(CARAS)
+
+/** Guard para lo que llega de afuera: Firebase, una URL, un formulario. */
+export function esCara(valor: unknown): valor is Cara {
+  return typeof valor === 'string' && CARAS_VALIDAS.has(valor)
+}
 
 /**
  * Las dos capas de la ficha. `existente` es lo que el paciente ya tiene, `requerida` lo
@@ -27,10 +40,32 @@ export type Cara = 'MESIAL' | 'DISTAL' | 'VESTIBULAR' | 'LINGUAL_PALATINO' | 'OC
  * El color sale de la capa y de ningún otro lado: existente = ROJO, requerida = AZUL.
  * Es la convención de la ficha en papel de la clínica, invertida respecto de MINSA.
  */
-export type Capa = 'existente' | 'requerida'
+export const CAPAS = ['existente', 'requerida'] as const
+export type Capa = (typeof CAPAS)[number]
+
+const CAPAS_VALIDAS: ReadonlySet<string> = new Set<string>(CAPAS)
+
+/** Guard para lo que llega de afuera: Firebase, una URL, un formulario. */
+export function esCapa(valor: unknown): valor is Capa {
+  return typeof valor === 'string' && CAPAS_VALIDAS.has(valor)
+}
 
 /** A qué se le aplica un hallazgo: una cara, la pieza entera, o un tramo de piezas. */
-export type Alcance = 'CARA' | 'DIENTE' | 'MULTI'
+export const ALCANCES = ['CARA', 'DIENTE', 'MULTI'] as const
+export type Alcance = (typeof ALCANCES)[number]
+
+const ALCANCES_VALIDOS: ReadonlySet<string> = new Set<string>(ALCANCES)
+
+/**
+ * Guard para lo que llega de afuera. Sin consumidor todavía —hoy `Alcance` solo se usa
+ * en tipos que ya validan lo que envuelven—, pero B2-5 (`getEventos`) va a leer
+ * `evento.alcance` crudo de Firebase y va a necesitar justo esto. Se agrega ahora para
+ * que ese servicio no tenga que reinventar la lista a mano, que es la duplicación que
+ * esta refactorización vino a sacar.
+ */
+export function esAlcance(valor: unknown): valor is Alcance {
+  return typeof valor === 'string' && ALCANCES_VALIDOS.has(valor)
+}
 
 /**
  * Posición geométrica dentro del cuadrado del diente: lo que el usuario clickea.

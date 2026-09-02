@@ -62,6 +62,7 @@ src/
 │   └── odontograma/               # dominio puro del odontograma — sin Firebase ni React
 ├── services/                      # TODAS las operaciones contra Firebase, por feature
 │   ├── appointments/, patients/, practices/, config/, auth/, options/ (obras sociales)
+│   └── odontograma/                # lectura/escritura del odontograma (B2-2, B2-3...)
 ├── dev/                            # scripts de seed/migración usados por app/dev/page.tsx
 └── __tests__/                      # vitest — services, components, lib
 ```
@@ -94,6 +95,8 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
 **El componente le pregunta al estado a través de `selectores.ts`, y nunca ve una `Cara`.** `hallazgoDeCara(estado, pieza, posicion, capa)` recibe la posición clickeada (`top`, `left`, …) y llama a `caraSemantica()` por dentro; `hallazgoDeDiente`, `tieneHallazgos` y `capasVisibles` completan el resto. Ninguna firma de ese archivo nombra una `Cara`: si el módulo devolviera una, el render volvería a tener con qué saltear la traducción. Consultar una pieza sin hallazgos es el camino normal —un odontograma vacío es `{}`, no 52 entradas—, así que los `hallazgoDe*` devuelven `undefined`, `tieneHallazgos` `false` y `capasVisibles` un array vacío congelado, sin ramas especiales en el JSX. Ojo con `filasDelArco(vista)`: la `fila` de `piezas.ts` es un identificador lógico y no el orden de render — en la ficha las temporarias van *entre* las permanentes, así que la vista mixta sale 1, 3, 4, 2.
 
+**El service de lectura (`getOdontograma`, en `src/services/odontograma/`) es el único lugar que valida el dato crudo de Firebase.** Si aparece una clave de pieza o un código de hallazgo que no existe en el catálogo, se descarta solo esa pieza/hallazgo puntual y se loguea con `console.error` — nunca se rompe la lectura completa por un dato corrupto aislado. Mismo criterio que ya usan `getPatient`/`getPatients`. Un paciente sin odontograma cargado devuelve `{ dientes: {}, vinculos: {}, meta: null }`, nunca `null` — `null` es solo para cuando la lectura en sí falla (offline, error de Firebase).
+
 ---
 
 ## Modelo de datos — Firebase Realtime Database
@@ -110,7 +113,12 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
     patients/{id}
         name, dni, phone, email, insurance, timestamp (usado para paginación)
-        clinicHistory/, odontogramData/
+        clinicHistory/
+
+    odontogramas/{pacienteId}/
+        actual/
+            dientes, vinculos, meta      # ver src/lib/odontograma/tipos.ts
+        eventos/{evt}                    # log append-only, ver B2-1
 
     priceTariffs/{chapter}/{id}
         name, price, id
@@ -192,7 +200,7 @@ git commit -m "tipo: título en español" -m "- cambio específico 1" -m "- camb
 
 **0. Leer este archivo completo** antes de planificar cualquier cosa.
 
-**1. Planificación bilateral.** Se discute la feature a puro feedback con agente + intengrantes del grupo si es necesario — qué hace, qué no hace, cómo se relaciona con lo que ya existe, flujo de pantallas. Sin código todavía. Se cierra cuando hay acuerdo en el alcance. Si hay ambigüedad de negocio o UX, el agente pregunta — no asume ni seguí de largo.
+**1. Planificación bilateral.** Se discute la feature a puro feedback con agente + intengrantes del grupo si es necesario — qué hace, qué no hace, cómo se relaciona con lo que ya existe, flujo de pantallas. Sin código todavía. Se cierra cuando hay acuerdo en el alcance. Si hay ambigüedad de negocio o UX, el agente pregunta — no asume ni sigue de largo.
 
 **2. Relevamiento de datos (si la feature toca Firebase).** No hay esquema SQL para consultar. Antes de asumir la forma de un nodo: revisar los servicios existentes en `src/services/{feature}/` que ya leen/escriben ese nodo, o el árbol real en la consola de Firebase. El árbol de este archivo es referencia, no ley.
 
