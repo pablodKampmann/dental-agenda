@@ -167,36 +167,6 @@ consuma esto, o se agrega una variante `fondoSuave`, o se cambia `fondo` a la ve
 clara y se renombra la actual. No se tocó antes porque no hay consumidor y la forma
 correcta se ve recién con el componente en la mano.
 
-### 3.2 El guard de color escanea una lista explícita: hay que mantenerla
-
-Ya no escanea "los archivos cuya ruta matchea `/odontogram/i`" —ese criterio dejaba afuera
-`src/app/patients/[id]/odontogram/page.tsx`, que es la pantalla donde se monta— sino la
-lista declarada arriba del `describe` en `caras.test.ts`: `src/lib/odontograma/`,
-`src/components/odontograma/` (contemplado, todavía no existe) y los archivos sueltos.
-Si algo de la lista se mueve o se renombra, el guard rompe en vez de dejar de mirarlo.
-
-**Lo que queda abierto:** un componente creado en un directorio **no declarado** —el
-ejemplo de siempre, `src/components/dental/Tooth.tsx`— sigue sin ser escaneado, igual que
-antes. La lista explícita no arregla eso, solo lo hace declarable.
-
-Dos cosas lo acotan hoy: los literales de cara sí se escanean en todo `src`, así que un
-componente perdido que reimplemente la traducción se caza igual; y el template de PR
-pregunta por los colores a mano. Lo que falta es el color en un directorio no declarado.
-
-Cierre posible cuando exista el primer componente: unir a la lista los archivos que
-**importan** de `@/lib/odontograma/`. Cualquier componente que dibuje el odontograma tiene
-que importar `colorDe()` o los selectores, así que caería adentro del escaneo por sí solo,
-esté donde esté. No se hizo ahora porque sin un consumidor real no hay con qué probarlo.
-
-### 3.3 `filasDelArco` devuelve claves y el render va a necesitar la pieza entera
-
-`selectores.ts` devuelve `ClavePieza[][]`, que es lo que indexa el estado. Pero el
-componente necesita `cuadrante`, `arcada` y `tipo` de cada pieza —para `etiquetaCara()` y
-para dibujar— o sea un `piezaDeClave()` por diente en cada render.
-
-Cumple el contrato tal como está escrito. Si al escribir el componente resulta molesto,
-cambiarlo a devolver `Pieza[][]` es contenido y no toca la persistencia.
-
 ### 3.4 `tieneHallazgos` y `capasVisibles` preguntan lo mismo
 
 `tieneHallazgos(e, p)` es equivalente a `capasVisibles(e, p).length > 0`. Comparten el

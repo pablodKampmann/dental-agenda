@@ -76,10 +76,13 @@ Las tres reglas de abajo no son solo convencion: dos estan verificadas por guard
 `src/__tests__/lib/odontograma/caras.test.ts`, que corren en el CI y rompen el PR.
 
 - **Colores.** Ningun archivo del odontograma declara un color propio (ni una clase de
-  Tailwind de una familia de color, ni un hex). El alcance es una lista explicita declarada
-  arriba del `describe` —`src/lib/odontograma/`, `src/components/odontograma/` (todavia no
-  existe, ya contemplado) y los archivos sueltos, hoy la pantalla del odontograma—. Si el
-  componente va a vivir en otro lado, **agregar el lugar a esa lista es parte de la tarea**.
+  Tailwind de una familia de color, ni un hex). El alcance ya no es una lista de carpetas:
+  es todo archivo de `src` que importe de `@/lib/odontograma/`, mas sus hermanos de
+  carpeta — asi un componente nuevo cae adentro del escaneo solo, este donde este, sin que
+  nadie tenga que declarar el lugar a mano. El shade de las clases se restringe a `600`
+  sin variante de interaccion delante (lo unico que `colorDe()` puede devolver), y el hex
+  se juzga por dominancia de canal rojo/azul — así el rojo de un boton "eliminar" o el
+  slate/teal de un contorno no rompen el guard por casualidad.
 - **Caras.** Ningun archivo fuera de `src/lib/odontograma/` contiene `'MESIAL'`, `'DISTAL'`,
   `'VESTIBULAR'` ni `'LINGUAL_PALATINO'` — comentarios incluidos. Unica excepcion:
   `src/__tests__/lib/odontograma/`, que asevera sobre ellos. Escanea todo `src`.

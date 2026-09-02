@@ -271,23 +271,29 @@ describe('colorDe', () => {
  * hallazgo". No se escanea todo `src` porque el resto de la app usa rojo para errores de
  * formulario y verde para exito, y daria falsos positivos sin parar.
  *
- * El alcance es una **lista explicita** y ya no "la ruta dice odontogram", que era el
- * criterio anterior y tenia un agujero: un componente en `src/components/dental/Tooth.tsx`
- * quedaba afuera del escaneo y el guard pasaba en verde sin haber mirado nada. Con la
- * lista, un lugar no declarado no se salta en silencio — los tests de abajo exigen que
- * cada entrada exista, asi que mover o renombrar algo rompe en vez de vaciar el guard.
+ * El alcance ya no es una **lista de carpetas** escrita a mano. Esa lista fue la version
+ * anterior de este mismo guard, y envejecio exactamente como se temia: los componentes
+ * reales del odontograma se escribieron en `src/components/patients/ui/odontogram/`, un
+ * lugar que la lista no preveia, y el PR que los mergeo paso en verde sin que el guard
+ * mirara uno solo de esos archivos.
  *
- * Dos consecuencias del cambio, escritas para que no se relean como descuidos:
+ * El criterio ahora es **por import**: cualquier archivo `.ts`/`.tsx` de `src` que
+ * importe de `@/lib/odontograma/`, mas los hermanos de carpeta de esos archivos. Todo
+ * componente que dibuje el odontograma tiene que pedirle el color a `colorDe()` o el
+ * estado a los selectores, asi que cae adentro del escaneo solo, este donde este. La
+ * vuelta por los hermanos de carpeta suma ademas a los archivos de esa misma pantalla que
+ * no importan nada del dominio por su cuenta — `FloatingAnchor.tsx` es el caso real hoy,
+ * un primitivo de popover generico sin una sola linea de logica de odontograma — sin
+ * volver a escribir un nombre de carpeta a mano: si el modulo entero se muda, se sigue
+ * encontrando solo porque alguno de sus archivos importa el dominio.
  *
- * - Los tests del odontograma (`src/__tests__/lib/odontograma/`) salieron del escaneo. Un
- *   test que asevera sobre `text-red-600` no *decide* un color, lo verifica; de hecho
+ * Dos excepciones, ninguna por lista de archivos sueltos:
+ *
+ * - `src/lib/odontograma/` es el dominio mismo (con `caras.ts` exceptuado mas abajo: es
+ *   el que define los colores).
+ * - `src/__tests__/lib/odontograma/` — los tests del dominio — queda afuera. Un test que
+ *   asevera sobre `text-red-600` no *decide* un color, lo verifica; de hecho
  *   `caras.test.ts` ya estaba exceptuado por eso mismo.
- * - `src/components/patients/ui/patientRecord.tsx` **no** esta en la lista, a proposito.
- *   Es el header del paciente y la barra de tabs: la pestana «Odontograma» es un `<Link>`
- *   a `/patients/{id}/odontogram`, no el dibujo. Y tiene seis clases de color legitimas
- *   que no son hallazgos (el icono de genero, el pin de direccion, el boton de WhatsApp),
- *   asi que meterlo obligaria a exceptuarlas una por una y eso vacia el guard. A ese
- *   archivo lo cubre el guard de literales de cara, mas abajo, donde entra con cero hits.
  *
  * Esta como test y no como nota de review porque el que va a romperlo es el componente
  * que todavia no se escribio: el prototipo pinta con colores literales adentro del SVG,
@@ -295,39 +301,84 @@ describe('colorDe', () => {
  */
 describe('colorDe es el unico lugar que decide un color de hallazgo', () => {
   const RAIZ_SRC = resolve(__dirname, '..', '..', '..')
-  const HEX = /#[0-9a-fA-F]{3,8}\b/
-  /**
-   * `teal` queda afuera a proposito: es el color de la app, no de un hallazgo. El resto
-   * de las familias de Tailwind estan todas, incluidas las que antes faltaban
-   * (`purple`, `pink`, `cyan`, `yellow`, `lime`, `fuchsia`) — un hallazgo pintado en
-   * `text-purple-600` estaba igual de mal y el guard no se enteraba.
-   */
-  const CLASE_DE_COLOR =
-    /\b(?:text|bg|border|fill|stroke|ring|decoration|outline)-(?:red|blue|rose|sky|indigo|violet|purple|fuchsia|pink|cyan|orange|amber|yellow|lime|green|emerald)-\d{2,3}\b/
+  const DOMINIO = join(RAIZ_SRC, 'lib', 'odontograma')
+  const TESTS_DEL_DOMINIO = join(RAIZ_SRC, '__tests__', 'lib', 'odontograma')
 
   /**
-   * `components/odontograma` todavia no existe. Va declarado igual para que el componente
-   * caiga adentro del escaneo el dia que se cree, sin que nadie tenga que acordarse de
-   * volver a este archivo.
+   * `teal` queda afuera a proposito: es el color primario de la app (`tailwind.config.ts`),
+   * no de un hallazgo. El resto de las familias de Tailwind estan todas, incluidas las
+   * que antes faltaban (`purple`, `pink`, `cyan`, `yellow`, `lime`, `fuchsia`) — un
+   * hallazgo pintado en `text-purple-600` esta igual de mal y el guard tiene que
+   * enterarse.
+   *
+   * El shade no esta escrito a mano: sale de `colorDe()` en vivo, mas abajo. Ponerlo
+   * fijo en `600` fue el bug de la version anterior de este guard — si alguien cambiaba
+   * `colorDe` a otro shade, el test "cubre SVG y HTML" de arriba (que si compara contra
+   * `colorDe()`) hubiese roto y se hubiese arreglado ahi, pero este regex se hubiese
+   * quedado en `600` y hubiese dejado de matchear nada, en verde para siempre. Derivarlo
+   * ata las dos cosas: si `colorDe` cambia de shade, este patron cambia solo.
+   *
+   * Tampoco matchea detras de una variante de interaccion (`hover:`, `group-hover:`,
+   * ...): `colorDe()` se aplica siempre sin condicionar a una interaccion, porque pinta
+   * un dato (la capa del hallazgo), no un estado de hover. Los botones de "eliminar" del
+   * picker y del timeline usan rojo — convencion de accion destructiva de toda la app,
+   * nada que ver con esta feature — pero en otro shade (`text-red-500`) o detras de
+   * `hover:` (`hover:text-red-600 hover:bg-red-50`): ninguno de los dos reproduce lo que
+   * `colorDe()` devuelve, asi que no tiene que tocarlos.
+   *
+   * Punto ciego, a proposito: un hallazgo pintado en un shade distinto al de `colorDe()`
+   * — `fill-red-500` en vez de `fill-red-600` — no lo caza este patron. Es el precio de
+   * no reventar contra los botones de "eliminar" de arriba, que usan shades distintos
+   * para lo mismo. Igual de no-hermetico que el resto de los guards de este archivo.
    */
-  const DIRECTORIOS = [
-    { partes: ['lib', 'odontograma'], obligatorio: true },
-    { partes: ['components', 'odontograma'], obligatorio: false },
-  ] as const
+  const VALORES_DE_COLORDE = (['existente', 'requerida'] as const).flatMap((capa) => {
+    const color = colorDe(capa)
+    return [color.texto, color.fondo, color.borde, color.relleno, color.trazo]
+  })
 
-  /** Archivos del odontograma que viven fuera de esos directorios. */
-  const ARCHIVOS_SUELTOS = [
-    ['app', 'patients', '[id]', 'odontogram', 'page.tsx'],
-  ] as const
-
-  function rutaEn(partes: readonly string[]): string {
-    return join(RAIZ_SRC, ...partes)
+  function shadeDe(clase: string): string {
+    const shade = clase.match(/-(\d+)$/)?.[1]
+    if (!shade) throw new Error(`"${clase}" no termina en "-<shade>": no se le puede sacar el shade`)
+    return shade
   }
 
-  function tsxDeDirectorio(directorio: string): string[] {
+  const SHADE = shadeDe(VALORES_DE_COLORDE[0])
+
+  const CLASE_DE_COLOR = new RegExp(
+    `(?<!:)\\b(?:text|bg|border|fill|stroke|ring|decoration|outline)-` +
+      `(?:red|blue|rose|sky|indigo|violet|purple|fuchsia|pink|cyan|orange|amber|yellow|lime|green|emerald)-${SHADE}\\b`
+  )
+
+  const HEX = /#[0-9a-fA-F]{3,8}\b/g
+
+  /**
+   * Un hex es sospechoso si el canal rojo o el azul domina claramente sobre los otros
+   * dos: son los dos unicos colores que `colorDe()` puede devolver (existente rojo,
+   * requerida azul). Los hexes reales de hoy en `Tooth.tsx` — `#94a3b8`/`#cbd5e1`
+   * (contorno slate), `#0d9488` (seleccion, es el teal de la app) y `#6b7280` (numero de
+   * pieza en gris) — no tienen un canal dominante por ese margen: son grises o verdosos,
+   * no rojizos ni azulados. El umbral (40 sobre 255) deja bien separados los dos grupos:
+   * los slate/teal de arriba quedan a 12-21 de diferencia entre canales, un rojo o azul
+   * real de Tailwind arranca en 87. No es una lista de hexes permitidos que envejezca —
+   * es la misma cuenta para cualquier hex que aparezca.
+   */
+  const UMBRAL_DOMINANCIA = 40
+  function esHexDeHallazgo(hex: string): boolean {
+    const digitos = hex.slice(1)
+    const seis = digitos.length === 3 ? digitos.split('').map((c) => c + c).join('') : digitos.slice(0, 6)
+    if (seis.length < 6 || /[^0-9a-fA-F]/.test(seis)) return true
+    const r = parseInt(seis.slice(0, 2), 16)
+    const g = parseInt(seis.slice(2, 4), 16)
+    const b = parseInt(seis.slice(4, 6), 16)
+    return r - Math.max(g, b) > UMBRAL_DOMINANCIA || b - Math.max(r, g) > UMBRAL_DOMINANCIA
+  }
+
+  const IMPORT_DOMINIO = /from\s+['"]@\/lib\/odontograma(?:\/|['"])/
+
+  function tsxDeDominio(directorio: string): string[] {
     return readdirSync(directorio).flatMap((entrada) => {
       const ruta = join(directorio, entrada)
-      if (statSync(ruta).isDirectory()) return tsxDeDirectorio(ruta)
+      if (statSync(ruta).isDirectory()) return tsxDeDominio(ruta)
       if (!/\.tsx?$/.test(ruta)) return []
       // `caras.ts` es el archivo que tiene permitido nombrar colores: es el que los define.
       if (/caras\.tsx?$/.test(ruta)) return []
@@ -335,44 +386,103 @@ describe('colorDe es el unico lugar que decide un color de hallazgo', () => {
     })
   }
 
-  const archivos = [
-    ...DIRECTORIOS.flatMap(({ partes }) => {
-      const ruta = rutaEn(partes)
-      return existsSync(ruta) ? tsxDeDirectorio(ruta) : []
-    }),
-    ...ARCHIVOS_SUELTOS.map(rutaEn),
-  ]
+  function todosLosFuentes(directorio: string): string[] {
+    return readdirSync(directorio).flatMap((entrada) => {
+      const ruta = join(directorio, entrada)
+      if (statSync(ruta).isDirectory()) return todosLosFuentes(ruta)
+      return /\.tsx?$/.test(ruta) ? [ruta] : []
+    })
+  }
 
-  it('los directorios obligatorios de la lista existen', () => {
-    for (const { partes, obligatorio } of DIRECTORIOS) {
-      if (!obligatorio) continue
-      expect(existsSync(rutaEn(partes)), `falta src/${partes.join('/')}`).toBe(true)
+  const todos = todosLosFuentes(RAIZ_SRC)
+  const importadores = todos.filter(
+    (ruta) =>
+      !ruta.startsWith(TESTS_DEL_DOMINIO + sep) && IMPORT_DOMINIO.test(readFileSync(ruta, 'utf8'))
+  )
+  const carpetasDeImportadores = [...new Set(importadores.map((ruta) => join(ruta, '..')))]
+  const hermanos = carpetasDeImportadores.flatMap((carpeta) =>
+    readdirSync(carpeta)
+      .map((entrada) => join(carpeta, entrada))
+      .filter((ruta) => /\.tsx?$/.test(ruta) && statSync(ruta).isFile())
+  )
+
+  const archivos = [...new Set([...tsxDeDominio(DOMINIO), ...importadores, ...hermanos])]
+
+  it('el dominio existe', () => {
+    expect(existsSync(DOMINIO), 'falta src/lib/odontograma').toBe(true)
+  })
+
+  it('no se vacia en silencio: hoy hay al menos estos archivos', () => {
+    // Piso real al momento de escribir este guard: 4 del dominio (sin `caras.ts`) + 7
+    // componentes de `src/components/patients/ui/odontogram/` + 2 servicios + la pantalla
+    // real (`clinicHistory/page.tsx`) + 2 tests de servicio. Si el numero baja, alguien
+    // dejo de importar el dominio donde antes lo hacia, o el escaneo se rompio.
+    expect(archivos.length).toBeGreaterThanOrEqual(16)
+  })
+
+  it('cubre los siete componentes reales del odontograma, no solo el dominio', () => {
+    const carpetaComponentes = join(RAIZ_SRC, 'components', 'patients', 'ui', 'odontogram')
+    const nombres = [
+      'Tooth.tsx',
+      'OdontogramaGrid.tsx',
+      'Legend.tsx',
+      'FindingGlyph.tsx',
+      'FloatingAnchor.tsx',
+      'HallazgoPicker.tsx',
+      'HistorialTimeline.tsx',
+    ]
+    for (const nombre of nombres) {
+      expect(archivos, `${nombre} no esta en el escaneo`).toContain(join(carpetaComponentes, nombre))
     }
   })
 
-  it('los archivos sueltos de la lista existen', () => {
-    for (const partes of ARCHIVOS_SUELTOS) {
-      const donde = `src/${partes.join('/')}`
-      expect(
-        existsSync(rutaEn(partes)),
-        `${donde} no existe: se movio o se renombro, y el guard dejo de mirarlo`
-      ).toBe(true)
+  it('cubre la pantalla donde se monta el odontograma hoy, no la ruta huerfana', () => {
+    // La pantalla real es `clinicHistory/page.tsx` (ver AGENTS.md): el odontograma vive
+    // fusionado ahi, no en la vieja `/patients/[id]/odontogram/page.tsx`, que quedo
+    // huerfana y ya ni importa el dominio. Es la prueba en carne propia del problema que
+    // este guard viene a resolver: una lista a mano hubiese seguido apuntando a la ruta
+    // vieja.
+    expect(archivos).toContain(
+      join(RAIZ_SRC, 'app', 'patients', '[id]', 'clinicHistory', 'page.tsx')
+    )
+  })
+
+  it('colorDe() devuelve un unico shade para sus diez valores', () => {
+    // Si esto deja de ser cierto, `SHADE` (el primer valor, arbitrariamente) deja de
+    // representar a los diez, y `CLASE_DE_COLOR` queda mal armado en silencio.
+    const shades = new Set(VALORES_DE_COLORDE.map(shadeDe))
+    expect([...shades], 'colorDe() ya no devuelve un shade unico: revisar CLASE_DE_COLOR a mano').toEqual([SHADE])
+  })
+
+  it('el patron de clase caza lo que colorDe() devuelve hoy, para las dos capas y los cinco roles', () => {
+    for (const clase of VALORES_DE_COLORDE) {
+      expect(CLASE_DE_COLOR.test(clase), clase).toBe(true)
     }
   })
 
-  it('encuentra los archivos del odontograma que hay hoy', () => {
-    expect(archivos.length).toBeGreaterThan(0)
+  it('el patron de clase no caza ni un shade distinto ni una variante de interaccion delante', () => {
+    const otroShade = String(Number(SHADE) - 100)
+    expect(CLASE_DE_COLOR.test(`text-red-${otroShade}`)).toBe(false)
+    expect(CLASE_DE_COLOR.test('bg-red-50')).toBe(false)
+    expect(CLASE_DE_COLOR.test(`hover:text-red-${SHADE}`)).toBe(false)
+    expect(CLASE_DE_COLOR.test(`hover:bg-red-50`)).toBe(false)
   })
 
-  it('cubre la pantalla donde se monta el odontograma, no solo el dominio', () => {
-    expect(archivos).toContain(rutaEn(['app', 'patients', '[id]', 'odontogram', 'page.tsx']))
+  it('el hex sospechoso caza rojo/azul real y no el slate/teal/gris de hoy', () => {
+    expect(esHexDeHallazgo('#dc2626')).toBe(true) // red-600
+    expect(esHexDeHallazgo('#2563eb')).toBe(true) // blue-600
+    expect(esHexDeHallazgo('#94a3b8')).toBe(false) // slate-400, contorno del diente
+    expect(esHexDeHallazgo('#cbd5e1')).toBe(false) // slate-300, grilla interna
+    expect(esHexDeHallazgo('#0d9488')).toBe(false) // teal-600, seleccion
+    expect(esHexDeHallazgo('#6b7280')).toBe(false) // gray-500, numero de pieza
   })
 
-  it.each(archivos)('%s no declara colores por su cuenta', (ruta) => {
+  it.each(archivos)('%s no declara un color de hallazgo por su cuenta', (ruta) => {
     const nombre = ruta.split(sep).pop()
     const contenido = readFileSync(ruta, 'utf8')
-    expect(contenido, `hex suelto en ${nombre}`).not.toMatch(HEX)
-    expect(contenido, `clase de color suelta en ${nombre}`).not.toMatch(CLASE_DE_COLOR)
+    const hexSospechosos = [...contenido.matchAll(HEX)].map((m) => m[0]).filter(esHexDeHallazgo)
+    expect(hexSospechosos, `hex de rojo/azul en ${nombre}: ${hexSospechosos.join(', ')}`).toEqual([])
+    expect(contenido, `clase de color de hallazgo suelta en ${nombre}`).not.toMatch(CLASE_DE_COLOR)
   })
 })
 
