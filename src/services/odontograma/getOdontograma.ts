@@ -3,6 +3,8 @@ import { get, ref } from 'firebase/database'
 import { esClavePieza, type ClavePieza } from '@/lib/odontograma/piezas'
 import { hallazgosPorAlcance } from '@/lib/odontograma/catalogo'
 import {
+  esCapa,
+  esCara,
   SCHEMA_VERSION,
   type Capa,
   type Cara,
@@ -36,16 +38,6 @@ import {
  * se devuelve igual. Mismo criterio que ya usan `getPatient` y `getPatients`.
  */
 
-const CARAS_VALIDAS: ReadonlySet<string> = new Set<Cara>([
-  'MESIAL',
-  'DISTAL',
-  'VESTIBULAR',
-  'LINGUAL_PALATINO',
-  'OCLUSAL_INCISAL',
-])
-
-const CAPAS_VALIDAS: ReadonlySet<string> = new Set<Capa>(['existente', 'requerida'])
-
 const CODIGOS_CARA_VALIDOS: ReadonlySet<string> = new Set(
   hallazgosPorAlcance('CARA').map((entrada) => entrada.codigo)
 )
@@ -61,14 +53,6 @@ const ODONTOGRAMA_VACIO: OdontogramaActual = Object.freeze({
   vinculos: Object.freeze({}) as Record<string, Vinculo>,
   meta: null,
 })
-
-function esCapa(valor: unknown): valor is Capa {
-  return typeof valor === 'string' && CAPAS_VALIDAS.has(valor)
-}
-
-function esCara(valor: unknown): valor is Cara {
-  return typeof valor === 'string' && CARAS_VALIDAS.has(valor)
-}
 
 /** Valida una hoja `caras/{CARA}/` — una capa por hallazgo de alcance CARA. */
 function validarHallazgoCara(raw: unknown, contexto: string): HallazgoCara | null {
