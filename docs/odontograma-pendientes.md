@@ -62,6 +62,82 @@ Decidir: o el CI corre `tsc --noEmit` además del build —y entonces hay que ar
 error primero—, o se documenta que el typecheck real es el build y se saca `tsc` del
 vocabulario del equipo. Hoy conviven las dos cosas y dan resultados distintos.
 
+### 1.5 Hallazgos de seguridad en las reglas de Firebase
+
+Detectado al relevar B2-1, con el JSON de reglas de la consola a la vista. **Los dos
+primeros no son del odontograma: son del proyecto entero.** Se anotan acá porque acá se
+encontraron; la dueña es el PO.
+
+**Lo que NO pasa** (se descartó mirando las reglas, contra una hipótesis inicial):
+`/clinics/$clinic_id` **sí** tiene aislamiento real por `clinicId` del lado del servidor,
+en `.read` y en `.write`. No son reglas de test mode y los datos de pacientes no son
+legibles sin autenticar. La frontera multi-tenant existe en reglas, no solo en el cliente.
+
+#### A · Un admin puede reasignarse a otra clínica
+
+> **Prioridad: diferida. Condición de disparo: el alta de la segunda clínica.**
+>
+> Con un solo cliente no hay a dónde escaparse: el único `clinicId` que existe es el
+> propio, así que reasignarse no da acceso a nada nuevo. **El día que exista una segunda
+> clínica en la base, esto pasa a ser un agujero explotable entre clientes y hay que
+> haberlo cerrado antes de ese alta, no después.** Decisión de Santiago, comunicada al PO.
+>
+> Quien esté por dar de alta un segundo tenant: leer esto primero.
+
+
+```json
+"admins": { ".read": true, "$uid": { ".write": "$uid === auth.uid" } }
+```
+
+Un admin puede escribir su propio nodo, sin `.validate` que limite la forma — o sea que
+puede reescribir su propio `clinicId`. Y el chequeo de `/clinics/$clinic_id` es
+`root.child('admins').child(auth.uid).child('clinicId').val() === $clinic_id`, que después
+pasa. **El aislamiento entre clínicas se autocertifica.**
+
+La cadena completa: leer `/admins` (es público) → sacar el `clinicId` de otra clínica →
+escribir el propio `clinicId` → leer los pacientes de esa clínica. Requiere ser admin de
+alguna clínica, no de esa.
+
+Arreglo posible: `clinicId` de escritura única (`.validate` que exija
+`!data.exists() || data.val() === newData.val()`), o directamente `".write": false` sobre
+ese campo si ningún flujo del cliente lo setea. Hay que verificar cómo se crea un admin.
+
+#### B · `/admins` es legible sin autenticar
+
+`".read": true` expone `userName`, `email` y `clinicId` de todos los admins. La URL de la
+base va en el bundle del cliente.
+
+No se puede cerrar sin tocar código: `signIn.ts:11` lee `/admins` entero **antes** de
+autenticar, para traducir `userName` → `email`. `updateUserName.ts:9` hace lo mismo para
+chequear unicidad. Cerrar la regla rompe los dos, y el `catch` de `signIn.ts:37` devuelve
+`'network-error'` ante un permission-denied, así que rompería mintiendo sobre el motivo.
+
+Salidas posibles, en orden de esfuerzo: loguear con email en vez de usuario (elimina la
+lectura); un índice público mínimo `userName → email` y `/admins` detrás de `auth != null`
+(reduce la superficie, sigue exponiendo emails); una Cloud Function (lo cierra del todo).
+Es decisión de producto.
+
+#### C · El `.write` de `/clinics/$clinic_id` cascadea sobre `eventos` — esto sí es nuestro
+
+`.write` concedido en un ancestro no se puede revocar desde abajo, así que
+`".write": "!data.exists()"` en `$evt` sería decorativo tal como están las reglas hoy.
+
+Es el caso contenido: el grant está en `/clinics/$clinic_id`, no en la raíz. Se
+des-cascadea bajando ese único `.write` a cada hijo que ya existe, con la misma condición
+que tiene hoy. Los permisos efectivos de cada módulo quedan idénticos. El `.read` **no** se
+toca: los reads tienen que seguir cascadeando.
+
+Ojo con un segundo nivel: `odontogramas` tampoco puede llevar un `.write` propio, o
+cascadea de nuevo sobre `eventos`. El `.write` va en `actual` y en `eventos/$evt` por
+separado.
+
+#### D · Las reglas no están en el repo
+
+No hay `database.rules.json`, ni `firebase.json`, ni `.firebaserc`, ni `firebase-tools` en
+`package.json`, ni nada en la historia de git. Viven solo en la consola: nunca pasaron por
+un PR y nadie puede ver un diff cuando cambian. Es prerequisito de B2-1 y del emulador.
+
+
 ---
 
 ## 2. Para B2-2 · Lectura del odontograma
@@ -81,10 +157,13 @@ corrupto, decidir ahí qué se hace (descartar la pieza, loguear, romper) y escr
 
 ## 3. Para cuando se planifique el front
 
-**Ojo: no hay ninguna issue que vaya a levantar esto.** `docs/odontograma-backend.md` es
-backend-only y B3 es soporte y cierre (seed, tests, AGENTS.md). El trabajo de portar
-`Tooth.tsx` y armar la pantalla no está planificado todavía. Estas entradas tienen que
-migrar al documento de planificación del front cuando exista.
+El front lo hace el equipo después del back — la pestaña «Odontograma» de la ficha del
+paciente ya existe y es donde va a montarse. Lo que todavía no existe es el plan escrito:
+`docs/odontograma-backend.md` es backend-only y B3 es soporte y cierre (seed, tests,
+AGENTS.md).
+
+**Estas entradas son el input de esa planificación.** Cuando se escriban las issues del
+front, se leen de acá y se migran allá.
 
 ### 3.1 `colorDe().fondo` es un color sólido, no sirve para un chip
 
@@ -158,7 +237,22 @@ espejado, y el dato clínico queda falso en media boca.
 
 No son deuda técnica: son decisiones que faltan y que bloquean issues futuras.
 
-### 4.1 ¿Quién firma cada asiento de auditoría?
+### 4.1 ¿Quién firma cada asiento de auditoría? — DIFERIDO
+
+> **Decidido: fuera de alcance por ahora.** El nombre y la matrícula del profesional van a
+> vivir en configuración/profesionales, junto con las políticas de privacidad, en una
+> etapa posterior. Hoy el asiento guarda `uid` y nada más.
+>
+> **Diferirlo es seguro y por qué:** agregar campos a un evento es aditivo. Los eventos ya
+> escritos siguen siendo válidos —`.validate` solo corre al escribir, no sobre lo que ya
+> está— y `SCHEMA_VERSION` está para marcar el corte si hiciera falta. O sea que no hay que
+> reescribir historia ni migrar nada cuando se agregue. No se pinta ninguna esquina.
+>
+> Lo que queda pendiente es la parte legal: mientras el asiento diga solo `uid`, el registro
+> no identifica al profesional actuante como pide la Ley 26.529. Es una deuda conocida, no
+> un descuido.
+
+#### El planteo original
 
 El evento guarda `uid`. En una historia clínica odontológica lo que suele hacer falta es el
 profesional y su matrícula, no el usuario del sistema — y no necesariamente son la misma
