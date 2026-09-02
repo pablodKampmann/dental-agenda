@@ -50,6 +50,7 @@ src/
 ├── components/
 │   ├── appointments/ui/
 │   ├── patients/ui/
+│   │   └── odontogram/           # Tooth, OdontogramaGrid, Legend, HallazgoPicker, FloatingAnchor...
 │   ├── practices/ui/            # UI de Aranceles
 │   ├── config/
 │   ├── navigation/               # desktopVersion.tsx, mobileVersion.tsx
@@ -96,6 +97,36 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 **El componente le pregunta al estado a través de `selectores.ts`, y nunca ve una `Cara`.** `hallazgoDeCara(estado, pieza, posicion, capa)` recibe la posición clickeada (`top`, `left`, …) y llama a `caraSemantica()` por dentro; `hallazgoDeDiente`, `tieneHallazgos` y `capasVisibles` completan el resto. Ninguna firma de ese archivo nombra una `Cara`: si el módulo devolviera una, el render volvería a tener con qué saltear la traducción. Consultar una pieza sin hallazgos es el camino normal —un odontograma vacío es `{}`, no 52 entradas—, así que los `hallazgoDe*` devuelven `undefined`, `tieneHallazgos` `false` y `capasVisibles` un array vacío congelado, sin ramas especiales en el JSX. Ojo con `filasDelArco(vista)`: la `fila` de `piezas.ts` es un identificador lógico y no el orden de render — en la ficha las temporarias van *entre* las permanentes, así que la vista mixta sale 1, 3, 4, 2.
 
 **El service de lectura (`getOdontograma`, en `src/services/odontograma/`) es el único lugar que valida el dato crudo de Firebase.** Si aparece una clave de pieza o un código de hallazgo que no existe en el catálogo, se descarta solo esa pieza/hallazgo puntual y se loguea con `console.error` — nunca se rompe la lectura completa por un dato corrupto aislado. Mismo criterio que ya usan `getPatient`/`getPatients`. Un paciente sin odontograma cargado devuelve `{ dientes: {}, vinculos: {}, meta: null }`, nunca `null` — `null` es solo para cuando la lectura en sí falla (offline, error de Firebase).
+
+### UI del odontograma y la Historia Clínica
+
+**Historia Clínica es un tab único, no dos.** El tab "Odontograma" que existía en `patientRecord.tsx` se eliminó — el odontograma vive fusionado dentro de `/patients/[id]/clinicHistory/page.tsx`, arriba de la Historia Clínica. La ruta vieja `/patients/[id]/odontogram/page.tsx` sigue en el repo (huérfana, sin link desde ningún lado) por si hace falta rescatar algo, pero no es user-facing. Todo lo del odontograma vive en `src/components/patients/ui/odontogram/`:
+
+| Componente | Responsabilidad |
+|---|---|
+| `Tooth.tsx` | Un diente: SVG con geometría de cuadrado interior + 4 trapecios (caras) a viewBox fijo (`VB=40`), escala 100% por CSS. Hallazgos de pieza completa se dibujan a tamaño real sobre todo el diente (grafismo del catálogo), no como badge chico. |
+| `OdontogramaGrid.tsx` | Grilla fluida de 16 columnas `fr` — cada pieza usa su `pieza.columna` real (ver `piezas.ts`), así las temporarias quedan alineadas debajo de su sucesora permanente sin cálculo propio y sin scroll horizontal. |
+| `Legend.tsx` | Toggle de capas visibles + lista del catálogo. Layout del header es determinístico (`grid grid-cols-2`, nunca flexbox libre) para que no se rompa en contenedores angostos — ver nota de responsive abajo. |
+| `FindingGlyph.tsx` | Ícono chico de un hallazgo según su `grafismo` del catálogo (`fill`, `cross`, `box`, `letter`, `screw`, `stump`, `equals`, `span`). Único lugar que dibuja esas formas. |
+| `FloatingAnchor.tsx` | Primitivo genérico de popover anclado — ver regla abajo, cualquier popover nuevo del odontograma se apoya acá. |
+| `HallazgoPicker.tsx` | El picker que abre al clickear un diente/cara. Flujo en 3 pasos, ver regla abajo. |
+| `HistorialTimeline.tsx` | El timeline de la Historia Clínica: notas libres + entradas generadas por hallazgos, con editar/eliminar. |
+
+**`FloatingAnchor` necesita el alto exacto por adelantado, nunca lo mide después de pintar.** Pasarle `height` (número fijo, en px) es obligatorio. La tentación de usar `useLayoutEffect` + `offsetHeight` para decidir arriba/abajo del anchor causa un "teletransporte" visible (una pintada en un lugar, reflow al lugar correcto un frame después) — ya pasó una vez en este módulo. Si un contenido nuevo necesita alto variable, hay que definirle un alto fijo por diseño (como hace `HallazgoPicker`) en vez de medirlo.
+
+**El picker de hallazgos es un flujo de 3 pasos con alto fijo: elegir → confirmar → nota.** Click en un hallazgo de la lista no aplica nada todavía, solo selecciona. "Confirmar" es un paso propio, explícito. La nota es siempre posterior a confirmar, nunca simultánea. El cuerpo (`ALTO_CUERPO` en `HallazgoPicker.tsx`) tiene altura fija — ningún paso cambia el tamaño del panel, solo el contenido de adentro, con scroll interno si hace falta. El header (capa + título) también es la misma estructura en los tres pasos por el mismo motivo.
+
+**Los hallazgos de pieza completa que dejan sin sentido a las caras las ocultan de la vista, nunca las borran.** El set `OCULTA_CARAS` en `Tooth.tsx` (`ausente`, `extraccion`, `no_erupcionada`, `remanente`) hace que el render de caras se salte por completo mientras ese hallazgo esté activo — el dato de `caras/` en el estado sigue intacto, y si se quita el hallazgo reaparece solo. Corona, implante y endodoncia no entran en ese set: conviven con hallazgos de cara sin ninguna regla especial.
+
+**El diente con el picker abierto escapa del backdrop oscuro por z-index, no por opacidad propia.** Cuando hay un picker abierto, `Tooth.tsx` recibe `activo` y se levanta con `relative z-[45]` — por encima del overlay del backdrop (`z-40` en `FloatingAnchor`) — así ese diente puntual queda sin atenuar mientras el resto del odontograma sí se oscurece. El anchor del picker es siempre el rect del **wrapper completo del diente** (cuadrado + número), nunca el del elemento puntual clickeado (una cara chica) — si no, el panel puede tapar el número o abrirse a mitad de camino.
+
+**Responsive de este módulo: nunca resolver con un mínimo en píxeles peleando contra un ancho en `%`.** Si un contenedor necesita ser fluido (ej. la leyenda al lado de la grilla), el layout interno de ese contenedor tiene que poder angostarse sin romperse — `min-w-0` + `truncate` en el texto que puede desbordar, `shrink-0` en lo que no debe achicarse nunca, y layouts determinísticos (`grid` con columnas fijas) en vez de `flex` libre con `ml-auto` cuando hay poco margen de error. Un `min-w-[Npx]` puesto para "que no se vea feo angosto" termina anulando el `%` apenas el contenedor es más chico que ese mínimo — el fix real está adentro del componente, no en el wrapper.
+
+**Vista mixta vs. permanente se decide por edad, con override manual.** `vistaSugeridaPorEdad()` en `clinicHistory/page.tsx`: 6 a 12 años inclusive → `'MIXTA'`, si no `'PERMANENTE'`. El profesional puede forzar la vista contraria con un botón en el header del odontograma; ese override gana siempre sobre la sugerencia. El orden de filas real (`FILAS_POR_VISTA` en `selectores.ts`, temporarias intercaladas entre las permanentes) es una decisión de dominio ya tomada y testeada — no tocarla desde la UI.
+
+**La Historia Clínica hoy es solo front — nada de esto pega contra Firebase todavía.** `entradas` (tipo `EntradaHistorial`) vive en `useState` dentro de `clinicHistory/page.tsx`, se pierde al refrescar. Guardar un hallazgo desde el picker actualiza el mismo estado local (`dientes`), no `actual/` en Firebase. Cuando se conecte el backend real (B2-3 escribir hallazgos, y el log de eventos de B2-5), hay que reemplazar esos `setState` por las llamadas a los services correspondientes — la forma de los datos (`EntradaHistorial`, `PickerContexto`) ya está pensada para eso, no debería hacer falta rehacer la UI.
+
+**Pitfall transversal: `layout.tsx` tiene `text-white` en el body.** Cualquier `<textarea>`/`<input>` nuevo que no fije su propio color de texto hereda blanco sobre fondo blanco — invisible hasta que se selecciona el texto. Poner siempre un `text-gray-*` explícito en inputs nuevos.
 
 ---
 
@@ -154,6 +185,8 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 - Estado de formularios con `useState`, sin librerías de forms.
 - Feedback con `Toast.tsx` + react-hot-toast, unificado en todo el proyecto.
 - Confirmación obligatoria antes de acciones destructivas, vía `AlertDialog` (Radix).
+- **Lo que va en todos los tabs de una sección va en el componente compartido, no en cada `page.tsx`.** `PatientRecord` (`src/components/patients/ui/patientRecord.tsx`) es el ejemplo: el link "← Pacientes" y el resumen de Última visita/Próximo turno (`appointmentsSummary.tsx`) viven adentro de `PatientRecord`, no en `[id]/page.tsx`. Como cada tab de paciente monta `PatientRecord`, ambos aparecen en cualquier tab sin duplicar código ni arriesgarse a que un tab nuevo se olvide de agregarlos. Antes de copiar un bloque de UI de un `page.tsx` a otro, primero preguntarse si no debería subir al componente compartido que ya montan los dos.
+- **Loading state por pantalla, no un spinner que tapa todo.** `Loading` (`src/components/shared/loading.tsx`, el diente girando a pantalla completa) se usa en 7+ pantallas del proyecto — no tocarlo para un caso puntual. Para una pantalla con estructura ya conocida (como la ficha de paciente), un skeleton dedicado que respeta el layout real (`patientRecordSkeleton.tsx`, con `animate-pulse`) da una transición mucho menos brusca al cambiar de tab que un overlay que oculta todo.
 
 ---
 

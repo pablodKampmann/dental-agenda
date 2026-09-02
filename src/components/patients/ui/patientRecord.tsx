@@ -6,10 +6,11 @@ import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation';
 import { AvatarFallback } from '../../shared/AvatarFallback';
 import { FaMale, FaFemale, FaWhatsapp } from 'react-icons/fa';
-import { BiSolidBookAdd } from 'react-icons/bi';
+import { BiSolidBookAdd, BiArrowBack } from 'react-icons/bi';
 import { TbPhone } from 'react-icons/tb';
 import { MdLocationPin, MdOutlineMailOutline } from 'react-icons/md';
 import { LiaIdCardSolid } from 'react-icons/lia';
+import { AppointmentsSummary } from './appointmentsSummary';
 
 interface ModalSettProps {
     patient: any | null;
@@ -32,13 +33,17 @@ export function PatientRecord({ patient }: ModalSettProps) {
 
     useEffect(() => {
         if (pathname.includes('clinicHistory')) setSelectedField('clinicHistory');
-        else if (pathname.includes('odontogram')) setSelectedField('odontogram');
         else if (pathname.includes('billing')) setSelectedField('billing');
         else setSelectedField('modify');
     }, [pathname]);
 
     return (
         <div className="mb-4">
+            <Link href="/patients">
+                <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-700 transition duration-150 mb-3 select-none">
+                    <BiArrowBack size={16} /> Pacientes
+                </button>
+            </Link>
             <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
                 {/* Patient info */}
                 <div className="flex items-center gap-4 px-4 py-3 bg-gray-50">
@@ -145,16 +150,9 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             Historia Clínica
                         </button>
                     </Link>
-                    <Link prefetch={true} href={`/patients/${patient.id}/odontogram`}>
-                        <button
-                            onClick={() => setSelectedField('odontogram')}
-                            className={`${selectedField === 'odontogram' ? 'bg-white text-teal-700 font-semibold' : 'text-gray-500 hover:text-gray-800'} px-5 py-2 text-sm transition duration-150`}
-                        >
-                            Odontograma
-                        </button>
-                    </Link>
                 </div>
             </div>
+            <AppointmentsSummary patientId={patient.id} />
         </div>
     );
 }

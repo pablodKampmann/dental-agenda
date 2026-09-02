@@ -12,25 +12,15 @@ import { usePathname } from 'next/navigation';
 import { PatientRecord } from './../../../components/patients/ui/patientRecord';
 import { getInsuranceOptions } from './../../../services/options/getInsuranceOpt';
 import { getInsurancePlans } from './../../../services/options/getInsurancePlans';
-import { getPatientAppointments } from './../../../services/appointments/getPatientAppointments';
 import { MiniCalendar } from '@/components/appointments/ui/MiniCalendar';
 import dayjs from 'dayjs';
-import { Loading } from './../../../components/shared/loading';
+import { PatientRecordSkeleton } from './../../../components/patients/ui/patientRecordSkeleton';
 import { useToast } from '@/context/ToastContext';
-import { ScaleLoader, ClipLoader } from 'react-spinners';
+import { ScaleLoader } from 'react-spinners';
 import { FaCheck, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
 import { getUser } from './../../../services/auth/getUser';
 import { EditableRow } from '@/components/patients/ui/editableRow';
 import { TbPencilCog } from 'react-icons/tb';
-import { BiArrowBack } from 'react-icons/bi';
-import Link from 'next/link';
-import { BsCalendarCheck, BsCalendarX } from 'react-icons/bs';
-
-function parseApptDate(dateStr: string): Date {
-  const [d, m, y] = dateStr.split('/');
-  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-}
-
 export default function PatientId() {
   const router = useRouter();
   const [isLoad, setIsLoad] = useState(true);
@@ -52,8 +42,6 @@ export default function PatientId() {
   const datePickerRef = useRef<HTMLDivElement>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
   const [clinicId, setClinicId] = useState<string | null>(null);
-  const [patientAppointments, setPatientAppointments] = useState<any[] | null>(null);
-  const [loadingAppointments, setLoadingAppointments] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -79,15 +67,6 @@ export default function PatientId() {
     }
     get();
   }, [id, clinicId]);
-
-  useEffect(() => {
-    if (!patient?.id) return;
-    setLoadingAppointments(true);
-    getPatientAppointments(patient.id).then(appts => {
-      setPatientAppointments(appts);
-      setLoadingAppointments(false);
-    });
-  }, [patient?.id]);
 
   async function submitInsuranceChanges() {
     if (!insuranceDraft) { setRowModify(''); return; }
@@ -183,20 +162,13 @@ export default function PatientId() {
     fetchClinicId();
   }, []);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const sortedAppointments = [...(patientAppointments || [])].sort(
-    (a, b) => parseApptDate(a.date).getTime() - parseApptDate(b.date).getTime()
-  );
-  const nextAppointment = sortedAppointments.find(a => parseApptDate(a.date) >= today) ?? null;
-  const lastAppointment = [...sortedAppointments].reverse().find(a => parseApptDate(a.date) < today) ?? null;
-
   if (id !== null) {
     return (
       <div className="h-[calc(100vh-68px)] overflow-y-auto">
         {isLoad ? (
-          <Loading />
+          <div className="ml-4 mr-2 px-4 pb-4 pt-6">
+            <PatientRecordSkeleton />
+          </div>
         ) : (
           <div className="ml-4 mr-2 px-4 pb-4 pt-6 animate-page-drop">
             <ConfirmAlert
@@ -215,64 +187,7 @@ export default function PatientId() {
 
             {patient && (
               <div>
-                {/* Back arrow */}
-                <Link href="/patients">
-                  <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-700 transition duration-150 mb-3 select-none">
-                    <BiArrowBack size={16} /> Pacientes
-                  </button>
-                </Link>
-
                 <PatientRecord patient={patient} />
-
-                {/* Appointments panel */}
-                <div className="border-2 border-gray-300 rounded-xl overflow-hidden mb-4">
-                  <div className="flex divide-x divide-gray-200">
-                    {/* Last visit */}
-                    <div className="flex-1 px-4 py-3 bg-gray-50">
-                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
-                        <BsCalendarX size={13} /> Última Visita
-                      </h3>
-                      {loadingAppointments ? (
-                        <ClipLoader size={14} color="#9ca3af" />
-                      ) : lastAppointment ? (
-                        <>
-                          <p className="text-sm font-semibold text-black">
-                            {lastAppointment.dayComplete} · {lastAppointment.time}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {typeof lastAppointment.reason === 'string'
-                              ? lastAppointment.reason
-                              : lastAppointment.reason?.name || 'Sin motivo registrado'}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Sin visitas anteriores</p>
-                      )}
-                    </div>
-                    {/* Next appointment */}
-                    <div className="flex-1 px-4 py-3">
-                      <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-1.5 flex items-center gap-1.5">
-                        <BsCalendarCheck size={13} /> Próximo Turno
-                      </h3>
-                      {loadingAppointments ? (
-                        <ClipLoader size={14} color="#9ca3af" />
-                      ) : nextAppointment ? (
-                        <>
-                          <p className="text-sm font-semibold text-teal-700">
-                            {nextAppointment.dayComplete} · {nextAppointment.time}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {typeof nextAppointment.reason === 'string'
-                              ? nextAppointment.reason
-                              : nextAppointment.reason?.name || 'Sin motivo registrado'}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Sin próximo turno</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Section header with save indicator */}
                 <div className="flex items-center justify-between mb-3 select-none">
