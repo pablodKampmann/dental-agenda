@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
@@ -268,9 +268,26 @@ describe('colorDe', () => {
 
 /**
  * Criterio de aceptacion: "ningun otro archivo del proyecto decide un color de
- * hallazgo". Se verifica sobre los archivos del odontograma -el dominio de aca y,
- * cuando exista, su UI- y no sobre todo `src`, porque el resto de la app usa rojo para
- * errores de formulario y daria falsos positivos sin parar.
+ * hallazgo". No se escanea todo `src` porque el resto de la app usa rojo para errores de
+ * formulario y verde para exito, y daria falsos positivos sin parar.
+ *
+ * El alcance es una **lista explicita** y ya no "la ruta dice odontogram", que era el
+ * criterio anterior y tenia un agujero: un componente en `src/components/dental/Tooth.tsx`
+ * quedaba afuera del escaneo y el guard pasaba en verde sin haber mirado nada. Con la
+ * lista, un lugar no declarado no se salta en silencio — los tests de abajo exigen que
+ * cada entrada exista, asi que mover o renombrar algo rompe en vez de vaciar el guard.
+ *
+ * Dos consecuencias del cambio, escritas para que no se relean como descuidos:
+ *
+ * - Los tests del odontograma (`src/__tests__/lib/odontograma/`) salieron del escaneo. Un
+ *   test que asevera sobre `text-red-600` no *decide* un color, lo verifica; de hecho
+ *   `caras.test.ts` ya estaba exceptuado por eso mismo.
+ * - `src/components/patients/ui/patientRecord.tsx` **no** esta en la lista, a proposito.
+ *   Es el header del paciente y la barra de tabs: la pestana «Odontograma» es un `<Link>`
+ *   a `/patients/{id}/odontogram`, no el dibujo. Y tiene seis clases de color legitimas
+ *   que no son hallazgos (el icono de genero, el pin de direccion, el boton de WhatsApp),
+ *   asi que meterlo obligaria a exceptuarlas una por una y eso vacia el guard. A ese
+ *   archivo lo cubre el guard de literales de cara, mas abajo, donde entra con cero hits.
  *
  * Esta como test y no como nota de review porque el que va a romperlo es el componente
  * que todavia no se escribio: el prototipo pinta con colores literales adentro del SVG,
@@ -279,25 +296,76 @@ describe('colorDe', () => {
 describe('colorDe es el unico lugar que decide un color de hallazgo', () => {
   const RAIZ_SRC = resolve(__dirname, '..', '..', '..')
   const HEX = /#[0-9a-fA-F]{3,8}\b/
+  /**
+   * `teal` queda afuera a proposito: es el color de la app, no de un hallazgo. El resto
+   * de las familias de Tailwind estan todas, incluidas las que antes faltaban
+   * (`purple`, `pink`, `cyan`, `yellow`, `lime`, `fuchsia`) — un hallazgo pintado en
+   * `text-purple-600` estaba igual de mal y el guard no se enteraba.
+   */
   const CLASE_DE_COLOR =
-    /\b(?:text|bg|border|fill|stroke|ring|decoration|outline)-(?:red|blue|rose|sky|indigo|violet|orange|amber|green|emerald)-\d{2,3}\b/
+    /\b(?:text|bg|border|fill|stroke|ring|decoration|outline)-(?:red|blue|rose|sky|indigo|violet|purple|fuchsia|pink|cyan|orange|amber|yellow|lime|green|emerald)-\d{2,3}\b/
 
-  function archivosDelOdontograma(directorio: string): string[] {
+  /**
+   * `components/odontograma` todavia no existe. Va declarado igual para que el componente
+   * caiga adentro del escaneo el dia que se cree, sin que nadie tenga que acordarse de
+   * volver a este archivo.
+   */
+  const DIRECTORIOS = [
+    { partes: ['lib', 'odontograma'], obligatorio: true },
+    { partes: ['components', 'odontograma'], obligatorio: false },
+  ] as const
+
+  /** Archivos del odontograma que viven fuera de esos directorios. */
+  const ARCHIVOS_SUELTOS = [
+    ['app', 'patients', '[id]', 'odontogram', 'page.tsx'],
+  ] as const
+
+  function rutaEn(partes: readonly string[]): string {
+    return join(RAIZ_SRC, ...partes)
+  }
+
+  function tsxDeDirectorio(directorio: string): string[] {
     return readdirSync(directorio).flatMap((entrada) => {
       const ruta = join(directorio, entrada)
-      if (statSync(ruta).isDirectory()) return archivosDelOdontograma(ruta)
+      if (statSync(ruta).isDirectory()) return tsxDeDirectorio(ruta)
       if (!/\.tsx?$/.test(ruta)) return []
-      if (!/odontogram/i.test(ruta)) return []
-      // Los dos archivos de esta issue son justamente los que tienen permitido nombrar colores.
-      if (/caras\.tsx?$/.test(ruta) || /caras\.test\.tsx?$/.test(ruta)) return []
+      // `caras.ts` es el archivo que tiene permitido nombrar colores: es el que los define.
+      if (/caras\.tsx?$/.test(ruta)) return []
       return [ruta]
     })
   }
 
-  const archivos = archivosDelOdontograma(RAIZ_SRC)
+  const archivos = [
+    ...DIRECTORIOS.flatMap(({ partes }) => {
+      const ruta = rutaEn(partes)
+      return existsSync(ruta) ? tsxDeDirectorio(ruta) : []
+    }),
+    ...ARCHIVOS_SUELTOS.map(rutaEn),
+  ]
+
+  it('los directorios obligatorios de la lista existen', () => {
+    for (const { partes, obligatorio } of DIRECTORIOS) {
+      if (!obligatorio) continue
+      expect(existsSync(rutaEn(partes)), `falta src/${partes.join('/')}`).toBe(true)
+    }
+  })
+
+  it('los archivos sueltos de la lista existen', () => {
+    for (const partes of ARCHIVOS_SUELTOS) {
+      const donde = `src/${partes.join('/')}`
+      expect(
+        existsSync(rutaEn(partes)),
+        `${donde} no existe: se movio o se renombro, y el guard dejo de mirarlo`
+      ).toBe(true)
+    }
+  })
 
   it('encuentra los archivos del odontograma que hay hoy', () => {
     expect(archivos.length).toBeGreaterThan(0)
+  })
+
+  it('cubre la pantalla donde se monta el odontograma, no solo el dominio', () => {
+    expect(archivos).toContain(rutaEn(['app', 'patients', '[id]', 'odontogram', 'page.tsx']))
   })
 
   it.each(archivos)('%s no declara colores por su cuenta', (ruta) => {
@@ -305,5 +373,92 @@ describe('colorDe es el unico lugar que decide un color de hallazgo', () => {
     const contenido = readFileSync(ruta, 'utf8')
     expect(contenido, `hex suelto en ${nombre}`).not.toMatch(HEX)
     expect(contenido, `clase de color suelta en ${nombre}`).not.toMatch(CLASE_DE_COLOR)
+  })
+})
+
+/**
+ * Segundo monopolio de `caras.ts`: la traduccion entre la posicion que se clickea y la
+ * cara que se persiste la hace solo `caraSemantica()`. Si alguien la reimplementa inline
+ * —un `posicion === 'left' ? 'MESIAL' : 'DISTAL'` adentro de un componente, un mapa de
+ * etiquetas portado del prototipo— tiene que escribir esos literales en algun lado. Este
+ * guard busca justamente eso.
+ *
+ * Es el error mas caro de la feature y el que no se ve en pantalla: el dibujo queda
+ * coherente y espejado, y el dato clinico queda falso en media boca. El prototipo trae
+ * los dos espejados mal (`left: 'Mesial'` para las 32 piezas, y el vestibular arriba en
+ * las dos arcadas), asi que portarlo tal cual es el camino por defecto.
+ *
+ * No pretende ser hermetico: se puede reimplementar la logica sin escribir los literales
+ * (interpolando, o usando los tipos). Cubre el caso realista, que es el copy-paste.
+ *
+ * Alcance y sus dos excepciones, las dos por scope y ninguna por patron:
+ *
+ * - `src/lib/odontograma/` es el dominio: ahi los literales son la definicion.
+ * - `src/__tests__/lib/odontograma/` los asevera, que es lo contrario de reimplementarlos
+ *   —este mismo archivo tiene los cinco arriba, en `CARAS`—.
+ *
+ * Se busca en todo el archivo, comentarios incluidos. Un componente que necesita hablar
+ * de una cara en prosa ya esta razonando sobre caras adentro del render, que es lo que la
+ * arquitectura no quiere: lo que corresponde es nombrar `caraSemantica()`.
+ */
+describe('nadie escribe una cara a mano fuera del dominio', () => {
+  const RAIZ_SRC = resolve(__dirname, '..', '..', '..')
+
+  /**
+   * Las cuatro caras que dependen del cuadrante. `OCLUSAL_INCISAL` queda afuera porque
+   * `center` es invariante: escribirla a mano es feo, pero no puede guardar el dato en la
+   * cara equivocada, que es lo que este guard viene a evitar.
+   */
+  const LITERAL_DE_CARA = /\b(?:MESIAL|DISTAL|VESTIBULAR|LINGUAL_PALATINO)\b/
+
+  const DOMINIO = join(RAIZ_SRC, 'lib', 'odontograma')
+  const TESTS_DEL_DOMINIO = join(RAIZ_SRC, '__tests__', 'lib', 'odontograma')
+  const EXCEPTUADOS: readonly string[] = [DOMINIO, TESTS_DEL_DOMINIO]
+
+  function fuentesFueraDelDominio(directorio: string): string[] {
+    if (EXCEPTUADOS.includes(directorio)) return []
+    return readdirSync(directorio).flatMap((entrada) => {
+      const ruta = join(directorio, entrada)
+      if (statSync(ruta).isDirectory()) return fuentesFueraDelDominio(ruta)
+      if (!/\.tsx?$/.test(ruta)) return []
+      return [ruta]
+    })
+  }
+
+  const archivos = fuentesFueraDelDominio(RAIZ_SRC)
+
+  it('escanea todo src menos el dominio y sus tests', () => {
+    expect(archivos.length).toBeGreaterThan(0)
+    for (const exceptuado of EXCEPTUADOS) {
+      expect(existsSync(exceptuado), `falta ${exceptuado}`).toBe(true)
+      expect(archivos.some((ruta) => ruta.startsWith(exceptuado + sep))).toBe(false)
+    }
+  })
+
+  /**
+   * El guard se verifica a si mismo: si el patron dejara de cazar los literales, este
+   * test rompe y no hace falta acordarse de mutar un componente para descubrirlo.
+   */
+  it('el patron caza los literales de verdad, y el dominio esta exceptuado', () => {
+    const caras = join(DOMINIO, 'caras.ts')
+    expect(readFileSync(caras, 'utf8')).toMatch(LITERAL_DE_CARA)
+    expect(archivos).not.toContain(caras)
+  })
+
+  it('la pestana del odontograma de la ficha esta adentro del escaneo', () => {
+    expect(archivos).toContain(
+      join(RAIZ_SRC, 'components', 'patients', 'ui', 'patientRecord.tsx')
+    )
+  })
+
+  it.each(archivos)('%s no escribe una cara a mano', (ruta) => {
+    const contenido = readFileSync(ruta, 'utf8')
+    expect(
+      contenido,
+      `${ruta.split(sep).pop()} nombra una cara. La traduccion posicion -> cara la hace ` +
+        `caraSemantica() en src/lib/odontograma/caras.ts, y el componente le pregunta al ` +
+        `estado por selectores.ts, que nunca devuelve una Cara. Si hace falta el nombre ` +
+        `para mostrar, es etiquetaCara().`
+    ).not.toMatch(LITERAL_DE_CARA)
   })
 })

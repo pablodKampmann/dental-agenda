@@ -71,6 +71,22 @@ Path alias `@/*` → `src/*`. `cn()` en `src/lib/utils.ts` para mergear clases T
 
 `src/lib/odontograma/` es la excepción a la regla de que la lógica vive en `services/`: es el dominio del odontograma en funciones y constantes puras, sin Firebase, sin React y testeable sin mocks. Los services de `odontograma/` lo consumen; nunca al revés. Plan de trabajo completo en `docs/odontograma-backend.md` (se documenta acá cuando el módulo esté cerrado). Lo detectado revisando el código ya mergeado y **no** arreglado en el momento, con el motivo de por qué no, está en `docs/odontograma-pendientes.md` — mirala antes de tocar el módulo, para no re-descubrir algo que ya está anotado ni "arreglar" algo que está así a propósito.
 
+Las tres reglas de abajo no son solo convencion: dos estan verificadas por guards en
+`src/__tests__/lib/odontograma/caras.test.ts`, que corren en el CI y rompen el PR.
+
+- **Colores.** Ningun archivo del odontograma declara un color propio (ni una clase de
+  Tailwind de una familia de color, ni un hex). El alcance es una lista explicita declarada
+  arriba del `describe` —`src/lib/odontograma/`, `src/components/odontograma/` (todavia no
+  existe, ya contemplado) y los archivos sueltos, hoy la pantalla del odontograma—. Si el
+  componente va a vivir en otro lado, **agregar el lugar a esa lista es parte de la tarea**.
+- **Caras.** Ningun archivo fuera de `src/lib/odontograma/` contiene `'MESIAL'`, `'DISTAL'`,
+  `'VESTIBULAR'` ni `'LINGUAL_PALATINO'` — comentarios incluidos. Unica excepcion:
+  `src/__tests__/lib/odontograma/`, que asevera sobre ellos. Escanea todo `src`.
+
+Ninguno de los dos es hermetico y no pretenden serlo: cubren el caso realista, que es
+portar el prototipo con su mapa de colores y su tabla de caras adentro del componente. Si
+uno de los dos se pone en rojo, la salida es usar el dominio, no ampliar la excepcion.
+
 Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
 **La traducción entre la posición que se clickea y la cara que se persiste la hace solo `caraSemantica()` en `caras.ts`.** De las cinco posiciones del cuadrado, cuatro dependen del cuadrante y por dos ejes independientes: `left`/`right` por hemiarcada del paciente —`left` es distal en la derecha (cuadrantes 1, 4, 5 y 8) y mesial en la izquierda— y `top`/`bottom` por arcada, porque el vestibular da hacia la cara externa del odontograma: arriba en la superior (1, 2, 5 y 6) y abajo en la inferior (3, 4, 7 y 8). Solo `center` es invariante. Los dos ejes salen de `arcadaDe()` y `hemiarcadaDe()` en `piezas.ts`, para que la tabla FDI y la geometría no puedan discrepar.
@@ -165,7 +181,8 @@ Con esa idea general, **el agente tiene libertad total** para crear componentes 
 
 - Ramas: `main` (producción) ← `dev` (integración) ← `feat/nombre-en-kebab-case` / `fix/nombre-en-kebab-case` / `refactor/nombre-en-kebab-case`.
 - Todo PR entra a `dev`. `dev` → `main` por PR aparte.
-- CI (`ci.yml`): corre `npm run build` en cada PR a `dev`/`main`, Node 20, `actions/checkout@v4` y `actions/setup-node@v4`, credenciales de Firebase inyectadas como GitHub Secrets.
+- CI (`ci.yml`): en cada PR a `dev`/`main`/`odontograma-dev` corre `npm run build` y despues `npm run test:run`. Node 20, `actions/checkout@v4` y `actions/setup-node@v4`. **Los dos pasos son gate: un test rojo no entra.** Las credenciales de Firebase se inyectan como GitHub Secrets solo en el build — los tests no las necesitan porque los que tocan Firebase mockean `@/lib/firebase` con `vi.mock`, y esta verificado corriendo la suite sin `.env.local`.
+- `.github/pull_request_template.md` es la checklist de PR: build y tests locales, no reimplementar el dominio del odontograma, `AGENTS.md` actualizado antes del commit, y lo detectado-y-no-arreglado en `docs/odontograma-pendientes.md`.
 - Formato de commit — una sola línea de comando, sin backslash, sin `git add` previo:
 
 ```bash
