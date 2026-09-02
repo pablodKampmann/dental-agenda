@@ -344,30 +344,110 @@ Recién acá aparece Firebase. Todo sigue el patrón de `src/services/{feature}/
 ```
 Rama:   feat/odontograma-reglas-firebase
 Toca:   database.rules.json (o la consola de Firebase)
-        AGENTS.md
 Depende: —
 ```
 
 **Qué hace.** Declara el árbol del contrato de datos y las reglas que hacen cumplir la inmutabilidad del log.
 
+**El hallazgo de esta issue: en Realtime Database un `.write` cascada hacia abajo como un OR.** Las reglas de antes tenían un único `.write` en `/clinics/$clinic_id`, con la condición de `clinicId`. Eso significa que **cualquier** hijo —incluido `eventos/$evt`— hereda ese grant sin que su propio `.write` pueda restringirlo: si el ancestro da `true`, no importa lo que diga el nodo. Un `".write": "!data.exists()"` puesto solo en `$evt` nunca se habría consultado, y el log habría quedado editable.
+
+`.validate` no tiene este problema — cascada como AND, no como OR, y todos los `.validate` del camino tienen que pasar — así que esa parte del bloque original ya funcionaba.
+
+**El arreglo es des-cascadear**: bajar el `.write` de `$clinic_id` a cada hijo que ya existe hoy (`appointments`, `patients`, `priceTariffs`, `pros`, `insurances`, `info`, y los sub-nodos de `odontogramas`), con la misma condición textual. Los permisos efectivos de cada módulo quedan idénticos a los de antes; lo único que cambia es que un hijo **nuevo** de `/clinics/$clinic_id` deja de heredar escritura por default — tiene que declarar su propio `.write`. El `.read` no se toca: se queda arriba y sigue cascadeando, porque si no el odontograma no se puede leer.
+
+`odontogramas` tampoco lleva `.write` propio — si lo tuviera, cascadearía de nuevo sobre `eventos` y se repetiría el mismo bug. Va en `actual` y en `eventos/$evt` por separado:
+
 ```json
-"eventos": {
-  "$evt": {
-    ".write": "!data.exists()",
-    ".validate": "newData.hasChildren(['ts','uid','alcance','capa'])
-                   && (newData.hasChild('diente') || newData.hasChild('piezas'))"
+"odontogramas": {
+  "$pacienteId": {
+    "actual": { ".write": "<C>" },
+    "eventos": {
+      "$evt": {
+        ".write": "<C> && !data.exists()",
+        ".validate": "newData.hasChildren(['ts','uid','alcance','capa'])
+                      && newData.child('ts').val() == now
+                      && newData.child('uid').val() == auth.uid
+                      && (newData.child('alcance').val() == 'CARA' || newData.child('alcance').val() == 'DIENTE' || newData.child('alcance').val() == 'MULTI')
+                      && (newData.child('capa').val() == 'existente' || newData.child('capa').val() == 'requerida')
+                      && (newData.hasChild('diente') || newData.hasChild('piezas'))"
+      }
+    }
   }
 }
 ```
 
+`<C>` es la condición textual de `$clinic_id`: `"auth != null && root.child('admins').child(auth.uid).child('clinicId').val() === $clinic_id"`.
+
+**Agregado al contrato original:** `hasChildren(['ts','uid','alcance','capa'])` solo verifica presencia, no verdad — un evento con `ts: 0` o `uid: "cualquiera"` pasaba igual. Se suma `newData.child('ts').val() == now` (fuerza `serverTimestamp()`, ver B2-3) y `newData.child('uid').val() == auth.uid` (nadie puede firmar un asiento a nombre de otro usuario).
+
+**`capa` y `alcance` se validan por valor, no solo por presencia.** Es un log clínico con valor legal: sin esto, cualquier cliente puede escribir `capa: "cualquier cosa"` y el evento entra igual. La lista de valores (`existente`/`requerida` para `capa`, `CARA`/`DIENTE`/`MULTI` para `alcance`) es una copia literal de `CAPAS` y `ALCANCES` de `src/lib/odontograma/tipos.ts` — Firebase Rules no puede importar TypeScript, así que es duplicación inevitable. **No se extiende el mismo criterio al catálogo de 13 hallazgos** (`de`/`a`, ver B1-3): ese catálogo crece con el tiempo y validarlo acá rompería el invariante de B1-3 de que sumar un hallazgo toca exactamente dos archivos. `capa` y `alcance` en cambio son vocabulario estructural fijado por la forma del árbol, no un catálogo abierto.
+
+⚠️ **Si `CAPAS` o `ALCANCES` cambian en `tipos.ts`, `database.rules.json` tiene que actualizarse en el mismo cambio.** Es la tercera copia de ese vocabulario (la primera es el propio `tipos.ts`, la segunda cualquier UI que liste capas/alcances) y no hay forma de compartir código con las reglas — pero que quede escrito evita que se desincronicen en silencio.
+
 **Criterios de aceptación**
 
-- [ ] Un cliente autenticado puede **crear** un evento.
-- [ ] Un cliente autenticado **no** puede editar ni borrar un evento existente. Probado a mano contra la base de desarrollo.
+Dos garantías distintas, según qué las sostiene:
+
+*Dependen del des-cascadeo — antes de este fix fallaban, porque el `.write` de `$clinic_id` pisaba la condición de `$evt`:*
+
+- [ ] Un cliente autenticado puede **crear** un evento nuevo en `eventos/`.
+- [ ] Un cliente autenticado **no** puede editar ni borrar un evento existente. Antes del fix esto pasaba igual: el grant heredado de `$clinic_id` no evaluaba el `!data.exists()` de `$evt`.
+- [ ] `actual/` sigue siendo escribible normalmente — el des-cascadeo movió el `.write`, no se lo sacó a nada que ya funcionaba.
+
+*Se cumplen pase lo que pase — sostenidas por `.validate`, que cascada como AND y ya estaba en el bloque original:*
+
 - [ ] Un evento `MULTI` —que escribe `piezas` y no `diente`— **entra**. La regla no puede exigir `diente`: en Realtime Database `null` es ausencia de clave, así que pedirlo rechazaría todo evento de prótesis.
 - [ ] Un evento sin `diente` **ni** `piezas` se rechaza.
-- [ ] `actual/` sigue siendo escribible normalmente.
-- [ ] El acceso está scopeado por `clinicId` como el resto del árbol.
+- [ ] El acceso está scopeado por `clinicId` como el resto del árbol — la condición `<C>` vive en el `.write` de cada nodo, esté o no des-cascadeado.
+
+Probado a mano contra un nodo de paciente descartable de la base real — no hay emulador ni base de desarrollo separada, así que es la única evidencia que va a existir de que las reglas hacen lo que dicen.
+
+**Checklist de verificación manual.** Se corre desde la consola de Firebase (Realtime Database → pestaña Datos, con una sesión logueada en otra pestaña para que la request lleve el token de auth — la consola web escribe como el usuario logueado). Usar un `pacienteId` descartable, ej. `__test_b2_1__`, y borrarlo entero al terminar. `$evt` es un push key cualquiera; `<uid>` es el uid del usuario autenticado con el que se prueba.
+
+Ruta base: `/clinics/{clinicId}/odontogramas/__test_b2_1__/`
+
+**Sobre `ts`:** la regla exige `newData.child('ts').val() == now`. Para que un valor tipeado a mano en la consola pase esa condición, se escribe como el placeholder de servidor, igual que hace `serverTimestamp()` desde el SDK: `{ ".sv": "timestamp" }` en vez de un número. Los casos de abajo que dicen "ts servidor" usan ese placeholder; el caso 6d usa a propósito un número fijo para que falle.
+
+1. **Crear evento (autenticado) → permitido.**
+   Escribir en `eventos/-Ntest0001`:
+   ```json
+   { "ts": { ".sv": "timestamp" }, "uid": "<uid>", "alcance": "DIENTE", "capa": "existente", "diente": "t16", "cara": null, "piezas": null, "de": null, "a": "corona" }
+   ```
+   (`ts` servidor.) Resultado esperado: **escribe**.
+
+2. **Editar el evento recién creado → rechazado.**
+   Sobre el mismo `eventos/-Ntest0001` del paso 1, intentar cambiar `a` a otro valor (ej. `"caries"`). Resultado esperado: **rechaza** (`!data.exists()` da `false`, y ya no hay `.write` heredado de `$clinic_id` que lo tape).
+
+3. **Borrar el evento recién creado → rechazado.**
+   Intentar `remove` sobre `eventos/-Ntest0001`. Resultado esperado: **rechaza**, mismo motivo que el paso 2.
+
+4. **`actual/` sigue escribible.**
+   Escribir en `actual/dientes/t16/diente/existente`: `"corona"`. Resultado esperado: **escribe** — confirma que mover el `.write` a cada hijo no rompió el nodo que sí necesita edición normal.
+
+5. **Evento `MULTI` sin `diente` → permitido.**
+   Escribir en `eventos/-Ntest0002`, **omitiendo la clave `diente` directamente** (no poner `null`: en RTDB escribir `null` no guarda nada, así que da igual, pero omitirla es lo real):
+   ```json
+   { "ts": { ".sv": "timestamp" }, "uid": "<uid>", "alcance": "MULTI", "capa": "existente", "cara": null, "piezas": { "t45": true, "t46": true, "t47": true }, "de": null, "a": "protesis_fija" }
+   ```
+   Resultado esperado: **escribe**, aunque no tenga `diente`.
+
+6. **Evento sin `diente` ni `piezas` → rechazado.**
+   Escribir en `eventos/-Ntest0003`, omitiendo **las dos** claves:
+   ```json
+   { "ts": { ".sv": "timestamp" }, "uid": "<uid>", "alcance": "DIENTE", "capa": "existente", "cara": null, "de": null, "a": "corona" }
+   ```
+   Resultado esperado: **rechaza** — ni `hasChild('diente')` ni `hasChild('piezas')` dan `true`.
+
+   Casos extra para probar el agregado de esta issue (no son de los 6 originales, pero son la validación nueva y quedan sin probar si no se agregan):
+
+   6a. Igual al payload del caso 1 pero con `"capa": "cualquier cosa"` → **rechaza**.
+   6b. Igual al payload del caso 1 pero con `"alcance": "OTRA"` → **rechaza**.
+   6c. Igual al payload del caso 1 pero con `"uid"` de otro usuario (no el logueado) → **rechaza**.
+   6d. Igual al payload del caso 1 pero con `"ts": 1735689600000` (número fijo, no el placeholder de servidor) → **rechaza**.
+
+   **Al terminar:** borrar `/clinics/{clinicId}/odontogramas/__test_b2_1__` entero desde la consola.
+
+**Lo que esta issue NO toca.** `/admins` tiene `".read": true` y un `.write` que deja a cada admin editar su propio `clinicId`. Los dos son hallazgos conocidos, con issue propia y prioridad ya decidida — cerrar el `.read` rompe el login, así que no se arregla acá.
 
 **Por qué importa.** Todo el código de este proyecto corre en el browser. Una garantía de inmutabilidad que viva en el cliente es decorativa: la única que cuenta es la de las reglas.
 
