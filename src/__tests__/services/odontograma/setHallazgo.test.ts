@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { caraSemantica } from '@/lib/odontograma/caras'
 
 vi.mock('@/lib/firebase', () => ({ db: {} }))
 
@@ -23,6 +24,15 @@ import { SCHEMA_VERSION } from '@/lib/odontograma/tipos'
 
 const mockUpdate = vi.mocked(update)
 
+/**
+ * Nadie escribe una cara a mano fuera del dominio (regla del propio proyecto,
+ * ver caras.test.ts) -- asi que las caras de prueba salen de caraSemantica(),
+ * no de un literal tipeado aca. 'center' es invariante de cuadrante; el
+ * segundo valor sale de una posicion lateral en un cuadrante concreto.
+ */
+const CARA_CENTRO_T16 = caraSemantica('center', 1)
+const CARA_LATERAL_T26 = caraSemantica('left', 2)
+
 describe('setHallazgo / removeHallazgo', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -42,7 +52,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       capa: 'requerida',
       codigo: 'caries',
       de: null,
@@ -59,7 +69,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       capa: 'requerida',
       codigo: 'caries',
       de: null,
@@ -72,7 +82,7 @@ describe('setHallazgo / removeHallazgo', () => {
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
-    expect(payload[`${base}/actual/dientes/t16/caras/OCLUSAL_INCISAL/requerida`]).toBe('caries')
+    expect(payload[`${base}/actual/dientes/t16/caras/${CARA_CENTRO_T16}/requerida`]).toBe('caries')
     expect(payload[`${base}/actual/meta/updatedAt`]).toEqual({ '.sv': 'timestamp' })
     expect(payload[`${base}/actual/meta/updatedBy`]).toBe('uid-1')
     expect(payload[`${base}/actual/meta/schemaVersion`]).toBe(SCHEMA_VERSION)
@@ -84,7 +94,7 @@ describe('setHallazgo / removeHallazgo', () => {
       alcance: 'CARA',
       capa: 'requerida',
       diente: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       piezas: null,
       de: null,
       a: 'caries',
@@ -98,7 +108,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       capa: 'requerida',
       codigo: 'caries',
       de: null,
@@ -107,7 +117,7 @@ describe('setHallazgo / removeHallazgo', () => {
 
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
-    expect(payload[`${base}/actual/dientes/t16/caras/OCLUSAL_INCISAL/existente`]).toBeUndefined()
+    expect(payload[`${base}/actual/dientes/t16/caras/${CARA_CENTRO_T16}/existente`]).toBeUndefined()
   })
 
   it('setHallazgoDiente writes to diente/{capa}, not caras/', async () => {
@@ -143,7 +153,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't26',
-      cara: 'MESIAL',
+      cara: CARA_LATERAL_T26,
       hallazgoRequerido: 'caries',
       hallazgoResultante: 'obturacion',
       existenteAnterior: null,
@@ -156,8 +166,8 @@ describe('setHallazgo / removeHallazgo', () => {
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
-    expect(payload[`${base}/actual/dientes/t26/caras/MESIAL/requerida`]).toBeNull()
-    expect(payload[`${base}/actual/dientes/t26/caras/MESIAL/existente`]).toBe('obturacion')
+    expect(payload[`${base}/actual/dientes/t26/caras/${CARA_LATERAL_T26}/requerida`]).toBeNull()
+    expect(payload[`${base}/actual/dientes/t26/caras/${CARA_LATERAL_T26}/existente`]).toBe('obturacion')
 
     const eventoKeys = Object.keys(payload).filter((k) => k.includes('/eventos/'))
     expect(eventoKeys).toHaveLength(2)
@@ -166,8 +176,8 @@ describe('setHallazgo / removeHallazgo', () => {
     const eventoRequerida = eventos.find((e) => e.capa === 'requerida')
     const eventoExistente = eventos.find((e) => e.capa === 'existente')
 
-    expect(eventoRequerida).toMatchObject({ de: 'caries', a: null, cara: 'MESIAL', diente: 't26' })
-    expect(eventoExistente).toMatchObject({ de: null, a: 'obturacion', cara: 'MESIAL', diente: 't26' })
+    expect(eventoRequerida).toMatchObject({ de: 'caries', a: null, cara: CARA_LATERAL_T26, diente: 't26' })
+    expect(eventoExistente).toMatchObject({ de: null, a: 'obturacion', cara: CARA_LATERAL_T26, diente: 't26' })
   })
 
   it('ejecutarHallazgoDienteRequerido works the same way for alcance DIENTE', async () => {
@@ -203,7 +213,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       capa: 'existente',
       de: 'obturacion',
       uid: 'uid-1',
@@ -213,7 +223,7 @@ describe('setHallazgo / removeHallazgo', () => {
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
-    expect(payload[`${base}/actual/dientes/t16/caras/OCLUSAL_INCISAL/existente`]).toBeNull()
+    expect(payload[`${base}/actual/dientes/t16/caras/${CARA_CENTRO_T16}/existente`]).toBeNull()
 
     const eventoKey = Object.keys(payload).find((k) => k.includes('/eventos/'))!
     expect(payload[eventoKey]).toMatchObject({ de: 'obturacion', a: null, capa: 'existente' })
@@ -254,7 +264,7 @@ describe('setHallazgo / removeHallazgo', () => {
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't16',
-      cara: 'OCLUSAL_INCISAL',
+      cara: CARA_CENTRO_T16,
       capa: 'requerida',
       codigo: 'caries',
       de: null,
