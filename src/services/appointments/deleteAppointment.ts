@@ -1,6 +1,7 @@
 import { db } from "@/lib/firebase";
 import { ref, get, remove } from "firebase/database";
 import { getUser } from "./../auth/getUser";
+import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
 export async function deleteAppointment(id: number, date: string) {
     try {
@@ -33,6 +34,8 @@ export async function deleteAppointment(id: number, date: string) {
                         await remove(staleRef);
                     }
                 }
+
+                invalidateSidebarCarousel();
             }
         }
     } catch (error) {

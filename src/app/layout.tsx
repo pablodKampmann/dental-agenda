@@ -41,7 +41,7 @@ export default async function RootLayout({
           <ToastProvider>
             <div className='w-full h-screen overflow-y-hidden'>
               <Navigation />
-              <div className='mt-[68px] sm:ml-56'>
+              <div className='mt-[68px] sm:mt-[58px] sm:ml-40'>
                 {children}
               </div>
             </div>

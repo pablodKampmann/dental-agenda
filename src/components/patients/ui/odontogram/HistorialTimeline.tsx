@@ -145,10 +145,10 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
       {idEditando && (
         <>
           <div
-            className="fixed top-[68px] left-0 sm:left-56 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
+            className="fixed top-[68px] sm:top-[58px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
             onClick={() => setIdEditando(null)}
           />
-          <div className="fixed left-1/2 sm:left-[calc(50%+7rem)] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">
+          <div className="fixed left-1/2 sm:left-[calc(50%+5rem)] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">
             <h2 className="text-lg font-semibold mb-3">Editar nota</h2>
             <textarea
               autoFocus

@@ -88,6 +88,7 @@ const config = {
         'alredy-exists': 'alredy-exists 0.1s ease-out',
         'page-drop': 'page-drop 0.3s ease-out',
         'move-from-left': 'move-from-left 0.3s ease-in-out',
+        'carousel-reveal': 'carousel-reveal 0.35s ease-out',
       },
       keyframes: {
         "accordion-down": {
@@ -229,6 +230,10 @@ const config = {
           '75%': { opacity: '1', transform: 'translateX(3%)' },
           '87.5%': { opacity: '1', transform: 'translateX(0%)' },
           '100%': { opacity: '1', transform: 'translateX(0%)' },
+        },
+        'carousel-reveal': {
+          '0%': { opacity: '0', transform: 'scale(0.96) translateY(4px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
         },
       },
     },

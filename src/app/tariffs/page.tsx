@@ -247,7 +247,7 @@ export default function Page() {
       item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
     ) ?? [];
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col pb-4 pt-6 overflow-hidden">
+    <div className="h-[calc(100vh-58px)] flex flex-col pb-4 pt-4 overflow-hidden">
       {isLoad ? <Loading /> : (<>
       <ConfirmAlert
         open={openAlert === "delete"}
@@ -268,7 +268,7 @@ export default function Page() {
       />
       <div className="flex flex-col h-full gap-6 animate-page-drop">
         {/* Toolbar */}
-        <div className="shrink-0 ml-4 mr-2 px-4">
+        <div className="shrink-0 px-4">
           <div className="flex justify-between select-none">
             <div className="flex items-center gap-3">
               {/* Category select */}
@@ -328,7 +328,7 @@ export default function Page() {
 
         {/* Table */}
         {chapterData ? (
-          <div className="flex-1 min-h-0 flex justify-between overflow-hidden ml-2">
+          <div className="flex-1 min-h-0 flex gap-4 overflow-hidden px-4">
             <PracticeTable
               chapterData={filteredChapterData}
               chapterName={chapterName}

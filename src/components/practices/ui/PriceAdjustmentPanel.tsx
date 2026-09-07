@@ -103,7 +103,7 @@ export function PriceAdjustmentPanel({
     // ── Confirmación por área ──
     if (isAreaConfirm) return (
         <div className="overflow-hidden w-1/5">
-            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto mr-6 shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
+            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
                 <h2 className="bg-teal-600 rounded-t-md text-white text-center font-semibold text-lg py-2 border-b-2 border-gray-600">
                     Ajuste de Precios
                 </h2>
@@ -151,7 +151,7 @@ export function PriceAdjustmentPanel({
     // ── Confirmación global ──
     if (isGlobalConfirm) return (
         <div className="overflow-hidden w-1/5">
-            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto mr-6 shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
+            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
                 <h2 className="bg-teal-600 rounded-t-md text-white text-center font-semibold text-lg py-2 border-b-2 border-gray-600">
                     Ajuste de Precios
                 </h2>
@@ -205,7 +205,7 @@ export function PriceAdjustmentPanel({
     // ── Vista normal ──
     return (
         <div className="overflow-hidden w-1/5">
-            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto mr-6 shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
+            <div className="animate-move-from-right-form text-black border-2 border-gray-600 ml-auto shadow-lg rounded-lg select-none bg-gray-300 bg-opacity-30">
 
                 {/* Header */}
                 <h2 className="bg-teal-600 rounded-t-md text-white text-center font-semibold text-lg py-2 border-b-2 border-gray-600 flex items-center justify-center gap-2">

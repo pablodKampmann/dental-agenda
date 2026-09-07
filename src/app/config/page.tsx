@@ -342,7 +342,7 @@ export default function Page() {
   };
 
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-[calc(100vh-58px)] flex flex-col overflow-hidden bg-gray-50">
       {isLoad ? (
         <Loading />
       ) : (

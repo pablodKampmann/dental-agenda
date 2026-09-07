@@ -45,7 +45,7 @@ export function AddPracticeForm({ chapterName, price, setPrice,
 
     return (
         <div className="overflow-hidden">
-            <form onSubmit={handleSubmit} className="relative w-[340px] mr-6 animate-move-from-right-form">
+            <form onSubmit={handleSubmit} className="relative w-[340px] animate-move-from-right-form">
                 <div className="w-full border-2 border-gray-600 bg-gray-300 bg-opacity-30 shadow-lg rounded-lg">
 
                     {/* Header */}

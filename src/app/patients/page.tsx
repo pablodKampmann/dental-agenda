@@ -51,7 +51,7 @@ export default function Patients() {
   }, [listOfPatients]);
 
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col ml-4 mr-2 px-4 pb-4 pt-6 overflow-hidden">
+    <div className="h-[calc(100vh-58px)] flex flex-col px-4 pb-4 pt-4 overflow-hidden">
       {isLoad && <Loading />}
       {isMobile ? (
         <SheetCreatePatient
