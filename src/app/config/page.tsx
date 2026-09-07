@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { AvatarFallback } from "../../components/shared/AvatarFallback";
@@ -9,11 +9,10 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getUser } from "../../services/auth/getUser";
 import { MdVisibilityOff, MdPerson, MdGroups, MdBusiness, MdHealthAndSafety } from "react-icons/md";
-import { TbPencilCog } from "react-icons/tb";
 import { getClinicData } from "../../services/config/getClinicData";
 import { InsurancesConfig } from "../../components/config/insurancesConfig";
 import { ScaleLoader } from "react-spinners";
-import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
+import { FaCircleXmark } from "react-icons/fa6";
 import { setRowChanges } from "../../services/config/setRowChanges";
 import { updateUserEmail } from "../../services/config/updateUserEmail";
 import { updateUserName } from "../../services/config/updateUserName";
@@ -30,6 +29,13 @@ import { deletePro } from "../../services/config/deletePro";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from '@/context/ToastContext';
 import { ConfirmAlert } from "../../components/shared/dialogAlerts/confirmAlert";
+import { EditableRow } from "../../components/patients/ui/editableRow";
+import { SelectField } from "../../components/patients/ui/fields/selectField";
+import { combine, required, email as emailValidator } from "@/lib/validators";
+
+function noSpaces(message = "No puede contener espacios") {
+  return (value: string) => (value.includes(" ") ? message : null);
+}
 
 export default function Page() {
   const router = useRouter();
@@ -42,7 +48,7 @@ export default function Page() {
   const [clinicInfo, setClinicInfo] = useState<any>(null);
   const [pros, setPros] = useState<null | any[]>(null);
   const [editRow, setEditRow] = useState<string>("");
-  const [changes, setChanges] = useState<string | null>(null);
+  const [changes, setChanges] = useState<string>("");
   const [openInputCredential, setOpenInputCredential] = useState(false);
   const [userCredential, setUserCredential] = useState<string>("");
   const [passwordStep, setPasswordStep] = useState<number>(0);
@@ -79,18 +85,25 @@ export default function Page() {
   }, [router]);
 
   //FUNCTION TO SAVE EDITINGS IN CONFIG
-  async function handleEditClinicRow(e: any, field: string, value: any) {
-    e.stopPropagation();
-    if (!value) {
-      reset();
-      return;
-    }
+
+  async function handleEditClinicRow(field: string, value: string) {
+    if (!value) { reset(); return; }
     setLoadingGet(true);
     await setClinicInfoChanges(user.clinicId, field, value);
     const result = await getClinicData(user.clinicId, "info");
     if (result) setClinicInfo(result);
     reset();
     showToast("success", "Cambio guardado correctamente");
+  }
+
+  async function submitSchedule() {
+    setLoadingGet(true);
+    await setClinicInfoChanges(user.clinicId, "initialSchedule", scheduleChanges.initial);
+    await setClinicInfoChanges(user.clinicId, "finalSchedule", scheduleChanges.final);
+    const result = await getClinicData(user.clinicId, "info");
+    if (result) setClinicInfo(result);
+    showToast("success", "Horario guardado correctamente");
+    reset();
   }
 
   //FUNCTIONS GETS
@@ -138,7 +151,8 @@ export default function Page() {
   }
 
   async function handleUpdatePro(key: string, name: string) {
-    if (!name) return;
+    if (!name) { reset(); return; }
+    setLoadingGet(true);
     await updatePro(user.clinicId, key, name);
     setPros((prev) =>
       prev ? prev.map((p) => (p.key === key ? { ...p, nameComplete: name } : p)) : prev,
@@ -159,7 +173,7 @@ export default function Page() {
   function reset() {
     setEditRow("");
     setLoadingGet(false);
-    setChanges(null);
+    setChanges("");
     setPasswordStep(0);
     setPasswordInput("");
     setCurrentPassword("");
@@ -167,19 +181,18 @@ export default function Page() {
     if (openInputCredential) setOpenInputCredential(false);
   }
 
-  async function handleEditRow(e: any, table: string, changes: any) {
-    e.stopPropagation();
+  async function handleEditRow(table: string, changes: string) {
     reset();
 
-    if (changes !== null) {
+    if (changes) {
       setLoadingGet(true);
       let result;
       switch (table) {
         case "displayName":
           result = await setRowChanges(table, changes, userUid);
           if (result !== null) {
-            const user = await getUser(false);
-            setUser(user);
+            const updatedUser = await getUser(false);
+            setUser(updatedUser);
             await refreshUser();
             showToast("success", "Cambio guardado correctamente");
           }
@@ -199,33 +212,10 @@ export default function Page() {
     reset();
   }
 
-  function handleCancelEditRow(e: any) {
-    e.stopPropagation();
-    reset();
-  }
-
-  function handleKeyPress(e: any, table: string, changes: any) {
-    if (e.key === "Escape") {
-      reset();
-    } else if (e.key === "Enter" && changes !== null) {
-      if (table === "email") {
-        if (openInputCredential === true) {
-          handleChangeEmail(e, table, changes);
-        } else {
-          setOpenInputCredential(true);
-        }
-      } else {
-        handleEditRow(e, table, changes);
-      }
-    }
-  }
-
   //FUNCTIONS CHANGE EMAIL
 
-  async function handleChangeEmail(e: any, table: string, changes: any) {
-    e.stopPropagation();
-
-    if (changes !== null) {
+  async function handleChangeEmail(table: string, changes: string) {
+    if (changes) {
       setLoadingGet(true);
       const result = (await updateUserEmail(
         table,
@@ -247,16 +237,20 @@ export default function Page() {
         showToast("success", "Email actualizado correctamente");
       }
     }
-}
-  async function handleChangeUserName(e: any) {
-    e.stopPropagation();
+  }
 
-    if (!changes || changes.trim() === "") return;
-    if (changes.includes(" ")) {
-      showToast("warning", "El nombre de usuario no puede contener espacios");
+  function submitEmailChanges(changes: string) {
+    if (openInputCredential) {
+      handleChangeEmail("email", changes);
+    } else if (changes) {
+      setOpenInputCredential(true);
+    } else {
       reset();
-      return;
     }
+  }
+
+  async function handleChangeUserName() {
+    if (!changes || changes.trim() === "") { reset(); return; }
 
     setLoadingGet(true);
     const result = await updateUserName(changes.trim(), userUid);
@@ -273,9 +267,7 @@ export default function Page() {
     reset();
   }
 
-  async function handlePasswordStep(e: any) {
-    e.stopPropagation();
-
+  async function handlePasswordStep() {
     if (passwordStep === 1) {
       if (!passwordInput) return;
       setLoadingGet(true);
@@ -320,12 +312,6 @@ export default function Page() {
       reset();
     }
   }
-
-  useEffect(() => {
-    if (openInputCredential) {
-      setOpenInputCredential(false);
-    }
-  }, [editRow]);
 
   const NAV_ITEMS = [
     { id: "profile",      label: "Perfil",          icon: MdPerson,           action: () => setSelectedField("profile") },
@@ -411,692 +397,298 @@ export default function Page() {
 
               {/* Card body */}
               <div className="px-6 pt-5 pb-8 text-black">
-            {selectedField === "profile" && (
-              <div className="max-w-lg">
-                <h1 className="text-base font-bold tracking-wide mb-3">
-                  Básico:
-                </h1>
-                <div className="flex flex-col gap-2 mb-4">
-                  {/* Nombre visible */}
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                      {editRow === "displayName" ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm text-gray-500 flex-shrink-0">
-                            Nombre visible:
-                          </span>
-                          <input
-                            autoFocus
-                            defaultValue={user.displayName}
-                            onChange={(e) => setChanges(e.target.value)}
-                            onKeyDown={(e: any) =>
-                              handleKeyPress(e, "displayName", changes)
-                            }
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                          />
-                          <FaCircleXmark
-                            onClick={(e: any) => handleCancelEditRow(e)}
-                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                          <FaCircleCheck
-                            onClick={(e: any) =>
-                              handleEditRow(e, "displayName", changes)
-                            }
-                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Nombre visible:
-                            </span>
-                            <span className="text-sm font-semibold text-black">
-                              {user.displayName}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => setEditRow("displayName")}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* Email */}
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                      {editRow === "email" ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm text-gray-500 flex-shrink-0">
-                            {openInputCredential
-                              ? "Contraseña actual:"
-                              : "Email:"}
-                          </span>
-                          {openInputCredential ? (
+                {selectedField === "profile" && (
+                  <div className="max-w-lg">
+                    <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>
+                    <div className="flex flex-col gap-2 mb-4">
+                      <EditableRow
+                        label="Nombre visible"
+                        value={user.displayName}
+                        rowKey="displayName"
+                        category="profile"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={(value) => handleEditRow("displayName", value)}
+                        changes={changes}
+                        validate={combine(required("El nombre visible es obligatorio"))}
+                      />
+                      <EditableRow
+                        label={openInputCredential ? "Contraseña actual" : "Email"}
+                        value={user.email}
+                        rowKey="email"
+                        category="profile"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={(value) => submitEmailChanges(value)}
+                        changes={changes}
+                        validate={openInputCredential ? undefined : emailValidator()}
+                        renderInput={
+                          openInputCredential ? (
                             <input
                               autoFocus
                               type="password"
                               autoComplete="off"
                               placeholder="Confirmá con tu contraseña"
-                              onChange={(e) =>
-                                setUserCredential(e.target.value)
-                              }
-                              onKeyDown={(e: any) =>
-                                handleKeyPress(e, "email", changes)
-                              }
+                              onChange={(e) => setUserCredential(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") submitEmailChanges(changes);
+                                else if (e.key === "Escape") reset();
+                              }}
                               className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
                             />
-                          ) : (
-                            <input
-                              autoFocus
-                              defaultValue={user.email}
-                              onChange={(e) => setChanges(e.target.value)}
-                              onKeyDown={(e: any) =>
-                                handleKeyPress(e, "email", changes)
-                              }
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                            />
-                          )}
-                          <FaCircleXmark
-                            onClick={(e: any) => {
-                              handleCancelEditRow(e);
-                              setOpenInputCredential(false);
-                            }}
-                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                          <FaCircleCheck
-                            onClick={(e: any) => {
-                              if (openInputCredential) {
-                                handleChangeEmail(e, "email", changes);
-                              } else if (changes !== null) {
-                                setOpenInputCredential(true);
-                              } else {
-                                handleCancelEditRow(e);
-                              }
-                            }}
-                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Email:
-                            </span>
-                            <span className="text-sm font-semibold text-black">
-                              {user.email}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => setEditRow("email")}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
+                          ) : undefined
+                        }
+                      />
                     </div>
-                  </div>
-                </div>
 
-                <h1 className="text-base font-bold tracking-wide mb-3">
-                  Acceso:
-                </h1>
-                <div className="flex flex-col gap-2 mb-4">
-                  {/* Usuario */}
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                      {editRow === "userName" ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm text-gray-500 flex-shrink-0">
-                            Usuario:
+                    <h1 className="text-base font-bold tracking-wide mb-3">Acceso:</h1>
+                    <div className="flex flex-col gap-2 mb-4">
+                      <EditableRow
+                        label="Usuario"
+                        value={user.userName}
+                        displayValue={
+                          <span className="inline-flex items-center gap-1">
+                            {showUserName ? user.userName : "?".repeat(user.userName.length)}
+                            <MdVisibilityOff
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setShowUserName((v) => !v); }}
+                              className="cursor-pointer hover:scale-110 text-gray-400"
+                              size={16}
+                            />
                           </span>
-                          <input
-                            autoFocus
-                            defaultValue={user.userName}
-                            onChange={(e) => setChanges(e.target.value)}
-                            onKeyDown={(e: any) => {
-                              if (e.key === "Escape") reset();
-                              else if (e.key === "Enter" && changes !== null)
-                                handleChangeUserName(e);
-                            }}
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                          />
-                          <FaCircleXmark
-                            onClick={(e: any) => handleCancelEditRow(e)}
-                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                          <FaCircleCheck
-                            onClick={(e: any) => {
-                              if (changes !== null) handleChangeUserName(e);
-                            }}
-                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Usuario:
-                            </span>
-                            <span className="text-sm font-semibold text-black flex items-center gap-1">
-                              {showUserName
-                                ? user.userName
-                                : "?".repeat(user.userName.length)}
-                              <MdVisibilityOff
-                                onClick={(e: any) => {
-                                  e.stopPropagation();
-                                  setShowUserName((v) => !v);
-                                }}
-                                className="cursor-pointer hover:scale-110 text-gray-400"
-                                size={16}
-                              />
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => setEditRow("userName")}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* Contraseña */}
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                      {editRow === "password" ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm text-gray-500 flex-shrink-0">
-                            {passwordStep === 1
-                              ? "Contraseña actual:"
+                        }
+                        rowKey="userName"
+                        category="profile"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={() => handleChangeUserName()}
+                        changes={changes}
+                        validate={combine(required("El usuario es obligatorio"), noSpaces())}
+                      />
+                      <EditableRow
+                        label={
+                          editRow === "password"
+                            ? passwordStep === 1
+                              ? "Contraseña actual"
                               : passwordStep === 2
-                                ? "Nueva contraseña:"
-                                : "Repetir nueva:"}
-                          </span>
+                                ? "Nueva contraseña"
+                                : "Repetir nueva"
+                            : "Contraseña"
+                        }
+                        value="?????????????"
+                        rowKey="password"
+                        category="profile"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={() => handlePasswordStep()}
+                        changes={changes}
+                        onEdit={() => setPasswordStep(1)}
+                        renderInput={
                           <input
                             key={passwordStep}
-                            value={passwordInput}
-                            onChange={(e) => setPasswordInput(e.target.value)}
-                            onKeyDown={(e: any) => {
-                              if (e.key === "Escape") reset();
-                              else if (e.key === "Enter") handlePasswordStep(e);
-                            }}
                             autoFocus
                             type="password"
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                          />
-                          <FaCircleXmark
-                            onClick={(e: any) => handleCancelEditRow(e)}
-                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                          <FaCircleCheck
-                            onClick={(e: any) => handlePasswordStep(e)}
-                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Contraseña:
-                            </span>
-                            <span className="text-sm font-semibold text-black">
-                              ?????????????
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setEditRow("password");
-                              setPasswordStep(1);
+                            placeholder={
+                              passwordStep === 1
+                                ? "Contraseña actual"
+                                : passwordStep === 2
+                                  ? "Nueva contraseña (mín. 6 caracteres)"
+                                  : "Repetí la nueva contraseña"
+                            }
+                            value={passwordInput}
+                            onChange={(e) => setPasswordInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handlePasswordStep();
+                              else if (e.key === "Escape") reset();
                             }}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <h1 className="text-base font-bold tracking-wide mb-3">
-                  Preferencias de interfaz:
-                </h1>
-                <div className="flex flex-col gap-2">
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                      {editRow === "language" ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm text-gray-500 flex-shrink-0">
-                            Idioma:
-                          </span>
-                          <select
-                            defaultValue={user.language}
-                            onChange={(e) => setChanges(e.target.value)}
-                            onKeyDown={(e: any) =>
-                              handleKeyPress(e, "language", changes)
-                            }
                             className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                          >
-                            <option value="spanish">spanish</option>
-                            <option value="english">english</option>
-                          </select>
-                          <FaCircleXmark
-                            onClick={(e: any) => handleCancelEditRow(e)}
-                            className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
                           />
-                          <FaCircleCheck
-                            onClick={(e: any) =>
-                              handleEditRow(e, "language", changes)
-                            }
-                            className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                            size={20}
+                        }
+                      />
+                    </div>
+
+                    <h1 className="text-base font-bold tracking-wide mb-3">Preferencias de interfaz:</h1>
+                    <div className="flex flex-col gap-2">
+                      <EditableRow
+                        label="Idioma"
+                        value={user.language}
+                        rowKey="language"
+                        category="profile"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={(value) => handleEditRow("language", value)}
+                        changes={changes}
+                        renderInput={
+                          <SelectField
+                            value={changes || user.language}
+                            onChange={setChanges}
+                            onSubmit={() => handleEditRow("language", changes)}
+                            onCancel={() => reset()}
+                            options={[
+                              { value: "spanish", label: "spanish" },
+                              { value: "english", label: "english" },
+                            ]}
                           />
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">
-                              Idioma:
-                            </span>
-                            <span className="text-sm font-semibold text-black">
-                              {user.language}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => setEditRow("language")}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
+                        }
+                      />
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-            {selectedField === "pros" && loadingGet === false && pros && (
-              <div className="max-w-lg">
-                <h1 className="text-base font-bold tracking-wide mb-3">
-                  Lista de profesionales:
-                </h1>
+                )}
 
-                <div className="flex flex-col gap-2 mb-4">
-                  {pros.map((professional) => (
-                    <div
-                      key={professional.key}
-                      className="border-2 border-gray-300 rounded-xl overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                        {editRow === professional.key ? (
-                          <div className="flex items-center gap-2 flex-1">
-                            <input
-                              autoFocus
-                              defaultValue={professional.nameComplete}
-                              onChange={(e) => setChanges(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Escape") reset();
-                                else if (e.key === "Enter" && changes)
-                                  handleUpdatePro(professional.key, changes);
-                              }}
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                            />
+                {selectedField === "pros" && loadingGet === false && pros && (
+                  <div className="max-w-lg">
+                    <h1 className="text-base font-bold tracking-wide mb-3">Lista de profesionales:</h1>
+
+                    <div className="flex flex-col gap-2 mb-4">
+                      {pros.map((professional) => (
+                        <EditableRow
+                          key={professional.key}
+                          label="Profesional"
+                          value={professional.nameComplete}
+                          rowKey={professional.key}
+                          category="pros"
+                          rowModify={editRow}
+                          setRowModify={setEditRow}
+                          setChanges={setChanges}
+                          submitChanges={(value) => handleUpdatePro(professional.key, value)}
+                          changes={changes}
+                          validate={combine(required("El nombre es obligatorio"))}
+                          extraActions={
                             <FaCircleXmark
-                              onClick={() => reset()}
-                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                              size={20}
+                              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setConfirmDeletePro(professional.key); }}
+                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer"
+                              size={18}
                             />
-                            <FaCircleCheck
-                              onClick={() => {
-                                if (changes) handleUpdatePro(professional.key, changes);
-                              }}
-                              className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                              size={20}
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            <span className="text-sm font-semibold text-black">
-                              {professional.nameComplete}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setEditRow(professional.key)}
-                                className="text-gray-400 hover:text-teal-700 transition duration-150"
-                              >
-                                <TbPencilCog size={18} />
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeletePro(professional.key)}
-                                className="text-gray-400 hover:text-red-600 transition duration-150"
-                              >
-                                <FaCircleXmark size={18} />
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          }
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Nombre completo..."
-                    value={newPro}
-                    onChange={(e) => setNewPro(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddPro();
-                      }
-                    }}
-                    className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
-                  />
-                  <button
-                    onClick={handleAddPro}
-                    className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap"
-                  >
-                    + Agregar
-                  </button>
-                </div>
-              </div>
-            )}
-            {selectedField === "insurances" && (
-              <InsurancesConfig setLoadingGet={setLoadingGet} />
-            )}
-            {selectedField === "clinicConfig" &&
-              loadingGet === false &&
-              clinicInfo && (
-                <div className="max-w-lg">
-                  <h1 className="text-base font-bold tracking-wide mb-3">
-                    Básico:
-                  </h1>
-                  <div className="flex flex-col gap-2 mb-4">
-                    {(
-                      [
-                        {
-                          key: "name",
-                          label: "Nombre",
-                          value: clinicInfo.name,
-                        },
-                        {
-                          key: "country",
-                          label: "País",
-                          value: clinicInfo.country,
-                        },
-                        {
-                          key: "address",
-                          label: "Dirección",
-                          value: clinicInfo.address,
-                        },
-                      ] as { key: string; label: string; value: string }[]
-                    ).map(({ key, label, value }) => (
-                      <div
-                        key={key}
-                        className="border-2 border-gray-300 rounded-xl overflow-hidden"
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Nombre completo..."
+                        value={newPro}
+                        onChange={(e) => setNewPro(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddPro();
+                          }
+                        }}
+                        className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                      />
+                      <button
+                        onClick={handleAddPro}
+                        className="px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 whitespace-nowrap"
                       >
-                        <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                          {editRow === key ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <span className="text-sm text-gray-500 flex-shrink-0">
-                                {label}:
-                              </span>
-                              <input
-                                autoFocus
-                                defaultValue={value}
-                                onChange={(e) => setChanges(e.target.value)}
-                                onKeyDown={(e: any) => {
-                                  if (e.key === "Escape") reset();
-                                  else if (
-                                    e.key === "Enter" &&
-                                    changes !== null
-                                  )
-                                    handleEditClinicRow(e, key, changes);
-                                }}
-                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                              />
-                              <FaCircleXmark
-                                onClick={(e: any) => handleCancelEditRow(e)}
-                                className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                                size={20}
-                              />
-                              <FaCircleCheck
-                                onClick={(e: any) =>
-                                  handleEditClinicRow(e, key, changes)
-                                }
-                                className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                                size={20}
-                              />
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">
-                                  {label}:
-                                </span>
-                                <span className="text-sm font-semibold text-black">
-                                  {value}
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => setEditRow(key)}
-                                className="text-gray-400 hover:text-teal-700 transition duration-150"
-                              >
-                                <TbPencilCog size={18} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {/* Horarios */}
-                    <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                        {editRow === "schedule" ? (
+                        + Agregar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedField === "insurances" && (
+                  <InsurancesConfig setLoadingGet={setLoadingGet} />
+                )}
+
+                {selectedField === "clinicConfig" && loadingGet === false && clinicInfo && (
+                  <div className="max-w-lg">
+                    <h1 className="text-base font-bold tracking-wide mb-3">Básico:</h1>
+                    <div className="flex flex-col gap-2 mb-4">
+                      {(
+                        [
+                          { key: "name", label: "Nombre", value: clinicInfo.name, required: true },
+                          { key: "country", label: "País", value: clinicInfo.country, required: false },
+                          { key: "address", label: "Dirección", value: clinicInfo.address, required: false },
+                        ] as { key: string; label: string; value: string; required: boolean }[]
+                      ).map(({ key, label, value, required: isRequired }) => (
+                        <EditableRow
+                          key={key}
+                          label={label}
+                          value={value}
+                          rowKey={key}
+                          category="clinicConfig"
+                          rowModify={editRow}
+                          setRowModify={setEditRow}
+                          setChanges={setChanges}
+                          submitChanges={(v) => handleEditClinicRow(key, v)}
+                          changes={changes}
+                          validate={isRequired ? combine(required(`${label} es obligatorio`)) : undefined}
+                        />
+                      ))}
+
+                      {/* Horarios */}
+                      <EditableRow
+                        label="Horarios de atención"
+                        value={`${clinicInfo.initialSchedule} a ${clinicInfo.finalSchedule}`}
+                        rowKey="schedule"
+                        category="clinicConfig"
+                        rowModify={editRow}
+                        setRowModify={setEditRow}
+                        setChanges={setChanges}
+                        submitChanges={() => submitSchedule()}
+                        changes={changes}
+                        onEdit={() => setScheduleChanges({ initial: clinicInfo.initialSchedule, final: clinicInfo.finalSchedule })}
+                        renderInput={
                           <div className="flex items-center gap-2 flex-1">
-                            <span className="text-sm text-gray-500 flex-shrink-0">
-                              Horarios:
-                            </span>
                             <input
                               autoFocus
                               defaultValue={clinicInfo.initialSchedule}
                               placeholder="inicio"
-                              onChange={(e) =>
-                                setScheduleChanges((prev) => ({
-                                  ...prev,
-                                  initial: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e: any) => {
-                                if (e.key === "Escape") reset();
+                              onChange={(e) => setScheduleChanges((prev) => ({ ...prev, initial: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") submitSchedule();
+                                else if (e.key === "Escape") reset();
                               }}
                               className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20"
                             />
-                            <span className="text-gray-400">ù</span>
+                            <span className="text-gray-400">a</span>
                             <input
                               defaultValue={clinicInfo.finalSchedule}
                               placeholder="fin"
-                              onChange={(e) =>
-                                setScheduleChanges((prev) => ({
-                                  ...prev,
-                                  final: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e: any) => {
-                                if (e.key === "Escape") reset();
+                              onChange={(e) => setScheduleChanges((prev) => ({ ...prev, final: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") submitSchedule();
+                                else if (e.key === "Escape") reset();
                               }}
                               className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20"
                             />
-                            <FaCircleXmark
-                              onClick={(e: any) => handleCancelEditRow(e)}
-                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                              size={20}
-                            />
-                            <FaCircleCheck
-                              onClick={async (e: any) => {
-                                e.stopPropagation();
-                                setLoadingGet(true);
-                                await setClinicInfoChanges(
-                                  user.clinicId,
-                                  "initialSchedule",
-                                  scheduleChanges.initial,
-                                );
-                                await setClinicInfoChanges(
-                                  user.clinicId,
-                                  "finalSchedule",
-                                  scheduleChanges.final,
-                                );
-                                const result = await getClinicData(
-                                  user.clinicId,
-                                  "info",
-                                );
-                                if (result) setClinicInfo(result);
-                                showToast("success", "Horario guardado correctamente");
-                                reset();
-                              }}
-                              className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                              size={20}
-                            />
                           </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-500">
-                                Horarios de atención:
-                              </span>
-                              <span className="text-sm font-semibold text-black">
-                                {clinicInfo.initialSchedule} ù{" "}
-                                {clinicInfo.finalSchedule}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                setChanges(null);
-                                setEditRow("schedule");
-                                setScheduleChanges({
-                                  initial: clinicInfo.initialSchedule,
-                                  final: clinicInfo.finalSchedule,
-                                });
-                              }}
-                              className="text-gray-400 hover:text-teal-700 transition duration-150"
-                            >
-                              <TbPencilCog size={18} />
-                            </button>
-                          </>
-                        )}
-                      </div>
+                        }
+                      />
+                    </div>
+
+                    <h1 className="text-base font-bold tracking-wide mb-3">Contacto:</h1>
+                    <div className="flex flex-col gap-2">
+                      {(
+                        [
+                          { key: "telContact", label: "Tel de contacto", value: clinicInfo.telContact, saveKey: "telContact" },
+                          { key: "secondTelContact", label: "Tel auxiliar", value: clinicInfo.secondTelContact, saveKey: "secondTelContact" },
+                          { key: "clinicEmail", label: "Correo electrónico", value: clinicInfo.email, saveKey: "email" },
+                        ] as { key: string; label: string; value: string; saveKey: string }[]
+                      ).map(({ key, label, value, saveKey }) => (
+                        <EditableRow
+                          key={key}
+                          label={label}
+                          value={value}
+                          rowKey={key}
+                          category="clinicConfig"
+                          rowModify={editRow}
+                          setRowModify={setEditRow}
+                          setChanges={setChanges}
+                          submitChanges={(v) => handleEditClinicRow(saveKey, v)}
+                          changes={changes}
+                          validate={key === "clinicEmail" ? emailValidator() : undefined}
+                        />
+                      ))}
                     </div>
                   </div>
-
-                  <h1 className="text-base font-bold tracking-wide mb-3">
-                    Contacto:
-                  </h1>
-                  <div className="flex flex-col gap-2">
-                    {(
-                      [
-                        {
-                          key: "telContact",
-                          label: "Tel de contacto",
-                          value: clinicInfo.telContact,
-                          saveKey: "telContact",
-                        },
-                        {
-                          key: "secondTelContact",
-                          label: "Tel auxiliar",
-                          value: clinicInfo.secondTelContact,
-                          saveKey: "secondTelContact",
-                        },
-                        {
-                          key: "clinicEmail",
-                          label: "Correo electrónico",
-                          value: clinicInfo.email,
-                          saveKey: "email",
-                        },
-                      ] as {
-                        key: string;
-                        label: string;
-                        value: string;
-                        saveKey: string;
-                      }[]
-                    ).map(({ key, label, value, saveKey }) => (
-                      <div
-                        key={key}
-                        className="border-2 border-gray-300 rounded-xl overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                          {editRow === key ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <span className="text-sm text-gray-500 flex-shrink-0">
-                                {label}:
-                              </span>
-                              <input
-                                autoFocus
-                                defaultValue={value}
-                                onChange={(e) => setChanges(e.target.value)}
-                                onKeyDown={(e: any) => {
-                                  if (e.key === "Escape") reset();
-                                  else if (
-                                    e.key === "Enter" &&
-                                    changes !== null
-                                  )
-                                    handleEditClinicRow(e, saveKey, changes);
-                                }}
-                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                              />
-                              <FaCircleXmark
-                                onClick={(e: any) => handleCancelEditRow(e)}
-                                className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer flex-shrink-0"
-                                size={20}
-                              />
-                              <FaCircleCheck
-                                onClick={(e: any) =>
-                                  handleEditClinicRow(e, saveKey, changes)
-                                }
-                                className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer flex-shrink-0"
-                                size={20}
-                              />
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500">
-                                  {label}:
-                                </span>
-                                <span className="text-sm font-semibold text-black">
-                                  {value}
-                                </span>
-                              </div>
-                              <button
-                                onClick={() => setEditRow(key)}
-                                className="text-gray-400 hover:text-teal-700 transition duration-150"
-                              >
-                                <TbPencilCog size={18} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
               </div>
             </div>
           </div>
