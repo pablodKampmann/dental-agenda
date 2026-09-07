@@ -35,7 +35,7 @@ export function PracticeTable({
     return (
         <div
             id="billing-target"
-            className="scroll-rounded rounded-lg w-full h-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg"
+            className="rounded-lg w-full h-full border-2 border-gray-600 flex-1 overflow-y-auto bg-gray-300 bg-opacity-30 overflow-x-hidden shadow-lg"
         >
             {/* Header sticky */}
             <div

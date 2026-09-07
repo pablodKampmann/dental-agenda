@@ -1,7 +1,7 @@
 'use client'
 
 import { getPatient } from './../../../services/patients/getPatient';
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { updatePatient } from './../../../services/patients/updatePatient';
 import { ConfirmAlert } from './../../../components/shared/dialogAlerts/confirmAlert';
 import { deletePatient } from './../../../services/patients/deletePatient';
@@ -12,15 +12,16 @@ import { usePathname } from 'next/navigation';
 import { PatientRecord } from './../../../components/patients/ui/patientRecord';
 import { getInsuranceOptions } from './../../../services/options/getInsuranceOpt';
 import { getInsurancePlans } from './../../../services/options/getInsurancePlans';
-import { MiniCalendar } from '@/components/appointments/ui/MiniCalendar';
 import dayjs from 'dayjs';
 import { PatientRecordSkeleton } from './../../../components/patients/ui/patientRecordSkeleton';
 import { useToast } from '@/context/ToastContext';
 import { ScaleLoader } from 'react-spinners';
-import { FaCheck, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
+import { FaCheck } from 'react-icons/fa6';
 import { getUser } from './../../../services/auth/getUser';
 import { EditableRow } from '@/components/patients/ui/editableRow';
-import { TbPencilCog } from 'react-icons/tb';
+import { SelectField } from '@/components/patients/ui/fields/selectField';
+import { DateField } from '@/components/patients/ui/fields/dateField';
+import { combine, required, numeric, phone as phoneValidator, email as emailValidator } from '@/lib/validators';
 export default function PatientId() {
   const router = useRouter();
   const [isLoad, setIsLoad] = useState(true);
@@ -38,8 +39,6 @@ export default function PatientId() {
   const [insuranceDraft, setInsuranceDraft] = useState<{ id: string; name: string } | null>(null);
   const [planDraft, setPlanDraft] = useState<{ id: string; name: string } | null>(null);
   const [date, setDate] = useState<null | any>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const datePickerRef = useRef<HTMLDivElement>(null);
   const [dateFormatted, setDateFormatted] = useState<null | any>(null);
   const [clinicId, setClinicId] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -68,47 +67,30 @@ export default function PatientId() {
     get();
   }, [id, clinicId]);
 
-  async function submitInsuranceChanges() {
-    if (!insuranceDraft) { setRowModify(''); return; }
-    setLoadingCategory('medic');
-    setRowModify('');
-    setChanges('');
-    const newPatient = await updatePatient(
-      { insurance: insuranceDraft.name, insuranceId: insuranceDraft.id, plan: '', planId: '' },
-      null, id, clinicId as string
-    );
-    if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
-    else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
-    setInsuranceDraft(null);
-  }
-
-  async function submitPlanChanges() {
-    if (!planDraft?.id) { setRowModify(''); setPlanDraft(null); return; }
-    setLoadingCategory('medic');
-    setRowModify('');
-    setChanges('');
-    const newPatient = await updatePatient(
-      { plan: planDraft.name, planId: planDraft.id },
-      null, id, clinicId as string
-    );
-    if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
-    else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
-    setPlanDraft(null);
-  }
-
-  async function submitChanges(changes: string, table: string, category: string) {
-    if (table === 'insurance') { await submitInsuranceChanges(); return; }
-    if (table === 'plan') { await submitPlanChanges(); return; }
+  async function submitPayload(payload: Record<string, string>, category: string) {
     setLoadingCategory(category);
     setRowModify('');
     setChanges('');
-    if (changes !== '') {
-      const newPatient = await updatePatient(changes, table, id, clinicId as string);
-      if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
-      else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
-    } else {
-      setLoadingCategory('');
-    }
+    const newPatient = await updatePatient(payload, null, id, clinicId as string);
+    if (newPatient) { setPatient(newPatient); setCheck(true); showToast("success", "Datos actualizados correctamente"); }
+    else { setLoadingCategory(''); showToast("error", "Error al actualizar los datos"); }
+  }
+
+  function submitChanges(changes: string, table: string, category: string) {
+    if (changes === '') { setRowModify(''); return; }
+    submitPayload({ [table]: changes }, category);
+  }
+
+  function submitInsuranceChanges() {
+    if (!insuranceDraft) { setRowModify(''); return; }
+    submitPayload({ insurance: insuranceDraft.name, insuranceId: insuranceDraft.id, plan: '', planId: '' }, 'medic');
+    setInsuranceDraft(null);
+  }
+
+  function submitPlanChanges() {
+    if (!planDraft?.id) { setRowModify(''); setPlanDraft(null); return; }
+    submitPayload({ plan: planDraft.name, planId: planDraft.id }, 'medic');
+    setPlanDraft(null);
   }
 
   useEffect(() => {
@@ -142,17 +124,6 @@ export default function PatientId() {
       setChanges(date.format('DD/MM/YYYY'));
     }
   }, [date]);
-
-  useEffect(() => {
-    if (!showDatePicker) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
-        setShowDatePicker(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showDatePicker]);
 
   useEffect(() => {
     async function fetchClinicId() {
@@ -221,6 +192,7 @@ export default function PatientId() {
                         setChanges={setChanges}
                         submitChanges={submitChanges}
                         changes={changes}
+                        validate={combine(required('El nombre es obligatorio'))}
                       />
                       <EditableRow
                         label="Apellido"
@@ -232,6 +204,7 @@ export default function PatientId() {
                         setChanges={setChanges}
                         submitChanges={submitChanges}
                         changes={changes}
+                        validate={combine(required('El apellido es obligatorio'))}
                       />
                       <EditableRow
                         label="DNI"
@@ -243,6 +216,7 @@ export default function PatientId() {
                         setChanges={setChanges}
                         submitChanges={submitChanges}
                         changes={changes}
+                        validate={combine(required('El DNI es obligatorio'), numeric('El DNI debe ser numérico'))}
                       />
                       <EditableRow
                         label="Domicilio"
@@ -266,23 +240,10 @@ export default function PatientId() {
                         submitChanges={submitChanges}
                         changes={changes}
                         renderInput={
-                          <div className="flex-1 relative" ref={datePickerRef}>
-                            <button
-                              type="button"
-                              onClick={() => setShowDatePicker(!showDatePicker)}
-                              className="w-full text-left border-2 border-gray-300 rounded-lg px-3 py-1 text-sm bg-gray-100 text-black"
-                            >
-                              {date ? date.format('DD/MM/YYYY') : dateFormatted ? dateFormatted.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
-                            </button>
-                            {showDatePicker && (
-                              <div className="absolute bottom-full left-0 z-50 mb-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64">
-                                <MiniCalendar
-                                  value={date ?? dateFormatted}
-                                  onChange={(d) => { setDate(d); setShowDatePicker(false); }}
-                                />
-                              </div>
-                            )}
-                          </div>
+                          <DateField
+                            value={date ?? dateFormatted}
+                            onChange={(d) => setDate(d)}
+                          />
                         }
                       />
                       <EditableRow
@@ -296,19 +257,16 @@ export default function PatientId() {
                         submitChanges={submitChanges}
                         changes={changes}
                         renderInput={
-                          <select
-                            defaultValue={patient.gender}
-                            onChange={(e) => setChanges(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') submitChanges(changes, 'gender', 'basic');
-                              else if (e.key === 'Escape') setRowModify('');
-                            }}
-                            autoFocus
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                          >
-                            <option value="male">Masculino</option>
-                            <option value="female">Femenino</option>
-                          </select>
+                          <SelectField
+                            value={changes || patient.gender}
+                            onChange={setChanges}
+                            onSubmit={() => submitChanges(changes, 'gender', 'basic')}
+                            onCancel={() => setRowModify('')}
+                            options={[
+                              { value: 'male', label: 'Masculino' },
+                              { value: 'female', label: 'Femenino' },
+                            ]}
+                          />
                         }
                       />
                     </div>
@@ -330,6 +288,7 @@ export default function PatientId() {
                           setChanges={setChanges}
                           submitChanges={submitChanges}
                           changes={changes}
+                          validate={phoneValidator()}
                         />
                         <EditableRow
                           label="Correo"
@@ -341,6 +300,7 @@ export default function PatientId() {
                           setChanges={setChanges}
                           submitChanges={submitChanges}
                           changes={changes}
+                          validate={emailValidator()}
                         />
                       </div>
                     </div>
@@ -360,23 +320,16 @@ export default function PatientId() {
                           submitChanges={submitChanges}
                           changes={changes}
                           renderInput={
-                            <select
+                            <SelectField
                               value={insuranceDraft?.id ?? ''}
-                              onChange={(e) => {
-                                const opt = insuranceOptions?.find(o => o.id === e.target.value);
+                              onChange={(value) => {
+                                const opt = insuranceOptions?.find(o => o.id === value);
                                 if (opt) setInsuranceDraft(opt);
                               }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') submitInsuranceChanges();
-                                else if (e.key === 'Escape') { setRowModify(''); setInsuranceDraft(null); }
-                              }}
-                              autoFocus
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                            >
-                              {insuranceOptions?.map((opt) => (
-                                <option key={opt.id} value={opt.id}>{opt.name}</option>
-                              ))}
-                            </select>
+                              onSubmit={submitInsuranceChanges}
+                              onCancel={() => { setRowModify(''); setInsuranceDraft(null); }}
+                              options={insuranceOptions?.map(opt => ({ value: opt.id, label: opt.name })) ?? []}
+                            />
                           }
                         />
 
@@ -411,25 +364,17 @@ export default function PatientId() {
                                 loadingPlans ? (
                                   <span className="text-sm text-gray-400 flex-1">Cargando...</span>
                                 ) : (
-                                  <select
+                                  <SelectField
                                     value={planDraft?.id ?? ''}
-                                    onChange={(e) => {
-                                      const opt = planOptions.find(o => o.id === e.target.value);
+                                    onChange={(value) => {
+                                      const opt = planOptions.find(o => o.id === value);
                                       if (opt) setPlanDraft(opt);
                                     }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') submitPlanChanges();
-                                      else if (e.key === 'Escape') { setRowModify(''); setPlanDraft(null); }
-                                    }}
-                                    autoFocus
-                                    className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-                                  >
-                                    {!planDraft?.id && <option value="" disabled>Seleccionar...</option>}
-                                    {planOptions.length === 0 && planDraft?.id && <option value="" disabled>Sin planes</option>}
-                                    {planOptions.map((opt) => (
-                                      <option key={opt.id} value={opt.id}>{opt.name}</option>
-                                    ))}
-                                  </select>
+                                    onSubmit={submitPlanChanges}
+                                    onCancel={() => { setRowModify(''); setPlanDraft(null); }}
+                                    placeholder={planOptions.length === 0 ? 'Sin planes' : 'Seleccionar...'}
+                                    options={planOptions.map(opt => ({ value: opt.id, label: opt.name }))}
+                                  />
                                 )
                               }
                             />
@@ -454,49 +399,18 @@ export default function PatientId() {
                 {/* Notes */}
                 <div className="mt-4">
                   <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Observaciones</h3>
-                  <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
-                    <div className="flex items-start justify-between px-3 py-2 bg-gray-50 gap-2">
-                      {rowModify === 'notes' ? (
-                        <div className="flex flex-col gap-2 flex-1">
-                          <textarea
-                            autoFocus
-                            defaultValue={patient.notes}
-                            onChange={(e) => setChanges(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Escape') setRowModify(''); }}
-                            rows={3}
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black resize-none w-full"
-                          />
-                          <div className="flex gap-2 justify-end">
-                            <FaCircleXmark
-                              onClick={() => setRowModify('')}
-                              className="text-gray-400 hover:text-red-600 transition duration-150 cursor-pointer"
-                              size={20}
-                            />
-                            <FaCircleCheck
-                              onClick={() => submitChanges(changes, 'notes', 'notes')}
-                              className="text-teal-600 hover:text-teal-700 transition duration-150 cursor-pointer"
-                              size={20}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <p className="text-sm text-black flex-1 whitespace-pre-wrap min-h-[2rem]">
-                            {patient.notes
-                              ? patient.notes
-                              : <span className="text-gray-400 italic">Sin observaciones</span>
-                            }
-                          </p>
-                          <button
-                            onClick={() => { setRowModify('notes'); setChanges(patient.notes ?? ''); }}
-                            className="text-gray-400 hover:text-teal-700 transition duration-150 flex-shrink-0 mt-0.5"
-                          >
-                            <TbPencilCog size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  <EditableRow
+                    label="Observaciones"
+                    value={patient.notes}
+                    rowKey="notes"
+                    category="notes"
+                    rowModify={rowModify}
+                    setRowModify={setRowModify}
+                    setChanges={setChanges}
+                    submitChanges={submitChanges}
+                    changes={changes}
+                    multiline
+                  />
                 </div>
 
                 {/* Delete */}
