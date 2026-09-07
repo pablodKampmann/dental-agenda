@@ -1,6 +1,7 @@
 import { db } from "@/lib/firebase";
 import { ref, set, get } from "firebase/database";
 import { getUser } from "../auth/getUser";
+import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
 export async function SetPatients(
     name: any, lastName: any, gender: any, date: any, dni: any, num: any,
@@ -38,6 +39,8 @@ export async function SetPatients(
             affiliateNum: affiliate,
             timestamp: Date.now(),
         });
+
+        invalidateSidebarCarousel();
     } catch (error) {
         console.error(error);
         return "error";

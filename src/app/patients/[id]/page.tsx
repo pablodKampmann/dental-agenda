@@ -164,13 +164,13 @@ export default function PatientId() {
 
   if (id !== null) {
     return (
-      <div className="h-[calc(100vh-68px)] overflow-y-auto">
+      <div className="h-[calc(100vh-58px)] overflow-y-auto">
         {isLoad ? (
-          <div className="ml-4 mr-2 px-4 pb-4 pt-6">
+          <div className="px-4 pb-4 pt-4">
             <PatientRecordSkeleton />
           </div>
         ) : (
-          <div className="ml-4 mr-2 px-4 pb-4 pt-6 animate-page-drop">
+          <div className="px-4 pb-4 pt-4 animate-page-drop">
             <ConfirmAlert
               open={openAlert}
               setOpen={setOpenAlert}

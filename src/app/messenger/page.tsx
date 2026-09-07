@@ -18,7 +18,7 @@ export default function Messenger() {
     }, [router]);
 
     return (
-        <div className="h-[calc(100vh-68px)] flex items-center justify-center select-none">
+        <div className="h-[calc(100vh-58px)] flex items-center justify-center select-none">
             <div className="flex flex-col items-center gap-6 text-center px-8 max-w-md animate-page-drop">
 
                 {/* Icono principal */}

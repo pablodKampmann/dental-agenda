@@ -53,7 +53,7 @@ src/
 │   │   └── odontogram/           # Tooth, OdontogramaGrid, Legend, HallazgoPicker, FloatingAnchor...
 │   ├── practices/ui/            # UI de Aranceles
 │   ├── config/
-│   ├── navigation/               # desktopVersion.tsx, mobileVersion.tsx
+│   ├── navigation/               # desktopVersion.tsx, mobileVersion.tsx, UserMenu.tsx, SidebarCarousel.tsx
 │   └── shared/                   # ver sección "Antes de crear UI nueva"
 ├── context/
 │   └── AuthContext.tsx           # useAuth() → { user, loading, refreshUser }
@@ -63,6 +63,7 @@ src/
 │   └── odontograma/               # dominio puro del odontograma — sin Firebase ni React
 ├── services/                      # TODAS las operaciones contra Firebase, por feature
 │   ├── appointments/, patients/, practices/, config/, auth/, options/ (obras sociales)
+│   ├── navigation/                 # getSidebarCarouselData, sidebarCarouselEvents (ver "Sidebar y topbar")
 │   └── odontograma/                # lectura/escritura del odontograma (B2-2, B2-3...)
 ├── dev/                            # scripts de seed/migración usados por app/dev/page.tsx
 └── __tests__/                      # vitest — services, components, lib
@@ -190,6 +191,19 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 - Confirmación obligatoria antes de acciones destructivas, vía `AlertDialog` (Radix).
 - **Lo que va en todos los tabs de una sección va en el componente compartido, no en cada `page.tsx`.** `PatientRecord` (`src/components/patients/ui/patientRecord.tsx`) es el ejemplo: el link "← Pacientes" y el resumen de Última visita/Próximo turno (`appointmentsSummary.tsx`) viven adentro de `PatientRecord`, no en `[id]/page.tsx`. Como cada tab de paciente monta `PatientRecord`, ambos aparecen en cualquier tab sin duplicar código ni arriesgarse a que un tab nuevo se olvide de agregarlos. Antes de copiar un bloque de UI de un `page.tsx` a otro, primero preguntarse si no debería subir al componente compartido que ya montan los dos.
 - **Loading state por pantalla, no un spinner que tapa todo.** `Loading` (`src/components/shared/loading.tsx`, el diente girando a pantalla completa) se usa en 7+ pantallas del proyecto — no tocarlo para un caso puntual. Para una pantalla con estructura ya conocida (como la ficha de paciente), un skeleton dedicado que respeta el layout real (`patientRecordSkeleton.tsx`, con `animate-pulse`) da una transición mucho menos brusca al cambiar de tab que un overlay que oculta todo.
+
+**Sidebar y topbar (desktop)**
+- Sidebar `w-40` (160px), topbar `h-14` (56px + `border-b-2`). El offset global que reserva ese espacio vive en un solo lugar, `src/app/layout.tsx`: `mt-[58px] sm:ml-40` sobre el wrapper que envuelve `{children}`. Cualquier overlay/backdrop fullscreen (`loading.tsx`, `confirmAlert.tsx`, `logOutAlert.tsx`, `HistorialTimeline.tsx`) replica ese mismo valor a mano (`sm:left-40`, `sm:top-[58px]`) porque son `fixed` y no heredan el offset del layout — si el ancho del sidebar o el alto del topbar cambian de nuevo, hay que tocar los dos lugares.
+- Si una página necesita su propio alto de contenedor (`h-[calc(100vh-Npx)]`), el número tiene que ser `58`, no `68` — `68` era el alto del topbar viejo (antes de compactarlo) y quedó pisoteado en varias páginas hasta que se corrigió en esta sesión. El topbar **mobile** (`mobileVersion.tsx`) sigue siendo más alto (68px) y no se tocó — no confundir los dos números.
+- **Margen de página estandarizado: `px-4 pt-4 pb-4` (16px, simétrico en las 4 direcciones), siempre.** Ninguna página debería inventar `ml-4 mr-2` ni un componente hijo meter su propio `mx-*`/`mr-*` extra "para separar" — eso fue justamente el bug que hubo que deshacer en Aranceles (`PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel` tenían cada uno su propio margen lateral, ninguno coincidía con el del toolbar de arriba). El gap entre elementos dentro de una página se resuelve con `gap-*` en el contenedor flex, no con márgenes sueltos en cada hijo.
+- El nav de `desktopVersion.tsx` es una lista de filas (ícono + label, hover con borde blanco, separadores finos entre ítems) — no un rail de íconos colapsado. `Configuración` es un ítem más de esa lista (no vive aparte); el bloque inferior fijo solo tiene Cerrar Sesión + el gear de acceso directo.
+- **`UserMenu.tsx`** es el dropdown del usuario en el topbar: cierre por click afuera (`useOutsideClick`) y por Escape, semántica de `<button>` real. Cualquier dropdown nuevo en el proyecto debería copiar este patrón en vez de reinventar el manejo de apertura/cierre a mano.
+
+**`SidebarCarousel.tsx`** — el carrusel de 4 slides al fondo del sidebar, arriba de Cerrar Sesión: turnos de hoy (+ próximos, hasta 3), cumpleaños de los próximos 7 días, pacientes nuevos del mes (hasta 3 nombres) y carga semanal (con rango de fechas y un mini gráfico de barras por día). Cosas a saber antes de tocarlo:
+- Es un **slider real**, no un swap de contenido: los 4 slides están en fila dentro de un track (`flex`, ancho `400%`), y lo único que se anima es `transform: translateX()` de ese track — una sola transición CSS (`TRACK_TRANSITION`), sin `setTimeout` copiando duraciones a mano. El drag/swipe suma su offset en vivo sobre la posición ya asentada del slide actual; soltar el gesto solo cambia el índice de slide, la misma transición interpola el resto. El track lleva `items-start` a propósito — sin eso, flexbox estira los 4 slides a la altura del más alto y el alto-por-slide deja de tener sentido.
+- El alto del contenedor se anima (`ResizeObserver` sobre el slide activo, o sobre el estado de loading/error) para que cada slide — y el propio loading/error — ocupe solo lo que su contenido necesita, nunca una altura fija compartida.
+- **No es realtime.** `getSidebarCarouselData()` (`src/services/navigation/`) hace lecturas puntuales (`get()`, no `onValue()`). Se refresca solo en dos momentos: al montar, y cuando llega el evento `SIDEBAR_CAROUSEL_REFRESH_EVENT` (`sidebarCarouselEvents.ts`). Deliberadamente no hay polling — un service que muta un dato que el carrusel muestra dispara `invalidateSidebarCarousel()` después del write exitoso, así que la actualización es instantánea (no "hasta 15 minutos después") y no hay lecturas de más cuando nada cambió. Cobertura actual, los 5 services que tocan datos que el carrusel muestra: `setAppointment`, `deleteAppointment`, `SetPatients`, `deletePatient` (siempre) y `updatePatient` (solo si el payload toca `birthDate`, `name` o `lastName` — ver `CAROUSEL_RELEVANT_FIELDS` ahí mismo, para no disparar el evento por una edición de teléfono/email/obra social que al carrusel no le importa). **Si se agrega otro service que crea/borra/edita algo que el carrusel muestra, hay que sumarle la misma llamada** — si no, ese dato queda desactualizado hasta el próximo refresh de página.
+- `src/services/patients/getAllPatients.ts` es el único service que trae **todos** los pacientes de la clínica sin paginar (a diferencia de `getPatients`, que sí pagina) — lo usan los cálculos de cumpleaños y pacientes nuevos del carrusel. No usarlo para listar pacientes en UI (para eso sigue siendo `getPatients`).
 
 ---
 

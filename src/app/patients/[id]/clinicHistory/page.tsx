@@ -202,8 +202,8 @@ export default function ClinicHistory() {
         const vista = vistaOverride ?? vistaSugerida;
 
         return (
-            <div className="h-[calc(100vh-68px)] overflow-y-auto">
-                <div className='ml-4 px-4 pb-4 pt-6 mr-2 relative'>
+            <div className="h-[calc(100vh-58px)] overflow-y-auto">
+                <div className='px-4 pb-4 pt-4 relative'>
                 {isLoad ? (
                     <PatientRecordSkeleton />
                 ) : (

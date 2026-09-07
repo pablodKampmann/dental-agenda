@@ -1,173 +1,110 @@
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React from "react";
 import { FaUsers, FaTooth, FaDollarSign } from "react-icons/fa";
-import { IoLogOutSharp, IoSettingsOutline } from "react-icons/io5";
-import {
-  IoMdArrowDropdown,
-  IoMdArrowDropup,
-  IoLogoWhatsapp,
-} from "react-icons/io";
+import { IoSettingsOutline } from "react-icons/io5";
+import { IoLogoWhatsapp } from "react-icons/io";
 import { MdNotificationsNone, MdBarChart } from "react-icons/md";
-import { RiUserSettingsFill } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
-//import toast, { Toaster } from 'react-hot-toast';
 import { BsCalendar2WeekFill } from "react-icons/bs";
-//import { PiCloudCheckFill } from "react-icons/pi";
+import { LogOut } from "lucide-react";
 import { AvatarFallback } from "../shared/AvatarFallback";
+import { UserMenu } from "./UserMenu";
+import { SidebarCarousel } from "./SidebarCarousel";
 
 interface props {
   openLogOutAlert: boolean;
   setOpenLogOutAlert: (value: boolean) => void;
 }
 
+const NAV_ITEMS = [
+  { href: "/agenda", label: "Agenda", icon: BsCalendar2WeekFill, match: (p: string) => p === "/agenda" },
+  { href: "/patients", label: "Pacientes", icon: FaUsers, match: (p: string) => p.includes("/patients") },
+  { href: "/tariffs", label: "Aranceles", icon: FaDollarSign, match: (p: string) => p === "/tariffs" },
+  { href: "/messenger", label: "Mensajería", icon: IoLogoWhatsapp, match: (p: string) => p === "/messenger" },
+  { href: "/estadisticas", label: "Estadísticas", icon: MdBarChart, match: (p: string) => p === "/estadisticas" },
+] as const;
+
 export function DesktopVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
   const pathname = usePathname();
-  const [openUserMenu, setOpenUserMenu] = useState(false);
   const { user: data } = useAuth();
-  //const notify = () => toast.success('Successfully toasted!');
 
   return (
     <div>
-      {/*  <Toaster
-                toastOptions={{
-                    success: {
-                        className: 'border-2 border-green-500 p-4 rounded-md',
-                    },
-                }}
-            />*/}
-
-      <div className="fixed top-0 h-18 left-0 z-50 w-full border-b-4 bg-teal-950 border-teal-700">
-        <div className="flex px-3 py-3 items-center justify-between">
-          <div className="flex items-center ml-1 select-none mt-1 mb-1 font-bold ">
-            <FaTooth size={30} />
-            <span className="ml-3 text-2xl">Admin</span>
-            <span className="bg-teal-600 px-1.5 rounded-xl ml-1 text-lg">
+      <div className="fixed top-0 h-14 left-0 z-50 w-full border-b-2 bg-teal-950 border-teal-700">
+        <div className="flex h-full px-3 items-center justify-between">
+          <div className="flex items-center select-none font-bold">
+            <FaTooth size={22} />
+            <span className="ml-2 text-lg">Admin</span>
+            <span className="bg-teal-600 px-1.5 rounded-lg ml-1 text-sm">
               PANEL
             </span>
           </div>
           {data ? (
             <div className="flex items-center">
               <MdNotificationsNone
-                size={36}
-                className="mr-3 bg-white rounded-full bg-opacity-10 hover:bg-opacity-15 hover:border-opacity-70 border-2 border-transparent hover:border-white transition duration-150 cursor-pointer p-1"
+                size={32}
+                className="mr-2 bg-white rounded-full bg-opacity-10 hover:bg-opacity-15 hover:border-opacity-70 border-2 border-transparent hover:border-white transition duration-150 cursor-pointer p-1"
               />
-              <div
-                onClick={() => setOpenUserMenu(!openUserMenu)}
-                className={`${openUserMenu ? "rounded-t-xl border-white border-opacity-70 " : "hover:border-white hover:border-opacity-70  rounded-full hover:bg-opacity-15"} flex px-3 cursor-pointer w-56 justify-center relative  items-center mr-2  border-transparent border-2 bg-white bg-opacity-10  transition duration-150 py-1  `}
-              >
-                <p className="w-full flex justify-start text-base font-medium select-none text-nowrap">
-                  {data.displayName}
-                </p>
-                {openUserMenu ? (
-                  <>
-                    <IoMdArrowDropup size={24} />
-                    <div className="absolute top-8 w-56   shadow-lg border-t  border-b-2 border-opacity-70 bg-teal-950  text-white border-white border-x-2  transition duration-150 rounded-b-xl   animate-user-menu">
-                      <Link
-                        href="/config"
-                        className="px-3 bg-white hover:bg-opacity-20    bg-opacity-10 py-1 select-none flex items-center"
-                      >
-                        <RiUserSettingsFill className="mr-1 " />{" "}
-                        Configuración{" "}
-                      </Link>
-                      <div className="w-full h-[1px] bg-white bg-opacity-70"></div>
-                      <div
-                        onClick={() => setOpenLogOutAlert(true)}
-                        className="px-3 py-1  bg-white bg-opacity-10  hover:bg-opacity-20 rounded-b-xl select-none flex items-center"
-                      >
-                        <IoLogOutSharp className="mr-1" />
-                        Cerrar Sesión
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <IoMdArrowDropdown size={24} />
-                )}
-              </div>
+              <UserMenu
+                displayName={data.displayName ?? ""}
+                onLogOut={() => setOpenLogOutAlert(true)}
+                className="mr-2"
+              />
               <Link className="focus:outline-none" href={"/config"}>
-                <AvatarFallback
-                  displayName={data.displayName}
-                />
+                <AvatarFallback displayName={data.displayName} size={32} />
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2 animate-pulse">
-              <div className="w-9 h-9 rounded-full bg-white bg-opacity-10" />
-              <div className="w-56 h-8 rounded-xl bg-white bg-opacity-10 mr-2" />
-              <div className="w-10 h-10 rounded-full bg-white bg-opacity-10" />
+              <div className="w-8 h-8 rounded-full bg-white bg-opacity-10" />
+              <div className="w-48 h-7 rounded-xl bg-white bg-opacity-10 mr-2" />
+              <div className="w-8 h-8 rounded-full bg-white bg-opacity-10" />
             </div>
           )}
         </div>
       </div>
 
       <div
-        className="fixed top-0 left-0 z-40 w-56 h-screen pt-20 transition-transform -translate-x-full border-r-4 border-teal-700 sm:translate-x-0 bg-teal-900	"
+        className="fixed top-0 left-0 z-40 w-40 h-screen pt-14 transition-transform -translate-x-full border-r-2 border-teal-700 sm:translate-x-0 bg-teal-900"
         aria-label="Sidebar"
       >
-        <div className="h-full pb-4 space-y-2 mx-3 font-medium overflow-y-auto tracking-tight">
-          <Link
-            href="/agenda"
-            prefetch={true}
-            className={`${pathname === "/agenda" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2   border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
-          >
-            <BsCalendar2WeekFill size={22} />
-            <p className="flex-1 ml-3 select-none">Agenda</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-          <Link
-            href="/patients"
-            prefetch={true}
-            className={`${pathname.includes("/patients") ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white  hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
-          >
-            <FaUsers size={26} />
-            <p className="flex-1 ml-3 select-none">Pacientes</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-          <Link
-            href="/tariffs"
-            prefetch={true}
-            className={`${pathname === "/tariffs" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
-          >
-            <FaDollarSign size={26} />
-            <p className="flex-1 ml-3 select-none">Aranceles</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-          <Link
-            href="/messenger"
-            prefetch={true}
-            className={`${pathname === "/messenger" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
-          >
-            <IoLogoWhatsapp size={26} />
-            <p className="flex-1 ml-3 select-none">Mensajeria</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
-          <Link
-            href="/estadisticas"
-            prefetch={true}
-            className={`${pathname === "/estadisticas" ? "bg-teal-950" : "bg-white bg-opacity-5 hover:bg-opacity-10"} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl w-full transition duration-150`}
-          >
-            <MdBarChart size={26} />
-            <p className="flex-1 ml-3 select-none">Estadísticas</p>
-          </Link>
-          <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+        <div className="h-full pb-3 space-y-2 mx-2 pt-2 font-medium overflow-y-auto tracking-tight">
+          {NAV_ITEMS.map(({ href, label, icon: Icon, match }, i) => (
+            <React.Fragment key={href}>
+              <Link
+                href={href}
+                prefetch={true}
+                className={`${match(pathname) ? "bg-teal-950" : "bg-white bg-opacity-5 hover:bg-opacity-10"} flex items-center gap-2.5 border-2 border-transparent hover:border-white hover:border-opacity-70 text-left px-2.5 py-2 rounded-xl w-full text-sm transition duration-150`}
+              >
+                <Icon size={17} className="shrink-0" />
+                <span className="select-none truncate">{label}</span>
+              </Link>
+              {i < NAV_ITEMS.length - 1 && (
+                <hr className="border-teal-700 border rounded-full" />
+              )}
+            </React.Fragment>
+          ))}
         </div>
         <div className="absolute bottom-0 w-full">
-          <hr className="border-teal-700  border-2 mx-3 rounded-full mb-2" />
-          <div className="flex mb-3 mx-3.5 space-x-2">
+          <div className="mx-2 mb-2">
+            <SidebarCarousel />
+          </div>
+          <hr className="border-teal-700 border mx-2 rounded-full mb-2" />
+          <div className="flex mb-2 mx-2 gap-1.5">
             <button
               onClick={() => setOpenLogOutAlert(!openLogOutAlert)}
-              className="bg-white px-1 py-1 bg-opacity-5 hover:bg-opacity-10 flex border-2 text-nowrap border-transparent hover:border-white border-opacity-20 text-left items-center text-sm rounded-xl  w-full transition duration-150"
+              className="bg-white px-1 py-1.5 bg-opacity-5 hover:bg-opacity-10 flex items-center justify-center gap-1 text-nowrap text-[10px] font-medium border-2 border-transparent hover:border-white border-opacity-20 rounded-xl flex-1 min-w-0 transition duration-150"
             >
-              <IoLogOutSharp size={28} className="" />
-              <p>Cerrar Sesión</p>
+              <LogOut size={14} className="shrink-0" />
+              Cerrar Sesión
             </button>
             <Link
               href="/config"
               prefetch={true}
-              className={`${pathname === "/config" ? "bg-teal-950  " : "bg-white  bg-opacity-5 hover:bg-opacity-10 "} flex px-1 py-1 border-2 border-transparent hover:border-white border-opacity-20  items-center justify-center rounded-xl  w-full transition duration-150`}
+              className={`${pathname === "/config" ? "bg-teal-950" : "bg-white bg-opacity-5 hover:bg-opacity-10"} flex px-1.5 py-1.5 border-2 border-transparent hover:border-white border-opacity-20 items-center justify-center rounded-xl shrink-0 transition duration-150`}
             >
-              <IoSettingsOutline size={28} />
+              <IoSettingsOutline size={18} />
             </Link>
           </div>
         </div>

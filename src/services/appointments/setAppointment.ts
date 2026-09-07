@@ -2,6 +2,7 @@ import { db } from "@/lib/firebase";
 import { ref, set, get, push } from "firebase/database";
 import type { dateData } from "@/components/appointments/appointmentUtils";
 import { getUser } from "./../auth/getUser";
+import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
 export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string) {
     try {
@@ -36,6 +37,8 @@ export async function setAppointment(patientId: number, dateData: dateData, reas
         });
         dbRef = ref(db, `/clinics/${clinicId}/patients/${patientId}/appointments/`);
         await push(dbRef, formattedDate)
+
+        invalidateSidebarCarousel();
     } catch (error) {
         console.error(error);
         return null;

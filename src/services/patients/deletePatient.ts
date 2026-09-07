@@ -1,6 +1,7 @@
 import { db } from "@/lib/firebase";
 import { ref, remove, get } from "firebase/database";
 import { getUser } from "../auth/getUser";
+import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
 export async function deletePatient(id: string | null) {
     try {
@@ -34,6 +35,7 @@ export async function deletePatient(id: string | null) {
         const snapshot = await get(patientRef);
         if (snapshot.exists()) {
             await remove(patientRef);
+            invalidateSidebarCarousel();
         }
     } catch (error) {
         console.error(error);
