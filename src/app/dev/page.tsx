@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { runSeedPatients, SEED_PATIENTS, SEED_PATIENTS_EXTRA } from "../../dev/seedPatients";
 import { runMigrateAddTimestamps } from "../../dev/migrateAddTimestamps";
+import { runSeedOdontograma } from "../../dev/seedOdontograma";
 
 export default function DevPage() {
     const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
@@ -13,6 +14,9 @@ export default function DevPage() {
     const [migrateStatus, setMigrateStatus] = useState<"idle" | "running" | "done">("idle");
     const [migrateResult, setMigrateResult] = useState<{ updated: number; skipped: number; failed: string[] } | null>(null);
     const [migrateError, setMigrateError] = useState<string | null>(null);
+    const [odontoStatus, setOdontoStatus] = useState<"idle" | "running" | "done">("idle");
+    const [odontoResult, setOdontoResult] = useState<{ ok: boolean; pacienteId?: string; mensaje: string; fallidos: string[] } | null>(null);
+    const [odontoError, setOdontoError] = useState<string | null>(null);
 
     async function handleMigrate() {
         setMigrateStatus("running");
@@ -25,6 +29,19 @@ export default function DevPage() {
             setMigrateError(e.message ?? "Error desconocido");
         }
         setMigrateStatus("done");
+    }
+
+    async function handleSeedOdontograma() {
+        setOdontoStatus("running");
+        setOdontoResult(null);
+        setOdontoError(null);
+        try {
+            const res = await runSeedOdontograma();
+            setOdontoResult(res);
+        } catch (e: any) {
+            setOdontoError(e.message ?? "Error desconocido");
+        }
+        setOdontoStatus("done");
     }
 
     async function handleSeedExtra() {
@@ -206,6 +223,43 @@ export default function DevPage() {
                                     {migrateResult.failed.map((f, i) => <li key={i}>{f}</li>)}
                                 </ul>
                             </div>
+                        )}
+                    </div>
+                )}
+
+                {/* --- Seed: odontograma de ejemplo --- */}
+                <div className="mt-10 border-l-4 border-blue-600 pl-4 mb-6">
+                    <h2 className="text-xl font-bold">Seed — Odontograma de ejemplo</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Carga caries, obturaciones, una pieza ausente, una extracción pendiente, una corona y un
+                        puente de tres piezas sobre {SEED_PATIENTS[0]?.name} {SEED_PATIENTS[0]?.lastName}.
+                        Idempotente: si ya tiene algo cargado, no toca nada.
+                    </p>
+                </div>
+
+                <button
+                    onClick={handleSeedOdontograma}
+                    disabled={odontoStatus === "running"}
+                    className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {odontoStatus === "running" ? "Cargando..." : "Cargar odontograma de ejemplo"}
+                </button>
+
+                {odontoError && (
+                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                        {odontoError}
+                    </div>
+                )}
+
+                {odontoResult && (
+                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                        <p className={`font-semibold ${odontoResult.ok ? "text-blue-700" : "text-red-600"}`}>
+                            {odontoResult.ok ? "✓" : "✗"} {odontoResult.mensaje}
+                        </p>
+                        {odontoResult.fallidos.length > 0 && (
+                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                {odontoResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
+                            </ul>
                         )}
                     </div>
                 )}
