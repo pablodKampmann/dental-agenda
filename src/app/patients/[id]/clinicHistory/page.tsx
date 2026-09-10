@@ -17,9 +17,10 @@ import { HistorialTimeline, type EntradaHistorial } from "@/components/patients/
 import { getOdontograma } from "@/services/odontograma/getOdontograma";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
-import type { Pieza } from "@/lib/odontograma/piezas";
+import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
 import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
+import { validarTramo } from "@/services/odontograma/setVinculo";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
 
@@ -107,6 +108,21 @@ export default function ClinicHistory() {
             return next;
         });
     }
+
+    function cancelarModoTramo() {
+        setEnModoTramo(false);
+        setPiezasEnTramo(new Map());
+    }
+
+    /** Escape cancela el modo de selección de tramo — no se activa por accidente ni queda sin salida. */
+    useEffect(() => {
+        if (!enModoTramo) return;
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Escape') cancelarModoTramo();
+        }
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [enModoTramo]);
 
     function hallazgoActualDe(contexto: PickerContexto): Partial<Record<Capa, CodigoHallazgo>> {
         if (contexto.alcance === 'MULTI') return {};
@@ -201,6 +217,14 @@ export default function ClinicHistory() {
         const vistaSugerida = vistaSugeridaPorEdad(patient?.birthDate);
         const vista = vistaOverride ?? vistaSugerida;
 
+        /**
+         * Valida en pantalla lo mismo que B2-4 valida en el servicio (al menos dos
+         * piezas, contiguas, misma arcada) — la autoridad sigue siendo el service,
+         * esto es solo para no dejar confirmar algo que va a rebotar.
+         */
+        const clavesEnTramo = Array.from(piezasEnTramo.keys()) as ClavePieza[];
+        const validacionTramo = clavesEnTramo.length >= 2 ? validarTramo(clavesEnTramo) : null;
+
         return (
             <div className="h-[calc(100vh-58px)] overflow-y-auto">
                 <div className='px-4 pb-4 pt-4 relative'>
@@ -225,7 +249,7 @@ export default function ClinicHistory() {
                                         {vista === 'MIXTA' ? 'Dentición mixta' : 'Dentición permanente'}
                                     </button>
                                     <button
-                                        onClick={() => { setEnModoTramo((v) => !v); setPiezasEnTramo(new Map()); }}
+                                        onClick={() => { if (enModoTramo) cancelarModoTramo(); else setEnModoTramo(true); }}
                                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium border shadow-sm transition ${
                                             enModoTramo
                                                 ? 'bg-teal-700 border-teal-700 text-white'
@@ -258,13 +282,15 @@ export default function ClinicHistory() {
 
                             {enModoTramo && (
                                 <div className="flex items-center justify-between bg-teal-50 border-t border-teal-100 px-4 py-2.5">
-                                    <span className="text-xs text-teal-700 font-medium">
+                                    <span className={`text-xs font-medium ${validacionTramo && !validacionTramo.ok ? 'text-amber-700' : 'text-teal-700'}`}>
                                         {piezasEnTramo.size === 0
                                             ? 'Seleccioná dos o más piezas contiguas'
+                                            : validacionTramo && !validacionTramo.ok
+                                            ? validacionTramo.error
                                             : `${piezasEnTramo.size} piezas seleccionadas`}
                                     </span>
                                     <button
-                                        disabled={piezasEnTramo.size < 2}
+                                        disabled={piezasEnTramo.size < 2 || (validacionTramo !== null && !validacionTramo.ok)}
                                         onClick={(e) => {
                                             setPickerAnterior(null)
                                             setPickerContexto({
