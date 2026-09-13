@@ -144,6 +144,33 @@ describe('getEventos', () => {
     ])
   })
 
+  it('reconstructs a real de→a transition for a CARA event, not just a null-to-value creation', async () => {
+    // Distinto del test de arriba: acá "de" no está ausente, es un código real
+    // -- una obturación que se convirtió en caries, no un hallazgo nuevo sobre
+    // una cara vacía. El servicio tiene que devolver los dos códigos tal cual.
+    mockGet.mockResolvedValue(
+      snapshotDe([
+        [
+          '-N1',
+          {
+            ts: 1000,
+            uid: 'uid-1',
+            alcance: 'CARA',
+            capa: 'existente',
+            diente: 't16',
+            cara: 'OCLUSAL_INCISAL',
+            de: 'obturacion',
+            a: 'caries',
+          },
+        ],
+      ]) as any
+    )
+
+    const result = await getEventos('paciente-1', 'clinic-1')
+
+    expect(result?.[0]).toMatchObject({ de: 'obturacion', a: 'caries' })
+  })
+
   it('validates a DIENTE event without a cara field', async () => {
     mockGet.mockResolvedValue(
       snapshotDe([
@@ -170,6 +197,21 @@ describe('getEventos', () => {
         a: 'corona',
       },
     ])
+  })
+
+  it('reconstructs a real de→a transition for a DIENTE event (extraccion requerida resuelta a ausente)', async () => {
+    mockGet.mockResolvedValue(
+      snapshotDe([
+        [
+          '-N1',
+          { ts: 1000, uid: 'uid-1', alcance: 'DIENTE', capa: 'existente', diente: 't18', de: 'extraccion', a: 'ausente' },
+        ],
+      ]) as any
+    )
+
+    const result = await getEventos('paciente-1', 'clinic-1')
+
+    expect(result?.[0]).toMatchObject({ de: 'extraccion', a: 'ausente' })
   })
 
   it('validates a MULTI event with piezas instead of diente', async () => {
@@ -203,6 +245,29 @@ describe('getEventos', () => {
       de: null,
       a: 'protesis_fija',
     })
+  })
+
+  it('reconstructs a real de→a transition for a MULTI event (both codes non-null)', async () => {
+    mockGet.mockResolvedValue(
+      snapshotDe([
+        [
+          '-N1',
+          {
+            ts: 1000,
+            uid: 'uid-1',
+            alcance: 'MULTI',
+            capa: 'existente',
+            piezas: { t45: true, t46: true },
+            de: 'protesis_fija',
+            a: 'protesis_removible',
+          },
+        ],
+      ]) as any
+    )
+
+    const result = await getEventos('paciente-1', 'clinic-1')
+
+    expect(result?.[0]).toMatchObject({ de: 'protesis_fija', a: 'protesis_removible' })
   })
 
   it('discards a CARA event missing "cara" and keeps the rest of the history', async () => {
