@@ -224,6 +224,9 @@ describe('setHallazgo / removeHallazgo', () => {
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
     expect(payload[`${base}/actual/dientes/t16/caras/${CARA_CENTRO_T16}/existente`]).toBeNull()
+    expect(payload[`${base}/actual/meta/updatedAt`]).toEqual({ '.sv': 'timestamp' })
+    expect(payload[`${base}/actual/meta/updatedBy`]).toBe('uid-1')
+    expect(payload[`${base}/actual/meta/schemaVersion`]).toBe(SCHEMA_VERSION)
 
     const eventoKey = Object.keys(payload).find((k) => k.includes('/eventos/'))!
     expect(payload[eventoKey]).toMatchObject({ de: 'obturacion', a: null, capa: 'existente' })
@@ -233,6 +236,66 @@ describe('setHallazgo / removeHallazgo', () => {
     // garantizan las Security Rules de B2-1, no este service.
     const eventoKeys = Object.keys(payload).filter((k) => k.includes('/eventos/'))
     expect(eventoKeys).toHaveLength(1)
+  })
+
+  it('a later removeHallazgo does not wipe out an event written by an earlier call (simulated multi-write store)', async () => {
+    // `update()` real solo toca las keys que recibe, nunca pisa el resto del árbol.
+    // El mock de arriba no simula eso -- acá se arma un store en memoria que sí
+    // aplica ese comportamiento, para probar la invariante entre dos escrituras
+    // reales en vez de solo contar cuántas keys de evento hay en un único payload.
+    //
+    // Esto prueba que EL SERVICE no arma un payload que pise un evento anterior.
+    // No prueba (ni puede probar, mockeando Firebase) que un `update()` hecho por
+    // OTRO cliente no podría borrar ese mismo evento: esa garantía de
+    // inmutabilidad del log es de las Security Rules (B2-1), verificadas a mano
+    // hasta que exista el emulador -- no de este test.
+    const store: Record<string, unknown> = {}
+    const applyUpdate = (payload: Record<string, unknown>) => {
+      for (const [path, value] of Object.entries(payload)) {
+        const segments = path.split('/').filter(Boolean)
+        let node = store as Record<string, unknown>
+        for (let i = 0; i < segments.length - 1; i++) {
+          const seg = segments[i]
+          if (typeof node[seg] !== 'object' || node[seg] === null) node[seg] = {}
+          node = node[seg] as Record<string, unknown>
+        }
+        const last = segments[segments.length - 1]
+        if (value === null) delete node[last]
+        else node[last] = value
+      }
+    }
+    mockUpdate.mockImplementation(async (_ref: unknown, payload: Record<string, unknown>) => {
+      applyUpdate(payload)
+    })
+
+    await setHallazgoCara({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't16',
+      cara: CARA_CENTRO_T16,
+      capa: 'existente',
+      codigo: 'obturacion',
+      de: null,
+      uid: 'uid-1',
+    })
+
+    await removeHallazgo({
+      alcance: 'CARA',
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't16',
+      cara: CARA_CENTRO_T16,
+      capa: 'existente',
+      de: 'obturacion',
+      uid: 'uid-1',
+    })
+
+    const eventos = (store as any).clinics['clinic-1'].odontogramas['paciente-1'].eventos as Record<string, any>
+    const eventosList = Object.values(eventos)
+
+    expect(eventosList).toHaveLength(2)
+    expect(eventosList).toContainEqual(expect.objectContaining({ de: null, a: 'obturacion' }))
+    expect(eventosList).toContainEqual(expect.objectContaining({ de: 'obturacion', a: null }))
   })
 
   it('removeHallazgo (DIENTE) writes to diente/{capa}', async () => {

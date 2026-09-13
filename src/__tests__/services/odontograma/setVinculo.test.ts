@@ -158,6 +158,9 @@ describe('setVinculo / removeVinculo', () => {
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
     expect(payload[`${base}/actual/vinculos/id-abc`]).toBeNull()
+    expect(payload[`${base}/actual/meta/updatedAt`]).toEqual({ '.sv': 'timestamp' })
+    expect(payload[`${base}/actual/meta/updatedBy`]).toBe('uid-1')
+    expect(payload[`${base}/actual/meta/schemaVersion`]).toBe(SCHEMA_VERSION)
 
     const eventoKey = Object.keys(payload).find((k) => k.includes('/eventos/'))!
     expect(payload[eventoKey]).toMatchObject({
@@ -166,6 +169,67 @@ describe('setVinculo / removeVinculo', () => {
       a: null,
       piezas: { t16: true, t15: true },
     })
+
+    // Mismo criterio que removeHallazgo: un solo evento nuevo en el payload, sin
+    // tocar ninguna key de un evento anterior.
+    const eventoKeys = Object.keys(payload).filter((k) => k.includes('/eventos/'))
+    expect(eventoKeys).toHaveLength(1)
+  })
+
+  it('a later removeVinculo does not wipe out the event written by setVinculo (simulated multi-write store)', async () => {
+    // Mismo motivo que en setHallazgo.test.ts: el mock de `update()` de arriba no
+    // simula que solo se tocan las keys recibidas, así que se arma un store en
+    // memoria que sí lo hace, para probar la invariante entre dos escrituras reales.
+    //
+    // Esto prueba que EL SERVICE no arma un payload que pise un evento anterior.
+    // No prueba (ni puede probar, mockeando Firebase) la inmutabilidad del log
+    // frente a otro cliente -- esa garantía es de las Security Rules (B2-1),
+    // verificadas a mano hasta que exista el emulador, no de este test.
+    const store: Record<string, unknown> = {}
+    const applyUpdate = (payload: Record<string, unknown>) => {
+      for (const [path, value] of Object.entries(payload)) {
+        const segments = path.split('/').filter(Boolean)
+        let node = store as Record<string, unknown>
+        for (let i = 0; i < segments.length - 1; i++) {
+          const seg = segments[i]
+          if (typeof node[seg] !== 'object' || node[seg] === null) node[seg] = {}
+          node = node[seg] as Record<string, unknown>
+        }
+        const last = segments[segments.length - 1]
+        if (value === null) delete node[last]
+        else node[last] = value
+      }
+    }
+    mockUpdate.mockImplementation(async (_ref: unknown, payload: Record<string, unknown>) => {
+      applyUpdate(payload)
+    })
+
+    const alta = await setVinculo({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      tipo: 'protesis_fija',
+      capa: 'existente',
+      piezas: ['t16', 't15'],
+      uid: 'uid-1',
+    })
+    const vinculoId = (alta as { ok: true; vinculoId: string }).vinculoId
+
+    await removeVinculo({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      vinculoId,
+      tipo: 'protesis_fija',
+      capa: 'existente',
+      piezas: { t16: true, t15: true },
+      uid: 'uid-1',
+    })
+
+    const eventos = (store as any).clinics['clinic-1'].odontogramas['paciente-1'].eventos as Record<string, any>
+    const eventosList = Object.values(eventos)
+
+    expect(eventosList).toHaveLength(2)
+    expect(eventosList).toContainEqual(expect.objectContaining({ de: null, a: 'protesis_fija' }))
+    expect(eventosList).toContainEqual(expect.objectContaining({ de: 'protesis_fija', a: null }))
   })
 
   it('removeVinculo returns null when offline', async () => {
