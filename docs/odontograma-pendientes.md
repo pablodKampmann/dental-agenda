@@ -95,18 +95,143 @@ ese campo si ningún flujo del cliente lo setea. Hay que verificar cómo se crea
 
 #### B · `/admins` es legible sin autenticar
 
-`".read": true` expone `userName`, `email` y `clinicId` de todos los admins. La URL de la
-base va en el bundle del cliente.
+> **Decidido: se cierra con un índice `userNames/`.** Elegida entre las tres opciones que
+> estaban planteadas acá. Los criterios de aceptación de abajo son la definición de
+> terminado de la issue.
 
-No se puede cerrar sin tocar código: `signIn.ts:11` lee `/admins` entero **antes** de
-autenticar, para traducir `userName` → `email`. `updateUserName.ts:9` hace lo mismo para
-chequear unicidad. Cerrar la regla rompe los dos, y el `catch` de `signIn.ts:37` devuelve
-`'network-error'` ante un permission-denied, así que rompería mintiendo sobre el motivo.
+`".read": true` sobre `/admins` expone `userName`, `email` y `clinicId` de todos los
+admins. La URL de la base va en el bundle del cliente, así que es legible por cualquiera.
+No hay datos de pacientes expuestos: `/clinics/$clinic_id` sí tiene aislamiento real por
+`clinicId` del lado del servidor. El alcance es el listado de admins.
 
-Salidas posibles, en orden de esfuerzo: loguear con email en vez de usuario (elimina la
-lectura); un índice público mínimo `userName → email` y `/admins` detrás de `auth != null`
-(reduce la superficie, sigue exponiendo emails); una Cloud Function (lo cierra del todo).
-Es decisión de producto.
+**Quién lee `/admins` hoy**, verificado archivo por archivo:
+
+| Archivo | Qué lee | ¿Autenticado? |
+|---|---|---|
+| `signIn.ts:10-11` | el nodo **entero**, antes de `signInWithEmailAndPassword` (línea 21) | **no** |
+| `updateUserName.ts:8-9` | el nodo **entero**, para chequear unicidad | sí |
+| `getUser.ts:28` | `admins/{uid}` propio | sí |
+| `setRowChanges.ts:9` | `admins/{id}` propio | sí |
+| `updateUserEmail.ts:17` | `admins/{id}` propio | sí |
+
+Solo una de las cinco es anónima. Las otras cuatro sobreviven a `".read": "auth != null"`
+sin tocar una línea.
+
+**Por qué igual no alcanza con `auth != null`.** Mientras `updateUserName` chequee la
+unicidad recorriendo el nodo entero, el techo del cierre es `auth != null`: cualquier
+admin logueado sigue viendo el email y el `clinicId` de todos los demás. Y ese es
+exactamente el primer eslabón de la cadena de
+[1.5 A](#a--un-admin-puede-reasignarse-a-otra-clínica). El índice saca esa lectura, y
+recién ahí `/admins` puede cerrarse a lectura por uid propio — que cierra esta entrada
+del todo y le saca el primer paso a la otra.
+
+**Las otras dos opciones, y por qué no.** *Loguear con email* elimina la lectura de
+`signIn` pero deja el recorrido de `updateUserName`, así que se queda en `auth != null` y
+no toca 1.5 A; además cambia el hábito de la odontóloga y, con la protección de
+enumeración de Firebase, `signInWithEmailAndPassword` devuelve `auth/invalid-credential`
+tanto para email inexistente como para clave incorrecta, así que la pantalla pierde la
+distinción "usuario incorrecto" / "clave incorrecta" que hoy tiene en
+`notSign/page.tsx:40-46`. *Una Cloud Function* llega al mismo lugar que el índice y
+cuesta levantar Functions desde cero —no hay `firebase.json`, ni `.firebaserc`, ni
+`functions/`, ni `firebase-tools` en `package.json`— y pasar el proyecto a Blaze.
+
+##### El contrato
+
+```
+/userNames/{userName}: "<email>"
+```
+
+Un mapa plano: clave el `userName`, valor el email de ese admin. Es el mismo dato que ya
+está en `/admins/{uid}`, dado vuelta para poder consultarlo por una sola clave en vez de
+recorriendo el nodo.
+
+```json
+"userNames": {
+  "$userName": {
+    ".read": true,
+    ".write": "auth != null && (!data.exists() || data.val() === auth.token.email) && (!newData.exists() || newData.val() === auth.token.email)",
+    ".validate": "newData.isString()"
+  }
+},
+"admins": {
+  "$uid": {
+    ".read": "$uid === auth.uid",
+    ".write": "$uid === auth.uid"
+  }
+}
+```
+
+**El `.read` va en `$userName`, no en `userNames`.** Puesto en el padre, el nodo es
+enumerable y se leen todos los emails de una sola lectura: no habríamos ganado nada.
+Puesto en el hijo, hay que saber el `userName` para leerlo — pasa de "expone los emails
+de todos" a "confirma un email si ya adivinaste el usuario". Es la diferencia entre el
+cierre y el teatro.
+
+**El `.write` cubre los tres movimientos** —crear la clave nueva, borrar la vieja,
+pisarse a sí mismo— y ninguno ajeno: en un alta `data` no existe y se exige que `newData`
+sea el propio email; en una baja `newData` no existe y se exige que `data` lo sea. Sin
+esa condición, cualquier admin se apropia del `userName` de otro apuntándolo a su propio
+email y le roba el login.
+
+**Criterios de aceptación**
+
+- [ ] `signIn` resuelve el email leyendo `userNames/{userName}` —una sola clave— y no lee
+      `/admins` nunca más.
+- [ ] `updateUserName` chequea la unicidad leyendo `userNames/{nuevo}` y tampoco recorre
+      `/admins`.
+- [ ] `updateUserName` escribe `/admins/{uid}/userName`, `userNames/{nuevo}` y
+      `userNames/{viejo}: null` en **un solo `update()` multi-path**. Si se parte a la
+      mitad, ese admin no se puede loguear más: o el índice apunta a una clave que ya no
+      existe, o quedan dos claves vivas para el mismo admin. Es el mismo patrón atómico
+      que usa `setHallazgo.ts`.
+- [ ] `/admins` pierde el `".read": true` y queda en `$uid === auth.uid`.
+- [ ] `getUser`, `setRowChanges` y `updateUserEmail` siguen andando **sin cambios** — los
+      tres leen su propio nodo. Si alguno necesitó tocarse, algo se entendió mal.
+- [ ] Un `userName` que no es clave válida de Realtime Database (contiene `.`, `#`, `$`,
+      `[`, `]` o `/`) no entra al índice. Hoy `updateUserName` acepta cualquier string;
+      con el índice, un punto en el userName rompe el login de ese admin. Se rechaza en
+      `updateUserName` con un código propio, no se deja fallar contra la regla.
+- [ ] Hay tests de `signIn` y `updateUserName` con el mock de `firebase/database` que ya
+      usan los tests de `appointments` y `patients`. Hoy no hay un solo test de
+      `services/auth/` ni de `services/config/`.
+- [ ] `npm run test:run` y `npm run build` pasan.
+
+**Lo que esta issue NO hace.** No toca el `.write` de `/admins/$uid`, así que
+[1.5 A](#a--un-admin-puede-reasignarse-a-otra-clínica) sigue abierta: un admin todavía
+puede reescribir su propio `clinicId`. Lo que sí le saca es el primer eslabón —ya no
+puede leer el `clinicId` de otra clínica para saber a dónde saltar—. Esa entrada sigue
+diferida hasta el alta de la segunda clínica.
+
+##### El orden de publicación, que no es negociable
+
+El índice y el cierre de la regla no pueden ir en el mismo movimiento, y hay un detalle
+que lo fuerza: **la misma regla que protege el índice impide sembrarlo.** Un script
+corriendo como Santiago solo puede escribir su propia entrada — para las de los demás
+admins, `newData.val() === auth.token.email` da `false`. No hay script que resuelva eso.
+
+1. Contar los admins con `/admins` todavía legible. Son pocos: no hay alta de admin en el
+   código —`createUserWithEmailAndPassword` no aparece en todo `src/`—, se crean a mano en
+   la consola.
+2. Publicar **solo** el bloque `userNames`, con `".write": "auth != null"` provisorio.
+   `/admins` sin tocar. Es aditivo: no rompe nada de lo que anda hoy.
+3. Cargar las entradas de los admins existentes, a mano o con un botón en `/dev`.
+4. Endurecer el `.write` de `userNames` a la condición final y verificar que un admin no
+   puede pisar la clave de otro.
+5. Mergear el código. Verificar el login de **cada** admin con `/admins` todavía abierto:
+   el código nuevo anda con las reglas viejas, así que este paso es reversible.
+6. Recién ahí publicar el cierre de `/admins`.
+
+Invertir 5 y 6 deja a todo el mundo afuera del sistema hasta que se despubliquen las
+reglas.
+
+**A verificar en el paso 4, no asumir:** que `auth.token.email` está poblado. Debería
+estarlo —el único proveedor del proyecto es email/password— pero es la condición de la
+que cuelga toda la regla del índice.
+
+**Deuda operativa que queda abierta:** cada admin nuevo creado a mano en la consola
+necesita su entrada en `userNames/` cargada a mano también, o no puede loguearse.
+Avisarle al PO. El día que exista un alta de admin en el código, ese flujo escribe las
+dos cosas juntas.
 
 #### C · El `.write` de `/clinics/$clinic_id` cascadea sobre `eventos` — esto sí es nuestro
 
