@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { RingLoader } from "react-spinners";
 import { BiSolidLogInCircle } from "react-icons/bi";
-import { signIn } from "./../../services/auth/signIn";
+import { signIn, type SignInResult } from "./../../services/auth/signIn";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { XCircle } from "lucide-react";
 
@@ -30,25 +30,37 @@ export default function NotSing() {
     setFieldError("");
 
     try {
-      const result = await signIn(userName.trim(), password);
+      const result: SignInResult = await signIn(userName.trim(), password);
 
-      if (result === "all-good") {
-        router.push("/agenda");
-        return;
-      }
-
-      if (result === "wrong-userName") {
-        setFieldError("user");
-        setError("El usuario proporcionado es incorrecto.");
-      } else if (result === "wrong-password") {
-        setFieldError("password");
-        setError("La clave proporcionada no coincide con el usuario.");
-        setTimeout(() => passwordInputRef.current?.focus(), 50);
-      } else if (result === "network-error") {
-        setFieldError("");
-        setError("Asegurate de contar con una conexión a Internet.");
-      } else {
-        setError("Ocurrió un error inesperado. Intentá de nuevo.");
+      switch (result) {
+        case "all-good":
+          router.push("/agenda");
+          return;
+        case "wrong-userName":
+          setFieldError("user");
+          setError("El usuario proporcionado es incorrecto.");
+          break;
+        case "wrong-password":
+          setFieldError("password");
+          setError("La clave proporcionada no coincide con el usuario.");
+          setTimeout(() => passwordInputRef.current?.focus(), 50);
+          break;
+        case "network-error":
+          setFieldError("");
+          setError("Asegurate de contar con una conexión a Internet.");
+          break;
+        case "permission-denied":
+          setFieldError("");
+          setError("El sistema no tiene permiso para verificar el usuario. Avisale al administrador.");
+          break;
+        case "unexpected-error":
+          setFieldError("");
+          setError("Ocurrió un error inesperado. Intentá de nuevo.");
+          break;
+        default: {
+          const _exhaustiveCheck: never = result;
+          throw new Error(`Resultado de signIn no manejado: ${_exhaustiveCheck}`);
+        }
       }
     } finally {
       setLoad(false);
