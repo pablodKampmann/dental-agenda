@@ -1,8 +1,8 @@
 'use client'
 import { useState } from "react";
-import { runSeedPatients, SEED_PATIENTS, SEED_PATIENTS_EXTRA } from "../../dev/seedPatients";
+import { runSeedPatients, SEED_PATIENTS, SEED_PATIENTS_EXTRA, SEED_PATIENT_PEDIATRICO } from "../../dev/seedPatients";
 import { runMigrateAddTimestamps } from "../../dev/migrateAddTimestamps";
-import { runSeedOdontograma } from "../../dev/seedOdontograma";
+import { runSeedOdontograma, runSeedOdontogramaPediatrico } from "../../dev/seedOdontograma";
 
 export default function DevPage() {
     const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
@@ -17,6 +17,9 @@ export default function DevPage() {
     const [odontoStatus, setOdontoStatus] = useState<"idle" | "running" | "done">("idle");
     const [odontoResult, setOdontoResult] = useState<{ ok: boolean; pacienteId?: string; mensaje: string; fallidos: string[] } | null>(null);
     const [odontoError, setOdontoError] = useState<string | null>(null);
+    const [odontoPedStatus, setOdontoPedStatus] = useState<"idle" | "running" | "done">("idle");
+    const [odontoPedResult, setOdontoPedResult] = useState<{ ok: boolean; pacienteId?: string; mensaje: string; fallidos: string[] } | null>(null);
+    const [odontoPedError, setOdontoPedError] = useState<string | null>(null);
 
     async function handleMigrate() {
         setMigrateStatus("running");
@@ -42,6 +45,19 @@ export default function DevPage() {
             setOdontoError(e.message ?? "Error desconocido");
         }
         setOdontoStatus("done");
+    }
+
+    async function handleSeedOdontogramaPediatrico() {
+        setOdontoPedStatus("running");
+        setOdontoPedResult(null);
+        setOdontoPedError(null);
+        try {
+            const res = await runSeedOdontogramaPediatrico();
+            setOdontoPedResult(res);
+        } catch (e: any) {
+            setOdontoPedError(e.message ?? "Error desconocido");
+        }
+        setOdontoPedStatus("done");
     }
 
     async function handleSeedExtra() {
@@ -259,6 +275,44 @@ export default function DevPage() {
                         {odontoResult.fallidos.length > 0 && (
                             <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
                                 {odontoResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
+                            </ul>
+                        )}
+                    </div>
+                )}
+
+                {/* --- Seed: odontograma pediátrico (dentición mixta) --- */}
+                <div className="mt-10 border-l-4 border-purple-600 pl-4 mb-6">
+                    <h2 className="text-xl font-bold">Seed — Odontograma pediátrico (dentición mixta)</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Carga hallazgos en las cuatro filas de la ficha (permanente y temporaria, superior e
+                        inferior) sobre {SEED_PATIENT_PEDIATRICO.name} {SEED_PATIENT_PEDIATRICO.lastName}, incluido
+                        un recambio en curso (pieza temporaria ausente + su sucesora permanente). Idempotente: si ya
+                        tiene algo cargado, no toca nada.
+                    </p>
+                </div>
+
+                <button
+                    onClick={handleSeedOdontogramaPediatrico}
+                    disabled={odontoPedStatus === "running"}
+                    className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {odontoPedStatus === "running" ? "Cargando..." : "Cargar odontograma pediátrico"}
+                </button>
+
+                {odontoPedError && (
+                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                        {odontoPedError}
+                    </div>
+                )}
+
+                {odontoPedResult && (
+                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                        <p className={`font-semibold ${odontoPedResult.ok ? "text-purple-700" : "text-red-600"}`}>
+                            {odontoPedResult.ok ? "✓" : "✗"} {odontoPedResult.mensaje}
+                        </p>
+                        {odontoPedResult.fallidos.length > 0 && (
+                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                {odontoPedResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
                             </ul>
                         )}
                     </div>
