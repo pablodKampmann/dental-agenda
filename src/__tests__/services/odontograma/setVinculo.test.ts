@@ -83,6 +83,36 @@ describe('setVinculo / removeVinculo', () => {
     expect(mockUpdate).not.toHaveBeenCalled()
   })
 
+  it('rejects protesis_fija over a temporary tramo (B4-1), even though the tramo itself is geometrically valid', async () => {
+    // t54, t55 — contiguas, misma arcada y fila: pasan validarTramo. El rechazo es
+    // por dentición, no por geometría.
+    const resultado = await setVinculo({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      tipo: 'protesis_fija',
+      capa: 'existente',
+      piezas: ['t54', 't55'],
+      uid: 'uid-1',
+    })
+
+    expect(resultado).toEqual({ ok: false, error: expect.any(String) })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('accepts protesis_removible over a temporary tramo', async () => {
+    mockUpdate.mockResolvedValue(undefined)
+    const resultado = await setVinculo({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      tipo: 'protesis_removible',
+      capa: 'existente',
+      piezas: ['t54', 't55'],
+      uid: 'uid-1',
+    })
+
+    expect(resultado).toEqual({ ok: true, vinculoId: expect.any(String) })
+  })
+
   it('returns null when offline (technical failure, not validation)', async () => {
     Object.defineProperty(global.navigator, 'onLine', {
       value: false,

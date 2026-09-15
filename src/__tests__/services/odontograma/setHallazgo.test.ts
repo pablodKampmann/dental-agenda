@@ -122,7 +122,7 @@ describe('setHallazgo / removeHallazgo', () => {
 
   it('setHallazgoDiente writes to diente/{capa}, not caras/', async () => {
     mockUpdate.mockResolvedValue(undefined)
-    await setHallazgoDiente({
+    const result = await setHallazgoDiente({
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't11',
@@ -132,6 +132,7 @@ describe('setHallazgo / removeHallazgo', () => {
       uid: 'uid-1',
     })
 
+    expect(result).toEqual({ ok: true })
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
     expect(payload[`${base}/actual/dientes/t11/diente/existente`]).toBe('corona')
@@ -144,6 +145,37 @@ describe('setHallazgo / removeHallazgo', () => {
       de: null,
       a: 'corona',
     })
+  })
+
+  it('setHallazgoDiente rejects implante on a temporary tooth with a legible error, and never calls update', async () => {
+    const result = await setHallazgoDiente({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't85', // temporaria
+      capa: 'existente',
+      codigo: 'implante',
+      de: null,
+      uid: 'uid-1',
+    })
+
+    expect(result).toEqual({ ok: false, error: expect.any(String) })
+    expect(mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('setHallazgoDiente accepts implante on a permanent tooth', async () => {
+    mockUpdate.mockResolvedValue(undefined)
+    const result = await setHallazgoDiente({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't36', // permanente
+      capa: 'existente',
+      codigo: 'implante',
+      de: null,
+      uid: 'uid-1',
+    })
+
+    expect(result).toEqual({ ok: true })
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
   })
 
   it('ejecutarHallazgoCaraRequerida clears requerida, sets existente, and writes two events', async () => {
@@ -183,7 +215,7 @@ describe('setHallazgo / removeHallazgo', () => {
   it('ejecutarHallazgoDienteRequerido works the same way for alcance DIENTE', async () => {
     mockUpdate.mockResolvedValue(undefined)
 
-    await ejecutarHallazgoDienteRequerido({
+    const result = await ejecutarHallazgoDienteRequerido({
       clinicId: 'clinic-1',
       pacienteId: 'paciente-1',
       pieza: 't18',
@@ -193,6 +225,7 @@ describe('setHallazgo / removeHallazgo', () => {
       uid: 'uid-1',
     })
 
+    expect(result).toEqual({ ok: true })
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
@@ -203,6 +236,21 @@ describe('setHallazgo / removeHallazgo', () => {
     expect(eventoKeys).toHaveLength(2)
     const eventos = eventoKeys.map((k) => payload[k] as any)
     expect(eventos.every((e) => e.alcance === 'DIENTE' && e.cara === null)).toBe(true)
+  })
+
+  it('ejecutarHallazgoDienteRequerido rejects a resultante that does not apply to the dentición, and never calls update', async () => {
+    const result = await ejecutarHallazgoDienteRequerido({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't75', // temporaria
+      hallazgoRequerido: 'extraccion',
+      hallazgoResultante: 'implante',
+      existenteAnterior: null,
+      uid: 'uid-1',
+    })
+
+    expect(result).toEqual({ ok: false, error: expect.any(String) })
+    expect(mockUpdate).not.toHaveBeenCalled()
   })
 
   it('removeHallazgo (CARA) writes null to the leaf and an event with a: null, keeping the previous event untouched', async () => {

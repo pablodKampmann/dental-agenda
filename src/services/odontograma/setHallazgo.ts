@@ -10,6 +10,8 @@ import {
   type EventoCara,
   type EventoDiente,
 } from '@/lib/odontograma/tipos'
+import { aplicaADenticion, hallazgoDe } from '@/lib/odontograma/catalogo'
+import { piezaDeClave } from '@/lib/odontograma/piezas'
 
 /**
  * Escritura de hallazgos del odontograma: `setHallazgoCara`, `setHallazgoDiente` y
@@ -117,9 +119,26 @@ interface SetHallazgoDienteParams {
   readonly uid: string
 }
 
+/**
+ * `null` es fallo técnico (offline, error de Firebase) — mismo criterio que el resto
+ * de los services. `{ ok: false, error }` es un hallazgo que no aplica a la dentición
+ * de esa pieza (B4-1): rechazado con un mensaje que la UI puede mostrar tal cual, sin
+ * reventar.
+ */
+type SetHallazgoDienteResultado = { readonly ok: true } | { readonly ok: false; readonly error: string } | null
+
 /** Escribe un hallazgo de alcance DIENTE en una hoja `diente/{capa}`. */
-export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promise<boolean | null> {
+export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promise<SetHallazgoDienteResultado> {
   const { clinicId, pacienteId, pieza, capa, codigo, de, uid } = params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(codigo, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(codigo).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -143,7 +162,7 @@ export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promis
       [`${base}/eventos/${eventoKey}`]: evento,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
@@ -232,11 +251,26 @@ interface EjecutarHallazgoDienteRequeridoParams {
   readonly uid: string
 }
 
-/** Misma operación que `ejecutarHallazgoCaraRequerida`, para hallazgos de alcance DIENTE. */
+/**
+ * Misma operación que `ejecutarHallazgoCaraRequerida`, para hallazgos de alcance
+ * DIENTE. `hallazgoResultante` puede ser un código distinto del requerido (una
+ * extracción requerida puede resolver en `ausente`), así que se valida contra la
+ * dentición de la pieza igual que en `setHallazgoDiente` — no alcanza con que
+ * `hallazgoRequerido` ya haya pasado esa validación cuando se cargó.
+ */
 export async function ejecutarHallazgoDienteRequerido(
   params: EjecutarHallazgoDienteRequeridoParams
-): Promise<boolean | null> {
+): Promise<SetHallazgoDienteResultado> {
   const { clinicId, pacienteId, pieza, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid } = params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(hallazgoResultante, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(hallazgoResultante).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -275,7 +309,7 @@ export async function ejecutarHallazgoDienteRequerido(
       [`${base}/eventos/${eventoExistenteKey}`]: eventoExistente,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null

@@ -30,12 +30,12 @@ const FACES: readonly FacePosition[] = ['top', 'right', 'bottom', 'left', 'cente
 
 /**
  * Hallazgos de pieza completa que dejan sin sentido clínico a las caras: no hay
- * superficie natural visible (ausente, extraída, no erupcionada) o no queda corona
+ * superficie natural visible (ausente, extraída, retenida/impactada) o no queda corona
  * (remanente). Mientras uno de estos esté activo, las caras se ocultan de la vista
  * — nunca se borran — y reaparecen solas si se quita el hallazgo. Corona, implante y
  * endodoncia no entran acá: conviven con hallazgos de cara sin problema.
  */
-const OCULTA_CARAS: ReadonlySet<CodigoHallazgoDiente> = new Set(['ausente', 'extraccion', 'no_erupcionada', 'remanente'])
+const OCULTA_CARAS: ReadonlySet<CodigoHallazgoDiente> = new Set(['ausente', 'extraccion', 'retenida', 'remanente'])
 
 /** Coordenadas fijas del viewBox: el SVG escala por CSS, la geometría no depende del tamaño en pantalla. */
 const VB = 40

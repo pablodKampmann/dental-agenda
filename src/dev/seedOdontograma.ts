@@ -96,28 +96,31 @@ export async function runSeedOdontograma(): Promise<{
     ) fallidos.push("caries requerida t46");
 
     // Pieza ausente.
-    if (
-        !(await setHallazgoDiente({
-            clinicId, pacienteId, pieza: "t18",
-            capa: "existente", codigo: "ausente", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("ausente t18");
+    const ausente = await setHallazgoDiente({
+        clinicId, pacienteId, pieza: "t18",
+        capa: "existente", codigo: "ausente", de: null, uid: UID_SEED,
+    });
+    if (ausente === null || !ausente.ok) {
+        fallidos.push(`ausente t18${ausente && !ausente.ok ? `: ${ausente.error}` : ""}`);
+    }
 
     // Extracción pendiente.
-    if (
-        !(await setHallazgoDiente({
-            clinicId, pacienteId, pieza: "t48",
-            capa: "requerida", codigo: "extraccion", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("extracción t48");
+    const extraccion = await setHallazgoDiente({
+        clinicId, pacienteId, pieza: "t48",
+        capa: "requerida", codigo: "extraccion", de: null, uid: UID_SEED,
+    });
+    if (extraccion === null || !extraccion.ok) {
+        fallidos.push(`extracción t48${extraccion && !extraccion.ok ? `: ${extraccion.error}` : ""}`);
+    }
 
     // Corona.
-    if (
-        !(await setHallazgoDiente({
-            clinicId, pacienteId, pieza: "t11",
-            capa: "existente", codigo: "corona", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("corona t11");
+    const corona = await setHallazgoDiente({
+        clinicId, pacienteId, pieza: "t11",
+        capa: "existente", codigo: "corona", de: null, uid: UID_SEED,
+    });
+    if (corona === null || !corona.ok) {
+        fallidos.push(`corona t11${corona && !corona.ok ? `: ${corona.error}` : ""}`);
+    }
 
     // Puente de tres piezas: t24, t25, t26 son contiguas en la misma arcada
     // (fila 1) -- setVinculo valida esto por su cuenta, acá no se repite el chequeo.
