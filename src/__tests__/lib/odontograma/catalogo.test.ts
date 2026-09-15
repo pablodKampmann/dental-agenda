@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   HALLAZGOS,
   HALLAZGOS_POR_CODIGO,
+  aplicaADenticion,
   esCodigoHallazgo,
   hallazgoDe,
   hallazgosPorAlcance,
@@ -21,20 +22,23 @@ import type {
  * duplicada a mano: si alguien edita el catálogo, este test tiene que romper hasta que
  * el documento y el código digan lo mismo.
  */
+const AMBAS: readonly ['PERMANENTE', 'TEMPORARIA'] = ['PERMANENTE', 'TEMPORARIA']
+const SOLO_PERMANENTE: readonly ['PERMANENTE'] = ['PERMANENTE']
+
 const TABLA_DEL_CONTRATO = [
-  ['caries', 'Caries', 'C', 'CARA', 'fill', 'requerida'],
-  ['obturacion', 'Obturación', 'O', 'CARA', 'fill', 'existente'],
-  ['sellante', 'Sellante', 'S', 'CARA', 'fill', 'existente'],
-  ['fractura', 'Fractura', 'F', 'CARA', 'fill', 'existente'],
-  ['ausente', 'Pieza ausente', 'X', 'DIENTE', 'cross', 'existente'],
-  ['corona', 'Corona', 'Co', 'DIENTE', 'box', 'existente'],
-  ['endodoncia', 'Endodoncia', 'E', 'DIENTE', 'letter', 'existente'],
-  ['implante', 'Implante', 'I', 'DIENTE', 'screw', 'existente'],
-  ['remanente', 'Remanente radicular', 'RR', 'DIENTE', 'stump', 'existente'],
-  ['extraccion', 'Extracción', 'Ex', 'DIENTE', 'equals', 'requerida'],
-  ['no_erupcionada', 'Pieza no erupcionada', 'NE', 'DIENTE', 'cross', 'requerida'],
-  ['protesis_fija', 'Prótesis fija', 'PF', 'MULTI', 'span', 'existente'],
-  ['protesis_removible', 'Prótesis removible', 'PR', 'MULTI', 'span', 'existente'],
+  ['caries', 'Caries', 'C', 'CARA', 'fill', 'requerida', AMBAS],
+  ['obturacion', 'Obturación', 'O', 'CARA', 'fill', 'existente', AMBAS],
+  ['sellante', 'Sellante', 'S', 'CARA', 'fill', 'existente', AMBAS],
+  ['fractura', 'Fractura', 'F', 'CARA', 'fill', 'existente', AMBAS],
+  ['ausente', 'Pieza ausente', 'X', 'DIENTE', 'cross', 'existente', AMBAS],
+  ['corona', 'Corona', 'Co', 'DIENTE', 'box', 'existente', AMBAS],
+  ['endodoncia', 'Endodoncia', 'E', 'DIENTE', 'letter', 'existente', AMBAS],
+  ['implante', 'Implante', 'I', 'DIENTE', 'screw', 'existente', SOLO_PERMANENTE],
+  ['remanente', 'Remanente radicular', 'RR', 'DIENTE', 'stump', 'existente', AMBAS],
+  ['extraccion', 'Extracción', 'Ex', 'DIENTE', 'equals', 'requerida', AMBAS],
+  ['retenida', 'Pieza retenida o impactada', 'RI', 'DIENTE', 'cross', 'requerida', AMBAS],
+  ['protesis_fija', 'Prótesis fija', 'PF', 'MULTI', 'span', 'existente', SOLO_PERMANENTE],
+  ['protesis_removible', 'Prótesis removible', 'PR', 'MULTI', 'span', 'existente', AMBAS],
 ] as const
 
 /**
@@ -56,11 +60,18 @@ const DEL_PROTOTIPO: ReadonlyArray<readonly [CodigoHallazgo, string]> = [
 
 const TODOS_LOS_ALCANCES: readonly Alcance[] = ['CARA', 'DIENTE', 'MULTI']
 
-const aFila = (entrada: EntradaDelCatalogo) =>
-  [entrada.codigo, entrada.nombre, entrada.abrev, entrada.alcance, entrada.grafismo, entrada.capaPorDefecto]
+const aFila = (entrada: EntradaDelCatalogo) => [
+  entrada.codigo,
+  entrada.nombre,
+  entrada.abrev,
+  entrada.alcance,
+  entrada.grafismo,
+  entrada.capaPorDefecto,
+  entrada.denticiones,
+]
 
 describe('HALLAZGOS — el catálogo v1 contra la tabla del contrato', () => {
-  it('tiene las 13 entradas del contrato, con nombre, abreviatura, alcance, grafismo y capa por defecto', () => {
+  it('tiene las 13 entradas del contrato, con nombre, abreviatura, alcance, grafismo, capa por defecto y denticiones', () => {
     expect(HALLAZGOS.map(aFila)).toEqual(TABLA_DEL_CONTRATO.map((fila) => [...fila]))
   })
 
@@ -80,16 +91,46 @@ describe('HALLAZGOS — el catálogo v1 contra la tabla del contrato', () => {
     expect(multi.map((hallazgo) => hallazgo.codigo)).toEqual(['protesis_fija', 'protesis_removible'])
   })
 
-  it('ausente y no_erupcionada comparten el grafismo cross y se distinguen por la capa', () => {
+  it('ausente y retenida comparten el grafismo cross y se distinguen por la capa', () => {
     expect(hallazgoDe('ausente').grafismo).toBe('cross')
-    expect(hallazgoDe('no_erupcionada').grafismo).toBe('cross')
-    expect(hallazgoDe('ausente').capaPorDefecto).not.toBe(hallazgoDe('no_erupcionada').capaPorDefecto)
+    expect(hallazgoDe('retenida').grafismo).toBe('cross')
+    expect(hallazgoDe('ausente').capaPorDefecto).not.toBe(hallazgoDe('retenida').capaPorDefecto)
   })
 
   it('ninguna entrada declara capas permitidas: las 13 aceptan las dos', () => {
     for (const hallazgo of HALLAZGOS) {
       expect(hallazgo).not.toHaveProperty('capasPermitidas')
     }
+  })
+})
+
+describe('denticiones — B4-1, no todos los hallazgos tienen sentido en un diente de leche', () => {
+  it('los cuatro hallazgos de cara aplican a las dos denticiones sin restricción', () => {
+    for (const codigo of ['caries', 'obturacion', 'sellante', 'fractura'] as const) {
+      expect(hallazgoDe(codigo).denticiones).toEqual(['PERMANENTE', 'TEMPORARIA'])
+    }
+  })
+
+  it('implante y prótesis fija solo aplican a la dentición permanente', () => {
+    expect(hallazgoDe('implante').denticiones).toEqual(['PERMANENTE'])
+    expect(hallazgoDe('protesis_fija').denticiones).toEqual(['PERMANENTE'])
+  })
+
+  it('el resto del catálogo (pieza entera y prótesis removible) acepta las dos denticiones', () => {
+    const restantes = HALLAZGOS.filter(
+      (h) => h.codigo !== 'implante' && h.codigo !== 'protesis_fija'
+    )
+    for (const hallazgo of restantes) {
+      expect(hallazgo.denticiones).toEqual(['PERMANENTE', 'TEMPORARIA'])
+    }
+  })
+
+  it('aplicaADenticion refleja el campo denticiones de la entrada', () => {
+    expect(aplicaADenticion('implante', 'PERMANENTE')).toBe(true)
+    expect(aplicaADenticion('implante', 'TEMPORARIA')).toBe(false)
+    expect(aplicaADenticion('protesis_fija', 'TEMPORARIA')).toBe(false)
+    expect(aplicaADenticion('caries', 'TEMPORARIA')).toBe(true)
+    expect(aplicaADenticion('ausente', 'TEMPORARIA')).toBe(true)
   })
 })
 
@@ -111,7 +152,7 @@ describe('hallazgosPorAlcance — el filtro con el que se arma el picker', () =>
       'implante',
       'remanente',
       'extraccion',
-      'no_erupcionada',
+      'retenida',
     ])
   })
 

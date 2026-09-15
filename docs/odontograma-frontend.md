@@ -45,8 +45,8 @@ tres cosas mal para nuestro caso, y las tres son invisibles en pantalla:
 Las tres se resuelven usando la capa de dominio en vez de constantes locales.
 
 Y le faltan cuatro hallazgos de nuestro catálogo: `extraccion` (grafismo `equals`),
-`no_erupcionada` (comparte `cross` con `ausente`, se distinguen por color) y las dos
-prótesis (grafismo `span`).
+`retenida` (comparte `cross` con `ausente`, se distinguen por color; se llamaba
+`no_erupcionada` hasta B4-1) y las dos prótesis (grafismo `span`).
 
 ---
 
@@ -71,7 +71,7 @@ Depende: B1-3, B1-4
       **ninguno decide un color por su cuenta**. El test de B1-4 lo verifica.
 - [ ] Escalan: el mismo componente sirve a cualquier tamaño de diente, sin números mágicos
       calculados para un tamaño puntual.
-- [ ] `ausente` y `no_erupcionada` usan el mismo `cross` y se distinguen solo por el color.
+- [ ] `ausente` y `retenida` usan el mismo `cross` y se distinguen solo por el color.
       Que se vean distintas es responsabilidad de la capa, no del grafismo.
 - [ ] `equals` no existe en el prototipo: son las dos rayas paralelas de la extracción en la
       ficha en papel. Mirar la foto antes de dibujarlo.
