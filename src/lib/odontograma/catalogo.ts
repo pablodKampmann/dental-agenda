@@ -78,8 +78,10 @@ export interface EntradaHallazgo<
  * `as const satisfies` es lo que sostiene el angostamiento por alcance: `as const` fija
  * los literales y `satisfies` verifica la forma de cada entrada sin borrarlos.
  */
-const AMBAS_DENTICIONES: readonly Denticion[] = ['PERMANENTE', 'TEMPORARIA']
-const SOLO_PERMANENTE: readonly Denticion[] = ['PERMANENTE']
+// Compartidos por referencia entre once entradas del catálogo: sin freeze, un
+// push() sobre cualquiera de las dos mutaría a todas las que la referencian.
+const AMBAS_DENTICIONES: readonly Denticion[] = Object.freeze(['PERMANENTE', 'TEMPORARIA'])
+const SOLO_PERMANENTE: readonly Denticion[] = Object.freeze(['PERMANENTE'])
 
 export const HALLAZGOS = [
   { codigo: 'caries', nombre: 'Caries', abrev: 'C', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'requerida', denticiones: AMBAS_DENTICIONES },

@@ -56,44 +56,49 @@ export async function runSeedOdontograma(): Promise<{
 
     // Dos caries en piezas y caras distintas.
     const cara16 = caraSemantica("top", 1); // hacia afuera, en la arcada superior
-    if (
-        !(await setHallazgoCara({
-            clinicId, pacienteId, pieza: "t16", cara: cara16,
-            capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("caries t16");
+    const caries16 = await setHallazgoCara({
+        clinicId, pacienteId, pieza: "t16", cara: cara16,
+        capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
+    });
+    if (caries16 === null || !caries16.ok) {
+        fallidos.push(`caries t16${caries16 && !caries16.ok ? `: ${caries16.error}` : ""}`);
+    }
 
     const caraOclusal36 = caraSemantica("center", 3); // center es invariante de cuadrante
-    if (
-        !(await setHallazgoCara({
-            clinicId, pacienteId, pieza: "t36", cara: caraOclusal36,
-            capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("caries t36");
+    const caries36 = await setHallazgoCara({
+        clinicId, pacienteId, pieza: "t36", cara: caraOclusal36,
+        capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
+    });
+    if (caries36 === null || !caries36.ok) {
+        fallidos.push(`caries t36${caries36 && !caries36.ok ? `: ${caries36.error}` : ""}`);
+    }
 
     // Obturación existente.
     const caraOclusal26 = caraSemantica("center", 2);
-    if (
-        !(await setHallazgoCara({
-            clinicId, pacienteId, pieza: "t26", cara: caraOclusal26,
-            capa: "existente", codigo: "obturacion", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("obturación t26");
+    const obturacion26 = await setHallazgoCara({
+        clinicId, pacienteId, pieza: "t26", cara: caraOclusal26,
+        capa: "existente", codigo: "obturacion", de: null, uid: UID_SEED,
+    });
+    if (obturacion26 === null || !obturacion26.ok) {
+        fallidos.push(`obturación t26${obturacion26 && !obturacion26.ok ? `: ${obturacion26.error}` : ""}`);
+    }
 
     // Dos capas sobre la misma cara: obturación existente + caries requerida encima.
     const caraOclusal46 = caraSemantica("center", 4);
-    if (
-        !(await setHallazgoCara({
-            clinicId, pacienteId, pieza: "t46", cara: caraOclusal46,
-            capa: "existente", codigo: "obturacion", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("obturación existente t46");
-    if (
-        !(await setHallazgoCara({
-            clinicId, pacienteId, pieza: "t46", cara: caraOclusal46,
-            capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
-        }))
-    ) fallidos.push("caries requerida t46");
+    const obturacion46 = await setHallazgoCara({
+        clinicId, pacienteId, pieza: "t46", cara: caraOclusal46,
+        capa: "existente", codigo: "obturacion", de: null, uid: UID_SEED,
+    });
+    if (obturacion46 === null || !obturacion46.ok) {
+        fallidos.push(`obturación existente t46${obturacion46 && !obturacion46.ok ? `: ${obturacion46.error}` : ""}`);
+    }
+    const caries46 = await setHallazgoCara({
+        clinicId, pacienteId, pieza: "t46", cara: caraOclusal46,
+        capa: "requerida", codigo: "caries", de: null, uid: UID_SEED,
+    });
+    if (caries46 === null || !caries46.ok) {
+        fallidos.push(`caries requerida t46${caries46 && !caries46.ok ? `: ${caries46.error}` : ""}`);
+    }
 
     // Pieza ausente.
     const ausente = await setHallazgoDiente({

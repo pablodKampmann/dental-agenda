@@ -9,7 +9,7 @@ import type {
   EventoCara,
   EventoDiente,
 } from '@/lib/odontograma/tipos'
-import { basePath, nuevaEventoKey, type ParaEscribir } from './setHallazgo'
+import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
 import { SCHEMA_VERSION } from '@/lib/odontograma/tipos'
 
 /**
@@ -42,7 +42,12 @@ type RemoveHallazgoParams =
       readonly uid: string
     }
 
-export async function removeHallazgo(params: RemoveHallazgoParams): Promise<boolean | null> {
+/**
+ * Nunca rechaza por regla de negocio —borrar lo que ya está siempre vale— así que
+ * solo usa `{ ok: true }` o `null` de `ResultadoEscritura` (ver ese tipo en
+ * `setHallazgo.ts`, que documenta el contrato completo de los services de escritura).
+ */
+export async function removeHallazgo(params: RemoveHallazgoParams): Promise<ResultadoEscritura> {
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -88,9 +93,10 @@ export async function removeHallazgo(params: RemoveHallazgoParams): Promise<bool
       [`${base}/eventos/${eventoKey}`]: evento,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
   }
 }
+
