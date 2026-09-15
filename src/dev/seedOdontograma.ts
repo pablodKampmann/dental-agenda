@@ -5,7 +5,7 @@ import { getOdontograma } from "../services/odontograma/getOdontograma";
 import { setHallazgoCara, setHallazgoDiente, type ResultadoEscritura } from "../services/odontograma/setHallazgo";
 import { setVinculo } from "../services/odontograma/setVinculo";
 import { caraSemantica } from "../lib/odontograma/caras";
-import { SEED_PATIENTS, SEED_PATIENT_PEDIATRICO } from "./seedPatients";
+import { SEED_PATIENTS, SEED_PATIENT_PEDIATRICO, runSeedPatients, type SeedPatient } from "./seedPatients";
 
 /**
  * Dos seeds de odontograma, cada uno sobre un paciente de dentición distinta:
@@ -57,9 +57,23 @@ function registrarFallo(fallidos: string[], etiqueta: string, resultado: Resulta
  * idempotencia. Si ya hay algo cargado, devuelve el resultado final directamente
  * (`listo: false`) y el caller no tiene que escribir nada. Si no, devuelve el
  * contexto (`listo: true`) para que el caller arme sus propios hallazgos.
+ *
+ * `crearSiFalta`: si no se encuentra el paciente, lo crea con
+ * `runSeedPatients([objetivo])` en vez de tirar error, y vuelve a buscarlo. Pensado
+ * para el seed pediátrico (B4-3), que necesita su propio paciente y no puede
+ * depender de que alguien haya apretado antes "Seed Pacientes" -- ese botón corre
+ * la lista completa de SEED_PATIENTS y **no** es idempotente (ver nota en
+ * docs/odontograma-pendientes.md), así que no es algo que este seed pueda pedirle
+ * a quien lo usa que corra "por las dudas". El seed de adultos no pasa esta opción:
+ * sigue exigiendo que "Seed Pacientes" ya haya corrido, como siempre.
+ *
+ * Si el paciente ya existe (típicamente en el segundo click) no se lo vuelve a
+ * crear -- la búsqueda de acá arriba ya lo encuentra y el `if` de abajo ni se
+ * evalúa.
  */
 async function prepararSeed(
-    objetivo: { name: string; lastName: string }
+    objetivo: SeedPatient,
+    crearSiFalta = false
 ): Promise<{ listo: false; resultado: ResultadoSeed } | { listo: true; contexto: ContextoSeed }> {
     const clinicId = await getUser(true);
     if (!clinicId) throw new Error("No se pudo obtener el clinicId.");
@@ -70,10 +84,23 @@ async function prepararSeed(
     }
     const uid = usuario.uid;
 
-    const pacientes = await getAllPatients();
+    let pacientes = await getAllPatients();
     if (!pacientes) throw new Error("No se pudieron leer los pacientes.");
 
-    const paciente = pacientes.find((p) => p.name === objetivo.name && p.lastName === objetivo.lastName);
+    let paciente = pacientes.find((p) => p.name === objetivo.name && p.lastName === objetivo.lastName);
+
+    if (!paciente && crearSiFalta) {
+        const creado = await runSeedPatients([objetivo]);
+        if (creado.ok !== 1) {
+            throw new Error(
+                `No se pudo crear a ${objetivo.name} ${objetivo.lastName}: ${creado.failed.join(", ") || "error desconocido"}`
+            );
+        }
+        pacientes = await getAllPatients();
+        if (!pacientes) throw new Error("No se pudieron leer los pacientes recién creados.");
+        paciente = pacientes.find((p) => p.name === objetivo.name && p.lastName === objetivo.lastName);
+    }
+
     if (!paciente) {
         throw new Error(`No se encontró a ${objetivo.name} ${objetivo.lastName} — corré primero "Seed Pacientes".`);
     }
@@ -205,10 +232,15 @@ export async function runSeedOdontograma(): Promise<ResultadoSeed> {
  * hay piezas temporarias de por medio. No se cargó ningún vínculo multi-pieza --
  * `setVinculo` ya lo ejercita el seed de adultos y el issue no lo pide acá, así
  * que no sumar uno de más solo para "completar servicios".
+ *
+ * A diferencia del seed de adultos, este SÍ crea a su paciente si no existe
+ * (`crearSiFalta: true` en `prepararSeed`) -- no puede exigir que se corra "Seed
+ * Pacientes" antes, porque ese botón no es idempotente y correrlo solo para tener
+ * a esta paciente duplicaría a los otros doce (ver docs/odontograma-pendientes.md).
  */
 export async function runSeedOdontogramaPediatrico(): Promise<ResultadoSeed> {
     const objetivo = SEED_PATIENT_PEDIATRICO;
-    const preparacion = await prepararSeed(objetivo);
+    const preparacion = await prepararSeed(objetivo, true);
     if (!preparacion.listo) return preparacion.resultado;
     const { clinicId, pacienteId, uid } = preparacion.contexto;
 

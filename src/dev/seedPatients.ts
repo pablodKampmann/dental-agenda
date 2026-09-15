@@ -30,7 +30,7 @@ function fechaNacimientoConEdad(anios: number): string {
     return `${dia}/${mes}/${anioNacimiento}`;
 }
 
-interface SeedPatient {
+export interface SeedPatient {
     name: string;
     lastName: string;
     gender: "male" | "female";

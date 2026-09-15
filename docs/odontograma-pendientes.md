@@ -357,3 +357,32 @@ para el caso concreto que motivó esta entrada.
 
 La próxima vez que alguien renombre o saque una entrada del catálogo: repetir el chequeo
 de 4.4 (exportar y buscar el código viejo) antes de tocar `catalogo.ts`, no después.
+
+---
+
+## 6. `runSeedPatients` no es idempotente
+
+Detectado al resolver B4-3 (el seed pediátrico necesitaba poder crear a su propio
+paciente sin depender de que alguien hubiera apretado antes "Seed Pacientes").
+
+`runSeedPatients` (`src/dev/seedPatients.ts`) recorre la lista que recibe e inserta cada
+paciente con `SetPatients` sin chequear si ya existe uno con el mismo nombre/apellido (o
+DNI). Apretar "Insertar pacientes" dos veces duplica los doce pacientes originales; lo
+mismo pasa con "Insertar 100 pacientes adicionales" y con cualquier lista nueva que se le
+pase (`SEED_PATIENTS_EXTRA`, `[SEED_PATIENT_PEDIATRICO]`, ...).
+
+B4-3 **no** resuelve esto en general — sería tocar el comportamiento de un botón que ya
+usan los otros seeds, y el issue puntual no lo pedía. Lo que hace `runSeedOdontogramaPediatrico`
+es acotado: busca a su paciente por nombre/apellido con `getAllPatients()` antes de crear
+nada, y solo llama a `runSeedPatients([SEED_PATIENT_PEDIATRICO])` si no lo encuentra — así
+que ese caso puntual queda protegido sin cambiar `runSeedPatients` ni los demás botones de
+`/dev`.
+
+**Arreglo real, si hace falta:** que `runSeedPatients` chequee existencia (por nombre +
+apellido, o por DNI, que es el dato que no debería repetirse en la vida real) antes de cada
+`SetPatients`, y salte al que ya está en vez de insertarlo de nuevo — mismo criterio que ya
+usan `runSeedOdontograma`/`runSeedOdontogramaPediatrico` con `dientes`.
+
+**Bloquea:** nada hoy — es una herramienta de dev, no un flujo de producción, y el riesgo
+es "apretar el botón de más" con un humano de por medio, no una corrupción silenciosa de
+datos reales.
