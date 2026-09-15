@@ -8,7 +8,29 @@ import { SetPatients } from "../services/patients/setPatients";
 // SEED DATA — editá esta lista para agregar o modificar pacientes de prueba
 // ---------------------------------------------------------------------------
 
-interface SeedPatient {
+/**
+ * `birthDate` de un paciente con exactamente `anios` cumplidos hoy, en formato
+ * DD/MM/YYYY. Se usa para el paciente pediátrico (B4-3): la vista mixta del
+ * odontograma (`vistaSugeridaPorEdad()` en clinicHistory/page.tsx) depende de la edad
+ * calculada contra la fecha de hoy, así que una fecha de nacimiento fija (como la de
+ * cualquier otro SEED_PATIENT) se hubiera vuelto vieja con el correr de los años y
+ * en algún momento el paciente hubiera salido del rango 6–12 que dispara MIXTA.
+ *
+ * Ojo: esto solo evita el problema en el momento de definir la lista. Una vez que
+ * "Seed Pacientes" corre y `SetPatients` persiste este valor, el paciente queda con
+ * un `birthDate` fijo en Firebase como cualquier fecha de nacimiento real — a partir
+ * de ahí sí envejece, y en ~4 años (cuando pase de 12) va a necesitar re-sedearse o
+ * ajustarse a mano si todavía hace falta un paciente en dentición mixta para probar.
+ */
+function fechaNacimientoConEdad(anios: number): string {
+    const hoy = new Date();
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const anioNacimiento = hoy.getFullYear() - anios;
+    return `${dia}/${mes}/${anioNacimiento}`;
+}
+
+export interface SeedPatient {
     name: string;
     lastName: string;
     gender: "male" | "female";
@@ -21,6 +43,20 @@ interface SeedPatient {
     planName: string;       // debe existir bajo esa obra social ("" si es Particular)
     affiliateNum: string;
 }
+
+/**
+ * Único paciente de SEED_PATIENTS en dentición mixta (6 a 12 años) — lo consume
+ * `runSeedOdontogramaPediatrico()` en `seedOdontograma.ts` para saber a quién buscar
+ * después de correr "Seed Pacientes". `birthDate` sale de `fechaNacimientoConEdad()`
+ * (ver comentario ahí): 9 años cae cómodo en el rango 6–12 que dispara la vista
+ * MIXTA, sin quedar pegado a ninguno de los dos bordes.
+ */
+export const SEED_PATIENT_PEDIATRICO: SeedPatient = {
+    name: "Delfina", lastName: "Coria", gender: "female",
+    birthDate: fechaNacimientoConEdad(9), dni: "57123456",
+    num: "+54 9 11 2233 9988", address: "Bulnes 250", email: "familia.coria@gmail.com",
+    insuranceName: "Particular", planName: "", affiliateNum: "",
+};
 
 export const SEED_PATIENTS: SeedPatient[] = [
     // --- desde la lista original ---
@@ -134,6 +170,11 @@ export const SEED_PATIENTS: SeedPatient[] = [
         num: "+54 9 11 3344 5566", address: "Rivadavia 1500", email: "rocio.navarro@gmail.com",
         insuranceName: "OSDE", planName: "410", affiliateNum: "01789012",
     },
+
+    // --- paciente pediátrico (B4-3), agregado acá y no en un seed aparte para
+    // reutilizar la resolución de obras sociales/planes que ya hace runSeedPatients
+    // en vez de reimplementarla en seedOdontograma.ts.
+    SEED_PATIENT_PEDIATRICO,
 ];
 
 // ---------------------------------------------------------------------------
