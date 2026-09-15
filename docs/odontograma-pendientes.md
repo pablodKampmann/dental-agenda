@@ -233,42 +233,6 @@ necesita su entrada en `userNames/` cargada a mano también, o no puede loguears
 Avisarle al PO. El día que exista un alta de admin en el código, ese flujo escribe las
 dos cosas juntas.
 
-#### C · El `.write` de `/clinics/$clinic_id` cascadea sobre `eventos` — esto sí es nuestro
-
-`.write` concedido en un ancestro no se puede revocar desde abajo, así que
-`".write": "!data.exists()"` en `$evt` sería decorativo tal como están las reglas hoy.
-
-Es el caso contenido: el grant está en `/clinics/$clinic_id`, no en la raíz. Se
-des-cascadea bajando ese único `.write` a cada hijo que ya existe, con la misma condición
-que tiene hoy. Los permisos efectivos de cada módulo quedan idénticos. El `.read` **no** se
-toca: los reads tienen que seguir cascadeando.
-
-Ojo con un segundo nivel: `odontogramas` tampoco puede llevar un `.write` propio, o
-cascadea de nuevo sobre `eventos`. El `.write` va en `actual` y en `eventos/$evt` por
-separado.
-
-#### D · Las reglas no están en el repo
-
-No hay `database.rules.json`, ni `firebase.json`, ni `.firebaserc`, ni `firebase-tools` en
-`package.json`, ni nada en la historia de git. Viven solo en la consola: nunca pasaron por
-un PR y nadie puede ver un diff cuando cambian. Es prerequisito de B2-1 y del emulador.
-
-
----
-
-## 2. Para B2-2 · Lectura del odontograma
-
-### 2.1 La validación del dato crudo va en la lectura, no en los selectores
-
-`capasConHallazgo()` en `selectores.ts` hace `hallazgos.existente !== undefined` y confía
-en que la forma que llega de Firebase sea la del tipo. Está bien que confíe: validar el
-dato crudo es trabajo de la capa de lectura.
-
-Cuando se escriba B2-2, la lectura tiene que garantizar que lo que sale de ahí cumple
-`DientesPorClave` de verdad —códigos de hallazgo del catálogo, claves de pieza válidas,
-capas conocidas— para que los selectores no tengan que desconfiar. Si un nodo viene
-corrupto, decidir ahí qué se hace (descartar la pieza, loguear, romper) y escribirlo.
-
 ---
 
 ## 3. Para cuando se planifique el front
@@ -343,6 +307,46 @@ reimplementado— así que un implante no aparece nunca como opción sobre una t
 validación del service se queda igual: el filtro del picker es UX, la autoridad sigue
 siendo el backend.
 
+### 3.8 El historial de la pantalla deja editar y borrar asientos
+
+`HistorialTimeline` expone `onEditarTexto` y `onEliminar`, y `clinicHistory/page.tsx` los
+implementa contra estado local. Hoy da igual, porque nada de eso se persiste.
+
+Apenas F4-1 conecte la escritura, la pantalla va a ofrecer dos operaciones que el servidor
+rechaza siempre: `eventos/$evt` tiene `".write": "<cond> && !data.exists()"` en
+`database.rules.json`. Y F4-2 lo pide explícito: *"Es de solo lectura. El log es
+append-only y la pantalla no puede sugerir otra cosa."*
+
+Lo que hay que decidir antes de escribir F4-1 —no después— es si el timeline son **dos
+cosas distintas metidas en un componente**: notas libres del profesional, que se editan y
+que hoy no se guardan en ningún lado, y asientos de auditoría derivados de `eventos`, que
+son inmutables. Si son dos, se separan; si es una sola, se le saca la edición. Lo que no
+puede quedar es un botón de borrar sobre un log append-only.
+
+### 3.9 Los vínculos no se dibujan: la pantalla descarta `vinculos` de la lectura
+
+`getOdontograma` devuelve `{ dientes, vinculos, meta }`, pero `clinicHistory/page.tsx` usa
+solo `data.dientes`. `OdontogramaGrid` ni siquiera recibe `vinculos` como prop.
+
+El grafismo `span` ya existe (`FindingGlyph.tsx`), así que lo que falta es el render sobre
+el arco (F3-2) y el alta y baja (F3-3): el botón "Aplicar prótesis" hoy registra una
+entrada en el historial local y **nunca llama a `setVinculo`**.
+
+Consecuencia concreta, y la que confunde: el puente de tres piezas que siembra
+`runSeedOdontograma` está en la base y no se ve en pantalla. Es fácil leerlo como "el seed
+no anda" cuando lo que falta es el dibujo.
+
+### 3.10 `page.tsx` importa `validarTramo` desde un service
+
+`clinicHistory/page.tsx` importa `validarTramo` de `@/services/odontograma/setVinculo`, que
+a su vez importa `firebase/database`. La función es dominio puro: razona con `ordenVisual`
+y `arcada` y no toca Firebase.
+
+Como está, la pantalla arrastra el SDK al bundle por una función que no lo necesita, y el
+criterio de F4-1 —"ningún componente arma un path de Firebase ni importa el SDK"— queda en
+zona gris. El lugar es `src/lib/odontograma/`; moverlo es cambiar un import, y el service
+la sigue usando desde ahí.
+
 ---
 
 ## 4. Preguntas abiertas
@@ -379,15 +383,6 @@ La capa `requerida` es, literalmente, el plan de tratamiento. El sistema ya tien
 está en el plan y cambia el alcance.
 
 **Bloquea:** nada hoy. Preguntarlo antes de cerrar B3 para no descubrirlo después.
-
-### 4.3 `serverTimestamp()` vs `number` en el tipo de `ts`
-
-`EventoOdontograma.ts` está tipado `number`, que es lo que se **lee**. Lo que se **escribe**
-es el placeholder del SDK, que no es un número. Al escribir hay que resolverlo de alguna
-forma (un tipo de escritura aparte, un cast acotado en el servicio, o `number | object`).
-
-**Bloquea:** B2-3. Es decisión de implementación, no del PO — pero hay que tomarla
-explícitamente y no dejar que aparezca un `as any` en el servicio.
 
 ### 4.4 Eventos legado con un código de catálogo que ya no existe (`no_erupcionada` → `retenida`, B4-1)
 
