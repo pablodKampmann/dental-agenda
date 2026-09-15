@@ -197,6 +197,27 @@ Los dos se resuelven usando `caraSemantica()` de `caras.ts`, tanto para guardar 
 pintar. Ninguno de los dos se ve en pantalla si está mal: el dibujo queda coherente y
 espejado, y el dato clínico queda falso en media boca.
 
+### 3.7 `HallazgoPicker` no filtra por dentición (B4-1) — criterio para F4-1
+
+El catálogo declara `denticiones` por entrada y los services (`setHallazgoDiente`,
+`setVinculo`) lo hacen cumplir, pero el picker (`HallazgoPicker.tsx`) todavía arma su
+lista solo con `hallazgosPorAlcance()`, sin cruzarla contra la dentición de la pieza
+clickeada. Hoy no importa: la UI ni siquiera escribe contra Firebase todavía. Pero
+apenas F4-1 la conecte, sigue ofreciendo "Implante" o "Prótesis fija" sobre un diente de
+leche.
+
+**El flujo si no se arregla:** la odontóloga elige "Implante" sobre una pieza temporaria →
+la UI lo dibuja optimista → el service lo rechaza (`{ ok: false, error }`) → hay que
+revertir el dibujo optimista y mostrarle el error. Funciona (el service no permite que se
+guarde mal), pero es una mala experiencia evitable: se ofreció algo que nunca iba a
+guardarse.
+
+**Criterio de aceptación para F4-1:** `HallazgoPicker` filtra su lista con el mismo
+`aplicaADenticion(codigo, pieza.denticion)` que ya usan los services —importado, no
+reimplementado— así que un implante no aparece nunca como opción sobre una temporaria. La
+validación del service se queda igual: el filtro del picker es UX, la autoridad sigue
+siendo el backend.
+
 ---
 
 ## 4. Preguntas abiertas
@@ -242,3 +263,97 @@ forma (un tipo de escritura aparte, un cast acotado en el servicio, o `number | 
 
 **Bloquea:** B2-3. Es decisión de implementación, no del PO — pero hay que tomarla
 explícitamente y no dejar que aparezca un `as any` en el servicio.
+
+### 4.4 Eventos legado con un código de catálogo que ya no existe (`no_erupcionada` → `retenida`, B4-1)
+
+> **Pendiente de decisión — la toma Santiago.** No implementado a propósito: es una
+> decisión de producto sobre qué hacer con la historia clínica, no algo que se resuelva
+> con código a ciegas.
+
+**El planteo.** B4-1 renombró el código de catálogo `no_erupcionada` a `retenida` — y no
+fue solo el nombre, cambió el significado (dejó de ser "todavía no le tocó salir" y pasó a
+ser una anomalía clínica real). `codigo` no es un identificador interno: es un valor que se
+**persiste** en dos lugares —
+
+- `actual/dientes/{pieza}/diente/{capa}` (mutable)
+- `eventos/{evt}/de` y `eventos/{evt}/a` (append-only, `database.rules.json` tiene
+  `".write": "<cond> && !data.exists()"` en `eventos/$evt` — un evento ya escrito no se
+  puede tocar sin despublicar reglas)
+
+Si existe algún evento viejo con `de` o `a` igual a `"no_erupcionada"`, hoy
+`getEventos.ts` lo descarta **entero** (`validarCodigoTransicion` rechaza el código
+inválido, y `validarEvento` devuelve `null` para todo el asiento apenas un campo falla —
+ver `getEventos.ts`, función `validarEvento`, ramas CARA/DIENTE/MULTI). No hay forma de
+arreglar ese evento porque el nodo es inmutable: la decisión es qué hace la **lectura** con
+él, para siempre — no se puede parchear una vez y olvidarse.
+
+**Opciones**
+
+- **(A) Tolerar códigos legado en la lectura, mostrarlos con su nombre viejo, congelado.**
+  `getEventos` reconoce `no_erupcionada` (y cualquier código futuro que se retire) contra
+  un vocabulario legado aparte del catálogo vivo, y el evento se muestra con una etiqueta
+  fija tipo "Pieza no erupcionada (código de catálogo retirado)" — **nunca** con el nombre
+  ni el sentido de `retenida`, porque no es lo mismo que se registró en su momento.
+  Costo: el tipo `EventoOdontograma`/`CodigoHallazgoDiente` ya no alcanza para tipar lo que
+  devuelve la lectura de eventos —hay que ensanchar el tipo de lectura o envolver el
+  resultado— y cada rename futuro agrega una entrada a ese vocabulario legado que no se
+  borra nunca. A favor: ningún asiento de la historia clínica desaparece.
+- **(B) Descartar el evento (comportamiento actual, sin cambios).** Costo cero. En contra:
+  un asiento real de la historia clínica desaparece sin dejar rastro visible —el
+  `console.error` no lo ve nadie en producción— la primera vez que se renombra o se saca un
+  código del catálogo. Es exactamente lo que B4-2 (`docs/odontograma-backend.md`) advierte
+  para el caso de exfoliación: perder historia es dejar de tener una historia clínica.
+- **(C) Punto medio: no decodificar el código, pero no perder el asiento.** La lectura
+  devuelve el evento con un campo tipo `legado: true` y sin `de`/`a` interpretados, y la UI
+  lo muestra como "hubo un cambio acá que ya no se puede mostrar (código de catálogo
+  retirado)". Menos informativo que (A), pero no exige mantener un vocabulario legado
+  creciendo dentro del tipo de dominio — el costo se paga en la UI, no en `tipos.ts`.
+
+**Recomendación: (A).** Es una historia clínica real, con implicancia legal (ver [4.1](#41-quién-firma-cada-asiento-de-auditoría--diferido)):
+perder un asiento porque el catálogo cambió de vocabulario es peor que cargar con un
+vocabulario legado de solo lectura que crece uno por rename. La alternativa (B, lo que hay
+hoy) es la más barata pero es la que el propio proyecto ya identificó como el error caro en
+B4-2.
+
+**Antes de decidir, falta un dato que nadie en este repo puede mirar sin acceso a la
+consola de Firebase — hace falta que Santiago lo chequee:**
+
+1. Exportar el JSON del proyecto (consola de Firebase → Realtime Database → menú de
+   tres puntos sobre el nodo raíz o sobre `clinics` → **Export JSON**) y buscar (Ctrl+F)
+   la cadena literal `no_erupcionada`.
+2. Si aparece bajo algún `.../actual/dientes/{clave}/diente/{capa}`: hay datos vivos que
+   migrar. Ese nodo **sí** es mutable, así que un script de migración (mismo patrón que
+   `src/dev/migrateAddTimestamps.ts`, disparado desde un botón en `src/app/dev/page.tsx`)
+   puede reescribir `"no_erupcionada"` → `"retenida"` ahí. **No escrito todavía** porque no
+   se sabe si hace falta — si el export da negativo, no hace falta ningún script.
+3. Si aparece bajo algún `.../eventos/{evt}/de` o `.../eventos/{evt}/a`: ese dato es
+   exactamente el caso de la opción (A)/(B)/(C) de arriba. Ahí no hay migración posible
+   (el nodo es append-only) — la decisión de arriba es la que determina qué hace
+   `getEventos` con ese asiento, no una migración.
+4. Evidencia indirecta (no reemplaza el chequeo anterior): al momento de este rename, la
+   UI del odontograma todavía no escribe a Firebase —`AGENTS.md` documenta que el picker
+   actualiza estado local, no `actual/`, hasta que se conecte F4-1— y el único código que
+   alguna vez llamó a `setHallazgoDiente` contra datos reales es
+   `src/dev/seedOdontograma.ts`, que nunca sembró `no_erupcionada`. Es una señal fuerte de
+   que no hay datos afectados, pero no es prueba: no cubre ediciones manuales hechas desde
+   la consola de Firebase, ni un seed o prototipo anterior a este repo.
+
+**Bloquea:** nada hoy (0 usuarios reales tocando el odontograma todavía, ver punto 4), pero
+hay que resolverlo antes de que el picker empiece a escribir contra Firebase de verdad
+(F4-1) — después de eso, cada rename de catálogo es un evento real de un paciente real.
+
+---
+
+## 5. Lección de B4-1: los códigos del catálogo son valores persistidos
+
+`codigo` en `catalogo.ts` no es un identificador interno de refactor libre: es lo que
+queda escrito en `actual/dientes/{pieza}/diente|caras/{capa}` y en `eventos/{evt}/de|a`.
+Renombrar uno —como pasó con `no_erupcionada` → `retenida` en B4-1— es una **migración de
+datos**, no un cambio de nombre de variable: hay que auditar si hay datos con el código
+viejo (`actual`, mutable) y decidir qué hacer con los que ya están en el log append-only
+(`eventos`, inmutable) **antes** de asumir que renombrar en el código alcanza. Ver
+[4.4](#44-eventos-legado-con-un-código-de-catálogo-que-ya-no-existe-no_erupcionada--retenida-b4-1)
+para el caso concreto que motivó esta entrada.
+
+La próxima vez que alguien renombre o saque una entrada del catálogo: repetir el chequeo
+de 4.4 (exportar y buscar el código viejo) antes de tocar `catalogo.ts`, no después.

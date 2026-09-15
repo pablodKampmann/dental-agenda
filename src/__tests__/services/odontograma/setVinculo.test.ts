@@ -183,7 +183,7 @@ describe('setVinculo / removeVinculo', () => {
       uid: 'uid-1',
     })
 
-    expect(resultado).toBe(true)
+    expect(resultado).toEqual({ ok: true })
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 

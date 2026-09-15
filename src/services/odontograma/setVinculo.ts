@@ -10,7 +10,7 @@ import {
   type PiezasSet,
   type Vinculo,
 } from '@/lib/odontograma/tipos'
-import { basePath, nuevaEventoKey, type ParaEscribir } from './setHallazgo'
+import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
 
 /**
  * Alta de un vínculo multi-pieza (prótesis fija o removible).
@@ -83,13 +83,12 @@ interface SetVinculoParams {
 }
 
 /**
- * `null` es fallo técnico (offline, error de Firebase) — mismo criterio que el
- * resto de los services. `{ ok: false, error }` es un tramo inválido: rechazado
- * con un mensaje que la UI puede mostrar tal cual, sin reventar.
+ * Devuelve `ResultadoEscritura` con `vinculoId` como campo extra de éxito (ver el
+ * contrato completo en `setHallazgo.ts`). `{ ok: false, error }` es un tramo
+ * inválido o un tipo que no aplica a esa dentición: rechazado con un mensaje que la
+ * UI puede mostrar tal cual, sin reventar.
  */
-type SetVinculoResultado = { readonly ok: true; readonly vinculoId: string } | { readonly ok: false; readonly error: string } | null
-
-export async function setVinculo(params: SetVinculoParams): Promise<SetVinculoResultado> {
+export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEscritura<{ vinculoId: string }>> {
   const { clinicId, pacienteId, tipo, capa, piezas, uid } = params
 
   const validacion = validarTramo(piezas)

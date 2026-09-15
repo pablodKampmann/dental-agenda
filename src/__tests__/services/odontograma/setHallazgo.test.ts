@@ -76,7 +76,7 @@ describe('setHallazgo / removeHallazgo', () => {
       uid: 'uid-1',
     })
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
     expect(mockUpdate).toHaveBeenCalledTimes(1)
 
     const [, payload] = mockUpdate.mock.calls[0]
@@ -100,6 +100,24 @@ describe('setHallazgo / removeHallazgo', () => {
       a: 'caries',
     })
     expect(evento.ts).toEqual({ '.sv': 'timestamp' })
+  })
+
+  it('setHallazgoCara accepts a cara-scope finding on a temporary tooth (no cara-scope code is dentición-restricted today)', async () => {
+    mockUpdate.mockResolvedValue(undefined)
+    const caraTemporaria = caraSemantica('center', 5) // t54..t55 son cuadrante 5, temporaria
+    const result = await setHallazgoCara({
+      clinicId: 'clinic-1',
+      pacienteId: 'paciente-1',
+      pieza: 't54',
+      cara: caraTemporaria,
+      capa: 'existente',
+      codigo: 'caries',
+      de: null,
+      uid: 'uid-1',
+    })
+
+    expect(result).toEqual({ ok: true })
+    expect(mockUpdate).toHaveBeenCalledTimes(1)
   })
 
   it('setHallazgoCara on requerida does not touch the existente leaf (different path)', async () => {
@@ -192,7 +210,7 @@ describe('setHallazgo / removeHallazgo', () => {
       uid: 'uid-1',
     })
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
     expect(mockUpdate).toHaveBeenCalledTimes(1)
 
     const [, payload] = mockUpdate.mock.calls[0]
@@ -267,7 +285,7 @@ describe('setHallazgo / removeHallazgo', () => {
       uid: 'uid-1',
     })
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
     const [, payload] = mockUpdate.mock.calls[0]
     const base = '/clinics/clinic-1/odontogramas/paciente-1'
 
