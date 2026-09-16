@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { usePopoverAnchor } from "@/hooks/usePopoverAnchor";
 import { usePopoverReveal } from "@/hooks/usePopoverReveal";
@@ -11,6 +11,7 @@ import { updateAppointment } from "./../../services/appointments/updateAppointme
 import { getAppointments } from "./../../services/appointments/getAppointments";
 import { SearchPatient } from "./../../services/patients/searchPatient";
 import { getPatients } from "./../../services/patients/getPatients";
+import { getClinicData } from "@/services/config/getClinicData";
 import { ClipLoader } from "react-spinners";
 import { Loading } from "./../../components/shared/loading";
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
@@ -43,6 +44,7 @@ import { AddAppointmentForm } from "@/components/appointments/ui/AddAppointmentF
 import { RemainingAppointments } from "@/components/appointments/ui/RemainingAppointments";
 import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
 import Tooltip from "@/components/shared/Tooltip";
+import { CustomSelect } from "@/components/shared/CustomSelect";
 
 import { useToast } from '@/context/ToastContext';
 
@@ -123,6 +125,8 @@ export default function Page() {
   const [freeSpaces, setFreeSpaces] = useState<any>(null);
   const [time, setTime] = useState(getCurrentTime());
   const [clinicId, setClinicId] = useState<string | null>(null);
+  const [pros, setPros] = useState<any[] | null>(null);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(null);
 
   const calendarRef = useRef<any>(null);
   const skipResetHours = useRef(false);
@@ -137,6 +141,55 @@ export default function Page() {
     }
     fetchClinicId();
   }, []);
+
+  // No es realtime a propósito, mismo criterio que el resto de /agenda: la lista de
+  // profesionales se trae una sola vez al montar, no hace falta escuchar cambios en vivo
+  // de /config mientras la agenda está abierta.
+  useEffect(() => {
+    if (!clinicId) return;
+    async function fetchPros() {
+      const result = await getClinicData(clinicId!, "pros");
+      setPros(Array.isArray(result) ? result : []);
+    }
+    fetchPros();
+  }, [clinicId]);
+
+  // Selector oculto y sin filtrado con 0 o 1 profesional — cero cambio de comportamiento
+  // para una clínica que todavía no cargó un segundo profesional en /config.
+  const showProfessionalFilter = !!pros && pros.length > 1;
+
+  // Recuerda el último profesional visto por este admin en este browser (por clínica, no
+  // global) — se restaura solo al volver a entrar a /agenda.
+  useEffect(() => {
+    if (!clinicId || !pros || pros.length === 0) return;
+    let saved: string | null = null;
+    try {
+      saved = window.localStorage.getItem(`agenda-last-pro-${clinicId}`);
+    } catch { /* localStorage no disponible (privado/bloqueado) — arranca en el primero */ }
+    const validSaved = saved && pros.some((p: any) => p.key === saved) ? saved : null;
+    setSelectedProfessionalId(validSaved ?? pros[0].key);
+  }, [clinicId, pros]);
+
+  function handleSelectProfessional(id: string) {
+    setSelectedProfessionalId(id);
+    try {
+      if (clinicId) window.localStorage.setItem(`agenda-last-pro-${clinicId}`, id);
+    } catch { /* no pasa nada si no se pudo persistir, solo no se recuerda la próxima vez */ }
+  }
+
+  // El id que se graba en cada turno nuevo. Se tagea aunque el selector esté oculto (0 o 1
+  // profesional) para que el día que se cargue un segundo profesional en /config, los turnos
+  // ya existentes del primero no queden sin dueño y desaparezcan de su vista filtrada.
+  const activeProfessionalId = pros && pros.length > 0 ? selectedProfessionalId ?? pros[0].key : null;
+
+  // La agenda (grilla, turnos restantes, cálculo de huecos libres, click en fila) solo ve
+  // los turnos del profesional seleccionado una vez que hay 2+ cargados — con 0 o 1 no hay
+  // nada que filtrar y se muestra todo, igual que antes de esta feature.
+  const visibleAppointments = useMemo(() => {
+    if (!Array.isArray(appointments)) return appointments;
+    if (!showProfessionalFilter || !selectedProfessionalId) return appointments;
+    return appointments.filter((a: any) => a && a.professionalId === selectedProfessionalId);
+  }, [appointments, showProfessionalFilter, selectedProfessionalId]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -278,7 +331,7 @@ export default function Page() {
         addMins(150),
       ];
 
-      if (!appointments || appointments.length === 0) {
+      if (!visibleAppointments || visibleAppointments.length === 0) {
         const maxSlots = slots.filter((s) =>
           (TIME_SLOTS as readonly string[]).includes(s),
         ).length;
@@ -286,7 +339,7 @@ export default function Page() {
         return;
       }
 
-      const validAppointments = appointments.filter((a: any) => a && a.time);
+      const validAppointments = visibleAppointments.filter((a: any) => a && a.time);
       let freeCount = 0;
       for (const slot of slots) {
         if (!(TIME_SLOTS as readonly string[]).includes(slot)) break;
@@ -296,7 +349,7 @@ export default function Page() {
 
       setFreeSpaces(freeCount);
     }
-  }, [appointmentDate, appointments]);
+  }, [appointmentDate, visibleAppointments]);
 
   useEffect(() => {
     if (appointmentDate) {
@@ -438,10 +491,10 @@ export default function Page() {
   function handleCliclRow(time: string, event: any) {
     if (!isLoadAppoints) {
       if (
-        appointments &&
-        appointments.some((a: { time: string }) => a.time === time)
+        visibleAppointments &&
+        visibleAppointments.some((a: { time: string }) => a.time === time)
       ) {
-        const appointment = appointments.find(
+        const appointment = visibleAppointments.find(
           (a: { time: string }) => a && a.time === time,
         );
         // Reclickear el turno que ya está "activo" (Acciones abierto sobre él, o en
@@ -505,14 +558,12 @@ export default function Page() {
         const parts = date.split("/");
         const year = parts[2];
         setShowForm(true);
-        setTimeout(() => {
-          setAppointmentDate({
-            date: date,
-            dayComplete: `${dayName} ${dayNum} de ${monthName}`,
-            year: year,
-            time: time,
-          });
-        }, 300);
+        setAppointmentDate({
+          date: date,
+          dayComplete: `${dayName} ${dayNum} de ${monthName}`,
+          year: year,
+          time: time,
+        });
       }
     }
   }
@@ -525,6 +576,10 @@ export default function Page() {
   ) {
     setIsLoadAppoints(true);
     const editing = editingAppointment;
+    // Si se edita, el turno conserva el profesional que ya tenía (por si en el futuro se
+    // habilita cambiarlo, hoy siempre coincide con el filtro activo). Si es alta nueva, el
+    // profesional lo decide el filtro seleccionado en la agenda.
+    const professionalId = editing?.professionalId ?? activeProfessionalId ?? undefined;
     clean();
     const result = editing
       ? await updateAppointment(
@@ -534,12 +589,14 @@ export default function Page() {
           dateData,
           reason,
           observations,
+          professionalId,
         )
       : await setAppointment(
           patientId,
           dateData,
           reason,
           observations,
+          professionalId,
         );
     const formattedDate = date?.replace(/\//g, "");
     const appts = await fetchAppointments(formattedDate);
@@ -561,8 +618,8 @@ export default function Page() {
     showToast("success", "Turno eliminado correctamente");
   }
 
-  const appointmentsCount = Array.isArray(appointments)
-    ? appointments.filter((a: any) => a && a.time).length
+  const appointmentsCount = Array.isArray(visibleAppointments)
+    ? visibleAppointments.filter((a: any) => a && a.time).length
     : 0;
 
   // El turno sobre el que está abierto el popover de Acciones, o que se está editando —
@@ -784,6 +841,18 @@ export default function Page() {
                   <MdChevronRight size={20} />
                 </button>
 
+                {showProfessionalFilter && (
+                  <div className="w-48 shrink-0">
+                    <CustomSelect
+                      size="sm"
+                      value={selectedProfessionalId ?? ""}
+                      onChange={handleSelectProfessional}
+                      options={pros!.map((p: any) => ({ value: p.key, label: p.nameComplete }))}
+                      placeholder="Profesional"
+                    />
+                  </div>
+                )}
+
                 <div className="w-5 shrink-0 flex items-center justify-center">
                   {isLoadAppoints && (
                     <ClipLoader speedMultiplier={1.7} color="#0f766e" size={18} />
@@ -792,7 +861,7 @@ export default function Page() {
               </div>
 
               <AppointmentsTable
-                appointments={appointments}
+                appointments={visibleAppointments}
                 appointmentDate={appointmentDate}
                 date={date}
                 onRowClick={handleCliclRow}
@@ -823,6 +892,7 @@ export default function Page() {
                   onSetAppoint={handleSetAppoint}
                   onOpenCreatePatient={() => setOpenModalCreatePatient(true)}
                   clinicId={clinicId}
+                  professionalName={showProfessionalFilter ? (pros!.find((p: any) => p.key === activeProfessionalId)?.nameComplete ?? null) : null}
                   editing={!!editingAppointment}
                   onDelete={() => setOpenAlertMessage(true)}
                 />
@@ -858,7 +928,7 @@ export default function Page() {
                   </div>
 
                   <RemainingAppointments
-                    appointments={appointments}
+                    appointments={visibleAppointments}
                     isCurrentViewToday={isToday(today)}
                     time={time}
                     alwaysToday={alwaysToday}

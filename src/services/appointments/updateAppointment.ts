@@ -11,6 +11,7 @@ export async function updateAppointment(
     dateData: dateData,
     reason?: any,
     observations?: string,
+    professionalId?: string,
 ) {
     try {
         if (!navigator.onLine) {
@@ -47,6 +48,7 @@ export async function updateAppointment(
             ...(dateData.time5 ? { time5: dateData.time5 } : {}),
             ...(dateData.time6 ? { time6: dateData.time6 } : {}),
             ...(reason ? { reason: reason } : {}),
+            ...(professionalId ? { professionalId } : {}),
             observations: observations,
         });
 

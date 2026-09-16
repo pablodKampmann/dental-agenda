@@ -86,10 +86,11 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                   rowSpan={rowSpan}
                   style={{ minHeight: `${rowSpan * 60}px` }}
                   className={`
+                    relative
                     ${appointment
                       ? isActive
-                        ? `border-l-4 border-l-teal-600 bg-teal-50 ${paddingClass} px-3`
-                        : `border-l-[3px] border-l-teal-600 hover:bg-gray-50 ${paddingClass} px-3`
+                        ? `bg-teal-50 ${paddingClass} px-3`
+                        : `hover:bg-gray-50 ${paddingClass} px-3`
                       : isSelected ? 'slot-selected p-8' : 'p-8 hover:bg-gray-50'
                     }
                     ${isLast ? '' : 'border-b border-b-gray-100'}
@@ -97,6 +98,12 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                   `}
                   onClick={(e) => onRowClick(time, e)}
                 >
+                  {appointment && (
+                    <span
+                      aria-hidden
+                      className={`absolute left-0 top-0 bottom-0 bg-teal-600 ${isActive ? 'w-1' : 'w-[3px]'}`}
+                    />
+                  )}
                   {appointment && (
                     <div
                       key={`${date}-${time}`}

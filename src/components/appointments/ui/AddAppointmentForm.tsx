@@ -30,6 +30,9 @@ interface Props {
   onSetAppoint: (patientId: number, dateData: dateData, reason: any, observations?: string) => void;
   onOpenCreatePatient: () => void;
   clinicId: string | null;
+  /** Nombre del profesional dueño de esta agenda — solo se pasa (y solo se muestra) cuando
+   *  la clínica tiene 2+ profesionales cargados; con uno solo no hay ambigüedad que aclarar. */
+  professionalName?: string | null;
   /** El turno ya existe y se está reagendando/editando, en vez de crear uno nuevo — el
    *  paciente queda fijo (no se ofrece el step de cambiarlo) y el copy/label reflejan
    *  "editar" en vez de "agregar". */
@@ -62,6 +65,7 @@ export function AddAppointmentForm({
   observations, setObservations,
   onSetAppoint, onOpenCreatePatient,
   clinicId,
+  professionalName,
   editing = false,
   onDelete,
 }: Props) {
@@ -108,7 +112,14 @@ export function AddAppointmentForm({
 
       {/* Card header */}
       <div className='shrink-0 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50 select-none'>
-        <h2 className='text-base font-bold text-black tracking-tight'>{editing ? 'Editar Turno' : 'Agregar Turno'}</h2>
+        <div className='flex items-center justify-between gap-2'>
+          <h2 className='text-base font-bold text-black tracking-tight'>{editing ? 'Editar Turno' : 'Agregar Turno'}</h2>
+          {professionalName && (
+            <span className='shrink-0 max-w-[140px] truncate text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5'>
+              {professionalName}
+            </span>
+          )}
+        </div>
         <p className='text-xs text-gray-400'>{editing ? 'Horario y detalles del turno.' : 'Horario, paciente y confirmación.'}</p>
       </div>
 
@@ -309,6 +320,9 @@ export function AddAppointmentForm({
                 <div className='px-3 py-2'>
                   <p className='text-sm font-semibold text-black'>{appointmentDate.dayComplete}, {appointmentDate.year}</p>
                   <p className='text-xs text-gray-500'>{appointmentDate.time} – {getEndTime()}</p>
+                  {professionalName && (
+                    <p className='text-xs text-gray-500 mt-0.5'>Profesional: <span className='font-semibold text-black'>{professionalName}</span></p>
+                  )}
                 </div>
               ) : (
                 <div className='px-3 py-2 flex items-center justify-between gap-2'>
