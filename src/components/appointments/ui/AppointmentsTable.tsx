@@ -9,11 +9,15 @@ interface Props {
   appointmentDate: any;
   date: string | null;
   onRowClick: (time: string, event: React.MouseEvent) => void;
+  /** `${date}-${time}` del turno sobre el que está abierto el popover de Acciones, o que se
+   *  está editando — para darle un trato visual distinto mientras dura esa interacción, así
+   *  el usuario sabe con cuál está interactuando. `null`/`undefined` cuando ninguno. */
+  activeAppointmentKey?: string | null;
 }
 
 const TIME_CELL = "w-px whitespace-nowrap align-top select-none cursor-default bg-gray-50 border-r border-gray-200 px-4 pt-2 text-xs font-semibold text-gray-400";
 
-export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick }: Props) {
+export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick, activeAppointmentKey }: Props) {
   return (
     <div className='flex-1 min-h-0 overflow-y-auto'>
       <table className='w-full'>
@@ -71,6 +75,8 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                 appointmentDate.time6 === time)
             );
 
+            const isActive = !!appointment && activeAppointmentKey === `${date}-${time}`;
+
             return (
               <tr key={time}>
                 <td className={`${TIME_CELL} ${isLast ? '' : 'border-b border-b-gray-100'}`}>
@@ -81,7 +87,9 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                   style={{ minHeight: `${rowSpan * 60}px` }}
                   className={`
                     ${appointment
-                      ? `border-l-[3px] border-l-teal-600 hover:bg-gray-50 ${paddingClass} px-3`
+                      ? isActive
+                        ? `border-l-4 border-l-teal-600 bg-teal-50 ${paddingClass} px-3`
+                        : `border-l-[3px] border-l-teal-600 hover:bg-gray-50 ${paddingClass} px-3`
                       : isSelected ? 'slot-selected p-8' : 'p-8 hover:bg-gray-50'
                     }
                     ${isLast ? '' : 'border-b border-b-gray-100'}
@@ -90,7 +98,11 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                   onClick={(e) => onRowClick(time, e)}
                 >
                   {appointment && (
-                    <div className='flex items-start gap-3 h-full'>
+                    <div
+                      key={`${date}-${time}`}
+                      className='flex items-start gap-3 h-full animate-carousel-reveal'
+                      style={{ animationDelay: `${Math.min(index * 25, 200)}ms`, animationFillMode: 'both' }}
+                    >
                       <AvatarFallback
                         displayName={`${appointment.patientData.name} ${appointment.patientData.lastName}`}
                         size={32}

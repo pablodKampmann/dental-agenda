@@ -30,6 +30,14 @@ interface Props {
   onSetAppoint: (patientId: number, dateData: dateData, reason: any, observations?: string) => void;
   onOpenCreatePatient: () => void;
   clinicId: string | null;
+  /** El turno ya existe y se está reagendando/editando, en vez de crear uno nuevo — el
+   *  paciente queda fijo (no se ofrece el step de cambiarlo) y el copy/label reflejan
+   *  "editar" en vez de "agregar". */
+  editing?: boolean;
+  /** Solo se usa con `editing`: eliminar el turno definitivamente en vez de guardar los
+   *  cambios — el padre es responsable de la confirmación (mismo `ConfirmAlert` que ya
+   *  dispara el menú de Acciones). */
+  onDelete?: () => void;
 }
 
 const CHAPTERS = [
@@ -54,8 +62,10 @@ export function AddAppointmentForm({
   observations, setObservations,
   onSetAppoint, onOpenCreatePatient,
   clinicId,
+  editing = false,
+  onDelete,
 }: Props) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(editing ? 3 : 1);
   const [chapterName, setChapterName] = useState('');
   const [chapterData, setChapterData] = useState<any>(null);
   const [loadingChapter, setLoadingChapter] = useState(false);
@@ -98,14 +108,16 @@ export function AddAppointmentForm({
 
       {/* Card header */}
       <div className='shrink-0 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50 select-none'>
-        <h2 className='text-base font-bold text-black tracking-tight'>Agregar Turno</h2>
-        <p className='text-xs text-gray-400'>Horario, paciente y confirmación.</p>
+        <h2 className='text-base font-bold text-black tracking-tight'>{editing ? 'Editar Turno' : 'Agregar Turno'}</h2>
+        <p className='text-xs text-gray-400'>{editing ? 'Horario y detalles del turno.' : 'Horario, paciente y confirmación.'}</p>
       </div>
 
-      {/* Stepper */}
+      {/* Stepper — en modo edición el paciente queda fijo, no se ofrece ese step */}
       <div className='shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200'>
-        {[1, 2, 3].map((s, i) => {
-          const labels = ['Horario', 'Paciente', 'Confirmar'];
+        {(editing
+          ? [{ s: 1, label: 'Horario' }, { s: 3, label: 'Confirmar' }]
+          : [{ s: 1, label: 'Horario' }, { s: 2, label: 'Paciente' }, { s: 3, label: 'Confirmar' }]
+        ).map(({ s, label }, i, arr) => {
           const complete = isStepComplete(s);
           const active = step === s;
           return (
@@ -127,10 +139,10 @@ export function AddAppointmentForm({
                 <span className={`text-xs font-semibold select-none transition duration-150
                   ${active ? 'text-teal-700' : complete ? 'text-teal-600' : 'text-gray-400 group-hover:text-teal-600'}
                 `}>
-                  {labels[i]}
+                  {label}
                 </span>
               </button>
-              {i < 2 && (
+              {i < arr.length - 1 && (
                 <div className={`h-0.5 w-6 mx-1 rounded-full transition duration-150 ${complete ? 'bg-teal-600' : 'bg-gray-200'}`} />
               )}
             </div>
@@ -153,9 +165,11 @@ export function AddAppointmentForm({
                     <p className='text-xs text-gray-500 select-none mt-1'>Horario</p>
                     <p className='text-sm font-semibold text-black'>{appointmentDate.time} – {getEndTime()}</p>
                   </div>
-                  <button onClick={() => setAppointmentDate(null)} className='shrink-0'>
-                    <FaRegTrashCan size={18} className='text-gray-400 hover:text-red-600 transition duration-150' />
-                  </button>
+                  {!editing && (
+                    <button onClick={() => setAppointmentDate(null)} className='shrink-0'>
+                      <FaRegTrashCan size={18} className='text-gray-400 hover:text-red-600 transition duration-150' />
+                    </button>
+                  )}
                 </div>
 
                 {/* Duración */}
@@ -182,7 +196,7 @@ export function AddAppointmentForm({
                   />
                 </div>
 
-                <button onClick={() => setStep(2)} className={PRIMARY_BTN}>
+                <button onClick={() => setStep(editing ? 3 : 2)} className={PRIMARY_BTN}>
                   Siguiente →
                 </button>
               </div>
@@ -308,7 +322,7 @@ export function AddAppointmentForm({
             <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>Paciente</span>
-                <button onClick={() => setStep(2)} className={LINK_BTN}>Editar</button>
+                {!editing && <button onClick={() => setStep(2)} className={LINK_BTN}>Editar</button>}
               </div>
               {patient ? (
                 <div className='px-3 py-2'>
@@ -321,7 +335,7 @@ export function AddAppointmentForm({
               ) : (
                 <div className='px-3 py-2 flex items-center justify-between gap-2'>
                   <p className='text-xs text-red-600 font-medium'>Sin paciente seleccionado</p>
-                  <button onClick={() => setStep(2)} className={LINK_BTN}>Seleccionar</button>
+                  {!editing && <button onClick={() => setStep(2)} className={LINK_BTN}>Seleccionar</button>}
                 </div>
               )}
             </div>
@@ -404,8 +418,18 @@ export function AddAppointmentForm({
                   : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}
               `}
             >
-              Confirmar Turno
+              {editing ? 'Guardar cambios' : 'Confirmar Turno'}
             </button>
+
+            {editing && onDelete && (
+              <button
+                onClick={onDelete}
+                className='shrink-0 w-full flex items-center justify-center gap-1.5 py-2 text-sm font-semibold text-red-600 border-2 border-red-200 rounded-lg hover:bg-red-50 transition duration-150'
+              >
+                <FaRegTrashCan size={14} />
+                Eliminar turno
+              </button>
+            )}
           </div>
         )}
       </div>

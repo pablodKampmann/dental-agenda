@@ -2,12 +2,16 @@
 
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor";
+import { usePopoverReveal } from "@/hooks/usePopoverReveal";
+import { computePopoverStyle, POPOVER_Z_INDEX } from "@/lib/popoverPosition";
 import { setAppointment } from "./../../services/appointments/setAppointment";
+import { updateAppointment } from "./../../services/appointments/updateAppointment";
 import { getAppointments } from "./../../services/appointments/getAppointments";
 import { SearchPatient } from "./../../services/patients/searchPatient";
 import { getPatients } from "./../../services/patients/getPatients";
 import { ClipLoader } from "react-spinners";
-import { FaShare } from "react-icons/fa";
 import { Loading } from "./../../components/shared/loading";
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
 import { useRouter } from "next/navigation";
@@ -21,6 +25,7 @@ import {
   MdChevronRight,
   MdClose,
   MdCalendarToday,
+  MdEdit,
 } from "react-icons/md";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
@@ -37,6 +42,7 @@ import { AppointmentsTable } from "@/components/appointments/ui/AppointmentsTabl
 import { AddAppointmentForm } from "@/components/appointments/ui/AddAppointmentForm";
 import { RemainingAppointments } from "@/components/appointments/ui/RemainingAppointments";
 import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
+import Tooltip from "@/components/shared/Tooltip";
 
 import { useToast } from '@/context/ToastContext';
 
@@ -79,6 +85,11 @@ function PatientParamReader({
   return null;
 }
 
+// Alto/ancho fijos del popover de Acciones (header + 3 ítems) — igual que FloatingAnchor en
+// el odontograma, el alto se define por adelantado y nunca se mide después de pintar.
+const ACCIONES_PANEL_WIDTH = 224; // w-56
+const ACCIONES_PANEL_HEIGHT = 148;
+
 export default function Page() {
   const router = useRouter();
   const [calendarValue, setCalendarValue] = React.useState<Dayjs | null>(
@@ -90,16 +101,12 @@ export default function Page() {
   const [openCalendar, setOpenCalendar] = useState(false);
   const [openModalAppointment, setOpenModalAppointment] = useState(false);
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
-  const [mousePosition, setMousePosition] = useState({
-    x: 0,
-    y: 0,
-    flipUp: false,
-  });
   const [Field, setField] = useState("name");
   const [searchContent, setSearchContent] = useState("");
   const [listPatients, setListPatients] = useState<null | any[] | string>(null);
   const [appointments, setAppointments] = useState<any>(null);
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
+  const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
   const [reason, setReason] = useState<any>(null);
   const [observations, setObservations] = useState<any>("");
@@ -119,6 +126,9 @@ export default function Page() {
 
   const calendarRef = useRef<any>(null);
   const skipResetHours = useRef(false);
+  const appointmentAnchorRef = useRef<HTMLElement | null>(null);
+  const { rect: appointmentAnchorRect, hidden: appointmentAnchorHidden, capture: captureAppointmentAnchor } =
+    usePopoverAnchor(appointmentAnchorRef, openModalAppointment);
 
   useEffect(() => {
     async function fetchClinicId() {
@@ -187,6 +197,11 @@ export default function Page() {
   useEffect(() => {
     const formattedDate = date?.replace(/\//g, "");
     setIsLoadAppoints(true);
+    // Limpiar antes de fetchear, no solo al resolver: si no, appointments sigue
+    // siendo el del día anterior durante el fetch, y con el key por fecha en
+    // AppointmentsTable esos turnos viejos remontan (y animan) bajo la fecha nueva
+    // antes de que llegue el dato real.
+    setAppointments(null);
 
     async function get() {
       const appts = await fetchAppointments(formattedDate);
@@ -356,6 +371,52 @@ export default function Page() {
     setObservations("");
     setFreeSpaces(null);
     setSearchContent("");
+    setEditingAppointment(null);
+  }
+
+  // Precarga el form de "Agregar Turno" con los datos del turno existente y lo deja en
+  // modo edición (AddAppointmentForm con editing=true) — el paciente no se toca, solo
+  // horario/motivo/observaciones. skipResetHours evita que el efecto que escucha
+  // [appointmentDate] pise appointmentHours de vuelta a 1 apenas lo seteamos acá.
+  function handleEditAppointment() {
+    if (!appointmentSelect) return;
+    setOpenModalAppointment(false);
+    const hours = appointmentSelect.time6 ? 6
+      : appointmentSelect.time5 ? 5
+        : appointmentSelect.time4 ? 4
+          : appointmentSelect.time3 ? 3
+            : appointmentSelect.time2 ? 2
+              : 1;
+    skipResetHours.current = true;
+    setPatient(appointmentSelect.patientData);
+    setReason(appointmentSelect.reason ?? null);
+    setObservations(appointmentSelect.observations ?? "");
+    setAppointmentHours(hours);
+    setAppointmentDate({
+      date: appointmentSelect.date,
+      dayComplete: appointmentSelect.dayComplete,
+      year: appointmentSelect.year,
+      time: appointmentSelect.time,
+      time2: appointmentSelect.time2,
+      time3: appointmentSelect.time3,
+      time4: appointmentSelect.time4,
+      time5: appointmentSelect.time5,
+      time6: appointmentSelect.time6,
+    });
+    setEditingAppointment(appointmentSelect);
+    setShowForm(true);
+  }
+
+  function handleShareWhatsApp() {
+    setOpenModalAppointment(false);
+    const phone = appointmentSelect?.patientData?.num?.replace(/\D/g, "");
+    if (!phone) {
+      showToast("error", "El paciente no tiene un teléfono cargado");
+      return;
+    }
+    const patientName = appointmentSelect.patientData?.name ?? "";
+    const message = `Hola ${patientName}, te recordamos tu turno del ${appointmentSelect.dayComplete} a las ${appointmentSelect.time}hs.`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   }
 
   function dayBack() {
@@ -380,20 +441,35 @@ export default function Page() {
         appointments &&
         appointments.some((a: { time: string }) => a.time === time)
       ) {
-        clean();
         const appointment = appointments.find(
           (a: { time: string }) => a && a.time === time,
         );
+        // Reclickear el turno que ya está "activo" (Acciones abierto sobre él, o en
+        // edición — el mismo resaltado de AppointmentsTable) cierra/cancela en vez de
+        // reabrir lo mismo: no tiene sentido un segundo popover de Acciones sobre algo que
+        // ya está abierto, ni reiniciar una edición ya en curso.
+        const isActiveAppointment =
+          activeAppointment &&
+          appointment &&
+          activeAppointment.date === appointment.date &&
+          activeAppointment.time === appointment.time;
+        clean();
+        if (isActiveAppointment) {
+          setOpenModalAppointment(false);
+          return;
+        }
         setAppointmentSelect(appointment);
-        console.log('appointmentSelect:', appointment);
+        // Ancla el popover a la fila clickeada (no a la posición del mouse) — así
+        // usePopoverAnchor lo reposiciona/oculta solo si el scroll interno de la tabla
+        // mueve esa fila, en vez de quedar "flotando" desanclado en su posición original.
+        appointmentAnchorRef.current = event.currentTarget as HTMLElement;
+        captureAppointmentAnchor();
         setOpenModalAppointment(true);
-        const modalHeight = 140;
-        const spaceBelow = window.innerHeight - event.clientY;
-        setMousePosition({
-          x: event.pageX,
-          y: event.pageY,
-          flipUp: spaceBelow < modalHeight,
-        });
+      } else if (editingAppointment) {
+        // Editando un turno existente, el horario queda fijo — lo único editable es la
+        // duración (CustomSelect en el propio form). Clickear otro slot de la grilla no
+        // reubica nada, a diferencia del alta de un turno nuevo.
+        return;
       } else if (appointmentDate) {
         // Re-clickear cualquiera de los slots ya resaltados/"respirando" (el rango completo
         // que ocupa la duración elegida, no solo el horario inicial — ver el mismo chequeo
@@ -448,21 +524,31 @@ export default function Page() {
     observations?: string,
   ) {
     setIsLoadAppoints(true);
+    const editing = editingAppointment;
     clean();
-    const result = await setAppointment(
-      patientId,
-      dateData,
-      reason,
-      observations,
-    );
+    const result = editing
+      ? await updateAppointment(
+          editing.id,
+          editing.date,
+          patientId,
+          dateData,
+          reason,
+          observations,
+        )
+      : await setAppointment(
+          patientId,
+          dateData,
+          reason,
+          observations,
+        );
     const formattedDate = date?.replace(/\//g, "");
     const appts = await fetchAppointments(formattedDate);
     setAppointments(appts);
     setIsLoadAppoints(false);
     if (result === null) {
-      showToast("error", "Error al crear el turno");
+      showToast("error", editing ? "Error al editar el turno" : "Error al crear el turno");
     } else {
-      showToast("success", "Turno creado correctamente");
+      showToast("success", editing ? "Turno editado correctamente" : "Turno creado correctamente");
     }
   }
 
@@ -478,6 +564,28 @@ export default function Page() {
   const appointmentsCount = Array.isArray(appointments)
     ? appointments.filter((a: any) => a && a.time).length
     : 0;
+
+  // El turno sobre el que está abierto el popover de Acciones, o que se está editando —
+  // se mantiene resaltado en la grilla mientras dure cualquiera de los dos, para que quede
+  // claro con cuál se está interactuando.
+  const activeAppointment = editingAppointment ?? (openModalAppointment ? appointmentSelect : null);
+  const activeAppointmentKey = activeAppointment
+    ? `${activeAppointment.date}-${activeAppointment.time}`
+    : null;
+
+  // Posicionamiento inteligente del popover de Acciones — mismo primitivo que CustomSelect:
+  // clampea contra el viewport, decide arriba/abajo según espacio disponible, y se oculta
+  // (sin desmontar) si el scroll interno de la tabla tapa la fila anclada. El alto es fijo
+  // por adelantado (header + 3 ítems), nunca medido después de pintar.
+  const { style: accionesStyle, openUp: accionesOpenUp } = appointmentAnchorRect
+    ? computePopoverStyle({
+        rect: appointmentAnchorRect,
+        width: ACCIONES_PANEL_WIDTH,
+        height: ACCIONES_PANEL_HEIGHT,
+        hidden: appointmentAnchorHidden,
+      })
+    : { style: null, openUp: null };
+  const accionesReveal = usePopoverReveal(accionesOpenUp);
 
   return (
     <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
@@ -515,19 +623,19 @@ export default function Page() {
               onConfirm={async () => {
                 const dateUpdate = appointmentSelect.date.replace(/\//g, '');
                 await deleteAppointment(appointmentSelect.id, dateUpdate);
+                // clean() por si se disparó desde adentro de "Editar Turno" — si no, el form
+                // queda abierto mostrando datos de un turno que ya no existe. Cuando viene
+                // del menú de Acciones (form cerrado) es un no-op inofensivo.
+                clean();
                 await handleSuccessDeleteAppointment();
               }}
               confirmText="Eliminar"
             />
-            {openModalAppointment && (
+            {openModalAppointment && appointmentAnchorRect && accionesStyle && createPortal(
               <div
-                className="absolute z-50 w-44 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden select-none animate-modal-appointment"
-                style={{
-                  left: `${mousePosition.x + 10}px`,
-                  ...(mousePosition.flipUp
-                    ? { bottom: `${window.innerHeight - mousePosition.y}px` }
-                    : { top: `${mousePosition.y}px` }),
-                }}
+                key={`${appointmentSelect?.date}-${appointmentSelect?.time}`}
+                className={`w-56 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden select-none ${accionesReveal}`}
+                style={{ ...accionesStyle, zIndex: POPOVER_Z_INDEX }}
               >
                 <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
                   <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
@@ -541,6 +649,20 @@ export default function Page() {
                   </button>
                 </div>
                 <button
+                  onClick={handleEditAppointment}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150"
+                >
+                  <MdEdit size={16} />
+                  Editar
+                </button>
+                <button
+                  onClick={handleShareWhatsApp}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black whitespace-nowrap transition duration-150"
+                >
+                  <BiSolidBellRing size={16} className="shrink-0" />
+                  Recordar por WhatsApp
+                </button>
+                <button
                   onClick={() => {
                     setOpenModalAppointment(false);
                     setOpenAlertMessage(true);
@@ -550,15 +672,8 @@ export default function Page() {
                   <MdDeleteForever size={18} />
                   Eliminar
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150">
-                  <FaShare size={15} />
-                  Compartir
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150">
-                  <BiSolidBellRing size={16} />
-                  Recordar Turno
-                </button>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
 
@@ -577,11 +692,11 @@ export default function Page() {
             </div>
             <button
               onClick={() => {
-                setShowForm(!showForm);
-                setPatient(null);
-                setSearchContent("");
-                setAppointmentDate(null);
-                setReason(null);
+                if (showForm) {
+                  clean();
+                } else {
+                  setShowForm(true);
+                }
               }}
               type="button"
               className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-2 text-sm font-semibold rounded-lg transition duration-150 ${
@@ -624,7 +739,7 @@ export default function Page() {
                   }`}
                 >
                   <MdUpdate size={16} />
-                  HOY
+                  Hoy
                 </button>
 
                 <button
@@ -681,6 +796,7 @@ export default function Page() {
                 appointmentDate={appointmentDate}
                 date={date}
                 onRowClick={handleCliclRow}
+                activeAppointmentKey={activeAppointmentKey}
               />
             </div>
 
@@ -707,6 +823,8 @@ export default function Page() {
                   onSetAppoint={handleSetAppoint}
                   onOpenCreatePatient={() => setOpenModalCreatePatient(true)}
                   clinicId={clinicId}
+                  editing={!!editingAppointment}
+                  onDelete={() => setOpenAlertMessage(true)}
                 />
               ) : (
                 <div className="flex flex-col gap-4 h-full min-h-0 animate-move-from-right-form-2">
@@ -717,15 +835,17 @@ export default function Page() {
                         Calendario
                       </h2>
                       {!isToday(today) && (
-                        <button
-                          onClick={() => {
-                            setToday(new Date());
-                            setCalendarValue(dayjs(new Date()));
-                          }}
-                          className="text-xs font-semibold text-teal-700 border border-teal-200 bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-md transition duration-150"
-                        >
-                          Hoy
-                        </button>
+                        <Tooltip content="Volver al día de hoy" clickable>
+                          <button
+                            onClick={() => {
+                              setToday(new Date());
+                              setCalendarValue(dayjs(new Date()));
+                            }}
+                            className="text-xs font-semibold text-teal-700 border border-teal-200 bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-md transition duration-150"
+                          >
+                            Hoy
+                          </button>
+                        </Tooltip>
                       )}
                     </div>
                     <div className="flex-1 min-h-0">
