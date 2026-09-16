@@ -36,9 +36,9 @@ Cualquiera de los tres agentes tiene que leer este archivo completo antes de pla
 src/
 ├── app/
 │   ├── page.tsx                 # redirect a /agenda
-│   ├── agenda/page.tsx          # Agenda de turnos — referencia visual base del proyecto
+│   ├── agenda/page.tsx          # Agenda de turnos
 │   ├── patients/
-│   │   ├── page.tsx             # listado
+│   │   ├── page.tsx             # listado (buscador en patientsToolbar.tsx, tabla en table.tsx)
 │   │   └── [id]/page.tsx, clinicHistory/page.tsx, odontogram/page.tsx
 │   ├── tariffs/page.tsx         # Aranceles
 │   ├── config/page.tsx          # Clínica + profesionales + obras sociales + perfil admin
@@ -185,7 +185,7 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
 **Componentes**
 - Organización por feature, con subcarpeta `ui/` interna cuando la feature es compleja.
-- Responsive: `useMediaQuery()` en 768px — desktop = Modal/Sidebar, mobile = Sheet/bottom-nav.
+- Responsive: `useMediaQuery()` en 768px decide sidebar (desktop) vs. bottom-nav (mobile) en `navigation.tsx`. **Los formularios no se bifurcan por dispositivo:** el `Sheet` de shadcn ya no se usa, un mismo modal responsive sirve para desktop y mobile (ver "Sistema visual").
 - Estado de formularios con `useState`, sin librerías de forms.
 - Feedback con `Toast.tsx` + react-hot-toast, unificado en todo el proyecto.
 - Confirmación obligatoria antes de acciones destructivas, vía `AlertDialog` (Radix).
@@ -203,9 +203,9 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
   - `extraActions` (modo lectura, al lado del lápiz) y `onEdit` (callback al abrir edición, para sembrar estado externo como el `passwordStep` del wizard de contraseña) son los dos puntos de extensión para casos que no son un campo de texto simple.
 
 **Sidebar y topbar (desktop)**
-- Sidebar `w-40` (160px), topbar `h-14` (56px + `border-b-2`). El offset global que reserva ese espacio vive en un solo lugar, `src/app/layout.tsx`: `mt-[58px] sm:ml-40` sobre el wrapper que envuelve `{children}`. Cualquier overlay/backdrop fullscreen (`loading.tsx`, `confirmAlert.tsx`, `logOutAlert.tsx`, `HistorialTimeline.tsx`) replica ese mismo valor a mano (`sm:left-40`, `sm:top-[58px]`) porque son `fixed` y no heredan el offset del layout — si el ancho del sidebar o el alto del topbar cambian de nuevo, hay que tocar los dos lugares.
+- Sidebar `w-40` (160px), topbar `h-14` (56px + `border-b-2`). El offset global que reserva ese espacio vive en un solo lugar, `src/app/layout.tsx`: `mt-[58px] sm:ml-40` sobre el wrapper que envuelve `{children}`. Ese mismo wrapper lleva el **fondo general de la app** (`bg-gray-100` + `min-h` para cubrir la pantalla) — ver "Sistema visual". Cualquier overlay/backdrop fullscreen (`loading.tsx`, `confirmAlert.tsx`, `logOutAlert.tsx`, `HistorialTimeline.tsx`) replica ese mismo valor a mano (`sm:left-40`, `sm:top-[58px]`) porque son `fixed` y no heredan el offset del layout — si el ancho del sidebar o el alto del topbar cambian de nuevo, hay que tocar los dos lugares.
 - Si una página necesita su propio alto de contenedor (`h-[calc(100vh-Npx)]`), el número tiene que ser `58`, no `68` — `68` era el alto del topbar viejo (antes de compactarlo) y quedó pisoteado en varias páginas hasta que se corrigió en esta sesión. El topbar **mobile** (`mobileVersion.tsx`) sigue siendo más alto (68px) y no se tocó — no confundir los dos números.
-- **Margen de página estandarizado: `px-4 pt-4 pb-4` (16px, simétrico en las 4 direcciones), siempre.** Ninguna página debería inventar `ml-4 mr-2` ni un componente hijo meter su propio `mx-*`/`mr-*` extra "para separar" — eso fue justamente el bug que hubo que deshacer en Aranceles (`PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel` tenían cada uno su propio margen lateral, ninguno coincidía con el del toolbar de arriba). El gap entre elementos dentro de una página se resuelve con `gap-*` en el contenedor flex, no con márgenes sueltos en cada hijo.
+- **Margen de página estandarizado: `px-4 pt-4 pb-4` (16px, simétrico en las 4 direcciones), siempre.** Ninguna página debería inventar `ml-4 mr-2` ni un componente hijo meter su propio `mx-*`/`mr-*` extra "para separar" — eso fue justamente el bug que hubo que deshacer en Aranceles (`PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel` tenían cada uno su propio margen lateral, ninguno coincidía con el del toolbar de arriba). El gap entre elementos dentro de una página se resuelve con `gap-*` en el contenedor flex, no con márgenes sueltos en cada hijo. Ojo con el reverso de esa regla: un hijo invisible (el `<div>` que agrupa modales y alerts) dentro de ese contenedor también recibe el `gap` y agrega margen — ver "Anatomía de página".
 - El nav de `desktopVersion.tsx` es una lista de filas (ícono + label, hover con borde blanco, separadores finos entre ítems) — no un rail de íconos colapsado. `Configuración` es un ítem más de esa lista (no vive aparte); el bloque inferior fijo solo tiene Cerrar Sesión + el gear de acceso directo.
 - **`UserMenu.tsx`** es el dropdown del usuario en el topbar: cierre por click afuera (`useOutsideClick`) y por Escape, semántica de `<button>` real. Cualquier dropdown nuevo en el proyecto debería copiar este patrón en vez de reinventar el manejo de apertura/cierre a mano.
 
@@ -217,15 +217,114 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
 ---
 
-## Antes de crear UI nueva — regla obligatoria
+## Sistema visual (UI/UX) — regla obligatoria antes de crear o tocar UI
 
-Antes de armar cualquier pantalla o componente nuevo, el agente tiene que darse una idea rápida de la estandarización visual del proyecto. No hace falta auditar el código entero ni gastar muchos tokens en esto — alcanza con mirar por arriba:
+El proyecto está en medio de una estandarización visual que se hace **una página por vez**. Esta sección es el contrato de cómo se tiene que ver y construir cualquier pantalla. Antes de armar o retocar UI, leerla completa y mirar por arriba las páginas de referencia. No hace falta auditar todo el código.
 
-- **`/agenda, /patients, etc`** (`src/app/agenda/page.tsx`) — es la referencia visual base: márgenes, colores, patrones de layout.
-- **Componentes base reutilizables** en `src/components/shared/` y `src/components/shared/ui/`: `Button`, `Card`, `AlertDialog`, `Sheet`, `Carousel`, `Toast`, `PageSlide`, `loading`, `confirmAlert`, `logOutAlert`.
-- **Tokens de diseño** en `tailwind.config.ts`: color primario `teal-600`, y un set de animaciones custom ya definidas (`page-drop`, `move-from-right`, `move-from-left`, `slide-up`/`slide-down`, `forms-from-right`, `breathe`, `modal-appointment`, entre otras) — revisar si ya existe una animación que sirva antes de inventar una nueva.
+### Referencias
 
-Con esa idea general, **el agente tiene libertad total** para crear componentes nuevos o reusar los existentes. La única condición es que el resultado haga sinergia con lo que ya existe.
+- **`/patients/[id]` y `/config` son la UI acertada y esperada.** Son la vara con la que se mide el resto.
+- **`/patients` (listado) y `/agenda` ya están migradas** a ese mismo lenguaje, y son el ejemplo más completo de la *anatomía de página* (abajo). Para una página nueva con listado o tabla, copiar la estructura de `/patients`.
+- `/agenda` **ya no es "la referencia visual base"**, como decía una versión anterior de este archivo. Eso era antes del refactor.
+
+### El concepto
+
+Lo que se busca:
+
+- **Sobrio, con jerarquía por superficies y no por color.** La jerarquía la dan las cards blancas sobre el fondo gris, los bordes finos y la tipografía, no los bloques de color. El teal es **acento** (acción primaria, estado activo, chips), nunca el relleno de un header.
+- **Los headers sólidos `bg-teal-600` (#0D9488) de los componentes flotantes quedaron antiguos.** Modales, paneles y cards llevan header sobrio: título negro sobre `bg-gray-50` o blanco, separado del contenido por `border-b border-gray-200`.
+- **Contraste suficiente entre la página y sus cards.** Con el fondo en `gray-50` las cards blancas no se despegaban (falta de contraste). Por eso el fondo general es un escalón más oscuro, `gray-100`, y el contenido denso (tablas, listas) va siempre sobre blanco.
+- **Estandarizado de verdad:** mismo fondo, mismos márgenes y misma estructura de header y card en todas las páginas. Lo que vale "para todas las páginas" se define **una sola vez** (como el fondo general en `layout.tsx`), nunca copiado en cada `page.tsx`.
+- **Se pregunta antes de decidir estructura.** Si una decisión visual cambia la estructura de la página (si lleva header o no, cómo se resuelve el contraste, cómo se trata el color), el agente la plantea con opciones antes de implementar. Los retoques de detalle los decide solo.
+
+### Tokens
+
+| Uso | Clases |
+|---|---|
+| Fondo general de la app | `bg-gray-100` (#F3F4F6), **solo** en el wrapper de `layout.tsx`. Ninguna página declara fondo propio. |
+| Card | `bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden` |
+| Header / footer interno de card | `bg-gray-50` + `border-b border-gray-200` (footer: `border-t`), `px-4 py-3` |
+| Título de página | `text-2xl font-bold text-black tracking-tight` |
+| Título de card o modal | `text-base font-bold text-black tracking-tight`, subtítulo `text-xs text-gray-400` |
+| Label de grupo / encabezado de tabla | `text-xs font-bold tracking-widest text-gray-400 uppercase` (en tablas `text-[11px]`) |
+| Label de campo | `text-xs font-semibold text-gray-500`, obligatorio con `*` en `text-red-500` |
+| Botón primario | `bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold px-3 py-1.5` |
+| Botón secundario / Cancelar | `border-2 border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg` |
+| Link de acción | `text-xs font-semibold text-teal-700 hover:text-teal-600` |
+| Input / select | `h-9 border-2 border-gray-300 rounded-lg bg-gray-100 text-sm text-black focus:outline-teal-700`, siempre con color de texto explícito (ver pitfall de `text-white`) |
+| Toggle segmentado (ej. Nombre / DNI) | contenedor `bg-gray-100 border-2 border-gray-300 rounded-lg p-0.5`; activo `bg-teal-700 text-white shadow-sm`; inactivo `text-gray-500 hover:text-black` |
+| Chip / contador | `text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5` |
+| Fila de tabla o lista | `border-b border-gray-100`, hover `bg-gray-50`, seleccionada `bg-teal-50` |
+| Destructivo | texto `text-red-600`, hover `bg-red-50`, borde `border-red-200` si es botón |
+| Avatar de paciente | `AvatarFallback`, el mismo en tabla de pacientes, agenda y ficha |
+
+El primario es **`teal-700`** con hover `teal-600`, no `teal-600` plano como decía la versión anterior de este archivo. `teal-600` queda para bordes de acento (ej. `border-l-teal-600` en un turno de la agenda) y para hovers.
+
+### Anatomía de página
+
+```
+<div h-[calc(100vh-58px)] flex flex-col overflow-hidden>      ← sin fondo propio
+  {modales, ConfirmAlert, popovers}                            ← FUERA del contenedor con gap
+  <div flex flex-col h-full gap-4 px-4 pt-4 pb-4 animate-page-drop>
+    <header shrink-0>   Título [chip contador]   ...   [Acción primaria]
+    <div flex-1 min-h-0>                                       ← cuerpo (una o más cards)
+      <card>
+        header interno   (buscador, navegador de fecha, filtros)
+        contenido        (flex-1 min-h-0 overflow-y-auto)
+        footer interno   (opcional: contador, "Cargar más")
+```
+
+- **Header de página:** título a la izquierda, al lado un chip con el contador relevante (pacientes cargados, turnos del día), y la acción principal a la derecha.
+- **Los controles de una card van en el header de esa card, no en el header de página.** El buscador de `/patients` y el navegador de fecha de `/agenda` viven arriba de su tabla, dentro de la card.
+- **El scroll es interno a cada card** (`flex-1 min-h-0 overflow-y-auto`), nunca de la página entera. Nada de `h-screen` + `pb-44` para empujar el contenido (así estaba `/agenda`).
+- **Pitfall: overlays dentro del contenedor con `gap`.** El `<div>` que agrupa modales y alerts no ocupa alto, pero si es hijo del contenedor `gap-4` igual recibe el gap y suma 16px arriba del header. Pasó en `/agenda`: quedaban 32px de margen superior contra los 16px de `/patients`. Todo lo que se renderiza flotando va **antes** del contenedor con gap.
+- **Estados vacíos:** ícono gris + título + una línea de ayuda, centrados (ver `table.tsx` de pacientes). No una fila de tabla con texto.
+
+### Componentes flotantes (modales, popovers, paneles)
+
+- Panel `bg-white border border-gray-200 rounded-2xl shadow-xl`, backdrop `bg-black/50`.
+- **Estructura fija de modal**, ver `modalCreatePatient.tsx`:
+  - header: ícono chico en `bg-teal-50 text-teal-700 border-teal-200 rounded-xl` + título + subtítulo + X para cerrar;
+  - cuerpo con scroll propio, agrupado con labels de grupo;
+  - footer `bg-gray-50 border-t` con Cancelar (secundario) y la acción (primario), alineados a la derecha.
+- Escape cierra: primero el sub-modal abierto, después el principal.
+- Textos de botón en tipografía normal (`Cancelar`, `Crear paciente`), nunca en MAYÚSCULAS.
+- Popover de acciones (ej. el de un turno en `/agenda`): panel blanco con header `bg-gray-50` + label de grupo, ítems de ancho completo con hover `bg-gray-50`, y la acción destructiva en rojo.
+- **El `Sheet` de shadcn no se usa más.** El alta de paciente es un único modal responsive (`max-w-[720px]`, grilla `grid-cols-1 sm:grid-cols-3`, `max-h-full` con scroll interno) para desktop y mobile. El flujo viejo de sheet + carrusel de 3 cards se borró, no reintroducirlo. `shared/ui/sheet.tsx` y `shared/ui/carousel.tsx` siguen en el repo pero hoy no los importa nadie.
+
+### Anti-patrones (lo viejo que se está eliminando)
+
+Si aparece alguno de estos en algo que se toca, se migra al token correspondiente:
+
+- Bordes pesados: `border-2 border-gray-600`, `border-4`.
+- Headers sólidos `bg-teal-600` con título grande en blanco, incluida la barra vertical "A G E N D A" que tenía la agenda.
+- Botones con `shadow-lg` + `border-b-4 border-b-teal-600` (los "Agregar Paciente/Turno" viejos).
+- Botones `bg-red-900 text-red-200` / `bg-teal-600 text-teal-950` en MAYÚSCULAS.
+- Superficies e inputs `bg-gray-300 bg-opacity-30/40`.
+- Hover oscuro en filas: `hover:bg-gray-900 hover:bg-opacity-30`.
+- Márgenes sueltos en los hijos (`ml-10`, `mr-2`) en lugar de `gap-*` en el contenedor.
+- Placeholders alineados con espacios (`"Busca un paciente          Por:"`).
+
+### Estado de la migración
+
+| Pantalla / componente | Estado |
+|---|---|
+| `/patients/[id]`, `/config` | Referencia |
+| Sidebar y topbar desktop (`desktopVersion.tsx`) | Refactorizado |
+| `/patients` (listado + `modalCreatePatient.tsx`) | Migrado |
+| `/agenda` (`AppointmentsTable`, `AddAppointmentForm`, `RemainingAppointments`, `MiniCalendar`) | Migrado |
+| **`/tariffs`** (`page.tsx` + `components/practices/ui/`: `PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel`) | **Desactualizado.** Concentra la mayoría de los `border-gray-600` y `bg-opacity-30` que quedan en el repo. Es la próxima. |
+| `shared/dialogAlerts/confirmAlert.tsx`, `logOutAlert.tsx`, `shared/alert.tsx` | Desactualizado: botones `bg-red-900`, `border-4`. `confirmAlert` se ve desde páginas ya migradas (eliminar turno, eliminar paciente), así que desentona. |
+| `navigation/mobileVersion.tsx`, `/notSign` | Desactualizado |
+
+Desvíos conocidos dentro de las propias referencias, a unificar cuando se toquen: `/config` usa `px-6 pt-6 pb-6` en vez del margen estándar `px-4 pt-4 pb-4`, y `/patients/[id]` no envuelve su contenido en una card blanca (se dibuja directo sobre el fondo general).
+
+### Otros recursos
+
+- Componentes base en `src/components/shared/` y `shared/ui/`: `Button`, `Card`, `AlertDialog`, `Toast`, `PageSlide`, `loading`, `confirmAlert`, `logOutAlert`, `AvatarFallback`.
+- Animaciones custom en `tailwind.config.ts` (`page-drop`, `move-from-right-form`, `modal-appointment`, `fade-in`, entre otras). Revisar si ya existe una antes de inventar otra.
+
+Dentro de este sistema, el agente tiene libertad para crear componentes nuevos o reusar los existentes.
 
 ---
 

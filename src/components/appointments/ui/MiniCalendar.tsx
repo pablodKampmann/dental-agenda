@@ -68,7 +68,7 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
               className={cn(
                 "text-xs py-1.5 rounded-md font-medium transition-colors",
                 year === currentYear
-                  ? "bg-teal-600 text-white shadow-sm"
+                  ? "bg-teal-700 text-white shadow-sm"
                   : "hover:bg-teal-50 text-gray-700 hover:text-teal-700"
               )}
             >
@@ -133,9 +133,9 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
               className={cn(
                 cellBase,
                 isSelected
-                  ? "bg-teal-600 text-white shadow-sm"
+                  ? "bg-teal-700 text-white shadow-sm"
                   : isToday
-                  ? "border-2 border-teal-500 text-teal-600 hover:bg-teal-50"
+                  ? "border-2 border-teal-600 text-teal-700 hover:bg-teal-50"
                   : "text-gray-700 hover:bg-teal-50 hover:text-teal-700"
               )}
             >

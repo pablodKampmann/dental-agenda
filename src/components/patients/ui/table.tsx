@@ -2,7 +2,8 @@
 import { ClipLoader } from "react-spinners";
 import { useRouter } from 'next/navigation'
 import { LuSearchX } from "react-icons/lu";
-import { TbUserSearch, TbReload } from 'react-icons/tb';
+import { TbReload } from 'react-icons/tb';
+import { BsPersonFillAdd } from "react-icons/bs";
 import { AvatarFallback } from "../../shared/AvatarFallback";
 
 interface props {
@@ -16,8 +17,12 @@ interface props {
     handleGetPatients: (quantity: number) => void;
 }
 
+const TH = "px-4 py-2.5 bg-gray-50 border-b border-gray-200 font-bold";
+const TD = "px-4";
+
 export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatientsButtom, setLoadMorePatientsButtom, handleGetPatients }: props) {
     const router = useRouter()
+    const isEmpty = listOfPatients !== null && listOfPatients.length === 0;
 
     function loadMorePatients() {
         if (isListOfPatientsComplete !== true && listOfPatients !== null) {
@@ -31,53 +36,53 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
     }
 
     return (
-        <div className="h-full overflow-hidden w-full">
-            <div className="rounded-xl w-full border-2 border-gray-600 overflow-y-auto overflow-x-hidden h-full bg-gray-50">
+        <>
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
                 <table className="w-full select-none">
                     <thead className="sticky top-0 z-10">
-                        <tr className="bg-teal-600 h-10 border-b-2 border-gray-600 text-left text-xs font-semibold uppercase tracking-widest text-white">
-                            <th className="w-12 pl-3 hidden md:table-cell"></th>
-                            <th className="md:pl-4 pl-2">Nombre</th>
-                            <th className="md:pl-5 pl-2">DNI</th>
-                            <th className="md:pl-5 pl-2">Teléfono</th>
-                            <th className="md:pl-5 pl-2 hidden md:table-cell">Correo</th>
-                            <th className="md:pl-5 pl-2 hidden md:table-cell">Obra Social</th>
+                        <tr className="text-left text-[11px] uppercase tracking-widest text-gray-400">
+                            <th className={`${TH} w-14 hidden md:table-cell`}></th>
+                            <th className={TH}>Nombre</th>
+                            <th className={TH}>DNI</th>
+                            <th className={TH}>Teléfono</th>
+                            <th className={`${TH} hidden md:table-cell`}>Correo</th>
+                            <th className={`${TH} hidden md:table-cell`}>Obra Social</th>
                         </tr>
                     </thead>
-                    {listOfPatients ? (
+                    {listOfPatients && (
                         <tbody>
                             {listOfPatients.map((patient, index) => (
                                 <tr
                                     onClick={() => { handleGoPatient(patient.id); setLoadRow(index); }}
                                     key={index}
                                     className={`
-                                        ${index !== listOfPatients.length - 1 ? 'border-b border-gray-600' : ''}
-                                        ${loadRow === index ? 'bg-teal-600 text-white' : 'text-black hover:bg-gray-900 hover:bg-opacity-10'}
+                                        ${index !== listOfPatients.length - 1 ? 'border-b border-gray-100' : ''}
+                                        ${loadRow === index ? 'bg-teal-50' : 'hover:bg-gray-50'}
                                         md:text-sm text-xs md:h-14 h-12 whitespace-nowrap cursor-pointer transition duration-150
                                     `}
                                 >
-                                    <td className="pl-3 hidden md:table-cell">
+                                    <td className={`${TD} hidden md:table-cell`}>
                                         <AvatarFallback
                                             displayName={`${patient.name} ${patient.lastName}`}
                                             size={32}
                                             className="rounded-full"
                                         />
                                     </td>
-                                    <td className="md:pl-4 pl-2">
-                                        <p className="font-medium">{patient.name} {patient.lastName}</p>
+                                    <td className={TD}>
+                                        <p className="font-semibold text-black">{patient.name} {patient.lastName}</p>
                                     </td>
-                                    <td className="md:pl-5 pl-2">
-                                        <p>{patient.dni}</p>
+                                    <td className={TD}>
+                                        <p className="text-gray-600">{patient.dni}</p>
                                     </td>
-                                    <td className="md:pl-5 pl-2">
-                                        <p>{patient.num || '-'}</p>
+                                    <td className={TD}>
+                                        <p className="text-gray-600">{patient.num || '-'}</p>
                                     </td>
-                                    <td className="md:pl-5 pl-2 hidden md:table-cell">
-                                        <p>{patient.email || '-'}</p>
+                                    <td className={`${TD} hidden md:table-cell`}>
+                                        <p className="text-gray-600">{patient.email || '-'}</p>
                                     </td>
-                                    <td className="md:pl-5 pl-2 hidden md:table-cell">
+                                    <td className={`${TD} hidden md:table-cell`}>
                                         {patient.insurance ? (
-                                            <span className="bg-teal-600 bg-opacity-15 text-teal-800 text-xs font-semibold px-2 py-0.5 rounded-full border border-teal-600 border-opacity-40">
+                                            <span className="text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">
                                                 {patient.insurance}
                                             </span>
                                         ) : (
@@ -86,60 +91,56 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
                                     </td>
                                 </tr>
                             ))}
-
-                            {/* Contador de pacientes */}
-                            <tr className="text-center text-xs h-6 font-semibold border-t-2 border-gray-600 bg-gray-50">
-                                <td className="table-cell md:hidden text-black" colSpan={3}>
-                                    {listOfPatients.length} pacientes
-                                </td>
-                                <td className="hidden md:table-cell text-black" colSpan={6}>
-                                    {listOfPatients.length} {listOfPatients.length === 1 ? 'paciente cargado' : 'pacientes cargados'}
-                                </td>
-                            </tr>
-
-                            {/* Footer: cargar más o estado de búsqueda */}
-                            {searchContent === '' ? (
-                                <tr
-                                    onClick={!loadMorePatientsButtom ? loadMorePatients : undefined}
-                                    className={`
-        ${isListOfPatientsComplete !== true ? 'bg-teal-600 cursor-pointer' : 'bg-teal-600'}
-        ${loadMorePatientsButtom ? 'opacity-70 pointer-events-none' : 'hover:bg-opacity-85'}
-        border-t-2 border-gray-600 transition duration-150
-    `}
-                                >
-                                    <td colSpan={6}>
-                                        {loadMorePatientsButtom ? (
-                                            <div className="flex py-2 justify-center items-center">
-                                                <ClipLoader speedMultiplier={1.7} color='white' size={28} />
-                                            </div>
-                                        ) : (
-                                            <div className="text-base py-2 font-semibold flex justify-center items-center gap-1.5 text-white w-full">
-                                                {isListOfPatientsComplete !== true ? (
-                                                    <>Cargar más pacientes <TbReload size={20} /></>
-                                                ) : (
-                                                    <p>Lista completa</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ) : (
-                                <tr className="bg-gray-50 border-t-2 border-gray-600">
-                                    <td colSpan={6}>
-                                        <div className="text-base py-2 font-semibold flex justify-center items-center gap-1.5 text-black w-full">
-                                            {listOfPatients.length > 0 ? (
-                                                <>Búsqueda completada <TbUserSearch size={20} /></>
-                                            ) : (
-                                                <>Sin resultados <LuSearchX size={20} /></>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
                         </tbody>
-                    ) : null}
+                    )}
                 </table>
+
+                {isEmpty && (
+                    <div className="flex flex-col items-center justify-center gap-2 py-12 select-none">
+                        {searchContent === '' ? (
+                            <>
+                                <BsPersonFillAdd size={28} className="text-gray-300" />
+                                <p className="text-sm font-semibold text-gray-500">Todavía no hay pacientes</p>
+                                <p className="text-xs text-gray-400">Agregá el primero desde el botón de arriba.</p>
+                            </>
+                        ) : (
+                            <>
+                                <LuSearchX size={28} className="text-gray-300" />
+                                <p className="text-sm font-semibold text-gray-500">Sin resultados</p>
+                                <p className="text-xs text-gray-400">Probá con otro nombre o DNI.</p>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
-        </div>
+
+            {/* Footer: cargar más o estado de búsqueda */}
+            {listOfPatients && (
+                <div className="shrink-0 px-4 py-2.5 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3 select-none">
+                    <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
+                        {searchContent !== ''
+                            ? `${listOfPatients.length} ${listOfPatients.length === 1 ? 'coincidencia' : 'coincidencias'}`
+                            : isListOfPatientsComplete
+                                ? 'Lista completa'
+                                : `${listOfPatients.length} de la lista`}
+                    </span>
+
+                    {searchContent === '' && isListOfPatientsComplete !== true && (
+                        <button
+                            type="button"
+                            onClick={loadMorePatients}
+                            disabled={loadMorePatientsButtom}
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            {loadMorePatientsButtom ? (
+                                <ClipLoader speedMultiplier={1.7} color="#0f766e" size={14} />
+                            ) : (
+                                <><TbReload size={14} /> Cargar más</>
+                            )}
+                        </button>
+                    )}
+                </div>
+            )}
+        </>
     );
 }

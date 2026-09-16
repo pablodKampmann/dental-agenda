@@ -10,19 +10,17 @@ import { ClipLoader } from "react-spinners";
 import { FaShare } from "react-icons/fa";
 import { Loading } from "./../../components/shared/loading";
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
-import { SheetCreatePatient } from "./../../components/patients/ui/createPatient/sheetCreatePatient";
-import { useMediaQuery } from "./../../hooks/useMediaQuery";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { BiSolidBookAdd, BiSolidBellRing } from "react-icons/bi";
 import {
-  BiRightArrow,
-  BiLeftArrow,
-  BiSolidBookAdd,
-  BiSolidBellRing,
-} from "react-icons/bi";
-import { MdUpdate, MdDeleteForever } from "react-icons/md";
-import { ImCancelCircle } from "react-icons/im";
+  MdUpdate,
+  MdDeleteForever,
+  MdChevronLeft,
+  MdChevronRight,
+  MdClose,
+} from "react-icons/md";
 import { BsCalendar2Date } from "react-icons/bs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
@@ -114,8 +112,6 @@ export default function Page() {
   const [appointmentDate, setAppointmentDate] = useState<any>(null);
   const [appointmentHours, setAppointmentHours] = useState<any>(1);
   const [openModalCreatePatient, setOpenModalCreatePatient] = useState(false);
-  const [openSheetCreatePatient, setOpenSheetCreatePatient] = useState(false);
-  const isMobile = !useMediaQuery("(min-width: 768px)");
   const { showToast } = useToast();
   const [freeSpaces, setFreeSpaces] = useState<any>(null);
   const [time, setTime] = useState(getCurrentTime());
@@ -451,32 +447,26 @@ export default function Page() {
     showToast("success", "Turno eliminado correctamente");
   }
 
+  const appointmentsCount = Array.isArray(appointments)
+    ? appointments.filter((a: any) => a && a.time).length
+    : 0;
+
   return (
-    <div className="h-screen overflow-y-hidden flex-1">
+    <div className="h-[calc(100vh-58px)] flex flex-col overflow-hidden">
       {isLoad ? (
         <Loading />
       ) : (
-        <div className="p-4 animate-page-drop">
+        <>
+          {/* Overlays: fuera del contenedor con gap, si no el gap-4 suma margen arriba del header */}
           <div>
-            {isMobile ? (
-              <SheetCreatePatient
-                open={openSheetCreatePatient}
-                onClose={() => setOpenSheetCreatePatient(false)}
-                onSuccess={() => {
-                  showToast("success", "Paciente creado correctamente");
-                  updateListPatients();
-                }}
-              />
-            ) : (
-              <ModalCreatePatient
-                open={openModalCreatePatient}
-                onClose={() => setOpenModalCreatePatient(false)}
-                onSuccess={() => {
-                  showToast("success", "Paciente creado correctamente");
-                  updateListPatients();
-                }}
-              />
-            )}
+            <ModalCreatePatient
+              open={openModalCreatePatient}
+              onClose={() => setOpenModalCreatePatient(false)}
+              onSuccess={() => {
+                showToast("success", "Paciente creado correctamente");
+                updateListPatients();
+              }}
+            />
             <Suspense fallback={null}>
               <PatientParamReader
                 setPatient={setPatient}
@@ -503,7 +493,7 @@ export default function Page() {
             />
             {openModalAppointment && (
               <div
-                className="bg-black rounded-xl shadow-xl opacity-90 absolute px-2 py-1 select-none animate-modal-appointment"
+                className="absolute z-50 w-44 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden select-none animate-modal-appointment"
                 style={{
                   left: `${mousePosition.x + 10}px`,
                   ...(mousePosition.flipUp
@@ -511,103 +501,51 @@ export default function Page() {
                     : { top: `${mousePosition.y}px` }),
                 }}
               >
-                <div className="flex-col">
-                  <h1 className="text-lg font-medium flex justify-center items-center border-b pb-2">
-                    Acciones{" "}
-                    <ImCancelCircle
-                      onClick={() => setOpenModalAppointment(false)}
-                      size={24}
-                      className="ml-6 mt-1 font-semibold hover:text-teal-500 cursor-pointer duration-150 transform hover:scale-110"
-                    />
-                  </h1>
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
+                  <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">
+                    Acciones
+                  </span>
                   <button
-                    onClick={() => {
-                      setOpenModalAppointment(false);
-                      setOpenAlertMessage(true);
-                    }}
-                    className="flex justify-center items-center group hover:text-teal-500"
+                    onClick={() => setOpenModalAppointment(false)}
+                    className="text-gray-400 hover:text-black transition duration-150"
                   >
-                    <MdDeleteForever
-                      className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1"
-                      size={20}
-                    />
-                    Eliminar{" "}
-                  </button>
-                  <button className="flex justify-center items-center group hover:text-teal-500">
-                    <FaShare
-                      className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1"
-                      size={20}
-                    />
-                    Compartir{" "}
-                  </button>
-                  <button className="flex justify-center items-center group hover:text-teal-500">
-                    <BiSolidBellRing
-                      className="text-white group-hover:text-teal-500 flex mt-2 mb-2 mr-1"
-                      size={20}
-                    />
-                    Recordar Turno{" "}
+                    <MdClose size={16} />
                   </button>
                 </div>
+                <button
+                  onClick={() => {
+                    setOpenModalAppointment(false);
+                    setOpenAlertMessage(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition duration-150"
+                >
+                  <MdDeleteForever size={18} />
+                  Eliminar
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150">
+                  <FaShare size={15} />
+                  Compartir
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150">
+                  <BiSolidBellRing size={16} />
+                  Recordar Turno
+                </button>
               </div>
             )}
           </div>
 
-          {/* Header */}
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex justify-center items-center">
-              {isToday(today) ? (
-                <div className="border-2 bg-teal-600 border-gray-600 pr-2 pl-1 transition duration-150 rounded-lg py-0.5 mr-2">
-                  <h1 className="flex font-bold text-lg text-white select-none">
-                    <MdUpdate size={24} className="mt-0.5 mr-2" />
-                    HOY
-                  </h1>
-                </div>
-              ) : (
-                <div
-                  onClick={() => {
-                    setToday(new Date());
-                    setOpenCalendar(false);
-                    setCalendarValue(dayjs(new Date()));
-                  }}
-                  className="cursor-pointer transition text-black duration-150 hover:text-white hover:bg-teal-600 bg-gray-300 border-2 border-gray-600 bg-opacity-30 pr-2 pl-1 rounded-lg py-0.5 mr-2"
-                >
-                  <h1 className="flex font-bold text-lg select-none">
-                    <MdUpdate size={24} className="mt-0.5 mr-2" />
-                    HOY
-                  </h1>
-                </div>
-              )}
-              <BiLeftArrow
-                onClick={dayBack}
-                size={34}
-                className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer mr-2 bg-gray-300 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1"
-              />
-              <div ref={calendarRef} className="relative">
-                <div
-                  onClick={() => setOpenCalendar(!openCalendar)}
-                  className={`${openCalendar ? "bg-teal-600 text-white" : "text-black bg-gray-300 bg-opacity-30"} transition hover:text-white duration-150 hover:bg-teal-600 cursor-pointer border-2 border-gray-600 px-3 rounded-lg`}
-                >
-                  <h1 className="flex justify-center items-center font-semibold text-md h-8 select-none">
-                    <BsCalendar2Date size={20} className="mr-2" /> {dayName}{" "}
-                    {dayNum} de {monthName} ({date})
-                  </h1>
-                </div>
-                {openCalendar && (
-                  <div className="select-none absolute bg-white text-black border-2 border-gray-600 rounded-xl top-11 z-10 shadow-xl w-72">
-                    <MiniCalendar
-                      value={calendarValue}
-                      onChange={(newValue) => setCalendarValue(newValue)}
-                      compact
-                    />
-                  </div>
-                )}
-              </div>
-              <BiRightArrow
-                onClick={dayNext}
-                size={34}
-                className="hover:text-white hover:bg-teal-600 transition duration-150 text-black cursor-pointer ml-2 bg-gray-300 bg-opacity-30 border-2 border-gray-600 rounded-lg py-1"
-              />
-              {isLoadAppoints && <ClipLoader className="ml-4" />}
+          <div className="flex flex-col h-full gap-4 px-4 pt-4 pb-4 animate-page-drop">
+          {/* Page header */}
+          <div className="shrink-0 flex items-center justify-between gap-3 select-none">
+            <div className="flex items-center gap-3 min-w-0">
+              <h1 className="text-2xl font-bold text-black tracking-tight">
+                Agenda
+              </h1>
+              <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 whitespace-nowrap">
+                {appointmentsCount === 0
+                  ? "Sin turnos"
+                  : `${appointmentsCount} ${appointmentsCount === 1 ? "turno" : "turnos"}`}
+              </span>
             </div>
             <button
               onClick={() => {
@@ -618,73 +556,143 @@ export default function Page() {
                 setReason(null);
               }}
               type="button"
-              className="select-none shadow-lg h-10 group text-black bg-gray-300 bg-opacity-30 hover:bg-teal-600 hover:border-gray-600 hover:text-white text-gl font-semibold px-4 border-b-4 border-2 border-b-teal-600 border-gray-600 rounded-lg flex items-center justify-center transition duration-200"
+              className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 text-sm font-semibold rounded-lg transition duration-150 ${
+                showForm
+                  ? "text-gray-600 border-2 border-gray-300 hover:bg-gray-50 hover:text-black"
+                  : "bg-teal-700 text-white hover:bg-teal-600"
+              }`}
             >
               {showForm ? (
-                <p className="text-gl text-black select-none font-semibold first-letter:transition duration-200 text-center flex px-4 group-hover:text-white">
-                  <ImCancelCircle
-                    size={20}
-                    className="mr-2 mt-1 font-semibold"
-                  />{" "}
+                <>
+                  <MdClose size={18} />
                   Cancelar
-                </p>
+                </>
               ) : (
-                <div className="flex">
-                  <BiSolidBookAdd className="mr-2 mt-1" size={24} />
+                <>
+                  <BiSolidBookAdd size={16} />
                   Agregar Turno
-                </div>
+                </>
               )}
             </button>
           </div>
 
-          {/* Main content */}
-          <div className="flex justify-between h-screen pb-44 overflow-y-hidden w-full">
-            <AppointmentsTable
-              appointments={appointments}
-              appointmentDate={appointmentDate}
-              date={date}
-              onRowClick={handleCliclRow}
-            />
+          {/* Body: agenda + panel lateral */}
+          <div className="flex-1 min-h-0 flex gap-4">
+            {/* Card de la agenda */}
+            <div className="flex-1 min-w-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Navegador de fecha */}
+              <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50 select-none">
+                <button
+                  onClick={() => {
+                    setToday(new Date());
+                    setOpenCalendar(false);
+                    setCalendarValue(dayjs(new Date()));
+                  }}
+                  disabled={isToday(today)}
+                  className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold transition duration-150 ${
+                    isToday(today)
+                      ? "bg-teal-700 text-white cursor-default"
+                      : "text-gray-500 border-2 border-gray-300 hover:text-teal-700 hover:border-teal-300"
+                  }`}
+                >
+                  <MdUpdate size={16} />
+                  HOY
+                </button>
 
-            {showForm ? (
-              <AddAppointmentForm
+                <button
+                  onClick={dayBack}
+                  className="h-8 w-8 flex items-center justify-center text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
+                >
+                  <MdChevronLeft size={20} />
+                </button>
+
+                <div ref={calendarRef} className="relative">
+                  <button
+                    onClick={() => setOpenCalendar(!openCalendar)}
+                    className={`flex items-center gap-2 h-8 px-3 rounded-lg border-2 text-sm font-semibold transition duration-150 ${
+                      openCalendar
+                        ? "border-teal-700 text-teal-700"
+                        : "border-gray-300 text-black hover:border-teal-300 hover:text-teal-700"
+                    }`}
+                  >
+                    <BsCalendar2Date size={15} />
+                    {dayName} {dayNum} de {monthName}
+                    <span className="text-xs font-medium text-gray-400">
+                      ({date})
+                    </span>
+                  </button>
+                  {openCalendar && (
+                    <div className="absolute top-10 z-20 w-72 bg-white text-black border border-gray-200 rounded-xl shadow-xl select-none">
+                      <MiniCalendar
+                        value={calendarValue}
+                        onChange={(newValue) => setCalendarValue(newValue)}
+                        compact
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={dayNext}
+                  className="h-8 w-8 flex items-center justify-center text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
+                >
+                  <MdChevronRight size={20} />
+                </button>
+
+                <div className="w-5 shrink-0 flex items-center justify-center">
+                  {isLoadAppoints && (
+                    <ClipLoader speedMultiplier={1.7} color="#0f766e" size={18} />
+                  )}
+                </div>
+              </div>
+
+              <AppointmentsTable
+                appointments={appointments}
                 appointmentDate={appointmentDate}
-                setAppointmentDate={setAppointmentDate}
-                appointmentHours={appointmentHours}
-                setAppointmentHours={setAppointmentHours}
-                freeSpaces={freeSpaces}
-                patient={patient}
-                setPatient={setPatient}
-                listPatients={listPatients}
-                searchContent={searchContent}
-                setSearchContent={setSearchContent}
-                Field={Field}
-                setField={setField}
-                reason={reason}
-                setReason={setReason}
-                observations={observations}
-                setObservations={setObservations}
-                onSetAppoint={handleSetAppoint}
-                onOpenCreatePatient={() =>
-                  isMobile
-                    ? setOpenSheetCreatePatient(true)
-                    : setOpenModalCreatePatient(true)
-                }
-                clinicId={clinicId}
+                date={date}
+                onRowClick={handleCliclRow}
               />
-            ) : (
-              <div className="w-[fit] h-full flex overflow-x-hidden">
-                <div className="flex flex-col animate-move-from-right-form-2 w-full ml-10 overflow-x-hidden">
-                  <div className="w-full justify-center flex flex-col select-none bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg shadow-xl">
-                    <div className="relative flex items-center justify-center bg-teal-600 rounded-t-xl border-b-2 border-gray-600">
-                      <h1 className="text-center text-white font-semibold text-2xl">Calendario</h1>
+            </div>
+
+            {/* Panel lateral */}
+            <div className="w-[360px] shrink-0 flex flex-col gap-4 overflow-hidden">
+              {showForm ? (
+                <AddAppointmentForm
+                  appointmentDate={appointmentDate}
+                  setAppointmentDate={setAppointmentDate}
+                  appointmentHours={appointmentHours}
+                  setAppointmentHours={setAppointmentHours}
+                  freeSpaces={freeSpaces}
+                  patient={patient}
+                  setPatient={setPatient}
+                  listPatients={listPatients}
+                  searchContent={searchContent}
+                  setSearchContent={setSearchContent}
+                  Field={Field}
+                  setField={setField}
+                  reason={reason}
+                  setReason={setReason}
+                  observations={observations}
+                  setObservations={setObservations}
+                  onSetAppoint={handleSetAppoint}
+                  onOpenCreatePatient={() => setOpenModalCreatePatient(true)}
+                  clinicId={clinicId}
+                />
+              ) : (
+                <div className="flex flex-col gap-4 h-full min-h-0 animate-move-from-right-form-2">
+                  {/* Calendario */}
+                  <div className="shrink-0 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black">
+                    <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50">
+                      <h2 className="text-base font-bold text-black tracking-tight">
+                        Calendario
+                      </h2>
                       {!isToday(today) && (
                         <button
                           onClick={() => {
                             setToday(new Date());
                             setCalendarValue(dayjs(new Date()));
                           }}
-                          className="absolute right-2 text-xs text-teal-100 hover:text-white border border-teal-400 hover:border-white px-2 py-0.5 rounded-md transition-colors"
+                          className="text-xs font-semibold text-teal-700 border border-teal-200 bg-teal-50 hover:bg-teal-100 px-2 py-0.5 rounded-md transition duration-150"
                         >
                           Hoy
                         </button>
@@ -695,6 +703,7 @@ export default function Page() {
                       onChange={(newValue) => setCalendarValue(newValue)}
                     />
                   </div>
+
                   <RemainingAppointments
                     appointments={appointments}
                     isCurrentViewToday={isToday(today)}
@@ -702,10 +711,11 @@ export default function Page() {
                     alwaysToday={alwaysToday}
                   />
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

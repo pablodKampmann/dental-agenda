@@ -6,9 +6,10 @@ import { addInsurancePlan } from "@/services/options/addInsurancePlan";
 import { SetPatients } from "@/services/patients/setPatients";
 import PhoneInput, { formatPhoneNumberIntl } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
-import dayjs from 'dayjs';
 import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
 import { ClipLoader } from "react-spinners";
+import { BsPersonFillAdd } from "react-icons/bs";
+import { IoClose } from "react-icons/io5";
 
 interface InsuranceOption { id: string; name: string; }
 interface PlanOption { id: string; name: string; }
@@ -19,7 +20,22 @@ interface Props {
     onSuccess: () => void;
 }
 
-const INPUT_CLS = "h-10 px-3 py-2 w-full border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-40 text-black";
+const INPUT_CLS = "h-9 w-full px-3 border-2 border-gray-300 rounded-lg bg-gray-100 text-sm text-black placeholder:text-gray-400 focus:outline-teal-700";
+const LABEL_CLS = "text-xs font-semibold text-gray-500 select-none";
+const GROUP_CLS = "text-xs font-bold tracking-widest text-gray-400 uppercase select-none";
+const BTN_GHOST = "px-4 py-2 text-sm font-semibold text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:text-black transition duration-150";
+const BTN_PRIMARY = "px-4 py-2 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 disabled:opacity-60";
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+    return (
+        <div className="flex flex-col gap-1 min-w-0">
+            <label className={LABEL_CLS}>
+                {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+            </label>
+            {children}
+        </div>
+    );
+}
 
 export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     const [insuranceOptions, setInsuranceOptions] = useState<InsuranceOption[] | null>(null);
@@ -100,6 +116,20 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showDatePicker]);
 
+    //ESC CIERRA EL SUB-MODAL ABIERTO, Y SI NO HAY, EL MODAL PRINCIPAL
+    useEffect(() => {
+        if (!open) return;
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key !== 'Escape') return;
+            if (openInsuranceModal) { setNewInsuranceName(""); setOpenInsuranceModal(false); }
+            else if (openPlanModal) { setNewPlanName(""); setOpenPlanModal(false); }
+            else if (showDatePicker) setShowDatePicker(false);
+            else HandleCloseModal();
+        }
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [open, openInsuranceModal, openPlanModal, showDatePicker]);
+
     function handleSelectInsurance(id: string, insuranceName: string) {
         setInsuranceId(id);
         setInsurance(insuranceName);
@@ -163,42 +193,52 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     return (
         <>
             <div className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} onClick={HandleCloseModal} />
-            <div className="fixed inset-0 z-50 flex items-center justify-center mt-12" onClick={HandleCloseModal}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={HandleCloseModal}>
                 <form
                     onSubmit={HandleSubmit}
                     onClick={(e) => e.stopPropagation()}
-                    className={`relative py-2 w-[700px] transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                    className={`w-full max-w-[720px] max-h-full flex flex-col bg-white border border-gray-200 rounded-2xl shadow-xl transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                 >
-                    <div className="w-full border-4 border-gray-600 relative px-4 py-4 bg-white shadow-xl rounded-xl">
-                        <div className="flex items-center">
-                            <div className="select-none h-12 w-12 bg-teal-600 rounded-full flex items-center justify-center text-teal-950 text-2xl font-mono">i</div>
-                            <div className="block font-semibold text-xl text-black ml-3">
-                                <h2 className="text-2xl leading-tight select-none">Agregar Paciente</h2>
-                                <p className="text-sm font-normal leading-tight select-none">Por favor, completa los datos del formulario.</p>
-                            </div>
+                    {/* Header */}
+                    <div className="shrink-0 flex items-center gap-3 px-6 pt-5 pb-4 border-b border-gray-200">
+                        <div className="shrink-0 flex items-center justify-center w-10 h-10 bg-teal-50 text-teal-700 border border-teal-200 rounded-xl">
+                            <BsPersonFillAdd size={20} />
                         </div>
-                        <div className="pt-2 pb-4">
-                            <div className="flex justify-between items-center">
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Nombre</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                        <div className="flex-1 min-w-0 select-none">
+                            <h2 className="text-base font-bold text-black tracking-tight">Agregar Paciente</h2>
+                            <p className="text-xs text-gray-400">
+                                Los campos con <span className="text-red-500">*</span> son obligatorios.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={HandleCloseModal}
+                            className="shrink-0 text-gray-400 hover:text-black transition duration-150"
+                        >
+                            <IoClose size={22} />
+                        </button>
+                    </div>
+
+                    {/* Body */}
+                    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 flex flex-col gap-5">
+                        {/* Datos personales */}
+                        <div className="flex flex-col gap-2">
+                            <h3 className={GROUP_CLS}>Datos personales</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <Field label="Nombre" required>
                                     <input type="text" className={INPUT_CLS} required value={name} onChange={(e) => setName(e.target.value)} />
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Apellido</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                                </Field>
+                                <Field label="Apellido" required>
                                     <input type="text" className={INPUT_CLS} required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Género</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                                </Field>
+                                <Field label="Género" required>
                                     <select className={INPUT_CLS} required value={gender} onChange={(e) => setGender(e.target.value)}>
                                         <option value="" disabled>Seleccionar</option>
                                         <option value="male">Masculino</option>
                                         <option value="female">Femenino</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center mt-2">
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Nacimiento</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                                </Field>
+                                <Field label="Nacimiento" required>
                                     <div className="relative" ref={datePickerRef}>
                                         <button
                                             type="button"
@@ -208,7 +248,7 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                             {date ? date.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
                                         </button>
                                         {showDatePicker && (
-                                            <div className="absolute top-full left-0 z-50 mt-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64">
+                                            <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl">
                                                 <MiniCalendar
                                                     value={date}
                                                     onChange={(d) => { setDate(d); setShowDatePicker(false); }}
@@ -216,50 +256,57 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Dni</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                                </Field>
+                                <Field label="DNI" required>
                                     <input
                                         type="text" maxLength={8}
                                         onKeyDown={(e) => {
-                            if (e.ctrlKey || e.metaKey) return;
-                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) e.preventDefault();
-                        }}
-                        onPaste={(e) => {
-                            e.preventDefault();
-                            const pasted = e.clipboardData.getData('text').replace(/\D/g, '');
-                            const input = e.currentTarget;
-                            const start = input.selectionStart ?? 0;
-                            const end = input.selectionEnd ?? 0;
-                            const next = (dni.slice(0, start) + pasted + dni.slice(end)).slice(0, 8);
-                            setDni(next);
-                        }}
+                                            if (e.ctrlKey || e.metaKey) return;
+                                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) e.preventDefault();
+                                        }}
+                                        onPaste={(e) => {
+                                            e.preventDefault();
+                                            const pasted = e.clipboardData.getData('text').replace(/\D/g, '');
+                                            const input = e.currentTarget;
+                                            const start = input.selectionStart ?? 0;
+                                            const end = input.selectionEnd ?? 0;
+                                            const next = (dni.slice(0, start) + pasted + dni.slice(end)).slice(0, 8);
+                                            setDni(next);
+                                        }}
                                         className={INPUT_CLS} required value={dni} onChange={(e) => setDni(e.target.value)}
                                     />
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Núm. Teléfono</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                                </Field>
+                                <Field label="Domicilio">
+                                    <input type="text" className={INPUT_CLS} value={address} onChange={(e) => setAddress(e.target.value)} />
+                                </Field>
+                            </div>
+                        </div>
+
+                        {/* Contacto */}
+                        <div className="flex flex-col gap-2">
+                            <h3 className={GROUP_CLS}>Contacto</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <Field label="Núm. Teléfono" required>
                                     <PhoneInput
                                         international countryCallingCodeEditable={false} defaultCountry="AR"
                                         value={num} onChange={(value) => setNum(value || '')}
-                                        className="h-10 input-phone-number px-3 py-2 w-[204px] border focus:ring-gray-500 focus:border-gray-600 text-sm border-gray-300 rounded-md focus:outline-none bg-gray-300 bg-opacity-40 text-black"
+                                        className={`input-phone-number ${INPUT_CLS}`}
                                         countries={['AR', 'UY', 'BR', 'US']}
                                     />
+                                </Field>
+                                <div className="sm:col-span-2">
+                                    <Field label="Correo Electrónico">
+                                        <input type="text" className={INPUT_CLS} value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    </Field>
                                 </div>
                             </div>
-                            <div className="flex items-center mt-2">
-                                <div className="flex flex-col w-full mt-1 mx-2">
-                                    <label className="text-black select-none text-lg ml-1">Domicilio</label>
-                                    <input type="text" className={INPUT_CLS} value={address} onChange={(e) => setAddress(e.target.value)} />
-                                </div>
-                                <div className="flex flex-col w-full mt-1 mx-2">
-                                    <label className="text-black select-none text-lg ml-1">Correo Electrónico</label>
-                                    <input type="text" className={INPUT_CLS} value={email} onChange={(e) => setEmail(e.target.value)} />
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-start mt-2">
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <div className='flex'><label className="text-black select-none text-lg ml-1">Obra Social</label><p className='text-red-500 ml-1 text-lg'>*</p></div>
+                        </div>
+
+                        {/* Cobertura */}
+                        <div className="flex flex-col gap-2">
+                            <h3 className={GROUP_CLS}>Cobertura</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+                                <Field label="Obra Social" required>
                                     <select
                                         className={INPUT_CLS} required value={insuranceId}
                                         onChange={(e) => {
@@ -273,10 +320,11 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                             <option key={opt.id} value={opt.id}>{opt.name}</option>
                                         ))}
                                     </select>
-                                    <button type="button" onClick={() => setOpenInsuranceModal(true)} className="mt-1 ml-1 text-xs text-teal-700 hover:text-teal-500 font-semibold text-left">+ Agregar nueva</button>
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>Plan</label>
+                                    <button type="button" onClick={() => setOpenInsuranceModal(true)} className="text-xs text-teal-700 hover:text-teal-600 font-semibold text-left transition duration-150">
+                                        + Agregar nueva
+                                    </button>
+                                </Field>
+                                <Field label="Plan">
                                     <div className={planDisabled ? 'cursor-not-allowed' : ''}>
                                         <select
                                             className={`${INPUT_CLS} ${planDisabled ? 'pointer-events-none text-gray-400' : ''}`}
@@ -299,55 +347,107 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                             ))}
                                         </select>
                                     </div>
-                                    <button type="button" onClick={() => setOpenPlanModal(true)} disabled={planDisabled} className="mt-1 ml-1 text-xs text-teal-700 hover:text-teal-500 font-semibold text-left disabled:text-gray-400 disabled:cursor-not-allowed">+ Agregar nueva</button>
-                                </div>
-                                <div className="flex flex-col mt-1 w-1/3 mx-2">
-                                    <label className={`${insurance === 'Particular' ? 'line-through' : ''} text-black ml-1 select-none text-lg`}>Núm. Afiliado</label>
-                                    <input type="text" className={`${INPUT_CLS} ${insurance === 'Particular' ? 'opacity-50 cursor-not-allowed' : ''}`} value={affiliate} onChange={(e) => setAffiliate(e.target.value)} disabled={insurance === 'Particular'} />
-                                </div>
+                                    <button type="button" onClick={() => setOpenPlanModal(true)} disabled={planDisabled} className="text-xs text-teal-700 hover:text-teal-600 font-semibold text-left transition duration-150 disabled:text-gray-400 disabled:cursor-not-allowed">
+                                        + Agregar nuevo
+                                    </button>
+                                </Field>
+                                <Field label="Núm. Afiliado">
+                                    <input
+                                        type="text"
+                                        className={`${INPUT_CLS} ${insurance === 'Particular' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        value={affiliate}
+                                        onChange={(e) => setAffiliate(e.target.value)}
+                                        disabled={insurance === 'Particular'}
+                                    />
+                                </Field>
                             </div>
                         </div>
-                        <div className="pt-3 flex items-center space-x-3">
-                            <button type="button" onClick={HandleCloseModal} className="bg-red-900 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">CANCELAR</button>
-                            <button type="submit" className="bg-teal-600 hover:bg-teal-500 font-semibold flex justify-center items-center w-full text-teal-950 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">
-                                {loading ? <ClipLoader color="white" size={24} /> : 'CREAR'}
-                            </button>
-                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                        <button type="button" onClick={HandleCloseModal} className={BTN_GHOST}>Cancelar</button>
+                        <button type="submit" disabled={loading} className={`${BTN_PRIMARY} min-w-[104px] flex items-center justify-center`}>
+                            {loading ? <ClipLoader color="white" size={16} /> : 'Crear paciente'}
+                        </button>
                     </div>
                 </form>
             </div>
 
             {openInsuranceModal && (
-                <>
-                    <div className={`fixed inset-0 z-[55] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${insuranceMounted ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setNewInsuranceName(""); setOpenInsuranceModal(false); }} />
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-                        <div className={`w-[400px] border-4 border-gray-600 bg-white shadow-xl rounded-xl px-6 py-5 transition-all duration-150 ease-out ${insuranceMounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                            <h2 className="text-xl font-semibold text-black mb-4">Nueva Obra Social</h2>
-                            <input type="text" placeholder="Nombre de la obra social" value={newInsuranceName} onChange={(e) => setNewInsuranceName(e.target.value)} className={INPUT_CLS} autoFocus onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInsurance(); } }} />
-                            <div className="flex space-x-3 mt-4">
-                                <button type="button" onClick={() => { setNewInsuranceName(""); setOpenInsuranceModal(false); }} className="bg-red-900 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">CANCELAR</button>
-                                <button type="button" onClick={handleAddInsurance} className="bg-teal-600 hover:bg-teal-500 font-semibold flex justify-center items-center w-full text-teal-950 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">AGREGAR</button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <MiniModal
+                    mounted={insuranceMounted}
+                    title="Nueva Obra Social"
+                    placeholder="Nombre de la obra social"
+                    value={newInsuranceName}
+                    onChange={setNewInsuranceName}
+                    onCancel={() => { setNewInsuranceName(""); setOpenInsuranceModal(false); }}
+                    onConfirm={handleAddInsurance}
+                />
             )}
 
             {openPlanModal && (
-                <>
-                    <div className={`fixed inset-0 z-[55] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${planMounted ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setNewPlanName(""); setOpenPlanModal(false); }} />
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-                        <div className={`w-[400px] border-4 border-gray-600 bg-white shadow-xl rounded-xl px-6 py-5 transition-all duration-150 ease-out ${planMounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                            <h2 className="text-xl font-semibold text-black mb-4">Nuevo Plan <span className="text-gray-500 font-normal">({insurance})</span></h2>
-                            <input type="text" placeholder="Nombre del plan" value={newPlanName} onChange={(e) => setNewPlanName(e.target.value)} className={INPUT_CLS} autoFocus onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPlan(); } }} />
-                            <div className="flex space-x-3 mt-4">
-                                <button type="button" onClick={() => { setNewPlanName(""); setOpenPlanModal(false); }} className="bg-red-900 hover:bg-red-800 font-semibold flex justify-center items-center w-full text-red-200 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">CANCELAR</button>
-                                <button type="button" onClick={handleAddPlan} className="bg-teal-600 hover:bg-teal-500 font-semibold flex justify-center items-center w-full text-teal-950 hover:text-white px-4 py-3 rounded-md focus:outline-none transition duration-200">AGREGAR</button>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <MiniModal
+                    mounted={planMounted}
+                    title="Nuevo Plan"
+                    subtitle={insurance}
+                    placeholder="Nombre del plan"
+                    value={newPlanName}
+                    onChange={setNewPlanName}
+                    onCancel={() => { setNewPlanName(""); setOpenPlanModal(false); }}
+                    onConfirm={handleAddPlan}
+                />
             )}
+        </>
+    );
+}
+
+interface MiniModalProps {
+    mounted: boolean;
+    title: string;
+    subtitle?: string;
+    placeholder: string;
+    value: string;
+    onChange: (value: string) => void;
+    onCancel: () => void;
+    onConfirm: () => void;
+}
+
+function MiniModal({ mounted, title, subtitle, placeholder, value, onChange, onCancel, onConfirm }: MiniModalProps) {
+    return (
+        <>
+            <div
+                className={`fixed inset-0 z-[55] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+                onClick={onCancel}
+            />
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+                <div
+                    className={`w-full max-w-[400px] bg-white border border-gray-200 rounded-2xl shadow-xl transition-all duration-150 ease-out pointer-events-auto ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="px-5 pt-4 pb-3 border-b border-gray-200 select-none">
+                        <h2 className="text-base font-bold text-black tracking-tight">
+                            {title}
+                            {subtitle && <span className="text-gray-400 font-normal"> · {subtitle}</span>}
+                        </h2>
+                    </div>
+                    <div className="px-5 py-4">
+                        <input
+                            type="text"
+                            placeholder={placeholder}
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            className={INPUT_CLS}
+                            autoFocus
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onConfirm(); } }}
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                        <button type="button" onClick={onCancel} className={BTN_GHOST}>Cancelar</button>
+                        <button type="button" onClick={onConfirm} className={BTN_PRIMARY}>Agregar</button>
+                    </div>
+                </div>
+            </div>
         </>
     );
 }
