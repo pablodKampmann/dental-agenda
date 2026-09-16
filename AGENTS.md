@@ -100,6 +100,25 @@ Path alias `@/*` → `src/*`. `cn()` en `src/lib/utils.ts` para mergear clases T
 
 ---
 
+## Firebase Security Rules
+
+**Las reglas de Realtime Database viven en el repo, no solo en la consola.** `database.rules.json` es la fuente de verdad, con `firebase.json` y `.firebaserc` (apunta a `dental-agenda-22448`) para desplegarlas. `firebase-tools` es devDependency (`--legacy-peer-deps`, por el mismatch de peer deps del proyecto).
+
+**A partir de acá, un cambio de reglas se hace por PR, nunca editando directo en la consola.** Antes de este cambio cualquiera con acceso a la consola podía tocar permisos de producción sin que quedara rastro ni revisión. El flujo correcto:
+
+1. Editar `database.rules.json` en una rama.
+2. PR normal a `dev`, con el diff de reglas visible para revisión — es exactamente lo que antes no existía.
+3. Una vez mergeado, desplegar con `npm run firebase:rules:deploy` (requiere `firebase login` una vez por máquina — pide permisos sobre el proyecto `dental-agenda-22448`).
+
+El deploy **no** corre solo en CI: hoy es manual, a propósito, porque un push accidental a reglas de producción sin que una persona lo dispare a mano es un riesgo mayor que la fricción de un paso manual. Si eso cambia, documentarlo acá.
+
+**Aislamiento multi-tenant real, con dos huecos conocidos y ya diferidos** (ver `docs/odontograma-pendientes.md` para el detalle completo si el módulo del odontograma está en el repo):
+- `/clinics/$clinic_id` sí aísla por `clinicId` del lado del servidor en `.read` y en cada `.write` — no son reglas de test mode.
+- `/admins` tiene `.read: true` (expone `userName`/`email`/`clinicId` de todos los admins sin autenticar) y cada admin puede reescribir su propio `clinicId`, lo cual le permite reasignarse a otra clínica. Los dos son huecos reales, diferidos a propósito: con un solo cliente no hay a dónde escaparse. El día que exista una segunda clínica, cerrarlos es prerequisito, no una mejora — quien dé de alta ese segundo tenant tiene que leer esto primero.
+- El `.write` de `$clinic_id` está **des-cascadeado**: cada hijo (`appointments`, `patients`, `priceTariffs`, `pros`, `insurances`, `info`, y los sub-nodos de `odontogramas` si existen) declara su propio `.write` con la misma condición. Un hijo nuevo de `/clinics/$clinic_id` no hereda escritura por default — tiene que declarar la suya.
+
+---
+
 ## Patrones de arquitectura
 
 **Auth y multi-tenancy**
