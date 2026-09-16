@@ -42,7 +42,7 @@ export default async function RootLayout({
             <div className='w-full h-screen overflow-y-hidden'>
               <Navigation />
               {/* Fondo general de la app: se define una sola vez acá, ninguna página lo repite */}
-              <div className='mt-[68px] sm:mt-[58px] sm:ml-40 bg-gray-100 min-h-[calc(100vh-68px)] sm:min-h-[calc(100vh-58px)]'>
+              <div className='mt-[68px] sm:mt-[56px] sm:ml-40 bg-gray-100 min-h-[calc(100vh-68px)] sm:min-h-[calc(100vh-56px)]'>
                 {children}
               </div>
             </div>

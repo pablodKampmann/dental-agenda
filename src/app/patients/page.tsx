@@ -55,7 +55,7 @@ export default function Patients() {
         : `${loadedCount} cargados`;
 
   return (
-    <div className="h-[calc(100vh-58px)] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
       {isLoad && <Loading />}
       <ModalCreatePatient
         open={isOpenModalCreatePatient}

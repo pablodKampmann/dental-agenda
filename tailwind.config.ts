@@ -89,7 +89,9 @@ const config = {
         'page-drop': 'page-drop 0.3s ease-out',
         'move-from-left': 'move-from-left 0.3s ease-in-out',
         'carousel-reveal': 'carousel-reveal 0.35s ease-out',
-        'fade-in': 'fade-in 0.2s ease-out',
+        'fade-in': 'fade-in 0.1s ease-out',
+        'popover-drop': 'popover-drop 0.1s ease-out',
+        'popover-rise': 'popover-rise 0.1s ease-out',
       },
       keyframes: {
         "accordion-down": {
@@ -239,6 +241,16 @@ const config = {
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        // Popover que abre hacia abajo: entra "cayendo" desde arriba del trigger.
+        'popover-drop': {
+          '0%': { opacity: '0', transform: 'translateY(-6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Popover que abre hacia arriba: entra "subiendo" desde abajo del trigger.
+        'popover-rise': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },

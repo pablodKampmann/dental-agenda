@@ -6,6 +6,7 @@ import { GiClick } from 'react-icons/gi';
 import { FaRegTrashCan, FaCheck } from 'react-icons/fa6';
 import { BsArrowLeftCircle } from 'react-icons/bs';
 import { getChapter } from '@/services/practices/getChapter';
+import { CustomSelect } from '@/components/shared/CustomSelect';
 import { timeCalc, getAge, formatPrice } from '../appointmentUtils';
 import type { dateData } from '../appointmentUtils';
 
@@ -144,7 +145,7 @@ export function AddAppointmentForm({
         {step === 1 && (
           <div className='p-4 flex flex-col gap-3 overflow-y-auto h-full'>
             {appointmentDate ? (
-              <>
+              <div className='flex flex-col gap-3 animate-popover-drop'>
                 <div className={`${PANEL} p-3 flex justify-between items-start gap-2`}>
                   <div className='flex flex-col gap-0.5 min-w-0'>
                     <p className='text-xs text-gray-500 select-none'>Día seleccionado</p>
@@ -160,24 +161,31 @@ export function AddAppointmentForm({
                 {/* Duración */}
                 <div className={`${PANEL} p-3`}>
                   <p className='text-xs text-gray-500 select-none mb-1.5'>Duración del turno</p>
-                  <select
-                    value={appointmentHours}
-                    onChange={(e) => setAppointmentHours(e.target.value)}
-                    className={`${INPUT_CLS} font-semibold cursor-pointer`}
-                  >
-                    <option value={1}>30 min</option>
-                    <option value={2} disabled={freeSpaces < 1}>1 hora</option>
-                    <option value={3} disabled={freeSpaces < 2}>1 hora 30 min</option>
-                    <option value={4} disabled={freeSpaces < 3}>2 horas</option>
-                    <option value={5} disabled={freeSpaces < 4}>2 horas 30 min</option>
-                    <option value={6} disabled={freeSpaces < 5}>3 horas</option>
-                  </select>
+                  <CustomSelect
+                    value={String(appointmentHours)}
+                    onChange={setAppointmentHours}
+                    options={[
+                      { value: '1', label: '30 min' },
+                      { value: '2', label: '1 hora' },
+                      { value: '3', label: '1 hora 30 min' },
+                      { value: '4', label: '2 horas' },
+                      { value: '5', label: '2 horas 30 min' },
+                      { value: '6', label: '3 horas' },
+                    ]}
+                    disabledValues={[
+                      freeSpaces < 1 && '2',
+                      freeSpaces < 2 && '3',
+                      freeSpaces < 3 && '4',
+                      freeSpaces < 4 && '5',
+                      freeSpaces < 5 && '6',
+                    ].filter(Boolean) as string[]}
+                  />
                 </div>
 
                 <button onClick={() => setStep(2)} className={PRIMARY_BTN}>
                   Siguiente →
                 </button>
-              </>
+              </div>
             ) : (
               <div className={`${PANEL} flex flex-col items-center justify-center p-6 text-center gap-2`}>
                 <BsArrowLeftCircle size={64} className='text-gray-300' />
@@ -278,7 +286,7 @@ export function AddAppointmentForm({
           <div className='p-4 flex flex-col gap-3 overflow-y-auto h-full'>
 
             {/* Resumen horario */}
-            <div className={`${PANEL} overflow-hidden`}>
+            <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>Horario</span>
                 <button onClick={() => setStep(1)} className={LINK_BTN}>Editar</button>
@@ -297,7 +305,7 @@ export function AddAppointmentForm({
             </div>
 
             {/* Resumen paciente */}
-            <div className={`${PANEL} overflow-hidden`}>
+            <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>Paciente</span>
                 <button onClick={() => setStep(2)} className={LINK_BTN}>Editar</button>
@@ -319,7 +327,7 @@ export function AddAppointmentForm({
             </div>
 
             {/* Motivo (opcional) */}
-            <div className={`${PANEL} overflow-hidden`}>
+            <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>
                   Motivo <span className='font-normal normal-case tracking-normal'>(opcional)</span>
@@ -337,14 +345,13 @@ export function AddAppointmentForm({
                 </div>
               ) : (
                 <div className='px-3 py-2 flex flex-col gap-2'>
-                  <select
+                  <CustomSelect
                     value={chapterName}
-                    onChange={(e) => { setChapterName(e.target.value); setChapterData(null); }}
-                    className={`${INPUT_CLS} text-xs font-semibold cursor-pointer`}
-                  >
-                    <option value=''>— Seleccionar categoría —</option>
-                    {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                    onChange={(v) => { setChapterName(v); setChapterData(null); }}
+                    placeholder="— Seleccionar categoría —"
+                    options={CHAPTERS.map((c) => ({ value: c, label: c }))}
+                    size="sm"
+                  />
                   {chapterName && (
                     <div className='border border-gray-200 rounded-lg overflow-hidden max-h-36 overflow-y-auto bg-white'>
                       {loadingChapter ? (
@@ -370,7 +377,7 @@ export function AddAppointmentForm({
             </div>
 
             {/* Observaciones */}
-            <div className={`${PANEL} overflow-hidden`}>
+            <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>
                   Observaciones <span className='font-normal normal-case tracking-normal'>(opcional)</span>
@@ -391,7 +398,7 @@ export function AddAppointmentForm({
                 onSetAppoint(patient.id, appointmentDate, reason, observations);
               }}
               disabled={!patient || !appointmentDate}
-              className={`w-full py-2.5 text-sm font-semibold rounded-lg transition duration-150
+              className={`shrink-0 w-full py-2.5 text-sm font-semibold rounded-lg transition duration-150
                 ${patient && appointmentDate
                   ? 'bg-teal-700 text-white hover:bg-teal-600 cursor-pointer'
                   : 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'}

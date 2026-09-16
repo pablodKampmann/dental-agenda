@@ -15,38 +15,66 @@ interface MiniCalendarProps {
   value: Dayjs | null;
   onChange: (date: Dayjs) => void;
   compact?: boolean;
+  /** Ocupa el 100% del alto del contenedor y reparte las filas de días en fracciones
+   * flexibles (1fr), en vez de un alto intrínseco fijo por padding. Para usar dentro
+   * de un contenedor con altura ya definida (ej. flex-1 de un layout), nunca en un
+   * popover flotante sin altura propia. */
+  fill?: boolean;
 }
 
-export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarProps) {
+export function MiniCalendar({ value, onChange, compact = false, fill = false }: MiniCalendarProps) {
   const todayDayjs = dayjs();
-  const [viewMonth, setViewMonth] = useState(value ?? todayDayjs);
+  // `value` puede llegar como un Dayjs "Invalid Date" (ej. dayjs(undefined, 'DD/MM/YYYY') de
+  // un paciente sin fecha de nacimiento cargada) en vez de null — es truthy igual, así que
+  // el chequeo tiene que ser de validez, no de nullidad, o todo el cálculo de celdas da NaN.
+  const validValue = value && value.isValid() ? value : null;
+  const [viewMonth, setViewMonth] = useState(validValue ?? todayDayjs);
   const [showYearPicker, setShowYearPicker] = useState(false);
 
   useEffect(() => {
-    if (value) setViewMonth(value);
-  }, [value]);
+    if (validValue) setViewMonth(validValue);
+  }, [validValue]);
 
   const startOfMonth = viewMonth.startOf("month");
   const daysInMonth = viewMonth.daysInMonth();
   const startDow = startOfMonth.day();
   const blanks = startDow === 0 ? 6 : startDow - 1;
 
-  const cells: (Dayjs | null)[] = [
-    ...Array(blanks).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => startOfMonth.date(i + 1)),
-  ];
+  const TOTAL_CELLS = 42; // 6 filas fijas, para que el alto no cambie entre meses de 4/5/6 filas
+
+  const prevMonthEnd = startOfMonth.subtract(1, "day");
+  const leading = Array.from({ length: blanks }, (_, i) =>
+    prevMonthEnd.date(prevMonthEnd.date() - blanks + 1 + i)
+  );
+  const current = Array.from({ length: daysInMonth }, (_, i) =>
+    startOfMonth.date(i + 1)
+  );
+  const trailingCount = TOTAL_CELLS - leading.length - current.length;
+  const nextMonthStart = startOfMonth.add(1, "month");
+  const trailing = Array.from({ length: trailingCount }, (_, i) =>
+    nextMonthStart.date(i + 1)
+  );
+
+  const cells = [...leading, ...current, ...trailing];
 
   const cellBase = cn(
     "w-full flex items-center justify-center rounded-md font-medium transition-colors duration-100 cursor-pointer",
-    compact ? "text-xs py-1" : "text-sm py-1.5"
+    compact ? "text-xs" : "text-sm",
+    fill ? "h-full" : compact ? "py-1" : "py-1.5"
   );
 
   if (showYearPicker) {
     const currentYear = viewMonth.year();
     const years = Array.from({ length: 16 }, (_, i) => currentYear - 4 + i);
     return (
-      <div className={cn("select-none w-full", compact ? "p-1.5" : "p-3")}>
-        <div className="flex items-center justify-between mb-2 bg-white border border-gray-200 rounded-lg px-1 py-0.5">
+      <div
+        className={cn(
+          "select-none w-full",
+          compact ? "p-1.5" : "p-3",
+          fill && "h-full flex flex-col"
+        )}
+      >
+        <div className="shrink-0 flex items-center justify-between mb-2 bg-white border border-gray-200 rounded-lg px-1 py-0.5">
           <button
             onClick={() => setShowYearPicker(false)}
             className="text-xs text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1 px-2 py-1 rounded hover:bg-teal-50 transition-colors"
@@ -57,7 +85,12 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
             {MONTHS[viewMonth.month()]} {currentYear}
           </button>
         </div>
-        <div className="grid grid-cols-4 gap-1">
+        <div
+          className={cn(
+            "grid grid-cols-4 gap-1",
+            fill && "flex-1 min-h-0 grid-rows-4"
+          )}
+        >
           {years.map((year) => (
             <button
               key={year}
@@ -66,7 +99,8 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
                 setShowYearPicker(false);
               }}
               className={cn(
-                "text-xs py-1.5 rounded-md font-medium transition-colors",
+                "text-xs rounded-md font-medium transition-colors",
+                fill ? "h-full" : "py-1.5",
                 year === currentYear
                   ? "bg-teal-700 text-white shadow-sm"
                   : "hover:bg-teal-50 text-gray-700 hover:text-teal-700"
@@ -81,9 +115,15 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
   }
 
   return (
-    <div className={cn("select-none w-full", compact ? "p-2" : "p-3")}>
+    <div
+      className={cn(
+        "select-none w-full",
+        compact ? "p-2" : "p-3",
+        fill && "h-full flex flex-col"
+      )}
+    >
       {/* Month navigation */}
-      <div className="flex items-center justify-between mb-2 bg-white border border-gray-200 rounded-lg px-1 py-0.5">
+      <div className="shrink-0 flex items-center justify-between mb-2 bg-white border border-gray-200 rounded-lg px-1 py-0.5">
         <button
           onClick={() => setViewMonth(viewMonth.subtract(1, "month"))}
           className="p-1.5 rounded-md hover:bg-teal-50 text-gray-500 hover:text-teal-600 transition-colors"
@@ -109,7 +149,7 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 mb-1">
+      <div className="shrink-0 grid grid-cols-7 mb-1">
         {WEEKDAYS.map((d) => (
           <div
             key={d}
@@ -121,18 +161,28 @@ export function MiniCalendar({ value, onChange, compact = false }: MiniCalendarP
       </div>
 
       {/* Days grid */}
-      <div className="grid grid-cols-7 gap-y-0.5">
+      <div
+        className={cn(
+          "grid grid-cols-7",
+          fill ? "flex-1 min-h-0 grid-rows-6 gap-0.5" : "gap-y-0.5"
+        )}
+      >
         {cells.map((day, i) => {
-          if (!day) return <div key={`blank-${i}`} />;
+          const isOutsideMonth = !day.isSame(viewMonth, "month");
           const isSelected = value?.isSame(day, "day");
           const isToday = day.isSame(todayDayjs, "day");
           return (
             <button
               key={i}
-              onClick={() => onChange(day)}
+              onClick={() => {
+                onChange(day);
+                if (isOutsideMonth) setViewMonth(day);
+              }}
               className={cn(
                 cellBase,
-                isSelected
+                isOutsideMonth
+                  ? "text-gray-300 hover:bg-teal-50 hover:text-teal-400"
+                  : isSelected
                   ? "bg-teal-700 text-white shadow-sm"
                   : isToday
                   ? "border-2 border-teal-600 text-teal-700 hover:bg-teal-50"

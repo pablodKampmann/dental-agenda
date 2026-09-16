@@ -25,7 +25,7 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
   const todayAppointments = isCurrentViewToday && appointments ? appointments : [];
 
   return (
-    <div className='flex-1 min-h-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black'>
+    <div className='flex-[40] [@media(min-height:850px)]:flex-[55] min-h-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black'>
       {/* Card header */}
       <div className='shrink-0 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50'>
         <div className='flex items-center justify-between gap-2'>

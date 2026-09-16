@@ -135,7 +135,7 @@ export default function PatientId() {
 
   if (id !== null) {
     return (
-      <div className="h-[calc(100vh-58px)] overflow-y-auto">
+      <div className="h-[calc(100vh-56px)] overflow-y-auto">
         {isLoad ? (
           <div className="px-4 pb-4 pt-4">
             <PatientRecordSkeleton />
@@ -301,6 +301,7 @@ export default function PatientId() {
                           submitChanges={submitChanges}
                           changes={changes}
                           validate={emailValidator()}
+                          type="email"
                         />
                       </div>
                     </div>

@@ -226,7 +226,7 @@ export default function ClinicHistory() {
         const validacionTramo = clavesEnTramo.length >= 2 ? validarTramo(clavesEnTramo) : null;
 
         return (
-            <div className="h-[calc(100vh-58px)] overflow-y-auto">
+            <div className="h-[calc(100vh-56px)] overflow-y-auto">
                 <div className='px-4 pb-4 pt-4 relative'>
                 {isLoad ? (
                     <PatientRecordSkeleton />

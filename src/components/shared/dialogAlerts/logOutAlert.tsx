@@ -26,7 +26,7 @@ export function LogOutAlert({ open, setOpen }: Props) {
   return (
     <>
       <div
-        className="fixed top-[68px] sm:top-[58px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
+        className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
         onClick={() => { if (!loading) setOpen(false); }}
       />
       <div className="fixed left-1/2 sm:left-[calc(50%+5rem)] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">

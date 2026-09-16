@@ -328,7 +328,7 @@ export default function Page() {
   };
 
   return (
-    <div className="h-[calc(100vh-58px)] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
       {isLoad ? (
         <Loading />
       ) : (
@@ -424,6 +424,7 @@ export default function Page() {
                         submitChanges={(value) => submitEmailChanges(value)}
                         changes={changes}
                         validate={openInputCredential ? undefined : emailValidator()}
+                        type="email"
                         renderInput={
                           openInputCredential ? (
                             <input
@@ -684,6 +685,7 @@ export default function Page() {
                           submitChanges={(v) => handleEditClinicRow(saveKey, v)}
                           changes={changes}
                           validate={key === "clinicEmail" ? emailValidator() : undefined}
+                          type={key === "clinicEmail" ? "email" : "text"}
                         />
                       ))}
                     </div>

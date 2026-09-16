@@ -1,3 +1,5 @@
+import { CustomSelect } from '@/components/shared/CustomSelect';
+
 interface Option {
     value: string;
     label: string;
@@ -12,22 +14,17 @@ interface Props {
     placeholder?: string;
 }
 
-export function SelectField({ value, onChange, onSubmit, onCancel, options, placeholder }: Props) {
+// El confirmar/cancelar de la fila (check/X) ya los resuelve EditableRow por fuera de este
+// campo — onSubmit/onCancel se mantienen en la firma solo por compatibilidad con los
+// callers existentes, que los pasan para el <select> nativo viejo (Enter/Escape).
+export function SelectField({ value, onChange, options, placeholder }: Props) {
     return (
-        <select
-            autoFocus
+        <CustomSelect
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter') onSubmit();
-                else if (e.key === 'Escape') onCancel();
-            }}
-            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
-        >
-            {placeholder && <option value="" disabled>{placeholder}</option>}
-            {options.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-        </select>
+            onChange={onChange}
+            options={options}
+            placeholder={placeholder}
+            className="flex-1"
+        />
     );
 }

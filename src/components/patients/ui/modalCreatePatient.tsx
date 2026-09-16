@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { getInsuranceOptions } from "@/services/options/getInsuranceOpt";
 import { getInsurancePlans } from "@/services/options/getInsurancePlans";
 import { addInsurance } from "@/services/options/addInsurance";
 import { addInsurancePlan } from "@/services/options/addInsurancePlan";
 import { SetPatients } from "@/services/patients/setPatients";
-import PhoneInput, { formatPhoneNumberIntl } from 'react-phone-number-input';
+import PhoneInput, { formatPhoneNumberIntl, parsePhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
 import { MiniCalendar } from "@/components/appointments/ui/MiniCalendar";
+import { CustomSelect } from "@/components/shared/CustomSelect";
+import { PhoneCountrySelect } from "@/components/shared/PhoneCountrySelect";
+import { usePopoverAnchor } from "@/hooks/usePopoverAnchor";
+import { usePopoverReveal } from "@/hooks/usePopoverReveal";
+import { computePopoverStyle } from "@/lib/popoverPosition";
+import { email as emailValidator } from "@/lib/validators";
+import { useToast } from "@/context/ToastContext";
 import { ClipLoader } from "react-spinners";
 import { BsPersonFillAdd } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -25,6 +33,13 @@ const LABEL_CLS = "text-xs font-semibold text-gray-500 select-none";
 const GROUP_CLS = "text-xs font-bold tracking-widest text-gray-400 uppercase select-none";
 const BTN_GHOST = "px-4 py-2 text-sm font-semibold text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:text-black transition duration-150";
 const BTN_PRIMARY = "px-4 py-2 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 disabled:opacity-60";
+// El calendario de Nacimiento se portalea a document.body (ver más abajo) para no quedar
+// recortado por el scroll del body del modal ni tapado por su footer — este marcador es
+// lo que le permite al listener de click-afuera reconocer un click adentro del panel
+// aunque ya no sea descendiente DOM del botón que lo abre.
+const BIRTHDATE_POPOVER_MARK = "birthdate-popover-portal";
+const BIRTHDATE_POPOVER_W = 256;
+const BIRTHDATE_POPOVER_H = 360;
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
     return (
@@ -55,6 +70,9 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     const [planId, setPlanId] = useState("");
     const [affiliate, setAffiliate] = useState("");
     const [loading, setLoading] = useState(false);
+    const [addingInsurance, setAddingInsurance] = useState(false);
+    const [addingPlan, setAddingPlan] = useState(false);
+    const { showToast } = useToast();
 
     const [openInsuranceModal, setOpenInsuranceModal] = useState(false);
     const [newInsuranceName, setNewInsuranceName] = useState("");
@@ -62,7 +80,12 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     const [newPlanName, setNewPlanName] = useState("");
 
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const datePickerRef = useRef<HTMLDivElement>(null);
+    const datePickerRef = useRef<HTMLButtonElement>(null);
+    const { rect: datePickerRect, hidden: datePickerHidden, capture: captureDatePicker } = usePopoverAnchor(datePickerRef, showDatePicker);
+    const datePickerPopover = datePickerRect
+        ? computePopoverStyle({ rect: datePickerRect, width: BIRTHDATE_POPOVER_W, height: BIRTHDATE_POPOVER_H, hidden: datePickerHidden })
+        : null;
+    const datePickerReveal = usePopoverReveal(datePickerPopover?.openUp ?? null);
     const [mounted, setMounted] = useState(false);
     const [insuranceMounted, setInsuranceMounted] = useState(false);
     const [planMounted, setPlanMounted] = useState(false);
@@ -108,7 +131,12 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     useEffect(() => {
         if (!showDatePicker) return;
         function handleClickOutside(e: MouseEvent) {
-            if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+            const target = e.target as Element;
+            if (
+                datePickerRef.current &&
+                !datePickerRef.current.contains(target) &&
+                !target.closest(`.${BIRTHDATE_POPOVER_MARK}`)
+            ) {
                 setShowDatePicker(false);
             }
         }
@@ -145,7 +173,35 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
 
     async function HandleSubmit(e: any) {
         e.preventDefault();
-        if (!date) return;
+        // Única fuente de verdad para los campos obligatorios (el form tiene `noValidate`,
+        // ver más abajo): lista qué falta puntualmente en vez de un mensaje genérico, para
+        // que el toast le diga al usuario exactamente qué completar.
+        const missing = [
+            !name.trim() && "Nombre",
+            !lastName.trim() && "Apellido",
+            !gender && "Género",
+            !date && "Nacimiento",
+            !dni.trim() && "DNI",
+            // `num` puede quedar en solo "+54" (código de país, sin número real) si el
+            // usuario enfocó el campo y no tipeó nada — truthy igual. Alcanza con que haya
+            // algún dígito además del código de área, sin exigir que sea un número real
+            // válido (eso rechazaba números tipeados a mano que no calzaban con el patrón
+            // exacto de AR).
+            !parsePhoneNumber(num || "")?.nationalNumber && "Núm. Teléfono",
+            !insuranceId && "Obra Social",
+        ].filter(Boolean) as string[];
+        // Correo no es obligatorio, pero si se cargó tiene que tener formato válido — mensaje
+        // aparte en vez de sumarlo a `missing`, que sería engañoso acá (el campo no está
+        // vacío, está mal escrito).
+        const emailInvalid = email.trim() !== "" && !!emailValidator()(email);
+        if (missing.length > 0 || emailInvalid) {
+            const missingMsg = missing.length === 0 ? ""
+                : missing.length === 1 ? `Falta completar: ${missing[0]}.`
+                : `Faltan completar: ${missing.join(", ")}.`;
+            const emailMsg = emailInvalid ? "El correo electrónico no tiene un formato válido." : "";
+            showToast("error", [missingMsg, emailMsg].filter(Boolean).join(" "), "patient-form-validation");
+            return;
+        }
         setLoading(true);
         const formattedDate = date.format('DD/MM/YYYY');
         const newNum = formatPhoneNumberIntl(num);
@@ -164,39 +220,66 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
     }
 
     async function handleAddInsurance() {
-        if (!newInsuranceName.trim()) return;
+        if (!newInsuranceName.trim() || addingInsurance) return;
+        setAddingInsurance(true);
         const result = await addInsurance(newInsuranceName.trim());
-        if (result) {
-            setInsuranceOptions(prev => prev ? [...prev, result] : [result]);
-            handleSelectInsurance(result.id, result.name);
+        setAddingInsurance(false);
+        if (!result) {
+            showToast("error", "No se pudo agregar la obra social. Probá de nuevo.");
+            return;
         }
+        setInsuranceOptions(prev => prev ? [...prev, result] : [result]);
+        handleSelectInsurance(result.id, result.name);
         setNewInsuranceName("");
         setOpenInsuranceModal(false);
+        showToast("success", `Obra social "${result.name}" agregada.`);
     }
 
     async function handleAddPlan() {
-        if (!newPlanName.trim() || !insuranceId) return;
+        if (!newPlanName.trim() || !insuranceId || addingPlan) return;
+        setAddingPlan(true);
         const result = await addInsurancePlan(insuranceId, newPlanName.trim());
-        if (result) {
-            setPlanOptions(prev => [...prev, result]);
-            setPlanId(result.id);
-            setPlan(result.name);
+        setAddingPlan(false);
+        if (!result) {
+            showToast("error", "No se pudo agregar el plan. Probá de nuevo.");
+            return;
         }
+        setPlanOptions(prev => [...prev, result]);
+        setPlanId(result.id);
+        setPlan(result.name);
         setNewPlanName("");
         setOpenPlanModal(false);
+        showToast("success", `Plan "${result.name}" agregado.`);
     }
 
     if (!open) return null;
 
     const planDisabled = !insuranceId || insurance === 'Particular';
 
-    return (
+    // Portal a document.body: este modal se monta dentro del contenedor `overflow-hidden`
+    // de cada página (agenda, /patients), y un `overflow-hidden` ancestro recorta un
+    // `fixed inset-0` descendiente aunque esté posicionado contra el viewport — sin el
+    // portal el backdrop nunca llega a cubrir la topbar/sidebar (bug real: se veía nítida
+    // arriba de un fondo oscurecido a medias).
+    if (typeof window === 'undefined') return null;
+
+    return createPortal(
         <>
-            <div className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} onClick={HandleCloseModal} />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={HandleCloseModal}>
+            {/* Backdrop sin onClick a propósito: es un form largo, un misclick afuera no
+                debe tirar los datos cargados — solo "Cancelar" (o la X) cierran. */}
+            <div className={`fixed inset-0 z-[60] bg-black/50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} />
+            <div className="fixed inset-0 z-[65] flex items-center justify-center p-4">
                 <form
                     onSubmit={HandleSubmit}
                     onClick={(e) => e.stopPropagation()}
+                    // "Crear paciente" es solo clickeable a propósito: un Enter suelto en
+                    // cualquier campo (nombre, DNI, teléfono...) no debe disparar el alta.
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                    // Apaga el globo de validación nativo del browser ("Completa este
+                    // campo") — HandleSubmit ya valida todos los campos obligatorios a mano
+                    // y avisa por toast; con las dos cosas activas convivían dos sistemas de
+                    // warning distintos para el mismo error.
+                    noValidate
                     className={`w-full max-w-[720px] max-h-full flex flex-col bg-white border border-gray-200 rounded-2xl shadow-xl transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                 >
                     {/* Header */}
@@ -232,30 +315,37 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                     <input type="text" className={INPUT_CLS} required value={lastName} onChange={(e) => setLastName(e.target.value)} />
                                 </Field>
                                 <Field label="Género" required>
-                                    <select className={INPUT_CLS} required value={gender} onChange={(e) => setGender(e.target.value)}>
-                                        <option value="" disabled>Seleccionar</option>
-                                        <option value="male">Masculino</option>
-                                        <option value="female">Femenino</option>
-                                    </select>
+                                    <CustomSelect
+                                        value={gender}
+                                        onChange={setGender}
+                                        placeholder="Seleccionar"
+                                        options={[
+                                            { value: 'male', label: 'Masculino' },
+                                            { value: 'female', label: 'Femenino' },
+                                        ]}
+                                    />
                                 </Field>
                                 <Field label="Nacimiento" required>
-                                    <div className="relative" ref={datePickerRef}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowDatePicker(!showDatePicker)}
-                                            className={`${INPUT_CLS} text-left ${date ? 'text-black' : 'text-gray-400'}`}
+                                    <button
+                                        ref={datePickerRef}
+                                        type="button"
+                                        onClick={() => { captureDatePicker(); setShowDatePicker((v) => !v); }}
+                                        className={`${INPUT_CLS} text-left ${date ? 'text-black' : 'text-gray-400'}`}
+                                    >
+                                        {date ? date.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
+                                    </button>
+                                    {showDatePicker && datePickerPopover && typeof window !== 'undefined' && createPortal(
+                                        <div
+                                            className={`${BIRTHDATE_POPOVER_MARK} bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto ${datePickerReveal}`}
+                                            style={{ ...datePickerPopover.style, width: BIRTHDATE_POPOVER_W, maxHeight: BIRTHDATE_POPOVER_H }}
                                         >
-                                            {date ? date.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
-                                        </button>
-                                        {showDatePicker && (
-                                            <div className="absolute top-full left-0 z-50 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl">
-                                                <MiniCalendar
-                                                    value={date}
-                                                    onChange={(d) => { setDate(d); setShowDatePicker(false); }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
+                                            <MiniCalendar
+                                                value={date}
+                                                onChange={(d) => { setDate(d); setShowDatePicker(false); }}
+                                            />
+                                        </div>,
+                                        document.body
+                                    )}
                                 </Field>
                                 <Field label="DNI" required>
                                     <input
@@ -292,11 +382,16 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                                         value={num} onChange={(value) => setNum(value || '')}
                                         className={`input-phone-number ${INPUT_CLS}`}
                                         countries={['AR', 'UY', 'BR', 'US']}
+                                        countrySelectComponent={PhoneCountrySelect}
+                                        numberInputProps={{
+                                            onFocus: (e: React.FocusEvent<HTMLInputElement>) =>
+                                                e.target.setSelectionRange(e.target.value.length, e.target.value.length),
+                                        }}
                                     />
                                 </Field>
                                 <div className="sm:col-span-2">
                                     <Field label="Correo Electrónico">
-                                        <input type="text" className={INPUT_CLS} value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        <input type="email" className={INPUT_CLS} value={email} onChange={(e) => setEmail(e.target.value)} />
                                     </Field>
                                 </div>
                             </div>
@@ -307,46 +402,38 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                             <h3 className={GROUP_CLS}>Cobertura</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
                                 <Field label="Obra Social" required>
-                                    <select
-                                        className={INPUT_CLS} required value={insuranceId}
-                                        onChange={(e) => {
-                                            const opt = insuranceOptions?.find(o => o.id === e.target.value);
-                                            handleSelectInsurance(e.target.value, opt?.name ?? '');
+                                    <CustomSelect
+                                        value={insuranceId}
+                                        onChange={(v) => {
+                                            const opt = insuranceOptions?.find(o => o.id === v);
+                                            handleSelectInsurance(v, opt?.name ?? '');
                                         }}
                                         disabled={!insuranceOptions}
-                                    >
-                                        <option value="" disabled>{insuranceOptions ? 'Seleccionar' : 'Cargando...'}</option>
-                                        {insuranceOptions?.map((opt) => (
-                                            <option key={opt.id} value={opt.id}>{opt.name}</option>
-                                        ))}
-                                    </select>
+                                        placeholder={insuranceOptions ? 'Seleccionar' : 'Cargando...'}
+                                        options={(insuranceOptions ?? []).map((opt) => ({ value: opt.id, label: opt.name }))}
+                                    />
                                     <button type="button" onClick={() => setOpenInsuranceModal(true)} className="text-xs text-teal-700 hover:text-teal-600 font-semibold text-left transition duration-150">
                                         + Agregar nueva
                                     </button>
                                 </Field>
                                 <Field label="Plan">
-                                    <div className={planDisabled ? 'cursor-not-allowed' : ''}>
-                                        <select
-                                            className={`${INPUT_CLS} ${planDisabled ? 'pointer-events-none text-gray-400' : ''}`}
-                                            value={planId}
-                                            onChange={(e) => {
-                                                const opt = planOptions.find(o => o.id === e.target.value);
-                                                setPlanId(e.target.value);
-                                                setPlan(opt?.name ?? '');
-                                            }}
-                                        >
-                                            <option value="" disabled>
-                                                {!insuranceId ? 'Elegí obra social primero'
-                                                    : insurance === 'Particular' ? '-'
-                                                    : loadingPlans ? 'Cargando...'
-                                                    : planOptions.length === 0 ? 'Agregá un plan'
-                                                    : 'Seleccionar'}
-                                            </option>
-                                            {planOptions.map((opt) => (
-                                                <option key={opt.id} value={opt.id}>{opt.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <CustomSelect
+                                        value={planId}
+                                        onChange={(v) => {
+                                            const opt = planOptions.find(o => o.id === v);
+                                            setPlanId(v);
+                                            setPlan(opt?.name ?? '');
+                                        }}
+                                        disabled={planDisabled}
+                                        placeholder={
+                                            !insuranceId ? 'Elegí obra social primero'
+                                                : insurance === 'Particular' ? '-'
+                                                : loadingPlans ? 'Cargando...'
+                                                : planOptions.length === 0 ? 'Agregá un plan'
+                                                : 'Seleccionar'
+                                        }
+                                        options={planOptions.map((opt) => ({ value: opt.id, label: opt.name }))}
+                                    />
                                     <button type="button" onClick={() => setOpenPlanModal(true)} disabled={planDisabled} className="text-xs text-teal-700 hover:text-teal-600 font-semibold text-left transition duration-150 disabled:text-gray-400 disabled:cursor-not-allowed">
                                         + Agregar nuevo
                                     </button>
@@ -383,6 +470,7 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                     onChange={setNewInsuranceName}
                     onCancel={() => { setNewInsuranceName(""); setOpenInsuranceModal(false); }}
                     onConfirm={handleAddInsurance}
+                    loading={addingInsurance}
                 />
             )}
 
@@ -396,9 +484,11 @@ export function ModalCreatePatient({ open, onClose, onSuccess }: Props) {
                     onChange={setNewPlanName}
                     onCancel={() => { setNewPlanName(""); setOpenPlanModal(false); }}
                     onConfirm={handleAddPlan}
+                    loading={addingPlan}
                 />
             )}
-        </>
+        </>,
+        document.body
     );
 }
 
@@ -411,16 +501,17 @@ interface MiniModalProps {
     onChange: (value: string) => void;
     onCancel: () => void;
     onConfirm: () => void;
+    loading?: boolean;
 }
 
-function MiniModal({ mounted, title, subtitle, placeholder, value, onChange, onCancel, onConfirm }: MiniModalProps) {
+function MiniModal({ mounted, title, subtitle, placeholder, value, onChange, onCancel, onConfirm, loading = false }: MiniModalProps) {
     return (
         <>
             <div
-                className={`fixed inset-0 z-[55] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+                className={`fixed inset-0 z-[70] backdrop-blur-sm bg-black/30 transition-opacity duration-150 ${mounted ? 'opacity-100' : 'opacity-0'}`}
                 onClick={onCancel}
             />
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+            <div className="fixed inset-0 z-[75] flex items-center justify-center p-4 pointer-events-none">
                 <div
                     className={`w-full max-w-[400px] bg-white border border-gray-200 rounded-2xl shadow-xl transition-all duration-150 ease-out pointer-events-auto ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                     onClick={(e) => e.stopPropagation()}
@@ -439,12 +530,15 @@ function MiniModal({ mounted, title, subtitle, placeholder, value, onChange, onC
                             onChange={(e) => onChange(e.target.value)}
                             className={INPUT_CLS}
                             autoFocus
+                            disabled={loading}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onConfirm(); } }}
                         />
                     </div>
                     <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-                        <button type="button" onClick={onCancel} className={BTN_GHOST}>Cancelar</button>
-                        <button type="button" onClick={onConfirm} className={BTN_PRIMARY}>Agregar</button>
+                        <button type="button" onClick={onCancel} disabled={loading} className={`${BTN_GHOST} disabled:opacity-60 disabled:cursor-not-allowed`}>Cancelar</button>
+                        <button type="button" onClick={onConfirm} disabled={loading} className={`${BTN_PRIMARY} min-w-[84px] flex items-center justify-center`}>
+                            {loading ? <ClipLoader color="white" size={16} /> : 'Agregar'}
+                        </button>
                     </div>
                 </div>
             </div>

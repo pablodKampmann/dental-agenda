@@ -18,9 +18,13 @@ interface props {
     extraActions?: React.ReactNode;
     onEdit?: () => void;
     displayValue?: React.ReactNode;
+    /** Tipo del `<input>` default (ignorado si `renderInput`/`multiline` reemplazan el
+     * campo). Habilita teclado y validación nativa del browser acordes al dato — ej.
+     * `email` para que el teclado de mobile muestre @ y el navegador valide el formato. */
+    type?: string;
 }
 
-export function EditableRow({ label, value, rowKey, category, rowModify, setRowModify, setChanges, submitChanges, changes, renderInput, multiline, validate, extraActions, onEdit, displayValue }: props) {
+export function EditableRow({ label, value, rowKey, category, rowModify, setRowModify, setChanges, submitChanges, changes, renderInput, multiline, validate, extraActions, onEdit, displayValue, type = 'text' }: props) {
     const isEditing = rowModify === rowKey;
     const contentRef = useRef<HTMLDivElement>(null);
     const prevHeightRef = useRef<number | null>(null);
@@ -113,6 +117,7 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
                                             />
                                         ) : (
                                             <input
+                                                type={type}
                                                 autoFocus
                                                 value={draft}
                                                 onChange={(e) => handleChange(e.target.value)}

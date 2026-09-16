@@ -39,7 +39,7 @@ export function ConfirmAlert({
     <>
       {/* Overlay: cubre solo el contenido, no el sidebar ni el topnav */}
       <div
-        className="fixed top-[68px] sm:top-[58px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
+        className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
         onClick={() => { if (!loading) setOpen(false); }}
       />
 

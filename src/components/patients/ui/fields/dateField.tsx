@@ -23,7 +23,7 @@ export function DateField({ value, onChange }: Props) {
                 {value ? value.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
             </button>
             {open && (
-                <div className="absolute bottom-full left-0 z-50 mb-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64">
+                <div className="absolute bottom-full left-0 z-50 mb-1 bg-white border-2 border-gray-300 rounded-xl shadow-xl w-64 animate-popover-rise">
                     <MiniCalendar value={value} onChange={(d) => { onChange(d); setOpen(false); }} />
                 </div>
             )}

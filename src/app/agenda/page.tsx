@@ -20,8 +20,8 @@ import {
   MdChevronLeft,
   MdChevronRight,
   MdClose,
+  MdCalendarToday,
 } from "react-icons/md";
-import { BsCalendar2Date } from "react-icons/bs";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
 import { ConfirmAlert } from "./../../components/shared/dialogAlerts/confirmAlert";
@@ -395,7 +395,35 @@ export default function Page() {
           flipUp: spaceBelow < modalHeight,
         });
       } else if (appointmentDate) {
-        clean();
+        // Re-clickear cualquiera de los slots ya resaltados/"respirando" (el rango completo
+        // que ocupa la duración elegida, no solo el horario inicial — ver el mismo chequeo
+        // en AppointmentsTable) cancela el alta. Cualquier otro slot, sea del mismo día o de
+        // otro, solo mueve el horario inicial sin tirar el estado de "Agregar Turno"
+        // (paciente, motivo, observaciones quedan como estaban). La duración se recalcula
+        // sola: el efecto que escucha `appointmentDate` ya resetea `appointmentHours` a 30
+        // min por cada cambio de horario, y `freeSpaces` se recalcula para el nuevo horario
+        // en su propio efecto.
+        const isWithinSelectedRange =
+          appointmentDate.date === date &&
+          (appointmentDate.time === time ||
+            appointmentDate.time2 === time ||
+            appointmentDate.time3 === time ||
+            appointmentDate.time4 === time ||
+            appointmentDate.time5 === time ||
+            appointmentDate.time6 === time);
+        if (isWithinSelectedRange) {
+          clean();
+        } else {
+          setOpenModalAppointment(false);
+          const parts = date.split("/");
+          const year = parts[2];
+          setAppointmentDate({
+            date: date,
+            dayComplete: `${dayName} ${dayNum} de ${monthName}`,
+            year: year,
+            time: time,
+          });
+        }
       } else {
         setOpenModalAppointment(false);
         const parts = date.split("/");
@@ -430,7 +458,7 @@ export default function Page() {
     const formattedDate = date?.replace(/\//g, "");
     const appts = await fetchAppointments(formattedDate);
     setAppointments(appts);
-    setTimeout(() => setIsLoadAppoints(false), 1500);
+    setIsLoadAppoints(false);
     if (result === null) {
       showToast("error", "Error al crear el turno");
     } else {
@@ -452,7 +480,7 @@ export default function Page() {
     : 0;
 
   return (
-    <div className="h-[calc(100vh-58px)] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
       {isLoad ? (
         <Loading />
       ) : (
@@ -556,10 +584,10 @@ export default function Page() {
                 setReason(null);
               }}
               type="button"
-              className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 text-sm font-semibold rounded-lg transition duration-150 ${
+              className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-2 text-sm font-semibold rounded-lg transition duration-150 ${
                 showForm
-                  ? "text-gray-600 border-2 border-gray-300 hover:bg-gray-50 hover:text-black"
-                  : "bg-teal-700 text-white hover:bg-teal-600"
+                  ? "text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-black"
+                  : "bg-teal-700 border-teal-700 text-white hover:bg-teal-600"
               }`}
             >
               {showForm ? (
@@ -589,10 +617,10 @@ export default function Page() {
                     setCalendarValue(dayjs(new Date()));
                   }}
                   disabled={isToday(today)}
-                  className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-semibold transition duration-150 ${
+                  className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border-2 text-xs font-semibold transition duration-150 ${
                     isToday(today)
-                      ? "bg-teal-700 text-white cursor-default"
-                      : "text-gray-500 border-2 border-gray-300 hover:text-teal-700 hover:border-teal-300"
+                      ? "bg-teal-700 border-teal-700 text-white cursor-default"
+                      : "text-gray-500 border-gray-300 hover:text-teal-700 hover:border-teal-300"
                   }`}
                 >
                   <MdUpdate size={16} />
@@ -609,20 +637,22 @@ export default function Page() {
                 <div ref={calendarRef} className="relative">
                   <button
                     onClick={() => setOpenCalendar(!openCalendar)}
-                    className={`flex items-center gap-2 h-8 px-3 rounded-lg border-2 text-sm font-semibold transition duration-150 ${
+                    className={`flex items-center justify-center gap-2 h-8 px-3 w-[320px] shrink-0 rounded-lg border-2 text-sm font-semibold transition duration-150 ${
                       openCalendar
                         ? "border-teal-700 text-teal-700"
                         : "border-gray-300 text-black hover:border-teal-300 hover:text-teal-700"
                     }`}
                   >
-                    <BsCalendar2Date size={15} />
-                    {dayName} {dayNum} de {monthName}
-                    <span className="text-xs font-medium text-gray-400">
+                    <MdCalendarToday size={15} className="shrink-0" />
+                    <span className="truncate">
+                      {dayName} {dayNum} de {monthName}
+                    </span>
+                    <span className="text-xs font-medium text-gray-400 shrink-0">
                       ({date})
                     </span>
                   </button>
                   {openCalendar && (
-                    <div className="absolute top-10 z-20 w-72 bg-white text-black border border-gray-200 rounded-xl shadow-xl select-none">
+                    <div className="absolute top-10 z-20 w-72 bg-white text-black border border-gray-200 rounded-xl shadow-xl select-none animate-popover-drop">
                       <MiniCalendar
                         value={calendarValue}
                         onChange={(newValue) => setCalendarValue(newValue)}
@@ -655,7 +685,7 @@ export default function Page() {
             </div>
 
             {/* Panel lateral */}
-            <div className="w-[360px] shrink-0 flex flex-col gap-4 overflow-hidden">
+            <div className="w-[360px] shrink-0 min-h-0 flex flex-col gap-4 overflow-hidden">
               {showForm ? (
                 <AddAppointmentForm
                   appointmentDate={appointmentDate}
@@ -681,8 +711,8 @@ export default function Page() {
               ) : (
                 <div className="flex flex-col gap-4 h-full min-h-0 animate-move-from-right-form-2">
                   {/* Calendario */}
-                  <div className="shrink-0 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black">
-                    <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50">
+                  <div className="flex-[60] [@media(min-height:850px)]:flex-[45] min-h-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black">
+                    <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50">
                       <h2 className="text-base font-bold text-black tracking-tight">
                         Calendario
                       </h2>
@@ -698,10 +728,13 @@ export default function Page() {
                         </button>
                       )}
                     </div>
-                    <MiniCalendar
-                      value={calendarValue}
-                      onChange={(newValue) => setCalendarValue(newValue)}
-                    />
+                    <div className="flex-1 min-h-0">
+                      <MiniCalendar
+                        value={calendarValue}
+                        onChange={(newValue) => setCalendarValue(newValue)}
+                        fill
+                      />
+                    </div>
                   </div>
 
                   <RemainingAppointments
