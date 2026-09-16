@@ -85,7 +85,7 @@ export type CodigoHallazgoDiente =
   | 'implante'
   | 'remanente'
   | 'extraccion'
-  | 'no_erupcionada'
+  | 'retenida'
 
 /** Hallazgos de alcance MULTI: abarcan un tramo de piezas y viven en `vinculos`. */
 export type CodigoHallazgoMulti = 'protesis_fija' | 'protesis_removible'

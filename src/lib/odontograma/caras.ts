@@ -177,7 +177,7 @@ const COLOR_POR_CAPA: Readonly<Record<Capa, ColorHallazgo>> = Object.freeze({
  * El color de un hallazgo sale de su capa y de nada más. No del tipo de hallazgo, no de
  * la cara, no de si el diente está ausente: `existente` es rojo y `requerida` es azul.
  *
- * Que sea así es lo que deja que `ausente` y `no_erupcionada` compartan el grafismo
+ * Que sea así es lo que deja que `ausente` y `retenida` compartan el grafismo
  * `cross` sin ambigüedad — en la ficha las dos son un aspa y se distinguen por el color.
  *
  * **Ojo con el prototipo: lo tiene al revés.** La convención que manda es la de la ficha

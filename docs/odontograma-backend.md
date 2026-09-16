@@ -151,21 +151,21 @@ colorDe(capa) = capa === 'existente' ? ROJO : AZUL
 
 Unión de los nueve del prototipo con los que faltaban de la ficha. `grafismo` usa los mismos valores que el `render` del prototipo, para que no haya tabla de traducción.
 
-| Código | Nombre | `abrev` | Alcance | Grafismo | Capa por defecto | De dónde sale |
-|---|---|---|---|---|---|---|
-| `caries` | Caries | `C` | CARA | `fill` | requerida | ambos |
-| `obturacion` | Obturación | `O` | CARA | `fill` | existente | ambos |
-| `sellante` | Sellante | `S` | CARA | `fill` | existente | prototipo |
-| `fractura` | Fractura | `F` | CARA | `fill` | existente | prototipo |
-| `ausente` | Pieza ausente | `X` | DIENTE | `cross` | existente | ambos |
-| `corona` | Corona | `Co` | DIENTE | `box` | existente | ambos |
-| `endodoncia` | Endodoncia | `E` | DIENTE | `letter` | existente | prototipo |
-| `implante` | Implante | `I` | DIENTE | `screw` | existente | prototipo |
-| `remanente` | Remanente radicular | `RR` | DIENTE | `stump` | existente | prototipo |
-| `extraccion` | Extracción | `Ex` | DIENTE | `equals` ⚠️ | requerida | ficha |
-| `no_erupcionada` | Pieza no erupcionada | `NE` | DIENTE | `cross` | requerida | ficha |
-| `protesis_fija` | Prótesis fija | `PF` | MULTI | `span` ⚠️ | existente | ficha |
-| `protesis_removible` | Prótesis removible | `PR` | MULTI | `span` ⚠️ | existente | ficha |
+| Código | Nombre | `abrev` | Alcance | Grafismo | Capa por defecto | Denticiones | De dónde sale |
+|---|---|---|---|---|---|---|---|
+| `caries` | Caries | `C` | CARA | `fill` | requerida | ambas | ambos |
+| `obturacion` | Obturación | `O` | CARA | `fill` | existente | ambas | ambos |
+| `sellante` | Sellante | `S` | CARA | `fill` | existente | ambas | prototipo |
+| `fractura` | Fractura | `F` | CARA | `fill` | existente | ambas | prototipo |
+| `ausente` | Pieza ausente | `X` | DIENTE | `cross` | existente | ambas | ambos |
+| `corona` | Corona | `Co` | DIENTE | `box` | existente | ambas | ambos |
+| `endodoncia` | Endodoncia | `E` | DIENTE | `letter` | existente | ambas | prototipo |
+| `implante` | Implante | `I` | DIENTE | `screw` | existente | **solo permanente** | prototipo |
+| `remanente` | Remanente radicular | `RR` | DIENTE | `stump` | existente | ambas | prototipo |
+| `extraccion` | Extracción | `Ex` | DIENTE | `equals` ⚠️ | requerida | ambas | ficha |
+| `retenida` | Pieza retenida o impactada | `RI` | DIENTE | `cross` | requerida | ambas | ficha |
+| `protesis_fija` | Prótesis fija | `PF` | MULTI | `span` ⚠️ | existente | **solo permanente** | ficha |
+| `protesis_removible` | Prótesis removible | `PR` | MULTI | `span` ⚠️ | existente | ambas | ficha |
 
 **Las primeras nueve `abrev` salen del prototipo**, de `data/findings.ts`, y se copian tal cual: adoptamos su catálogo, así que sus abreviaturas ya estaban decididas. Las cuatro últimas no existen ahí y las completo con la costumbre de siglas de la propia ficha.
 
@@ -175,7 +175,9 @@ Unión de los nueve del prototipo con los que faltaban de la ficha. `grafismo` u
 
 ⚠️ Los tres grafismos marcados **no existen todavía en el prototipo** y hay que dibujarlos: `equals` es el signo `=` de la ficha, y `span` es el rectángulo que abarca el tramo de piezas de una prótesis.
 
-`no_erupcionada` reusa `cross`, igual que `ausente`: en la ficha las dos son un aspa y se distinguen solo por el color. El componente ya lo soporta, porque el color sale de la capa.
+`retenida` reusa `cross`, igual que `ausente`: en la ficha las dos son un aspa y se distinguen solo por el color. El componente ya lo soporta, porque el color sale de la capa. No es el estado normal de un permanente que todavía no le tocó salir —eso no se marca—, es una pieza que no erupcionó o no exfolió cuando correspondía (ver B4-1, más abajo).
+
+**Denticiones (B4-1).** Solo `implante` y `protesis_fija` están restringidos a la dentición permanente. El resto del catálogo —incluidos los cuatro hallazgos de cara— acepta las dos sin restricción.
 
 ---
 
@@ -255,7 +257,7 @@ Expone `hallazgosPorAlcance(alcance)` para que el picker se arme filtrado: al cl
 - [ ] Los códigos son únicos y coinciden con los `FindingType` del prototipo donde existen.
 - [ ] Exactamente dos entradas tienen alcance `MULTI`, y son las dos prótesis.
 - [ ] `hallazgosPorAlcance('CARA')` devuelve caries, obturación, sellante y fractura.
-- [ ] `no_erupcionada` y `ausente` comparten grafismo `cross` — se distinguen por la capa, no por el dibujo.
+- [ ] `retenida` y `ausente` comparten grafismo `cross` — se distinguen por la capa, no por el dibujo. (Se llamaba `no_erupcionada` hasta B4-1, que la renombró — ver esa sección.)
 - [ ] Agregar una entrada toca **exactamente dos archivos** —el catálogo y la unión de códigos de `tipos.ts`— más su grafismo. La persistencia y los servicios no se tocan.
 - [ ] El desajuste entre los dos es un **error de build**, no un hallazgo que aparece en el picker y después no se puede guardar. La unión de códigos vive en `tipos.ts` a propósito: es vocabulario persistido, y `catalogo.ts` ya depende de ahí — derivarla al revés invertiría la dependencia.
 - [ ] Hay un test de aserciones de tipo que tipa el árbol de ejemplo del contrato contra `EstadoDiente`, `Vinculo` y `EventoOdontograma`. Hasta acá nada verifica que los tipos de B1-2 encajen con el árbol documentado — el build solo comprueba que las declaraciones sean válidas.
@@ -630,6 +632,7 @@ Lo que sí necesita backend son tres cosas.
 ```
 Rama:   feat/odontograma-denticion-temporaria
 Toca:   src/lib/odontograma/catalogo.ts
+        src/services/odontograma/setHallazgo.ts
         src/services/odontograma/setVinculo.ts
         sus tests
 Depende: B2-4
@@ -639,12 +642,14 @@ Depende: B2-4
 
 No todos los hallazgos tienen sentido en un diente de leche: un **implante** no va sobre una pieza temporaria, y una **prótesis fija** tampoco. El catálogo gana un campo `denticiones` y los servicios lo validan.
 
+**Decisión de modelo tomada en esta issue.** `no_erupcionada` no podía quedar como estaba: era un hallazgo que había que cargar a mano en cada pieza permanente sin erupcionar, y en un chico de 7 años son veinte y pico — además de no ser un hallazgo clínico, sino lo normal para la edad. Se evaluaron tres opciones (derivarlo de la edad del paciente sin persistirlo; marcarlo solo cuando es clínicamente notable y renombrarlo; dejarlo igual y resolver la usabilidad en pantalla) y se eligió la segunda: el código se **renombró a `retenida`** («Pieza retenida o impactada»). Deja de significar «todavía no le tocó salir» —eso no se marca, es el estado normal— y pasa a significar una anomalía real: una pieza (de cualquier dentición) que no erupcionó o no exfolió cuando correspondía. Una pieza permanente sin hallazgos simplemente no aparece en el árbol, que es el comportamiento que `EstadoDiente` ya tenía. Grafismo (`cross`, compartido con `ausente`) y capa por defecto (`requerida`) no cambiaron.
+
 **Criterios de aceptación**
 
 - [ ] Cada entrada del catálogo declara a qué denticiones aplica.
 - [ ] Intentar poner `implante` sobre una pieza temporaria devuelve un error legible.
 - [ ] Un vínculo no puede mezclar piezas permanentes y temporarias.
-- [ ] Los hallazgos de cara (caries, obturación, sellante) aplican a las dos denticiones sin restricción.
+- [ ] Los hallazgos de cara (caries, obturación, sellante, fractura) aplican a las dos denticiones sin restricción.
 
 ---
 
@@ -657,7 +662,7 @@ Toca:   src/services/odontograma/ (tests)
 Depende: B4-1
 ```
 
-**Qué hace.** Nada de código nuevo, y por eso conviene tenerlo escrito: cuando se cae la 55 y erupciona la 15, son **dos hallazgos sobre dos piezas distintas**, no una edición de la misma. La 55 pasa a `ausente` y la 15 deja de estar `no_erupcionada`.
+**Qué hace.** Nada de código nuevo, y por eso conviene tenerlo escrito: cuando se cae la 55 y erupciona la 15, son **dos hallazgos sobre dos piezas distintas**, no una edición de la misma. La 55 pasa a `ausente`. La 15, si venía sin hallazgos, no necesita ningún cambio — no tenerlos es su estado normal hasta que erupciona (ver la decisión de B4-1: eso ya no se marca a mano). Si la 15 estaba marcada `retenida`, recién ahí ese hallazgo se quita.
 
 El modelo ya lo soporta —son posiciones independientes— pero el histórico tiene que reflejarlo como dos eventos, y eso hay que testearlo antes de que alguien intente «convertir» un diente en otro.
 

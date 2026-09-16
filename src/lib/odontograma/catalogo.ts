@@ -20,6 +20,7 @@ import type {
   CodigoHallazgoDiente,
   CodigoHallazgoMulti,
 } from './tipos'
+import type { Denticion } from './piezas'
 
 /**
  * Cómo se dibuja el hallazgo. Son los mismos valores que el `render` del prototipo
@@ -28,7 +29,7 @@ import type {
  * abarca el tramo de piezas de una prótesis.
  *
  * El grafismo dice la forma, nunca el color: el color sale de la capa, vía `colorDe()`.
- * Por eso `ausente` y `no_erupcionada` pueden compartir `cross` sin ambigüedad.
+ * Por eso `ausente` y `retenida` pueden compartir `cross` sin ambigüedad.
  */
 export type Grafismo = 'fill' | 'cross' | 'box' | 'letter' | 'screw' | 'stump' | 'equals' | 'span'
 
@@ -60,6 +61,14 @@ export interface EntradaHallazgo<
    * Por eso no hay `capasPermitidas`: sería redundante con «siempre ambas».
    */
   readonly capaPorDefecto: Capa
+  /**
+   * A qué denticiones aplica. A diferencia de las capas, acá **no** son siempre las dos:
+   * un implante o una prótesis fija no tienen sentido sobre una pieza temporaria, así
+   * que el campo existe de verdad y `setHallazgoDiente`/`setVinculo` lo hacen cumplir.
+   * Los cuatro hallazgos de cara aplican a las dos sin restricción, igual que la mayoría
+   * de los de pieza entera — las excepciones son las que importan clínicamente.
+   */
+  readonly denticiones: readonly Denticion[]
 }
 
 /**
@@ -69,22 +78,33 @@ export interface EntradaHallazgo<
  * `as const satisfies` es lo que sostiene el angostamiento por alcance: `as const` fija
  * los literales y `satisfies` verifica la forma de cada entrada sin borrarlos.
  */
+// Compartidos por referencia entre once entradas del catálogo: sin freeze, un
+// push() sobre cualquiera de las dos mutaría a todas las que la referencian.
+const AMBAS_DENTICIONES: readonly Denticion[] = Object.freeze(['PERMANENTE', 'TEMPORARIA'])
+const SOLO_PERMANENTE: readonly Denticion[] = Object.freeze(['PERMANENTE'])
+
 export const HALLAZGOS = [
-  { codigo: 'caries', nombre: 'Caries', abrev: 'C', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'requerida' },
-  { codigo: 'obturacion', nombre: 'Obturación', abrev: 'O', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente' },
-  { codigo: 'sellante', nombre: 'Sellante', abrev: 'S', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente' },
-  { codigo: 'fractura', nombre: 'Fractura', abrev: 'F', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente' },
-  { codigo: 'ausente', nombre: 'Pieza ausente', abrev: 'X', alcance: 'DIENTE', grafismo: 'cross', capaPorDefecto: 'existente' },
-  { codigo: 'corona', nombre: 'Corona', abrev: 'Co', alcance: 'DIENTE', grafismo: 'box', capaPorDefecto: 'existente' },
-  { codigo: 'endodoncia', nombre: 'Endodoncia', abrev: 'E', alcance: 'DIENTE', grafismo: 'letter', capaPorDefecto: 'existente' },
-  { codigo: 'implante', nombre: 'Implante', abrev: 'I', alcance: 'DIENTE', grafismo: 'screw', capaPorDefecto: 'existente' },
-  { codigo: 'remanente', nombre: 'Remanente radicular', abrev: 'RR', alcance: 'DIENTE', grafismo: 'stump', capaPorDefecto: 'existente' },
-  { codigo: 'extraccion', nombre: 'Extracción', abrev: 'Ex', alcance: 'DIENTE', grafismo: 'equals', capaPorDefecto: 'requerida' },
+  { codigo: 'caries', nombre: 'Caries', abrev: 'C', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'requerida', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'obturacion', nombre: 'Obturación', abrev: 'O', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'sellante', nombre: 'Sellante', abrev: 'S', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'fractura', nombre: 'Fractura', abrev: 'F', alcance: 'CARA', grafismo: 'fill', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'ausente', nombre: 'Pieza ausente', abrev: 'X', alcance: 'DIENTE', grafismo: 'cross', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'corona', nombre: 'Corona', abrev: 'Co', alcance: 'DIENTE', grafismo: 'box', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'endodoncia', nombre: 'Endodoncia', abrev: 'E', alcance: 'DIENTE', grafismo: 'letter', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  // Un implante necesita hueso maduro: no va sobre una pieza temporaria.
+  { codigo: 'implante', nombre: 'Implante', abrev: 'I', alcance: 'DIENTE', grafismo: 'screw', capaPorDefecto: 'existente', denticiones: SOLO_PERMANENTE },
+  { codigo: 'remanente', nombre: 'Remanente radicular', abrev: 'RR', alcance: 'DIENTE', grafismo: 'stump', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
+  { codigo: 'extraccion', nombre: 'Extracción', abrev: 'Ex', alcance: 'DIENTE', grafismo: 'equals', capaPorDefecto: 'requerida', denticiones: AMBAS_DENTICIONES },
   // Aspa igual que `ausente`: en la ficha las dos son un aspa y las separa el color, que
   // sale de la capa. Por eso una arranca en `existente` y la otra en `requerida`.
-  { codigo: 'no_erupcionada', nombre: 'Pieza no erupcionada', abrev: 'NE', alcance: 'DIENTE', grafismo: 'cross', capaPorDefecto: 'requerida' },
-  { codigo: 'protesis_fija', nombre: 'Prótesis fija', abrev: 'PF', alcance: 'MULTI', grafismo: 'span', capaPorDefecto: 'existente' },
-  { codigo: 'protesis_removible', nombre: 'Prótesis removible', abrev: 'PR', alcance: 'MULTI', grafismo: 'span', capaPorDefecto: 'existente' },
+  //
+  // No es «todavía no salió» — eso es lo normal para la edad y no se marca. Es una pieza
+  // (permanente o temporaria) que no erupcionó o no exfolió cuando le tocaba: retenida o
+  // impactada. Ver la nota de B4-1 en docs/odontograma-backend.md.
+  { codigo: 'retenida', nombre: 'Pieza retenida o impactada', abrev: 'RI', alcance: 'DIENTE', grafismo: 'cross', capaPorDefecto: 'requerida', denticiones: AMBAS_DENTICIONES },
+  // Una prótesis fija va sobre pilares permanentes: no aplica a un tramo temporario.
+  { codigo: 'protesis_fija', nombre: 'Prótesis fija', abrev: 'PF', alcance: 'MULTI', grafismo: 'span', capaPorDefecto: 'existente', denticiones: SOLO_PERMANENTE },
+  { codigo: 'protesis_removible', nombre: 'Prótesis removible', abrev: 'PR', alcance: 'MULTI', grafismo: 'span', capaPorDefecto: 'existente', denticiones: AMBAS_DENTICIONES },
 ] as const satisfies readonly EntradaHallazgo[]
 
 /** La unión de las 13 entradas literales, cada una con su código y su alcance exactos. */
@@ -151,4 +171,13 @@ export function esCodigoHallazgo(valor: unknown): valor is CodigoHallazgo {
 /** La entrada de un código ya validado. */
 export function hallazgoDe(codigo: CodigoHallazgo): EntradaDelCatalogo {
   return HALLAZGOS_POR_CODIGO[codigo]
+}
+
+/**
+ * Si un hallazgo tiene sentido clínico sobre una pieza de esa dentición. La autoridad
+ * es esta función —vía `setHallazgoDiente` y `setVinculo`— y no el picker del front,
+ * que la va a usar para filtrar opciones pero no reemplaza la validación acá.
+ */
+export function aplicaADenticion(codigo: CodigoHallazgo, denticion: Denticion): boolean {
+  return hallazgoDe(codigo).denticiones.includes(denticion)
 }

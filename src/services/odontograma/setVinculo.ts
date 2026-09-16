@@ -1,6 +1,7 @@
 import { db } from '@/lib/firebase'
 import { ref, update, push, child, serverTimestamp } from 'firebase/database'
 import { piezaDeClave, type ClavePieza } from '@/lib/odontograma/piezas'
+import { aplicaADenticion, hallazgoDe } from '@/lib/odontograma/catalogo'
 import {
   SCHEMA_VERSION,
   type Capa,
@@ -9,7 +10,7 @@ import {
   type PiezasSet,
   type Vinculo,
 } from '@/lib/odontograma/tipos'
-import { basePath, nuevaEventoKey, type ParaEscribir } from './setHallazgo'
+import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
 
 /**
  * Alta de un vínculo multi-pieza (prótesis fija o removible).
@@ -18,6 +19,11 @@ import { basePath, nuevaEventoKey, type ParaEscribir } from './setHallazgo'
  * misma validación en pantalla para no dejar confirmar algo que va a rebotar, pero
  * la decisión final es de acá. Por eso `validarTramo` está exportada: la UI la
  * importa en vez de reimplementar el criterio por su cuenta.
+ *
+ * `validarTramo` solo juzga la geometría del tramo (cantidad, arcada, contigüidad) —
+ * es independiente del tipo de vínculo. Si el tipo aplica a la dentición del tramo
+ * (B4-1: una prótesis fija no va sobre piezas temporarias) se valida aparte, en
+ * `setVinculo`, con el mismo `aplicaADenticion` que usa `setHallazgoDiente`.
  */
 
 /**
@@ -77,18 +83,28 @@ interface SetVinculoParams {
 }
 
 /**
- * `null` es fallo técnico (offline, error de Firebase) — mismo criterio que el
- * resto de los services. `{ ok: false, error }` es un tramo inválido: rechazado
- * con un mensaje que la UI puede mostrar tal cual, sin reventar.
+ * Devuelve `ResultadoEscritura` con `vinculoId` como campo extra de éxito (ver el
+ * contrato completo en `setHallazgo.ts`). `{ ok: false, error }` es un tramo
+ * inválido o un tipo que no aplica a esa dentición: rechazado con un mensaje que la
+ * UI puede mostrar tal cual, sin reventar.
  */
-type SetVinculoResultado = { readonly ok: true; readonly vinculoId: string } | { readonly ok: false; readonly error: string } | null
-
-export async function setVinculo(params: SetVinculoParams): Promise<SetVinculoResultado> {
+export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEscritura<{ vinculoId: string }>> {
   const { clinicId, pacienteId, tipo, capa, piezas, uid } = params
 
   const validacion = validarTramo(piezas)
   if (!validacion.ok) {
     return { ok: false, error: validacion.error }
+  }
+
+  // El tramo ya es geométricamente válido, así que todas sus piezas comparten fila —
+  // y por lo tanto dentición (ver el chequeo de `fila` en validarTramo). Alcanza con
+  // mirar la primera.
+  const denticion = piezaDeClave(piezas[0]).denticion
+  if (!aplicaADenticion(tipo, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(tipo).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
   }
 
   try {

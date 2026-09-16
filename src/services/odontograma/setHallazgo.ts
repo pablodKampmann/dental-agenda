@@ -10,6 +10,8 @@ import {
   type EventoCara,
   type EventoDiente,
 } from '@/lib/odontograma/tipos'
+import { aplicaADenticion, hallazgoDe } from '@/lib/odontograma/catalogo'
+import { piezaDeClave } from '@/lib/odontograma/piezas'
 
 /**
  * Escritura de hallazgos del odontograma: `setHallazgoCara`, `setHallazgoDiente` y
@@ -35,6 +37,36 @@ import {
  * aparte" que pide docs/odontograma-pendientes.md §4.3, en vez de un `as any`.
  */
 type ParaEscribir<E extends { ts: number }> = Omit<E, 'ts'> & { ts: object }
+
+/**
+ * Contrato de retorno de **todos** los services de escritura del odontograma:
+ * `setHallazgoCara`, `setHallazgoDiente`, `ejecutarHallazgoCaraRequerida`,
+ * `ejecutarHallazgoDienteRequerido`, `removeHallazgo` (en `removeHallazgo.ts`),
+ * `setVinculo` y `removeVinculo` (en `setVinculo.ts` / `removeVinculo.ts`) devuelven
+ * esta misma forma — un solo lugar la define, todos los demás la importan de acá.
+ *
+ * - `null` es **fallo técnico**: offline o error de Firebase. Nunca "rechazado por
+ *   una regla de negocio".
+ * - `{ ok: false, error }` es un **rechazo por regla de negocio** (B4-1, un tramo
+ *   inválido en `setVinculo`, ...) con un mensaje que la UI puede mostrar tal cual,
+ *   sin reventar.
+ * - `{ ok: true, ...}` es éxito. `Extra` son los campos que una operación puntual
+ *   necesita devolver además del `ok` (`setVinculo` agrega `vinculoId`).
+ *
+ * Por qué existe: `{ ok: false }` es **truthy**. Un caller escrito contra un
+ * protocolo viejo (`if (resultado)` o `if (resultado !== null)`) tomaría un rechazo
+ * por un éxito, no revertiría una actualización optimista, y quedaría dibujado un
+ * hallazgo que nunca se guardó. Por eso los siete comparten la forma aunque
+ * `setHallazgoCara`, `ejecutarHallazgoCaraRequerida`, `removeHallazgo` y
+ * `removeVinculo` no tengan hoy ninguna regla que puedan rechazar — nunca usan la
+ * rama `ok: false`, pero el contrato es uno solo para los siete, no seis con una
+ * excepción. Que una función nunca use una rama es normal; que tenga una forma de
+ * retorno distinta no lo es.
+ */
+export type ResultadoEscritura<Extra extends object = object> =
+  | ({ readonly ok: true } & Extra)
+  | { readonly ok: false; readonly error: string }
+  | null
 
 function basePath(clinicId: string, pacienteId: string): string {
   return `/clinics/${clinicId}/odontogramas/${pacienteId}`
@@ -74,9 +106,28 @@ interface SetHallazgoCaraParams {
   readonly uid: string
 }
 
-/** Escribe un hallazgo de alcance CARA en una hoja `caras/{cara}/{capa}`. */
-export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<boolean | null> {
+/**
+ * Escribe un hallazgo de alcance CARA en una hoja `caras/{cara}/{capa}`.
+ *
+ * Valida contra la dentición de la pieza igual que `setHallazgoDiente` — hoy es un
+ * no-op porque los cuatro hallazgos de cara aplican a las dos denticiones sin
+ * restricción (B4-1, fijado por un test en `catalogo.test.ts`), pero la pregunta
+ * "¿este código aplica acá?" tiene que salir siempre del catálogo vía
+ * `aplicaADenticion()`, nunca de una asunción implícita en la función que escribe.
+ * Si mañana se restringe un hallazgo de cara, este service ya lo respeta sin que
+ * nadie tenga que acordarse de tocarlo.
+ */
+export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, pieza, cara, capa, codigo, de, uid } = params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(codigo, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(codigo).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -100,7 +151,7 @@ export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<bo
       [`${base}/eventos/${eventoKey}`]: evento,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
@@ -117,9 +168,18 @@ interface SetHallazgoDienteParams {
   readonly uid: string
 }
 
-/** Escribe un hallazgo de alcance DIENTE en una hoja `diente/{capa}`. */
-export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promise<boolean | null> {
+/** Escribe un hallazgo de alcance DIENTE en una hoja `diente/{capa}`. Valida contra la dentición (B4-1). */
+export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, pieza, capa, codigo, de, uid } = params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(codigo, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(codigo).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -143,7 +203,7 @@ export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promis
       [`${base}/eventos/${eventoKey}`]: evento,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
@@ -171,12 +231,24 @@ interface EjecutarHallazgoCaraRequeridaParams {
  * reconstruir las dos por separado. Un solo evento no alcanza: `EventoBase.capa` es
  * un único valor (`existente` *o* `requerida`), no puede documentar ambas hojas a la
  * vez sin perder cuál fue cuál.
+ *
+ * `hallazgoResultante` se valida contra la dentición igual que en `setHallazgoCara`
+ * — hoy siempre pasa, mismo motivo (B4-1).
  */
 export async function ejecutarHallazgoCaraRequerida(
   params: EjecutarHallazgoCaraRequeridaParams
-): Promise<boolean | null> {
+): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, pieza, cara, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid } =
     params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(hallazgoResultante, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(hallazgoResultante).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -215,7 +287,7 @@ export async function ejecutarHallazgoCaraRequerida(
       [`${base}/eventos/${eventoExistenteKey}`]: eventoExistente,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
@@ -232,11 +304,26 @@ interface EjecutarHallazgoDienteRequeridoParams {
   readonly uid: string
 }
 
-/** Misma operación que `ejecutarHallazgoCaraRequerida`, para hallazgos de alcance DIENTE. */
+/**
+ * Misma operación que `ejecutarHallazgoCaraRequerida`, para hallazgos de alcance
+ * DIENTE. `hallazgoResultante` puede ser un código distinto del requerido (una
+ * extracción requerida puede resolver en `ausente`), así que se valida contra la
+ * dentición de la pieza igual que en `setHallazgoDiente` — no alcanza con que
+ * `hallazgoRequerido` ya haya pasado esa validación cuando se cargó.
+ */
 export async function ejecutarHallazgoDienteRequerido(
   params: EjecutarHallazgoDienteRequeridoParams
-): Promise<boolean | null> {
+): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, pieza, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid } = params
+
+  const denticion = piezaDeClave(pieza).denticion
+  if (!aplicaADenticion(hallazgoResultante, denticion)) {
+    return {
+      ok: false,
+      error: `${hallazgoDe(hallazgoResultante).nombre} no aplica a piezas de dentición ${denticion.toLowerCase()}.`,
+    }
+  }
+
   try {
     if (!navigator.onLine) throw new Error()
 
@@ -275,7 +362,7 @@ export async function ejecutarHallazgoDienteRequerido(
       [`${base}/eventos/${eventoExistenteKey}`]: eventoExistente,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null

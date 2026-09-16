@@ -1,7 +1,7 @@
 import { db } from '@/lib/firebase'
 import { ref, update, serverTimestamp } from 'firebase/database'
 import { SCHEMA_VERSION, type Capa, type CodigoHallazgoMulti, type EventoMulti, type PiezasSet } from '@/lib/odontograma/tipos'
-import { basePath, nuevaEventoKey, type ParaEscribir } from './setHallazgo'
+import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
 
 /**
  * Baja de un vínculo multi-pieza: escribe `null` en `vinculos/{vinculoId}` y agrega
@@ -23,7 +23,12 @@ interface RemoveVinculoParams {
   readonly uid: string
 }
 
-export async function removeVinculo(params: RemoveVinculoParams): Promise<boolean | null> {
+/**
+ * Nunca rechaza por regla de negocio —dar de baja un vínculo existente siempre
+ * vale— así que solo usa `{ ok: true }` o `null` de `ResultadoEscritura` (ver ese
+ * tipo en `setHallazgo.ts`, que documenta el contrato completo).
+ */
+export async function removeVinculo(params: RemoveVinculoParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, vinculoId, tipo, capa, piezas, uid } = params
   try {
     if (!navigator.onLine) throw new Error()
@@ -51,7 +56,7 @@ export async function removeVinculo(params: RemoveVinculoParams): Promise<boolea
       [`${base}/eventos/${eventoKey}`]: evento,
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     console.error(error)
     return null
