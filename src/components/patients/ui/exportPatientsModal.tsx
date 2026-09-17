@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, FileSpreadsheet } from "lucide-react";
 import { ClipLoader } from "react-spinners";
@@ -15,6 +15,15 @@ interface Props {
 
 export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filterDescription }: Props) {
     const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            const frame = requestAnimationFrame(() => setMounted(true));
+            return () => cancelAnimationFrame(frame);
+        }
+        setMounted(false);
+    }, [open]);
 
     if (!open) return null;
 
@@ -31,11 +40,16 @@ export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filt
     return createPortal(
         <>
             <div
-                className="fixed inset-0 z-[60] bg-black/50"
-                onClick={() => { if (!loading) onClose(); }}
+                className={`fixed inset-0 z-[60] bg-black/50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}
             />
-            <div className="fixed inset-0 z-[65] flex items-center justify-center p-4">
-                <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+            <div
+                className="fixed inset-0 z-[65] flex items-center justify-center p-4"
+                onClick={() => { if (!loading) onClose(); }}
+            >
+                <div
+                    onClick={(e) => e.stopPropagation()}
+                    className={`w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                >
                     <div className="flex items-start gap-3 px-4 py-3 border-b border-gray-200">
                         <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-teal-50 text-teal-700 border border-teal-200 shrink-0">
                             <FileSpreadsheet size={18} />

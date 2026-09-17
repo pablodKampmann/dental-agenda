@@ -8,9 +8,10 @@ import { PatientsToolbar } from "./../../components/patients/ui/patientsToolbar"
 import { Table } from "./../../components/patients/ui/table";
 import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull";
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
-import { ExportPatientsModal } from "../../components/patients/ui/exportPatientsModal";
+import { ExportPatientsModal } from "../../components/patients/ui/ExportPatientsModal";
 import type { ToggleableColumn } from "../../components/patients/ui/columnsVisibilityMenu";
 import { exportPatientsToExcel } from "@/lib/exportPatientsToExcel";
+import { getClinicData } from "@/services/config/getClinicData";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -134,8 +135,9 @@ export default function Patients() {
       ? `Se exportan los pacientes ${exportFilterParts.join(" y ")} — el total que cumple el filtro, no solo lo cargado en pantalla.`
       : null;
 
-  function handleExportConfirm() {
-    exportPatientsToExcel(filteredPatients ?? []);
+  async function handleExportConfirm() {
+    const clinicInfo = clinicId ? await getClinicData(clinicId, "info") : null;
+    exportPatientsToExcel(filteredPatients ?? [], clinicInfo, exportFilterDescription);
   }
 
   return (
