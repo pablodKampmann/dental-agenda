@@ -1,14 +1,10 @@
-import { useState, useEffect } from 'react';
 import { TbUserSearch } from 'react-icons/tb';
-import { ClipLoader } from "react-spinners";
-import { SearchPatient } from "./../../../services/patients/searchPatient";
 
 interface props {
     searchContent: string;
     setSearchContent: (value: string) => void;
-    setListOfPatients: (value: any) => void;
-    handleGetPatients: (quantity: number) => void;
-    clinicId: string | null;
+    selectedField: 'name' | 'dni';
+    setSelectedField: (value: 'name' | 'dni') => void;
 }
 
 const FIELDS = [
@@ -16,42 +12,13 @@ const FIELDS = [
     { id: 'dni', label: 'DNI', placeholder: 'Buscar por DNI...' },
 ] as const;
 
-export function PatientsToolbar({ searchContent, setSearchContent, setListOfPatients, handleGetPatients, clinicId }: props) {
-    const [selectedField, setSelectedField] = useState<typeof FIELDS[number]['id']>('name');
-    const [isSearching, setIsSearching] = useState(false);
-
-    //SEARCH PATIENTS LOGIC
-    useEffect(() => {
-        setSearchContent('');
-    }, [selectedField]);
-
-    useEffect(() => {
-        let isCancelled = false;
-
-        if (searchContent.length < 1) {
-            setIsSearching(true);
-            Promise.resolve(handleGetPatients(20)).then(() => {
-                if (!isCancelled) setIsSearching(false);
-            });
-            return () => { isCancelled = true; };
-        }
-
-        const debounceTimer = setTimeout(async () => {
-            setIsSearching(true);
-            const patientsFilter = await SearchPatient(selectedField, searchContent, clinicId!);
-            if (!isCancelled) {
-                setListOfPatients(patientsFilter);
-                setIsSearching(false);
-            }
-        }, 300);
-
-        return () => {
-            isCancelled = true;
-            clearTimeout(debounceTimer);
-        };
-    }, [searchContent, selectedField]);
-
+export function PatientsToolbar({ searchContent, setSearchContent, selectedField, setSelectedField }: props) {
     const activeField = FIELDS.find((field) => field.id === selectedField)!;
+
+    function handleSelectField(id: 'name' | 'dni') {
+        setSelectedField(id);
+        setSearchContent('');
+    }
 
     return (
         <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200">
@@ -81,7 +48,7 @@ export function PatientsToolbar({ searchContent, setSearchContent, setListOfPati
                     <button
                         key={id}
                         type="button"
-                        onClick={() => setSelectedField(id)}
+                        onClick={() => handleSelectField(id)}
                         className={`h-7 px-3 rounded-md text-xs font-semibold transition duration-150 ${
                             selectedField === id
                                 ? 'bg-teal-700 text-white shadow-sm'
@@ -91,10 +58,6 @@ export function PatientsToolbar({ searchContent, setSearchContent, setListOfPati
                         {label}
                     </button>
                 ))}
-            </div>
-
-            <div className="w-5 shrink-0 flex items-center justify-center">
-                {isSearching && <ClipLoader speedMultiplier={1.7} color="#0f766e" size={18} />}
             </div>
         </div>
     );

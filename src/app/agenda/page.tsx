@@ -9,8 +9,7 @@ import { computePopoverStyle, POPOVER_Z_INDEX } from "@/lib/popoverPosition";
 import { setAppointment } from "./../../services/appointments/setAppointment";
 import { updateAppointment } from "./../../services/appointments/updateAppointment";
 import { getAppointments } from "./../../services/appointments/getAppointments";
-import { SearchPatient } from "./../../services/patients/searchPatient";
-import { getPatients } from "./../../services/patients/getPatients";
+import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull";
 import { getClinicData } from "@/services/config/getClinicData";
 import { ClipLoader } from "react-spinners";
 import { Loading } from "./../../components/shared/loading";
@@ -105,7 +104,7 @@ export default function Page() {
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
   const [Field, setField] = useState("name");
   const [searchContent, setSearchContent] = useState("");
-  const [listPatients, setListPatients] = useState<null | any[] | string>(null);
+  const [allPatients, setAllPatients] = useState<null | any[]>(null);
   const [appointments, setAppointments] = useState<any>(null);
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
@@ -202,49 +201,36 @@ export default function Page() {
     return () => unsubscribe();
   }, [router]);
 
+  // Picker de paciente del alta de turno: un solo fetch de todos los pacientes de la
+  // clínica al montar, igual criterio que /patients — búsqueda y listado se resuelven
+  // filtrando en memoria, sin volver a golpear Firebase por cada tecla tipeada.
   useEffect(() => {
     if (!clinicId) return;
-    if (searchContent.length > 0) {
-      Search();
-    }
-    if (searchContent === "") {
-      Get();
-    }
-
-    async function Search() {
-      const patientsFilter = await SearchPatient(
-        Field,
-        searchContent,
-        clinicId!,
-      );
-      if (patientsFilter.length < 1) {
-        setListPatients("noResult");
-      } else {
-        setListPatients(patientsFilter);
-      }
-    }
-
-    async function Get() {
-      const patients = await getPatients(20, clinicId!);
-      if (patients) {
-        setListPatients(patients.patients);
-      } else {
-        setListPatients("noResult");
-      }
-    }
-  }, [searchContent, Field, clinicId]);
+    getAllPatientsFull(clinicId).then((data) => setAllPatients(data ?? []));
+  }, [clinicId]);
 
   useEffect(() => {
     setSearchContent("");
   }, [Field]);
 
-  async function updateListPatients() {
-    const patients = await getPatients(20, clinicId!);
-    if (patients) {
-      setListPatients(patients.patients);
-    } else {
-      setListPatients("noResult");
+  const listPatients: null | any[] | string = useMemo(() => {
+    if (!allPatients) return null;
+    const term = searchContent.trim();
+    let matches = allPatients;
+    if (term !== "") {
+      matches = Field === "dni"
+        ? allPatients.filter((p) => (p?.dni ?? "").toString().startsWith(term))
+        : allPatients.filter((p) =>
+            `${p?.name ?? ""} ${p?.lastName ?? ""}`.toLowerCase().includes(term.toLowerCase())
+          );
     }
+    if (matches.length < 1) return "noResult";
+    return term === "" ? matches.slice(0, 20) : matches;
+  }, [allPatients, searchContent, Field]);
+
+  function updateListPatients() {
+    if (!clinicId) return;
+    getAllPatientsFull(clinicId).then((data) => setAllPatients(data ?? []));
   }
 
   useEffect(() => {
@@ -849,6 +835,7 @@ export default function Page() {
                       onChange={handleSelectProfessional}
                       options={pros!.map((p: any) => ({ value: p.key, label: p.nameComplete }))}
                       placeholder="Profesional"
+                      triggerClassName="bg-gray-50"
                     />
                   </div>
                 )}

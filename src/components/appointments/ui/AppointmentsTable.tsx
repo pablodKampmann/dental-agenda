@@ -16,6 +16,7 @@ interface Props {
 }
 
 const TIME_CELL = "w-px whitespace-nowrap align-top select-none cursor-default bg-gray-50 border-r border-gray-200 px-4 pt-2 text-xs font-semibold text-gray-400";
+const TIME_CELL_ACTIVE = "w-px whitespace-nowrap align-top select-none cursor-default bg-teal-50 border-r border-teal-200 px-4 pt-2 text-xs font-bold text-teal-700";
 
 export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick, activeAppointmentKey }: Props) {
   return (
@@ -46,9 +47,14 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
             const isLast = index === array.length - 1;
 
             if (isSecondarySlot) {
+              const ownerAppointment = appointments && Array.isArray(appointments) && appointments.find(
+                (a: any) => a && (a.time2 === time || a.time3 === time || a.time4 === time || a.time5 === time || a.time6 === time)
+              );
+              const isOwnerActive = !!ownerAppointment && activeAppointmentKey === `${date}-${ownerAppointment.time}`;
+
               return (
                 <tr key={time}>
-                  <td className={`${TIME_CELL} ${isLast ? '' : 'border-b border-b-gray-100'}`}>
+                  <td className={`${isOwnerActive ? TIME_CELL_ACTIVE : TIME_CELL} ${isLast ? '' : 'border-b border-b-gray-100'}`}>
                     {time}
                   </td>
                 </tr>
@@ -79,7 +85,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
 
             return (
               <tr key={time}>
-                <td className={`${TIME_CELL} ${isLast ? '' : 'border-b border-b-gray-100'}`}>
+                <td className={`${isActive ? TIME_CELL_ACTIVE : TIME_CELL} ${isLast ? '' : 'border-b border-b-gray-100'}`}>
                   {time}
                 </td>
                 <td

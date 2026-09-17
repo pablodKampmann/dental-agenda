@@ -1,5 +1,4 @@
 
-import { ClipLoader } from "react-spinners";
 import { useRouter } from 'next/navigation'
 import { LuSearchX } from "react-icons/lu";
 import { TbReload } from 'react-icons/tb';
@@ -12,24 +11,15 @@ interface props {
     setLoadRow: (value: number | null) => void;
     loadRow: number | null;
     isListOfPatientsComplete: boolean;
-    loadMorePatientsButtom: boolean;
-    setLoadMorePatientsButtom: (values: boolean) => void;
-    handleGetPatients: (quantity: number) => void;
+    loadMorePatients: () => void;
 }
 
 const TH = "px-4 py-2.5 bg-gray-50 border-b border-gray-200 font-bold";
 const TD = "px-4";
 
-export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatientsButtom, setLoadMorePatientsButtom, handleGetPatients }: props) {
+export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatients }: props) {
     const router = useRouter()
     const isEmpty = listOfPatients !== null && listOfPatients.length === 0;
-
-    function loadMorePatients() {
-        if (isListOfPatientsComplete !== true && listOfPatients !== null) {
-            setLoadMorePatientsButtom(true);
-            handleGetPatients(listOfPatients.length * 2);
-        }
-    }
 
     function handleGoPatient(patientId: any) {
         router.push(`/patients/${patientId}`);
@@ -129,14 +119,9 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
                         <button
                             type="button"
                             onClick={loadMorePatients}
-                            disabled={loadMorePatientsButtom}
-                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150"
                         >
-                            {loadMorePatientsButtom ? (
-                                <ClipLoader speedMultiplier={1.7} color="#0f766e" size={14} />
-                            ) : (
-                                <><TbReload size={14} /> Cargar más</>
-                            )}
+                            <TbReload size={14} /> Cargar más
                         </button>
                     )}
                 </div>

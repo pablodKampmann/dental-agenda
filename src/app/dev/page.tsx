@@ -3,6 +3,7 @@ import { useState } from "react";
 import { runSeedPatients, SEED_PATIENTS, SEED_PATIENTS_EXTRA, SEED_PATIENT_PEDIATRICO } from "../../dev/seedPatients";
 import { runMigrateAddTimestamps } from "../../dev/migrateAddTimestamps";
 import { runSeedOdontograma, runSeedOdontogramaPediatrico } from "../../dev/seedOdontograma";
+import { runClearAllPatients, type ClearPatientsResult } from "../../dev/clearPatients";
 
 export default function DevPage() {
     const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
@@ -20,8 +21,13 @@ export default function DevPage() {
     const [odontoPedStatus, setOdontoPedStatus] = useState<"idle" | "running" | "done">("idle");
     const [odontoPedResult, setOdontoPedResult] = useState<{ ok: boolean; pacienteId?: string; mensaje: string; fallidos: string[] } | null>(null);
     const [odontoPedError, setOdontoPedError] = useState<string | null>(null);
+    const [clearConfirmText, setClearConfirmText] = useState("");
+    const [clearStatus, setClearStatus] = useState<"idle" | "running" | "done">("idle");
+    const [clearResult, setClearResult] = useState<ClearPatientsResult | null>(null);
+    const [clearError, setClearError] = useState<string | null>(null);
 
     async function handleMigrate() {
+        if (!window.confirm("¿Ejecutar la migración de timestamps sobre los pacientes de esta clínica?")) return;
         setMigrateStatus("running");
         setMigrateResult(null);
         setMigrateError(null);
@@ -35,6 +41,7 @@ export default function DevPage() {
     }
 
     async function handleSeedOdontograma() {
+        if (!window.confirm(`¿Cargar el odontograma de ejemplo sobre ${SEED_PATIENTS[0]?.name} ${SEED_PATIENTS[0]?.lastName}?`)) return;
         setOdontoStatus("running");
         setOdontoResult(null);
         setOdontoError(null);
@@ -48,6 +55,7 @@ export default function DevPage() {
     }
 
     async function handleSeedOdontogramaPediatrico() {
+        if (!window.confirm(`¿Cargar el odontograma pediátrico sobre ${SEED_PATIENT_PEDIATRICO.name} ${SEED_PATIENT_PEDIATRICO.lastName}?`)) return;
         setOdontoPedStatus("running");
         setOdontoPedResult(null);
         setOdontoPedError(null);
@@ -61,6 +69,7 @@ export default function DevPage() {
     }
 
     async function handleSeedExtra() {
+        if (!window.confirm(`¿Insertar ${SEED_PATIENTS_EXTRA.length} pacientes adicionales en Firebase?`)) return;
         setStatusExtra("running");
         setResultExtra(null);
         setErrorExtra(null);
@@ -74,6 +83,7 @@ export default function DevPage() {
     }
 
     async function handleSeed() {
+        if (!window.confirm(`¿Insertar ${SEED_PATIENTS.length} pacientes en Firebase?`)) return;
         setStatus("running");
         setResult(null);
         setError(null);
@@ -86,237 +96,311 @@ export default function DevPage() {
         setStatus("done");
     }
 
+    async function handleClearAllPatients() {
+        if (!window.confirm("Esto borra TODOS los pacientes de esta clínica junto con sus turnos y odontogramas. Es irreversible. ¿Confirmás?")) return;
+        setClearStatus("running");
+        setClearResult(null);
+        setClearError(null);
+        try {
+            const res = await runClearAllPatients();
+            setClearResult(res);
+            setClearConfirmText("");
+        } catch (e: any) {
+            setClearError(e.message ?? "Error desconocido");
+        }
+        setClearStatus("done");
+    }
+
     return (
         <div className="h-screen bg-gray-50 p-10 pb-20 text-black overflow-y-auto">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <div className="mb-6 border-l-4 border-teal-600 pl-4">
-                    <h1 className="text-2xl font-bold">Dev — Seed Pacientes</h1>
+                    <h1 className="text-2xl font-bold">Dev — Herramientas internas</h1>
                     <p className="text-sm text-gray-500 mt-1">Solo para uso en desarrollo. No exponer en producción.</p>
                 </div>
 
-                {/* Lista de pacientes a insertar */}
-                <div className="mb-6 border-2 border-gray-200 rounded-xl overflow-hidden">
-                    <div className="bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600">
-                        {SEED_PATIENTS.length} pacientes a insertar
-                    </div>
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-white">
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Nombre</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">DNI</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Obra Social</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Plan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {SEED_PATIENTS.map((p, i) => (
-                                <tr key={i} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                    <td className="px-4 py-1.5">{p.name} {p.lastName}</td>
-                                    <td className="px-4 py-1.5 text-gray-500">{p.dni}</td>
-                                    <td className="px-4 py-1.5">{p.insuranceName}</td>
-                                    <td className="px-4 py-1.5 text-gray-500">{p.planName || "—"}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {/* --- Seed: pacientes base --- */}
+                    <section className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+                        <div className="px-4 py-3 border-b-2 border-teal-600">
+                            <h2 className="text-lg font-bold">Seed — Pacientes</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">Inserta {SEED_PATIENTS.length} pacientes de ejemplo en Firebase.</p>
+                        </div>
+                        <div className="max-h-72 overflow-y-auto">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0">
+                                    <tr className="border-b border-gray-200 bg-gray-100">
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Nombre</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">DNI</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Obra Social</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Plan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {SEED_PATIENTS.map((p, i) => (
+                                        <tr key={i} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                            <td className="px-4 py-1.5">{p.name} {p.lastName}</td>
+                                            <td className="px-4 py-1.5 text-gray-500">{p.dni}</td>
+                                            <td className="px-4 py-1.5">{p.insuranceName}</td>
+                                            <td className="px-4 py-1.5 text-gray-500">{p.planName || "—"}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="p-4 border-t border-gray-200 mt-auto">
+                            <button
+                                onClick={handleSeed}
+                                disabled={status === "running"}
+                                className="w-full px-6 py-3 bg-teal-700 text-white font-semibold rounded-xl hover:bg-teal-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {status === "running" ? "Insertando..." : "Insertar pacientes en Firebase"}
+                            </button>
 
-                <button
-                    onClick={handleSeed}
-                    disabled={status === "running"}
-                    className="px-6 py-3 bg-teal-700 text-white font-semibold rounded-xl hover:bg-teal-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {status === "running" ? "Insertando..." : "Insertar pacientes en Firebase"}
-                </button>
+                            {error && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {error}
+                                </div>
+                            )}
 
-                {error && (
-                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
-                        {error}
-                    </div>
-                )}
+                            {result && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className="font-semibold text-teal-700">✓ {result.ok} pacientes creados correctamente</p>
+                                    {result.failed.length > 0 && (
+                                        <div className="mt-2">
+                                            <p className="font-semibold text-red-600">✗ {result.failed.length} fallidos:</p>
+                                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                                {result.failed.map((f, i) => <li key={i}>{f}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
 
-                {result && (
-                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
-                        <p className="font-semibold text-teal-700">✓ {result.ok} pacientes creados correctamente</p>
-                        {result.failed.length > 0 && (
-                            <div className="mt-2">
-                                <p className="font-semibold text-red-600">✗ {result.failed.length} fallidos:</p>
-                                <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
-                                    {result.failed.map((f, i) => <li key={i}>{f}</li>)}
-                                </ul>
+                    {/* --- Seed: 100 pacientes adicionales --- */}
+                    <section className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+                        <div className="px-4 py-3 border-b-2 border-teal-600">
+                            <h2 className="text-lg font-bold">Seed — 100 pacientes adicionales</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">Inserta {SEED_PATIENTS_EXTRA.length} nuevos pacientes (no repite los anteriores).</p>
+                        </div>
+                        <div className="max-h-72 overflow-y-auto">
+                            <table className="w-full text-sm">
+                                <thead className="sticky top-0">
+                                    <tr className="border-b border-gray-200 bg-gray-100">
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Nombre</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">DNI</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Obra Social</th>
+                                        <th className="text-left px-4 py-2 font-medium text-gray-500">Plan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {SEED_PATIENTS_EXTRA.map((p, i) => (
+                                        <tr key={i} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                            <td className="px-4 py-1.5">{p.name} {p.lastName}</td>
+                                            <td className="px-4 py-1.5 text-gray-500">{p.dni}</td>
+                                            <td className="px-4 py-1.5">{p.insuranceName}</td>
+                                            <td className="px-4 py-1.5 text-gray-500">{p.planName || "—"}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="p-4 border-t border-gray-200 mt-auto">
+                            <button
+                                onClick={handleSeedExtra}
+                                disabled={statusExtra === "running"}
+                                className="w-full px-6 py-3 bg-teal-700 text-white font-semibold rounded-xl hover:bg-teal-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {statusExtra === "running" ? "Insertando..." : `Insertar ${SEED_PATIENTS_EXTRA.length} pacientes adicionales`}
+                            </button>
+
+                            {errorExtra && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {errorExtra}
+                                </div>
+                            )}
+
+                            {resultExtra && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className="font-semibold text-teal-700">✓ {resultExtra.ok} pacientes creados correctamente</p>
+                                    {resultExtra.failed.length > 0 && (
+                                        <div className="mt-2">
+                                            <p className="font-semibold text-red-600">✗ {resultExtra.failed.length} fallidos:</p>
+                                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                                {resultExtra.failed.map((f, i) => <li key={i}>{f}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* --- Migración: agregar timestamps --- */}
+                    <section className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+                        <div className="px-4 py-3 border-b-2 border-orange-500">
+                            <h2 className="text-lg font-bold">Migración — Agregar timestamps</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">Asigna timestamps secuenciales a pacientes que no tienen el campo.</p>
+                        </div>
+                        <div className="p-4 mt-auto">
+                            <button
+                                onClick={handleMigrate}
+                                disabled={migrateStatus === "running"}
+                                className="w-full px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {migrateStatus === "running" ? "Migrando..." : "Ejecutar migración de timestamps"}
+                            </button>
+                            <p className="text-xs text-orange-500 mt-1">⚠ Puede demorar unos segundos dependiendo de la cantidad de pacientes.</p>
+
+                            {migrateError && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {migrateError}
+                                </div>
+                            )}
+
+                            {migrateResult && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className="font-semibold text-orange-600">✓ {migrateResult.updated} actualizados · {migrateResult.skipped} salteados</p>
+                                    {migrateResult.failed.length > 0 && (
+                                        <div className="mt-2">
+                                            <p className="font-semibold text-red-600">✗ {migrateResult.failed.length} fallidos:</p>
+                                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                                {migrateResult.failed.map((f, i) => <li key={i}>{f}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* --- Seed: odontograma de ejemplo --- */}
+                    <section className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+                        <div className="px-4 py-3 border-b-2 border-blue-600">
+                            <h2 className="text-lg font-bold">Seed — Odontograma de ejemplo</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                Carga caries, obturaciones, una pieza ausente, una extracción pendiente, una corona y un
+                                puente de tres piezas sobre {SEED_PATIENTS[0]?.name} {SEED_PATIENTS[0]?.lastName}.
+                                Idempotente: si ya tiene algo cargado, no toca nada.
+                            </p>
+                        </div>
+                        <div className="p-4 mt-auto">
+                            <button
+                                onClick={handleSeedOdontograma}
+                                disabled={odontoStatus === "running"}
+                                className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {odontoStatus === "running" ? "Cargando..." : "Cargar odontograma de ejemplo"}
+                            </button>
+
+                            {odontoError && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {odontoError}
+                                </div>
+                            )}
+
+                            {odontoResult && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className={`font-semibold ${odontoResult.ok ? "text-blue-700" : "text-red-600"}`}>
+                                        {odontoResult.ok ? "✓" : "✗"} {odontoResult.mensaje}
+                                    </p>
+                                    {odontoResult.fallidos.length > 0 && (
+                                        <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                            {odontoResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* --- Seed: odontograma pediátrico (dentición mixta) --- */}
+                    <section className="border-2 border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+                        <div className="px-4 py-3 border-b-2 border-purple-600">
+                            <h2 className="text-lg font-bold">Seed — Odontograma pediátrico</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                Carga hallazgos en las cuatro filas de la ficha (permanente y temporaria, superior e
+                                inferior) sobre {SEED_PATIENT_PEDIATRICO.name} {SEED_PATIENT_PEDIATRICO.lastName}, incluido
+                                un recambio en curso (pieza temporaria ausente + su sucesora permanente). Idempotente: si ya
+                                tiene algo cargado, no toca nada.
+                            </p>
+                        </div>
+                        <div className="p-4 mt-auto">
+                            <button
+                                onClick={handleSeedOdontogramaPediatrico}
+                                disabled={odontoPedStatus === "running"}
+                                className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {odontoPedStatus === "running" ? "Cargando..." : "Cargar odontograma pediátrico"}
+                            </button>
+
+                            {odontoPedError && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {odontoPedError}
+                                </div>
+                            )}
+
+                            {odontoPedResult && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className={`font-semibold ${odontoPedResult.ok ? "text-purple-700" : "text-red-600"}`}>
+                                        {odontoPedResult.ok ? "✓" : "✗"} {odontoPedResult.mensaje}
+                                    </p>
+                                    {odontoPedResult.fallidos.length > 0 && (
+                                        <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
+                                            {odontoPedResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
+                                        </ul>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* --- Peligroso: borrar TODOS los pacientes --- */}
+                    <section className="border-2 border-red-300 rounded-xl overflow-hidden bg-white flex flex-col lg:col-span-2">
+                        <div className="px-4 py-3 border-b-2 border-red-600">
+                            <h2 className="text-lg font-bold text-red-700">⚠ Borrar todos los pacientes</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                Elimina TODOS los pacientes de esta clínica, sus turnos y el estado actual de sus
+                                odontogramas (el log de eventos no se toca — es append-only por reglas de Firebase).
+                                Irreversible — no hay papelera en Realtime Database. Escribí <b>BORRAR</b> para habilitar el botón.
+                            </p>
+                        </div>
+                        <div className="p-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                <input
+                                    type="text"
+                                    value={clearConfirmText}
+                                    onChange={(e) => setClearConfirmText(e.target.value)}
+                                    placeholder="Escribí BORRAR para confirmar"
+                                    className="h-11 flex-1 px-3 border-2 border-red-300 rounded-xl text-sm text-black focus:outline-red-600"
+                                />
+                                <button
+                                    onClick={handleClearAllPatients}
+                                    disabled={clearConfirmText !== "BORRAR" || clearStatus === "running"}
+                                    className="shrink-0 px-6 py-3 bg-red-700 text-white font-semibold rounded-xl hover:bg-red-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {clearStatus === "running" ? "Borrando..." : "Borrar todos los pacientes"}
+                                </button>
                             </div>
-                        )}
-                    </div>
-                )}
-                {/* --- 100 pacientes adicionales --- */}
-                <div className="mt-10 border-l-4 border-teal-600 pl-4 mb-6">
-                    <h2 className="text-xl font-bold">Seed — 100 pacientes adicionales</h2>
-                    <p className="text-sm text-gray-500 mt-1">Inserta {SEED_PATIENTS_EXTRA.length} nuevos pacientes (no repite los anteriores).</p>
+
+                            {clearError && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {clearError}
+                                </div>
+                            )}
+
+                            {clearResult && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className="font-semibold text-red-700">
+                                        ✓ {clearResult.patients} pacientes, {clearResult.appointments} turnos y {clearResult.odontogramas} odontogramas eliminados
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
                 </div>
-
-                <div className="mb-6 border-2 border-gray-200 rounded-xl overflow-hidden">
-                    <div className="bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600">
-                        {SEED_PATIENTS_EXTRA.length} pacientes a insertar
-                    </div>
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-white">
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Nombre</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">DNI</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Obra Social</th>
-                                <th className="text-left px-4 py-2 font-medium text-gray-500">Plan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {SEED_PATIENTS_EXTRA.map((p, i) => (
-                                <tr key={i} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                    <td className="px-4 py-1.5">{p.name} {p.lastName}</td>
-                                    <td className="px-4 py-1.5 text-gray-500">{p.dni}</td>
-                                    <td className="px-4 py-1.5">{p.insuranceName}</td>
-                                    <td className="px-4 py-1.5 text-gray-500">{p.planName || "—"}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <button
-                    onClick={handleSeedExtra}
-                    disabled={statusExtra === "running"}
-                    className="px-6 py-3 bg-teal-700 text-white font-semibold rounded-xl hover:bg-teal-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {statusExtra === "running" ? "Insertando..." : `Insertar ${SEED_PATIENTS_EXTRA.length} pacientes adicionales`}
-                </button>
-
-                {errorExtra && (
-                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
-                        {errorExtra}
-                    </div>
-                )}
-
-                {resultExtra && (
-                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
-                        <p className="font-semibold text-teal-700">✓ {resultExtra.ok} pacientes creados correctamente</p>
-                        {resultExtra.failed.length > 0 && (
-                            <div className="mt-2">
-                                <p className="font-semibold text-red-600">✗ {resultExtra.failed.length} fallidos:</p>
-                                <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
-                                    {resultExtra.failed.map((f, i) => <li key={i}>{f}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* --- Migración: agregar timestamps --- */}
-                <div className="mt-10 border-l-4 border-orange-500 pl-4 mb-6">
-                    <h2 className="text-xl font-bold">Migración — Agregar timestamps</h2>
-                    <p className="text-sm text-gray-500 mt-1">Asigna timestamps secuenciales a pacientes que no tienen el campo.</p>
-                </div>
-
-                <button
-                    onClick={handleMigrate}
-                    disabled={migrateStatus === "running"}
-                    className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {migrateStatus === "running" ? "Migrando..." : "Ejecutar migración de timestamps"}
-                </button>
-                <p className="text-xs text-orange-500 mt-1">⚠ Puede demorar unos segundos dependiendo de la cantidad de pacientes.</p>
-
-                {migrateError && (
-                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
-                        {migrateError}
-                    </div>
-                )}
-
-                {migrateResult && (
-                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
-                        <p className="font-semibold text-orange-600">✓ {migrateResult.updated} actualizados · {migrateResult.skipped} salteados</p>
-                        {migrateResult.failed.length > 0 && (
-                            <div className="mt-2">
-                                <p className="font-semibold text-red-600">✗ {migrateResult.failed.length} fallidos:</p>
-                                <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
-                                    {migrateResult.failed.map((f, i) => <li key={i}>{f}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* --- Seed: odontograma de ejemplo --- */}
-                <div className="mt-10 border-l-4 border-blue-600 pl-4 mb-6">
-                    <h2 className="text-xl font-bold">Seed — Odontograma de ejemplo</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Carga caries, obturaciones, una pieza ausente, una extracción pendiente, una corona y un
-                        puente de tres piezas sobre {SEED_PATIENTS[0]?.name} {SEED_PATIENTS[0]?.lastName}.
-                        Idempotente: si ya tiene algo cargado, no toca nada.
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleSeedOdontograma}
-                    disabled={odontoStatus === "running"}
-                    className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {odontoStatus === "running" ? "Cargando..." : "Cargar odontograma de ejemplo"}
-                </button>
-
-                {odontoError && (
-                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
-                        {odontoError}
-                    </div>
-                )}
-
-                {odontoResult && (
-                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
-                        <p className={`font-semibold ${odontoResult.ok ? "text-blue-700" : "text-red-600"}`}>
-                            {odontoResult.ok ? "✓" : "✗"} {odontoResult.mensaje}
-                        </p>
-                        {odontoResult.fallidos.length > 0 && (
-                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
-                                {odontoResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
-                            </ul>
-                        )}
-                    </div>
-                )}
-
-                {/* --- Seed: odontograma pediátrico (dentición mixta) --- */}
-                <div className="mt-10 border-l-4 border-purple-600 pl-4 mb-6">
-                    <h2 className="text-xl font-bold">Seed — Odontograma pediátrico (dentición mixta)</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Carga hallazgos en las cuatro filas de la ficha (permanente y temporaria, superior e
-                        inferior) sobre {SEED_PATIENT_PEDIATRICO.name} {SEED_PATIENT_PEDIATRICO.lastName}, incluido
-                        un recambio en curso (pieza temporaria ausente + su sucesora permanente). Idempotente: si ya
-                        tiene algo cargado, no toca nada.
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleSeedOdontogramaPediatrico}
-                    disabled={odontoPedStatus === "running"}
-                    className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {odontoPedStatus === "running" ? "Cargando..." : "Cargar odontograma pediátrico"}
-                </button>
-
-                {odontoPedError && (
-                    <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
-                        {odontoPedError}
-                    </div>
-                )}
-
-                {odontoPedResult && (
-                    <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
-                        <p className={`font-semibold ${odontoPedResult.ok ? "text-purple-700" : "text-red-600"}`}>
-                            {odontoPedResult.ok ? "✓" : "✗"} {odontoPedResult.mensaje}
-                        </p>
-                        {odontoPedResult.fallidos.length > 0 && (
-                            <ul className="mt-1 list-disc pl-5 text-red-500 space-y-0.5">
-                                {odontoPedResult.fallidos.map((f, i) => <li key={i}>{f}</li>)}
-                            </ul>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );
