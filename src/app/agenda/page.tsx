@@ -11,6 +11,7 @@ import { updateAppointment } from "./../../services/appointments/updateAppointme
 import { getAppointments } from "./../../services/appointments/getAppointments";
 import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull";
 import { getClinicData } from "@/services/config/getClinicData";
+import { normalizeForSearch } from "@/lib/utils";
 import { ClipLoader } from "react-spinners";
 import { Loading } from "./../../components/shared/loading";
 import { ModalCreatePatient } from "./../../components/patients/ui/modalCreatePatient";
@@ -90,6 +91,7 @@ function PatientParamReader({
 // el odontograma, el alto se define por adelantado y nunca se mide después de pintar.
 const ACCIONES_PANEL_WIDTH = 224; // w-56
 const ACCIONES_PANEL_HEIGHT = 148;
+const PICKER_PAGE_SIZE = 50;
 
 export default function Page() {
   const router = useRouter();
@@ -105,6 +107,7 @@ export default function Page() {
   const [Field, setField] = useState("name");
   const [searchContent, setSearchContent] = useState("");
   const [allPatients, setAllPatients] = useState<null | any[]>(null);
+  const [visiblePatientsCount, setVisiblePatientsCount] = useState(PICKER_PAGE_SIZE);
   const [appointments, setAppointments] = useState<any>(null);
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
@@ -211,22 +214,33 @@ export default function Page() {
 
   useEffect(() => {
     setSearchContent("");
+    setVisiblePatientsCount(PICKER_PAGE_SIZE);
   }, [Field]);
 
-  const listPatients: null | any[] | string = useMemo(() => {
+  const isPickerFiltering = searchContent.trim() !== "";
+
+  const allMatchingPatients: null | any[] = useMemo(() => {
     if (!allPatients) return null;
     const term = searchContent.trim();
-    let matches = allPatients;
-    if (term !== "") {
-      matches = Field === "dni"
-        ? allPatients.filter((p) => (p?.dni ?? "").toString().startsWith(term))
-        : allPatients.filter((p) =>
-            `${p?.name ?? ""} ${p?.lastName ?? ""}`.toLowerCase().includes(term.toLowerCase())
-          );
-    }
-    if (matches.length < 1) return "noResult";
-    return term === "" ? matches.slice(0, 20) : matches;
+    if (term === "") return allPatients;
+    return Field === "dni"
+      ? allPatients.filter((p) => (p?.dni ?? "").toString().startsWith(term))
+      : allPatients.filter((p) =>
+          normalizeForSearch(`${p?.name ?? ""} ${p?.lastName ?? ""}`).includes(normalizeForSearch(term))
+        );
   }, [allPatients, searchContent, Field]);
+
+  const listPatients: null | any[] | string = useMemo(() => {
+    if (!allMatchingPatients) return null;
+    if (allMatchingPatients.length < 1) return "noResult";
+    return isPickerFiltering ? allMatchingPatients : allMatchingPatients.slice(0, visiblePatientsCount);
+  }, [allMatchingPatients, isPickerFiltering, visiblePatientsCount]);
+
+  const isPickerListComplete = isPickerFiltering || (allMatchingPatients?.length ?? 0) <= visiblePatientsCount;
+
+  function loadMorePatients() {
+    setVisiblePatientsCount((c) => c + PICKER_PAGE_SIZE);
+  }
 
   function updateListPatients() {
     if (!clinicId) return;
@@ -868,6 +882,8 @@ export default function Page() {
                   patient={patient}
                   setPatient={setPatient}
                   listPatients={listPatients}
+                  isPickerListComplete={isPickerListComplete}
+                  onLoadMorePatients={loadMorePatients}
                   searchContent={searchContent}
                   setSearchContent={setSearchContent}
                   Field={Field}

@@ -19,6 +19,8 @@ interface Props {
   patient: any;
   setPatient: (v: any) => void;
   listPatients: any;
+  isPickerListComplete: boolean;
+  onLoadMorePatients: () => void;
   searchContent: string;
   setSearchContent: (v: string) => void;
   Field: string;
@@ -60,7 +62,7 @@ export function AddAppointmentForm({
   appointmentDate, setAppointmentDate,
   appointmentHours, setAppointmentHours, freeSpaces,
   patient, setPatient,
-  listPatients, searchContent, setSearchContent, Field, setField,
+  listPatients, isPickerListComplete, onLoadMorePatients, searchContent, setSearchContent, Field, setField,
   reason, setReason,
   observations, setObservations,
   onSetAppoint, onOpenCreatePatient,
@@ -293,6 +295,16 @@ export function AddAppointmentForm({
                     </div>
                   )}
                 </div>
+
+                {listPatients && typeof listPatients !== 'string' && !isPickerListComplete && (
+                  <button
+                    type="button"
+                    onClick={onLoadMorePatients}
+                    className="self-center flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150"
+                  >
+                    Cargar más
+                  </button>
+                )}
 
                 {/* Crear paciente */}
                 <div className='flex items-center gap-1 text-xs text-gray-500'>

@@ -1,5 +1,6 @@
 
 import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react';
 import { LuSearchX } from "react-icons/lu";
 import { TbReload } from 'react-icons/tb';
 import { BsPersonFillAdd } from "react-icons/bs";
@@ -15,11 +16,27 @@ interface props {
     visibleColumns: Record<string, boolean>;
 }
 
-const TH = "px-4 py-2.5 bg-gray-50 border-b border-gray-200 font-bold";
+const TH = "px-4 py-2.5 bg-gray-100 border-b border-gray-200 font-bold";
 const TD = "px-4";
 
 export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatients, visibleColumns }: props) {
     const router = useRouter()
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [scrollbarWidth, setScrollbarWidth] = useState(0);
+
+    // El header vive en su propia tabla, fuera del div con scroll, para que la scrollbar
+    // nativa no lo pise (ver nota en el JSX). Pero si ese div SÍ tiene scrollbar, le come
+    // ancho a la tabla del body y no al header — desalinea las columnas. Medimos el ancho
+    // real (offsetWidth - clientWidth, 0 si no hay scrollbar) y se lo reservamos al header.
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const measure = () => setScrollbarWidth(el.offsetWidth - el.clientWidth);
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [listOfPatients]);
     const isEmpty = listOfPatients !== null && listOfPatients.length === 0;
     const showDni = visibleColumns.dni !== false;
     const showPhone = visibleColumns.phone !== false;
@@ -37,25 +54,60 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
         router.push(`/patients/${patientId}`);
     }
 
+    // Mismo colgroup (mismos anchos, mismas columnas ocultas) en la tabla de header y la de body,
+    // con table-layout fixed, para que separar el header en su propia tabla (y así no compartir
+    // el div con scroll) no desalinee columnas — con layout "auto" cada tabla mide su propio
+    // contenido y los anchos no coinciden entre las dos.
+    const COLS = [
+        { show: true, width: '6%', mobileOnly: true },   // avatar
+        { show: true, width: '20%' },                    // nombre
+        { show: showDni, width: '12%' },
+        { show: showPhone, width: '14%' },
+        { show: showEmail, width: '18%', mobileOnly: true },
+        { show: showInsurance, width: '13%', mobileOnly: true },
+        { show: showGender, width: '10%', mobileOnly: true },
+        { show: showBirthDate, width: '13%', mobileOnly: true },
+        { show: showAddress, width: '15%', mobileOnly: true },
+        { show: showPlan, width: '10%', mobileOnly: true },
+        { show: showAffiliateNum, width: '12%', mobileOnly: true },
+    ];
+
+    function ColGroup() {
+        return (
+            <colgroup>
+                {COLS.filter((c) => c.show).map((c, i) => (
+                    <col key={i} className={c.mobileOnly ? 'hidden md:table-column' : undefined} style={{ width: c.width }} />
+                ))}
+            </colgroup>
+        );
+    }
+
     return (
         <>
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-                <table className="w-full select-none">
-                    <thead className="sticky top-0 z-10">
-                        <tr className="text-left text-[11px] uppercase tracking-widest text-gray-400">
-                            <th className={`${TH} w-14 hidden md:table-cell`}></th>
-                            <th className={TH}>Nombre</th>
-                            {showDni && <th className={TH}>DNI</th>}
-                            {showPhone && <th className={TH}>Teléfono</th>}
-                            {showEmail && <th className={`${TH} hidden md:table-cell`}>Correo</th>}
-                            {showInsurance && <th className={`${TH} hidden md:table-cell`}>Obra Social</th>}
-                            {showGender && <th className={`${TH} hidden md:table-cell`}>Género</th>}
-                            {showBirthDate && <th className={`${TH} hidden md:table-cell`}>Fecha de nacimiento</th>}
-                            {showAddress && <th className={`${TH} hidden md:table-cell`}>Domicilio</th>}
-                            {showPlan && <th className={`${TH} hidden md:table-cell`}>Plan</th>}
-                            {showAffiliateNum && <th className={`${TH} hidden md:table-cell`}>N° Afiliado</th>}
-                        </tr>
-                    </thead>
+            <div style={{ paddingRight: scrollbarWidth }}>
+            <table className="w-full table-fixed select-none">
+                <ColGroup />
+                <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-widest text-gray-400">
+                        <th className={`${TH} hidden md:table-cell`}></th>
+                        <th className={TH}>Nombre</th>
+                        {showDni && <th className={TH}>DNI</th>}
+                        {showPhone && <th className={TH}>Teléfono</th>}
+                        {showEmail && <th className={`${TH} hidden md:table-cell`}>Correo</th>}
+                        {showInsurance && <th className={`${TH} hidden md:table-cell`}>Obra Social</th>}
+                        {showGender && <th className={`${TH} hidden md:table-cell`}>Género</th>}
+                        {showBirthDate && <th className={`${TH} hidden md:table-cell`}>Fecha de nacimiento</th>}
+                        {showAddress && <th className={`${TH} hidden md:table-cell`}>Domicilio</th>}
+                        {showPlan && <th className={`${TH} hidden md:table-cell`}>Plan</th>}
+                        {showAffiliateNum && <th className={`${TH} hidden md:table-cell`}>N° Afiliado</th>}
+                    </tr>
+                </thead>
+            </table>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+                <table className="w-full table-fixed select-none">
+                    <ColGroup />
                     {listOfPatients && (
                         <tbody>
                             {listOfPatients.map((patient, index) => (

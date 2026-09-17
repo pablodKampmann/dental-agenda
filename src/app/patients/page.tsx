@@ -11,6 +11,7 @@ import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePati
 import { ExportPatientsModal } from "../../components/patients/ui/ExportPatientsModal";
 import type { ToggleableColumn } from "../../components/patients/ui/columnsVisibilityMenu";
 import { exportPatientsToExcel } from "@/lib/exportPatientsToExcel";
+import { normalizeForSearch } from "@/lib/utils";
 import { getClinicData } from "@/services/config/getClinicData";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -76,7 +77,11 @@ export default function Patients() {
     for (const p of allPatients) {
       if (p?.insurance) names.add(p.insurance);
     }
-    const sorted = Array.from(names).sort((a, b) => a.localeCompare(b));
+    const sorted = Array.from(names).sort((a, b) => {
+      if (a === "Particular") return -1;
+      if (b === "Particular") return 1;
+      return a.localeCompare(b);
+    });
     return [
       { value: "", label: "Todas las obras sociales" },
       ...sorted.map((name) => ({ value: name, label: name })),
@@ -98,9 +103,9 @@ export default function Patients() {
       return result.filter((p) => (p?.dni ?? "").toString().startsWith(term));
     }
 
-    const termLower = term.toLowerCase();
+    const termNormalized = normalizeForSearch(term);
     return result.filter((p) =>
-      `${p?.name ?? ""} ${p?.lastName ?? ""}`.toLowerCase().includes(termLower)
+      normalizeForSearch(`${p?.name ?? ""} ${p?.lastName ?? ""}`).includes(termNormalized)
     );
   }, [allPatients, searchContent, selectedField, selectedInsurance]);
 

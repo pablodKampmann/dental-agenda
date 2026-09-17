@@ -41,9 +41,9 @@ export function PatientsToolbar({
 
     return (
         <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <div className="relative flex-1 min-w-0 md:flex-none md:w-80">
+            <div className="relative flex-1 min-w-0 md:flex-none md:w-[26rem] flex items-stretch h-9 border-2 border-gray-300 rounded-lg bg-white transition-colors focus-within:border-teal-700">
                 <TbUserSearch
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-700 pointer-events-none"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700 pointer-events-none"
                     size={17}
                 />
                 <input
@@ -58,25 +58,24 @@ export function PatientsToolbar({
                             selectedField === 'dni' ? inputValue.replace(/[^0-9]/g, '') : inputValue
                         );
                     }}
-                    className="h-8 w-full pl-8 pr-3 border-2 border-gray-300 rounded-lg bg-gray-50 text-sm text-black placeholder:text-gray-400 focus:outline-teal-700"
+                    className="flex-1 min-w-0 pl-9 pr-3 bg-transparent text-sm text-black placeholder:text-gray-400 outline-none rounded-l-lg"
                 />
-            </div>
-
-            <div className="flex gap-0.5 p-0.5 shrink-0 bg-gray-50 border-2 border-gray-300 rounded-lg select-none">
-                {FIELDS.map(({ id, label }) => (
-                    <button
-                        key={id}
-                        type="button"
-                        onClick={() => handleSelectField(id)}
-                        className={`h-7 px-3 rounded-md text-xs font-semibold transition duration-150 ${
-                            selectedField === id
-                                ? 'bg-teal-700 text-white shadow-sm'
-                                : 'text-gray-500 hover:text-black'
-                        }`}
-                    >
-                        {label}
-                    </button>
-                ))}
+                <div className="flex gap-0.5 p-1 shrink-0 border-l border-gray-200 select-none">
+                    {FIELDS.map(({ id, label }) => (
+                        <button
+                            key={id}
+                            type="button"
+                            onClick={() => handleSelectField(id)}
+                            className={`px-3 rounded-md text-xs font-semibold transition duration-150 ${
+                                selectedField === id
+                                    ? 'bg-teal-700 text-white shadow-sm'
+                                    : 'text-gray-500 hover:text-black hover:bg-gray-100'
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="shrink-0 w-48">
@@ -86,7 +85,7 @@ export function PatientsToolbar({
                     options={insuranceOptions}
                     placeholder="Todas las obras sociales"
                     size="sm"
-                    triggerClassName="bg-gray-50"
+                    triggerClassName="bg-white"
                 />
             </div>
 
@@ -95,7 +94,7 @@ export function PatientsToolbar({
                     columns={columns}
                     visible={visibleColumns}
                     onToggle={onToggleColumn}
-                    triggerClassName="bg-gray-50"
+                    triggerClassName="bg-white"
                 />
             </div>
         </div>
