@@ -2,15 +2,26 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { BsPersonFillAdd } from "react-icons/bs";
+import { FileSpreadsheet } from "lucide-react";
 import { Loading } from "./../../components/shared/loading";
 import { PatientsToolbar } from "./../../components/patients/ui/patientsToolbar";
 import { Table } from "./../../components/patients/ui/table";
 import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull";
 import { ModalCreatePatient } from "../../components/patients/ui/modalCreatePatient";
+import { ExportPatientsModal } from "../../components/patients/ui/exportPatientsModal";
+import type { ToggleableColumn } from "../../components/patients/ui/columnsVisibilityMenu";
+import { exportPatientsToExcel } from "@/lib/exportPatientsToExcel";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
 const PAGE_SIZE = 100;
+
+const TOGGLEABLE_COLUMNS: ToggleableColumn[] = [
+  { key: "dni", label: "DNI" },
+  { key: "phone", label: "Teléfono" },
+  { key: "email", label: "Correo" },
+  { key: "insurance", label: "Obra Social" },
+];
 
 export default function Patients() {
   const [isLoad, setIsLoad] = useState(true);
@@ -20,6 +31,9 @@ export default function Patients() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchContent, setSearchContent] = useState("");
   const [selectedField, setSelectedField] = useState<"name" | "dni">("name");
+  const [selectedInsurance, setSelectedInsurance] = useState("");
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [loadRow, setLoadRow] = useState<number | null>(null);
   const { user } = useAuth();
   const clinicId = user?.clinicId ?? null;
@@ -38,30 +52,53 @@ export default function Patients() {
     setIsLoad(false);
   }
 
+  // Igual que la búsqueda: el filtro por obra social corre en memoria sobre el fetch
+  // único de `getAllPatientsFull` (ya trae toda la clínica), no dispara ninguna query
+  // nueva a Firebase — es el mismo patrón documentado para búsqueda/paginación acá.
+  const insuranceOptions = useMemo(() => {
+    if (!allPatients) return [{ value: "", label: "Todas las obras sociales" }];
+    const names = new Set<string>();
+    for (const p of allPatients) {
+      if (p?.insurance) names.add(p.insurance);
+    }
+    const sorted = Array.from(names).sort((a, b) => a.localeCompare(b));
+    return [
+      { value: "", label: "Todas las obras sociales" },
+      ...sorted.map((name) => ({ value: name, label: name })),
+    ];
+  }, [allPatients]);
+
   const filteredPatients = useMemo(() => {
     if (!allPatients) return null;
+    let result = allPatients;
+
+    if (selectedInsurance !== "") {
+      result = result.filter((p) => p?.insurance === selectedInsurance);
+    }
+
     const term = searchContent.trim();
-    if (term === "") return allPatients;
+    if (term === "") return result;
 
     if (selectedField === "dni") {
-      return allPatients.filter((p) => (p?.dni ?? "").toString().startsWith(term));
+      return result.filter((p) => (p?.dni ?? "").toString().startsWith(term));
     }
 
     const termLower = term.toLowerCase();
-    return allPatients.filter((p) =>
+    return result.filter((p) =>
       `${p?.name ?? ""} ${p?.lastName ?? ""}`.toLowerCase().includes(termLower)
     );
-  }, [allPatients, searchContent, selectedField]);
+  }, [allPatients, searchContent, selectedField, selectedInsurance]);
 
   const isSearching = searchContent.trim() !== "";
+  const isFiltering = isSearching || selectedInsurance !== "";
   const visiblePatients = filteredPatients
-    ? isSearching
+    ? isFiltering
       ? filteredPatients
       : filteredPatients.slice(0, visibleCount)
     : null;
 
   const isListOfPatientsComplete = filteredPatients
-    ? isSearching || visibleCount >= filteredPatients.length
+    ? isFiltering || visibleCount >= filteredPatients.length
     : false;
 
   function loadMorePatients() {
@@ -71,11 +108,35 @@ export default function Patients() {
   const loadedCount = Array.isArray(visiblePatients) ? visiblePatients.length : 0;
   const totalPatientsCount = Array.isArray(allPatients) ? allPatients.length : 0;
   const countLabel =
-    isSearching
+    isFiltering
       ? `${loadedCount} ${loadedCount === 1 ? "resultado" : "resultados"}`
       : isListOfPatientsComplete
         ? `${loadedCount} ${loadedCount === 1 ? "paciente" : "pacientes"}`
         : `${loadedCount} de ${totalPatientsCount} cargados`;
+
+  function handleToggleColumn(key: string) {
+    setVisibleColumns((prev) => ({ ...prev, [key]: prev[key] === false ? true : false }));
+  }
+
+  // Descripción mostrada en el modal de export — siempre aclara si hay un filtro activo,
+  // porque el export corre sobre `filteredPatients` (el set completo filtrado), no sobre
+  // `visiblePatients` (que puede estar recortado por la paginación de "Cargar más").
+  const exportFilterParts: string[] = [];
+  if (isSearching) {
+    const fieldLabel = selectedField === "dni" ? "DNI" : "nombre";
+    exportFilterParts.push(`que coinciden con "${searchContent.trim()}" (por ${fieldLabel})`);
+  }
+  if (selectedInsurance !== "") {
+    exportFilterParts.push(`con obra social "${selectedInsurance}"`);
+  }
+  const exportFilterDescription =
+    exportFilterParts.length > 0
+      ? `Se exportan los pacientes ${exportFilterParts.join(" y ")} — el total que cumple el filtro, no solo lo cargado en pantalla.`
+      : null;
+
+  function handleExportConfirm() {
+    exportPatientsToExcel(filteredPatients ?? []);
+  }
 
   return (
     <div className="h-[calc(100vh-56px)] flex flex-col overflow-hidden">
@@ -87,6 +148,13 @@ export default function Patients() {
           showToast("success", "Paciente creado correctamente");
           fetchAllPatients();
         }}
+      />
+      <ExportPatientsModal
+        open={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onConfirm={handleExportConfirm}
+        totalCount={filteredPatients?.length ?? 0}
+        filterDescription={exportFilterDescription}
       />
       <div
         className={`${isLoad ? "opacity-0" : "animate-page-drop"} transition-opacity duration-150 flex flex-col h-full gap-4 px-4 pt-4 pb-4`}
@@ -101,14 +169,25 @@ export default function Patients() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsOpenModalCreatePatient(true)}
-            className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150"
-          >
-            <BsPersonFillAdd size={16} />
-            Agregar Paciente
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsExportModalOpen(true)}
+              disabled={totalPatientsCount === 0}
+              className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-2 text-sm font-semibold rounded-lg transition duration-150 text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-black disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <FileSpreadsheet size={16} />
+              Exportar
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpenModalCreatePatient(true)}
+              className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-2 text-sm font-semibold rounded-lg transition duration-150 bg-teal-700 border-teal-700 text-white hover:bg-teal-600"
+            >
+              <BsPersonFillAdd size={16} />
+              Agregar Paciente
+            </button>
+          </div>
         </div>
 
         {/* Card: buscador + tabla */}
@@ -116,16 +195,23 @@ export default function Patients() {
           <PatientsToolbar
             searchContent={searchContent}
             setSearchContent={setSearchContent}
+            insuranceOptions={insuranceOptions}
+            selectedInsurance={selectedInsurance}
+            setSelectedInsurance={setSelectedInsurance}
+            columns={TOGGLEABLE_COLUMNS}
+            visibleColumns={visibleColumns}
+            onToggleColumn={handleToggleColumn}
             selectedField={selectedField}
             setSelectedField={setSelectedField}
           />
           <Table
-            searchContent={searchContent}
+            isFiltering={isFiltering}
             listOfPatients={visiblePatients}
             setLoadRow={setLoadRow}
             loadRow={loadRow}
             isListOfPatientsComplete={isListOfPatientsComplete}
             loadMorePatients={loadMorePatients}
+            visibleColumns={visibleColumns}
           />
         </div>
       </div>

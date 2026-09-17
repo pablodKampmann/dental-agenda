@@ -6,20 +6,25 @@ import { BsPersonFillAdd } from "react-icons/bs";
 import { AvatarFallback } from "../../shared/AvatarFallback";
 
 interface props {
-    searchContent: string;
+    isFiltering: boolean;
     listOfPatients: null | any[];
     setLoadRow: (value: number | null) => void;
     loadRow: number | null;
     isListOfPatientsComplete: boolean;
     loadMorePatients: () => void;
+    visibleColumns: Record<string, boolean>;
 }
 
 const TH = "px-4 py-2.5 bg-gray-50 border-b border-gray-200 font-bold";
 const TD = "px-4";
 
-export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatients }: props) {
+export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isListOfPatientsComplete, loadMorePatients, visibleColumns }: props) {
     const router = useRouter()
     const isEmpty = listOfPatients !== null && listOfPatients.length === 0;
+    const showDni = visibleColumns.dni !== false;
+    const showPhone = visibleColumns.phone !== false;
+    const showEmail = visibleColumns.email !== false;
+    const showInsurance = visibleColumns.insurance !== false;
 
     function handleGoPatient(patientId: any) {
         router.push(`/patients/${patientId}`);
@@ -33,10 +38,10 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
                         <tr className="text-left text-[11px] uppercase tracking-widest text-gray-400">
                             <th className={`${TH} w-14 hidden md:table-cell`}></th>
                             <th className={TH}>Nombre</th>
-                            <th className={TH}>DNI</th>
-                            <th className={TH}>Teléfono</th>
-                            <th className={`${TH} hidden md:table-cell`}>Correo</th>
-                            <th className={`${TH} hidden md:table-cell`}>Obra Social</th>
+                            {showDni && <th className={TH}>DNI</th>}
+                            {showPhone && <th className={TH}>Teléfono</th>}
+                            {showEmail && <th className={`${TH} hidden md:table-cell`}>Correo</th>}
+                            {showInsurance && <th className={`${TH} hidden md:table-cell`}>Obra Social</th>}
                         </tr>
                     </thead>
                     {listOfPatients && (
@@ -61,24 +66,32 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
                                     <td className={TD}>
                                         <p className="font-semibold text-black">{patient.name} {patient.lastName}</p>
                                     </td>
-                                    <td className={TD}>
-                                        <p className="text-gray-600">{patient.dni}</p>
-                                    </td>
-                                    <td className={TD}>
-                                        <p className="text-gray-600">{patient.num || '-'}</p>
-                                    </td>
-                                    <td className={`${TD} hidden md:table-cell`}>
-                                        <p className="text-gray-600">{patient.email || '-'}</p>
-                                    </td>
-                                    <td className={`${TD} hidden md:table-cell`}>
-                                        {patient.insurance ? (
-                                            <span className="text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">
-                                                {patient.insurance}
-                                            </span>
-                                        ) : (
-                                            <p className="text-gray-400">-</p>
-                                        )}
-                                    </td>
+                                    {showDni && (
+                                        <td className={TD}>
+                                            <p className="text-gray-600">{patient.dni}</p>
+                                        </td>
+                                    )}
+                                    {showPhone && (
+                                        <td className={TD}>
+                                            <p className="text-gray-600">{patient.num || '-'}</p>
+                                        </td>
+                                    )}
+                                    {showEmail && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.email || '-'}</p>
+                                        </td>
+                                    )}
+                                    {showInsurance && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            {patient.insurance ? (
+                                                <span className="text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">
+                                                    {patient.insurance}
+                                                </span>
+                                            ) : (
+                                                <p className="text-gray-400">-</p>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -87,7 +100,7 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
 
                 {isEmpty && (
                     <div className="flex flex-col items-center justify-center gap-2 py-12 select-none">
-                        {searchContent === '' ? (
+                        {!isFiltering ? (
                             <>
                                 <BsPersonFillAdd size={28} className="text-gray-300" />
                                 <p className="text-sm font-semibold text-gray-500">Todavía no hay pacientes</p>
@@ -108,14 +121,14 @@ export function Table({ searchContent, listOfPatients, setLoadRow, loadRow, isLi
             {listOfPatients && (
                 <div className="shrink-0 px-4 py-2.5 border-t border-gray-200 bg-gray-50 flex items-center justify-between gap-3 select-none">
                     <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
-                        {searchContent !== ''
+                        {isFiltering
                             ? `${listOfPatients.length} ${listOfPatients.length === 1 ? 'coincidencia' : 'coincidencias'}`
                             : isListOfPatientsComplete
                                 ? 'Lista completa'
                                 : `${listOfPatients.length} de la lista`}
                     </span>
 
-                    {searchContent === '' && isListOfPatientsComplete !== true && (
+                    {!isFiltering && isListOfPatientsComplete !== true && (
                         <button
                             type="button"
                             onClick={loadMorePatients}
