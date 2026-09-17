@@ -119,7 +119,7 @@ export function ColumnsVisibilityMenu({ columns, visible, onToggle, triggerClass
                 type="button"
                 onClick={handleToggleOpen}
                 className={cn(
-                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border-2 bg-gray-100 text-xs text-gray-600 transition duration-150",
+                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border-2 bg-[#F9FAFB] text-xs text-gray-600 transition duration-150",
                     open ? "border-teal-700" : "border-gray-300 hover:border-teal-300",
                     triggerClassName
                 )}

@@ -113,7 +113,7 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
                                                 onKeyDown={handleKeyPress}
                                                 onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
                                                 rows={3}
-                                                className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black resize-none w-full"
+                                                className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black resize-none w-full"
                                             />
                                         ) : (
                                             <input
@@ -123,7 +123,7 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
                                                 onChange={(e) => handleChange(e.target.value)}
                                                 onKeyDown={handleKeyPress}
                                                 onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
-                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-full"
                                             />
                                         )
                                     )}

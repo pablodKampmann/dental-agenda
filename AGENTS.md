@@ -331,7 +331,7 @@ Lo que se busca:
 | Botón primario | `bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold px-3 py-1.5` |
 | Botón secundario / Cancelar | `border-2 border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-black rounded-lg` |
 | Link de acción | `text-xs font-semibold text-teal-700 hover:text-teal-600` |
-| Input / select | `h-9 border-2 border-gray-300 rounded-lg bg-gray-100 text-sm text-black focus:outline-teal-700`, siempre con color de texto explícito (ver pitfall de `text-white`) |
+| Input / select | `h-9 border-2 border-gray-300 rounded-lg bg-[#F9FAFB] text-sm text-black focus:outline-teal-700`, siempre con color de texto explícito (ver pitfall de `text-white`) |
 | Toggle segmentado (ej. Nombre / DNI) | contenedor `bg-gray-100 border-2 border-gray-300 rounded-lg p-0.5`; activo `bg-teal-700 text-white shadow-sm`; inactivo `text-gray-500 hover:text-black` |
 | Chip / contador | `text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5` |
 | Fila de tabla o lista | `border-b border-gray-100`, hover `bg-gray-50`, seleccionada `bg-teal-50` |

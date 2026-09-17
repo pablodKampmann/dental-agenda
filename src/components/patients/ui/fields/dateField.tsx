@@ -18,7 +18,7 @@ export function DateField({ value, onChange }: Props) {
             <button
                 type="button"
                 onClick={() => setOpen((prev) => !prev)}
-                className="w-full text-left border-2 border-gray-300 rounded-lg px-3 py-1 text-sm bg-gray-100 text-black"
+                className="w-full text-left border-2 border-gray-300 rounded-lg px-3 py-1 text-sm bg-[#F9FAFB] text-black"
             >
                 {value ? value.format('DD/MM/YYYY') : 'DD/MM/YYYY'}
             </button>

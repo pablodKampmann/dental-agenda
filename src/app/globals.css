@@ -181,9 +181,9 @@ input[type=number] {
 }
 
 .input-phone-number input {
-  /* Transparente a propósito: el gris estándar (#F3F4F6) ya lo pone el contenedor
-     (INPUT_CLS, bg-gray-100). Un color semitransparente acá se compone sobre ese fondo
-     y da un tono ligeramente distinto (~#EFF1F3) en vez del gris plano del sistema. */
+  /* Transparente a propósito: el fondo (#F9FAFB) ya lo pone el contenedor (INPUT_CLS).
+     Un color semitransparente acá se compone sobre ese fondo y da un tono ligeramente
+     distinto en vez del gris plano del sistema. */
   background-color: transparent !important;
 }
 

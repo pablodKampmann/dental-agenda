@@ -247,7 +247,7 @@ export function CustomSelect({
         disabled={disabled}
         tabIndex={tabIndex}
         className={cn(
-          "flex items-center justify-between gap-2 rounded-lg border-2 bg-gray-100 text-left transition duration-150",
+          "flex items-center justify-between gap-2 rounded-lg border-2 bg-[#F9FAFB] text-left transition duration-150",
           size === "sm" ? "h-8 px-2.5 text-xs" : "h-9 px-3 text-sm",
           disabled
             ? "opacity-40 cursor-not-allowed border-gray-300"

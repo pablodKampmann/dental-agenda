@@ -437,7 +437,7 @@ export default function Page() {
                                 if (e.key === "Enter") submitEmailChanges(changes);
                                 else if (e.key === "Escape") reset();
                               }}
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black flex-1"
                             />
                           ) : undefined
                         }
@@ -505,7 +505,7 @@ export default function Page() {
                               if (e.key === "Enter") handlePasswordStep();
                               else if (e.key === "Escape") reset();
                             }}
-                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black flex-1"
+                            className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black flex-1"
                           />
                         }
                       />
@@ -581,7 +581,7 @@ export default function Page() {
                             handleAddPro();
                           }
                         }}
-                        className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                        className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-full"
                       />
                       <button
                         onClick={handleAddPro}
@@ -646,7 +646,7 @@ export default function Page() {
                                 if (e.key === "Enter") submitSchedule();
                                 else if (e.key === "Escape") reset();
                               }}
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20"
+                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-20"
                             />
                             <span className="text-gray-400">a</span>
                             <input
@@ -657,7 +657,7 @@ export default function Page() {
                                 if (e.key === "Enter") submitSchedule();
                                 else if (e.key === "Escape") reset();
                               }}
-                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-20"
+                              className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-20"
                             />
                           </div>
                         }

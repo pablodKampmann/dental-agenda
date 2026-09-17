@@ -22,6 +22,11 @@ const TOGGLEABLE_COLUMNS: ToggleableColumn[] = [
   { key: "phone", label: "Teléfono" },
   { key: "email", label: "Correo" },
   { key: "insurance", label: "Obra Social" },
+  { key: "gender", label: "Género" },
+  { key: "birthDate", label: "Fecha de nacimiento" },
+  { key: "address", label: "Domicilio" },
+  { key: "plan", label: "Plan" },
+  { key: "affiliateNum", label: "N° Afiliado" },
 ];
 
 export default function Patients() {
@@ -33,7 +38,16 @@ export default function Patients() {
   const [searchContent, setSearchContent] = useState("");
   const [selectedField, setSelectedField] = useState<"name" | "dni">("name");
   const [selectedInsurance, setSelectedInsurance] = useState("");
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
+  // Las 4 columnas históricas (dni/phone/email/insurance) arrancan visibles por default
+  // (ausencia de key === visible, ver ColumnsVisibilityMenu/Table). Las nuevas se agregan
+  // ya ocultas por default para no saturar la tabla — el usuario las prende a demanda.
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    gender: false,
+    birthDate: false,
+    address: false,
+    plan: false,
+    affiliateNum: false,
+  });
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [loadRow, setLoadRow] = useState<number | null>(null);
   const { user } = useAuth();

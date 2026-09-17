@@ -53,7 +53,7 @@ const PANEL = "bg-gray-50 border border-gray-200 rounded-xl";
 const PANEL_HEAD = "flex justify-between items-center gap-2 px-3 py-1.5 border-b border-gray-200";
 const PANEL_LABEL = "text-xs font-bold tracking-widest text-gray-400 uppercase select-none";
 const LINK_BTN = "text-xs font-semibold text-teal-700 hover:text-teal-600 transition duration-150";
-const INPUT_CLS = "w-full h-9 px-3 border-2 border-gray-300 rounded-lg bg-gray-100 text-sm text-black placeholder:text-gray-400 focus:outline-teal-700";
+const INPUT_CLS = "w-full h-9 px-3 border-2 border-gray-300 rounded-lg bg-[#F9FAFB] text-sm text-black placeholder:text-gray-400 focus:outline-teal-700";
 const PRIMARY_BTN = "w-full py-2 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150";
 
 export function AddAppointmentForm({

@@ -25,6 +25,13 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
     const showPhone = visibleColumns.phone !== false;
     const showEmail = visibleColumns.email !== false;
     const showInsurance = visibleColumns.insurance !== false;
+    const showGender = visibleColumns.gender === true;
+    const showBirthDate = visibleColumns.birthDate === true;
+    const showAddress = visibleColumns.address === true;
+    const showPlan = visibleColumns.plan === true;
+    const showAffiliateNum = visibleColumns.affiliateNum === true;
+
+    const GENDER_LABEL: Record<string, string> = { male: "Masculino", female: "Femenino" };
 
     function handleGoPatient(patientId: any) {
         router.push(`/patients/${patientId}`);
@@ -42,6 +49,11 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
                             {showPhone && <th className={TH}>Teléfono</th>}
                             {showEmail && <th className={`${TH} hidden md:table-cell`}>Correo</th>}
                             {showInsurance && <th className={`${TH} hidden md:table-cell`}>Obra Social</th>}
+                            {showGender && <th className={`${TH} hidden md:table-cell`}>Género</th>}
+                            {showBirthDate && <th className={`${TH} hidden md:table-cell`}>Fecha de nacimiento</th>}
+                            {showAddress && <th className={`${TH} hidden md:table-cell`}>Domicilio</th>}
+                            {showPlan && <th className={`${TH} hidden md:table-cell`}>Plan</th>}
+                            {showAffiliateNum && <th className={`${TH} hidden md:table-cell`}>N° Afiliado</th>}
                         </tr>
                     </thead>
                     {listOfPatients && (
@@ -90,6 +102,31 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
                                             ) : (
                                                 <p className="text-gray-400">-</p>
                                             )}
+                                        </td>
+                                    )}
+                                    {showGender && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.gender ? GENDER_LABEL[patient.gender] ?? patient.gender : '-'}</p>
+                                        </td>
+                                    )}
+                                    {showBirthDate && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.birthDate || '-'}</p>
+                                        </td>
+                                    )}
+                                    {showAddress && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.address || '-'}</p>
+                                        </td>
+                                    )}
+                                    {showPlan && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.plan || '-'}</p>
+                                        </td>
+                                    )}
+                                    {showAffiliateNum && (
+                                        <td className={`${TD} hidden md:table-cell`}>
+                                            <p className="text-gray-600">{patient.affiliateNum || '-'}</p>
                                         </td>
                                     )}
                                 </tr>

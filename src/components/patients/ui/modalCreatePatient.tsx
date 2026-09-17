@@ -28,7 +28,7 @@ interface Props {
     onSuccess: () => void;
 }
 
-const INPUT_CLS = "h-9 w-full px-3 border-2 border-gray-300 rounded-lg bg-gray-100 text-sm text-black placeholder:text-gray-400 focus:outline-teal-700";
+const INPUT_CLS = "h-9 w-full px-3 border-2 border-gray-300 rounded-lg bg-[#F9FAFB] text-sm text-black placeholder:text-gray-400 focus:outline-teal-700";
 const LABEL_CLS = "text-xs font-semibold text-gray-500 select-none";
 const GROUP_CLS = "text-xs font-bold tracking-widest text-gray-400 uppercase select-none";
 const BTN_GHOST = "px-4 py-2 text-sm font-semibold text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:text-black transition duration-150";
