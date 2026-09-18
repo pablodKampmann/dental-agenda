@@ -91,8 +91,9 @@ export function AddAppointmentForm({
   // tanda. Corre en cada scroll y también después de cada tanda nueva (por si el contenido
   // agregado todavía no alcanza a generar scroll y hay que seguir pidiendo de una).
   useEffect(() => {
-    const el = patientListScrollRef.current;
-    if (!el || isPickerListComplete) return;
+    const scrollEl = patientListScrollRef.current;
+    if (!scrollEl || isPickerListComplete) return;
+    const el = scrollEl;
     // Bandera por tanda: sin esto, cada evento de scroll cercano al fondo agenda su propio
     // setTimeout de 400ms — un solo gesto de scroll dispara el evento varias veces, así que
     // se encolaban varios pedidos de "+50" en paralelo antes de que llegara el primero.
