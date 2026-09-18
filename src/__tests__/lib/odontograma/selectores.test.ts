@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { caraSemantica } from '@/lib/odontograma/caras'
 import { PIEZAS, piezaDeCodigo, type Cuadrante } from '@/lib/odontograma/piezas'
 import {
@@ -10,6 +10,7 @@ import {
   hallazgoDeCara,
   hallazgoDeDiente,
   tieneHallazgos,
+  vinculosDeFila,
   type VisibilidadCapas,
 } from '@/lib/odontograma/selectores'
 import type {
@@ -18,9 +19,12 @@ import type {
   ClavePieza,
   CodigoHallazgoCara,
   CodigoHallazgoDiente,
+  CodigoHallazgoMulti,
   CodigoPieza,
   DientesPorClave,
   FacePosition,
+  PiezasSet,
+  Vinculo,
 } from '@/lib/odontograma/tipos'
 
 const CUADRANTES: readonly Cuadrante[] = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -108,6 +112,74 @@ describe('filasDelArco', () => {
   it('devuelve siempre la misma referencia para la misma vista', () => {
     expect(filasDelArco('MIXTA')).toBe(filasDelArco('MIXTA'))
     expect(filasDelArco('PERMANENTE')).toBe(filasDelArco('PERMANENTE'))
+  })
+})
+
+describe('vinculosDeFila', () => {
+  const FILA_SUPERIOR = filasDelArco('PERMANENTE')[0]
+  const FILA_INFERIOR = filasDelArco('PERMANENTE')[1]
+
+  function unVinculo(
+    piezas: readonly ClavePieza[],
+    tipo: CodigoHallazgoMulti = 'protesis_fija',
+    capa: Capa = 'existente'
+  ): Vinculo {
+    const piezasSet = Object.fromEntries(piezas.map((clave) => [clave, true])) as PiezasSet
+    return { tipo, capa, piezas: piezasSet }
+  }
+
+  it('sin vinculos da vacio -- es el caso normal, un odontograma sin protesis', () => {
+    expect(vinculosDeFila({}, FILA_SUPERIOR)).toEqual([])
+  })
+
+  /**
+   * Las claves de entrada van a proposito "al reves": lo que importa es que la salida
+   * este ordenada por `ordenVisual`, no por el orden de `Object.keys()` del `PiezasSet`
+   * ni por el orden en que se selecciono el tramo.
+   */
+  it('un vinculo entero en la fila aparece con sus piezas ordenadas por ordenVisual', () => {
+    const vinculo = unVinculo(['t26', 't24', 't25'])
+    const resultado = vinculosDeFila({ 'id-1': vinculo }, FILA_SUPERIOR)
+
+    expect(resultado).toHaveLength(1)
+    expect(resultado[0]).toMatchObject({ id: 'id-1', vinculo })
+    expect(resultado[0].piezas.map((p) => p.clave)).toEqual(['t24', 't25', 't26'])
+  })
+
+  it('un vinculo de otra fila no aparece -- es el caso normal, no dato corrupto', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const vinculo = unVinculo(['t44', 't45'])
+
+    expect(vinculosDeFila({ 'id-1': vinculo }, FILA_SUPERIOR)).toEqual([])
+    expect(errorSpy).not.toHaveBeenCalled()
+
+    errorSpy.mockRestore()
+  })
+
+  /**
+   * `validarTramo` (B2-4) garantiza que un vinculo valido tiene todas sus piezas en la
+   * misma fila. Que aparezcan repartidas entre dos es el caso que esa garantia dice que
+   * no puede pasar -dato corrupto, no un vinculo de otra fila- asi que se descarta con
+   * `console.error`, igual que `getOdontograma` ante una pieza o un hallazgo invalido.
+   */
+  it('un vinculo con piezas repartidas entre dos filas es dato corrupto: se descarta y se loguea', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const vinculo = unVinculo(['t24', 't44'])
+
+    expect(vinculosDeFila({ 'id-1': vinculo }, FILA_SUPERIOR)).toEqual([])
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+
+    errorSpy.mockRestore()
+  })
+
+  it('distingue vinculos de fila superior e inferior en el mismo mapa', () => {
+    const vinculos = {
+      superior: unVinculo(['t14', 't15']),
+      inferior: unVinculo(['t34', 't35']),
+    }
+
+    expect(vinculosDeFila(vinculos, FILA_SUPERIOR).map((v) => v.id)).toEqual(['superior'])
+    expect(vinculosDeFila(vinculos, FILA_INFERIOR).map((v) => v.id)).toEqual(['inferior'])
   })
 })
 
