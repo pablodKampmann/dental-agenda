@@ -18,9 +18,13 @@ interface props {
     extraActions?: React.ReactNode;
     onEdit?: () => void;
     displayValue?: React.ReactNode;
+    /** Tipo del `<input>` default (ignorado si `renderInput`/`multiline` reemplazan el
+     * campo). Habilita teclado y validación nativa del browser acordes al dato — ej.
+     * `email` para que el teclado de mobile muestre @ y el navegador valide el formato. */
+    type?: string;
 }
 
-export function EditableRow({ label, value, rowKey, category, rowModify, setRowModify, setChanges, submitChanges, changes, renderInput, multiline, validate, extraActions, onEdit, displayValue }: props) {
+export function EditableRow({ label, value, rowKey, category, rowModify, setRowModify, setChanges, submitChanges, changes, renderInput, multiline, validate, extraActions, onEdit, displayValue, type = 'text' }: props) {
     const isEditing = rowModify === rowKey;
     const contentRef = useRef<HTMLDivElement>(null);
     const prevHeightRef = useRef<number | null>(null);
@@ -109,16 +113,17 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
                                                 onKeyDown={handleKeyPress}
                                                 onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
                                                 rows={3}
-                                                className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black resize-none w-full"
+                                                className="border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black resize-none w-full"
                                             />
                                         ) : (
                                             <input
+                                                type={type}
                                                 autoFocus
                                                 value={draft}
                                                 onChange={(e) => handleChange(e.target.value)}
                                                 onKeyDown={handleKeyPress}
                                                 onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
-                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full"
+                                                className="border-2 border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-full"
                                             />
                                         )
                                     )}

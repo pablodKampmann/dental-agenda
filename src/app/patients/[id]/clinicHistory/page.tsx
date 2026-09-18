@@ -23,6 +23,7 @@ import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odon
 import { validarTramo } from "@/services/odontograma/setVinculo";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /** Dentición mixta aprox. entre los 6 y los 12 años, hasta que erupciona la permanente completa. */
 function vistaSugeridaPorEdad(birthDate: string | undefined): VistaArcada {
@@ -43,6 +44,7 @@ export default function ClinicHistory() {
     const id = pathname.split('/').slice(-2, -1)[0] || null;
     const [patient, setPatient] = useState<any>(null);
     const [clinicId, setClinicId] = useState<string | null>(null);
+    useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
 
     const [dientes, setDientes] = useState<DientesPorClave>({});
     const [visibilidad, setVisibilidad] = useState<VisibilidadCapas>(AMBAS_CAPAS);
@@ -226,7 +228,7 @@ export default function ClinicHistory() {
         const validacionTramo = clavesEnTramo.length >= 2 ? validarTramo(clavesEnTramo) : null;
 
         return (
-            <div className="h-[calc(100vh-58px)] overflow-y-auto">
+            <div className="h-[calc(100vh-56px)] overflow-y-auto">
                 <div className='px-4 pb-4 pt-4 relative'>
                 {isLoad ? (
                     <PatientRecordSkeleton />

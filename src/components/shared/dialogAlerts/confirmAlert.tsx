@@ -39,29 +39,33 @@ export function ConfirmAlert({
     <>
       {/* Overlay: cubre solo el contenido, no el sidebar ni el topnav */}
       <div
-        className="fixed top-[68px] sm:top-[58px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
+        className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/50 animate-fade-in"
         onClick={() => { if (!loading) setOpen(false); }}
       />
 
       {/* Dialog */}
-      <div className="fixed left-1/2 sm:left-[calc(50%+5rem)] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">
-        <h2 className="text-lg font-semibold mb-1">{title}</h2>
-        <div className="text-sm text-gray-500 mb-5 pl-0.5">{description}</div>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setOpen(false)}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium hover:bg-gray-50 transition duration-150 disabled:opacity-50"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl bg-red-800 text-white text-sm font-medium hover:bg-red-900 transition duration-150 min-w-[80px] disabled:opacity-50 flex items-center justify-center"
-          >
-            {loading ? <ClipLoader color="white" size={18} /> : confirmText}
-          </button>
+      <div className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-xl text-black animate-fade-in pointer-events-auto">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <h2 className="text-base font-bold tracking-tight">{title}</h2>
+          </div>
+          <div className="px-4 py-4 text-sm text-gray-500">{description}</div>
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-2">
+            <button
+              onClick={() => setOpen(false)}
+              disabled={loading}
+              className="border-2 border-gray-300 text-gray-600 hover:bg-white hover:text-black rounded-lg text-sm font-semibold px-3 py-1.5 transition duration-150 disabled:opacity-50"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold px-3 py-1.5 transition duration-150 min-w-[80px] disabled:opacity-50 flex items-center justify-center"
+            >
+              {loading ? <ClipLoader color="white" size={18} /> : confirmText}
+            </button>
+          </div>
         </div>
       </div>
     </>

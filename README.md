@@ -195,3 +195,4 @@ npm run build    # production build — runs type checking and compilation
 ```
 
 > ⚠️ Never commit real credentials. `.env.local` is already ignored by `.gitignore`.
+
