@@ -15,13 +15,13 @@ interface Props {
   activeAppointmentKey?: string | null;
 }
 
-const TIME_CELL = "w-px whitespace-nowrap align-top select-none cursor-default bg-gray-100 border-r border-gray-200 px-4 pt-2 text-xs font-semibold text-gray-400";
-const TIME_CELL_ACTIVE = "w-px whitespace-nowrap align-top select-none cursor-default bg-teal-50 border-r border-teal-200 px-4 pt-2 text-xs font-bold text-teal-700";
+const TIME_CELL = "w-14 whitespace-nowrap align-top text-center select-none cursor-default bg-gray-100 border-r border-gray-200 px-1 pt-2 text-xs font-semibold text-gray-400";
+const TIME_CELL_ACTIVE = "w-14 whitespace-nowrap align-top text-center select-none cursor-default bg-teal-50 border-r border-teal-200 px-1 pt-2 text-xs font-bold text-teal-700";
 
 export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick, activeAppointmentKey }: Props) {
   return (
     <div className='flex-1 min-h-0 overflow-y-auto'>
-      <table className='w-full'>
+      <table className='w-full table-fixed'>
         <tbody className='text-black'>
           {TIME_SLOTS.map((time, index, array) => {
             const isSecondarySlot = appointments && Array.isArray(appointments) && appointments.some(
@@ -165,9 +165,9 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                             </span>
                           )}
                           {appointment.observations && (
-                            <span className='flex items-center gap-1 text-xs text-gray-400 min-w-0'>
-                              <MdOutlineNotes size={13} className='flex-shrink-0' />
-                              <span className='truncate'>{appointment.observations}</span>
+                            <span className='flex items-start gap-1 text-xs text-gray-400 w-full min-w-0'>
+                              <MdOutlineNotes size={13} className='flex-shrink-0 mt-0.5' />
+                              <span className='whitespace-normal break-words'>{appointment.observations}</span>
                             </span>
                           )}
                         </div>

@@ -2,6 +2,7 @@
 
 import { getPatient } from './../../../services/patients/getPatient';
 import { useState, useEffect } from 'react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { updatePatient } from './../../../services/patients/updatePatient';
 import { ConfirmAlert } from './../../../components/shared/dialogAlerts/confirmAlert';
 import { deletePatient } from './../../../services/patients/deletePatient';
@@ -49,6 +50,8 @@ export default function PatientId() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName}` : "Paciente");
 
   useEffect(() => {
     if (!clinicId) return;

@@ -15,9 +15,6 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: 'Dental Agenda — Panel de Administración',
   description: 'Panel de administración para gestión de turnos, pacientes y facturación del consultorio dental.',
-  icons: {
-    icon: '/Diente.png',
-  },
 }
 
 export default async function RootLayout({
