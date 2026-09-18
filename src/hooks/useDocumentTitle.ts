@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 const STATIC_TITLES: Record<string, string> = {
   "/agenda": "Agenda",
   "/patients": "Pacientes",
-  "/tariffs": "Aranceles",
+  "/treatments": "Tratamientos",
   "/config": "Configuración",
   "/estadisticas": "Estadísticas",
   "/messenger": "Mensajería",

@@ -23,7 +23,7 @@ Cualquiera de los tres agentes tiene que leer este archivo completo antes de pla
 | Backend | Firebase 10 — Realtime Database, Auth, Storage (sin servidor propio) |
 | Fechas | dayjs (locale español) |
 | Toasts | react-hot-toast + componente propio `Toast.tsx` |
-| PDF | pdfme |
+| PDF | pdfme (generar) + pdfjs-dist (leer/extraer texto, ej. import de Tratamientos) |
 | Tests | vitest + Testing Library |
 
 **Pitfall de dependencias:** el proyecto corre Next 16 con React 18.2 (no 19). Hay mismatch de peer deps — por eso el CI y las instalaciones locales usan `npm ci --legacy-peer-deps` / `npm install --legacy-peer-deps`. No sacar ese flag sin resolver el mismatch primero.
@@ -40,7 +40,8 @@ src/
 │   ├── patients/
 │   │   ├── page.tsx             # listado (buscador en patientsToolbar.tsx, tabla en table.tsx)
 │   │   └── [id]/page.tsx, clinicHistory/page.tsx, odontogram/page.tsx
-│   ├── tariffs/page.tsx         # Aranceles
+│   ├── tariffs/page.tsx         # Aranceles — código muerto, ver "Tratamientos y Pagos" más abajo
+│   ├── treatments/page.tsx      # Tratamientos — catálogo plano que reemplaza a Aranceles
 │   ├── config/page.tsx          # Clínica + profesionales + obras sociales + perfil admin
 │   ├── estadisticas/page.tsx    # Dashboard — placeholder, sin implementar
 │   ├── messenger/page.tsx       # Mensajería — WIP, casi vacío
@@ -51,7 +52,8 @@ src/
 │   ├── appointments/ui/
 │   ├── patients/ui/
 │   │   └── odontogram/           # Tooth, OdontogramaGrid, Legend, HallazgoPicker, FloatingAnchor...
-│   ├── practices/ui/            # UI de Aranceles
+│   ├── practices/ui/            # UI de Aranceles — código muerto, no linkeado desde el nav
+│   ├── treatments/ui/           # TreatmentsTable, AddTreatmentForm, ImportTreatmentsModal — catálogo de Tratamientos
 │   ├── config/
 │   ├── navigation/               # desktopVersion.tsx, mobileVersion.tsx, UserMenu.tsx, SidebarCarousel.tsx
 │   └── shared/                   # ver sección "Antes de crear UI nueva"
@@ -63,7 +65,7 @@ src/
 │   ├── firebase.ts                # init de Firebase desde variables de entorno
 │   └── odontograma/               # dominio puro del odontograma — sin Firebase ni React
 ├── services/                      # TODAS las operaciones contra Firebase, por feature
-│   ├── appointments/, patients/, practices/, config/, auth/, options/ (obras sociales)
+│   ├── appointments/, patients/, practices/ (código muerto), treatments/, config/, auth/, options/ (obras sociales)
 │   ├── navigation/                 # getSidebarCarouselData, sidebarCarouselEvents (ver "Sidebar y topbar")
 │   └── odontograma/                # lectura/escritura del odontograma (B2-2, B2-3...)
 ├── dev/                            # scripts de seed/migración usados por app/dev/page.tsx
@@ -162,8 +164,11 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
             dientes, vinculos, meta      # ver src/lib/odontograma/tipos.ts
         eventos/{evt}                    # log append-only, ver B2-1
 
-    priceTariffs/{chapter}/{id}
+    priceTariffs/{chapter}/{id}       # código muerto, ver "Tratamientos y Pagos" más abajo
         name, price, id
+
+    treatments/{id}
+        name, price, area, codigo (opcional, único), vigenteDesde (opcional)
 
     professionals/{id}
         name, specialty, ...
@@ -335,6 +340,28 @@ Tres reglas de ese módulo que valen para cualquiera que lo toque, UI incluida.
 
 **`Table` de `/patients` (`table.tsx`): "Cargar más" solo se muestra cuando el scroll está cerca del fondo** (`isNearBottom`, mismo threshold de 80px y mismo patrón de listener de `scroll` + recheck en `[listOfPatients]` que el picker de agenda) — antes aparecía siempre que hubiera más para cargar, sin importar en qué parte del scroll estuviera el usuario. Entra con `animate-fade-in` (la animación ya definida en `tailwind.config.ts`, reusada — no se agregó una nueva).
 
+**`/tariffs` (Aranceles, capítulos del colegio) quedó reemplazado por `/treatments` (Tratamientos) — decisión de negocio, no solo visual.** El cliente ya no organiza precios por capítulo; quiere un catálogo plano (nombre + precio vigente) fácil de reajustar cuando aumenta el colegio, más un registro de pagos por paciente (`/payments`, todavía sin construir — ver roadmap) que puede opcionalmente prellenarse desde este catálogo. `/tariffs/page.tsx`, `src/components/practices/ui/` y `src/services/practices/` (y el nodo `priceTariffs/` en Firebase) quedan como código muerto a propósito — no se borraron ni se migraron datos, están simplemente desconectados del nav (`desktopVersion.tsx`/`mobileVersion.tsx`) y no se tocan salvo que haga falta rescatar algo puntual.
+
+**`/treatments`: catálogo plano de tratamientos, nodo `treatments/{id}` (`name`, `price`, `area`, `codigo?`, `vigenteDesde?`) — sin capítulos como estructura de datos.** Sigue la misma anatomía de página que `/agenda`: card de tabla a la izquierda (`TreatmentsTable.tsx`, mismo patrón de header separado del body con scroll que `Table` de `/patients`) y panel lateral derecho de 360px (`AddTreatmentForm.tsx`) que alterna entre alta/edición y un estado ocioso, igual que `AddAppointmentForm`/Calendario en `/agenda`. Clickear una fila selecciona ese tratamiento para editar (mismo criterio que reclickear un turno activo en agenda: reclickear la fila ya seleccionada cierra el panel en vez de reabrirlo). `src/services/treatments/` tiene los 4 CRUD directos (`getTreatments`, `addTreatment`, `updateTreatment`, `deleteTreatment`, estos dos últimos reciben un objeto `TreatmentFields` en vez de posicional, para escalar sin romper la firma cada vez que se suma un campo) más `importTreatments` para el import batch — sin ningún service de "capítulo", ese concepto no existe en el dato.
+
+- **`area`** es texto libre, no un select de opciones cerradas — el input (`AddTreatmentForm`) usa `<datalist>` nativo con las áreas ya usadas en el catálogo como sugerencia, pero nunca fuerza a elegir una. Si se deja vacío al guardar, se graba `"Varios"` — nunca queda un tratamiento sin área (mismo default aplica en lectura, `getTreatments`, para los tratamientos viejos que se crearon antes de este campo). El filtro por área en la página (`CustomSelect`, junto al buscador) deriva sus opciones de los valores únicos ya presentes en el catálogo, mismo patrón que el filtro de obra social en `/patients` — sin query nueva a Firebase.
+- **`codigo`** es opcional (referencia al código del colegio, ej. `"04.01.09"`) pero único entre los tratamientos que lo tienen cargado — `AddTreatmentForm` valida la unicidad en memoria contra el catálogo ya cargado (mismo patrón de "un solo fetch, todo en memoria" del resto del proyecto) y avisa por toast si ya lo usa otro. El separador siempre es `.` — si se tipea `,` se normaliza a `.` (al revés que el campo Precio, que normaliza a `,`: cada uno sigue la convención del dato que representa).
+- **Precio con autoformateo visual (`src/components/treatments/priceInput.ts`).** El estado guardado del input (`raw`) son solo dígitos y a lo sumo una coma, nunca puntos de miles; los puntos se regeneran en cada render (`formatPriceInput`). `.` y `,` se interceptan en `onKeyDown` (no en `onChange`) y ambos producen la coma decimal — una vez en `onChange` ya no se distingue un `.` recién tipeado de un punto de miles ya puesto por el formateo. En la tabla el precio se muestra con `toLocaleString("es-AR")` (`formatPrice` de agenda asume enteros y rompe con decimales).
+- **`AddTreatmentForm` es un `<form>`: Enter guarda.** Los campos obligatorios (nombre, precio) se avisan por toast con `id` fijo, nunca con labels de error inline; el código repetido también va por toast. En edición, "Guardar cambios" queda deshabilitado mientras nada difiera del tratamiento original. `TreatmentsPage` le pasa `key={editingTreatment?.id ?? "new"}` para remontarlo al cambiar de tratamiento — la animación de entrada dispara por mount, sin key no se repite al saltar de una fila a otra. No poner `autoFocus` en el primer input: el foco inmediato corta la animación de deslizamiento del panel.
+- **`database.rules.json` necesita un bloque por cada nodo nuevo de clínica** (`treatments` lo tiene, igual que `priceTariffs`); sin `.write` explícito Firebase devuelve `PERMISSION_DENIED`. El archivo del repo no se aplica solo: hay que publicarlo en la consola de Firebase (Realtime Database → Rules) o con el CLI.
+- **Es el único código del catálogo que decide identidad entre tratamientos — el nombre nunca dispara un merge/actualización automática.** Esto importa tanto para la unicidad de arriba como para el import: dos tratamientos pueden llamarse igual y coexistir sin problema si no comparten código.
+
+**Import del catálogo desde un PDF (`ImportTreatmentsModal.tsx`, botón "Importar PDF" en el header de `/treatments`) — sin IA, el parseo es determinístico.** El PDF de aranceles del colegio (y cualquier otro con el mismo formato tabular) tiene texto real, no es un escaneo — se lee 100% en el browser con `pdfjs-dist` (`src/lib/pdfText.ts`: agrupa los items sueltos que devuelve pdf.js por renglón visual, tolerancia de 2pt en Y para diferencias de baseline entre fuente normal/negrita, y los ordena de izquierda a derecha) y se interpreta con reglas fijas (`src/lib/treatmentsPdfParser.ts`, función pura sin Firebase ni React, mismo criterio que `src/lib/odontograma/`):
+  - El **área** de cada tratamiento sale de pisar una variable "área actual" recorriendo las líneas de arriba a abajo: arranca en el nombre del capítulo (`"CAPITULO IV PROTESIS ARANCELES"` → `"Prótesis"`) y una subfila de encabezado sin código ni precio (`"PRÓTESIS REMOVIBLE"`) la reemplaza hasta el próximo encabezado — capítulo o subárea, lo que aparezca primero. No hay jerarquía capítulo/subárea en el dato final, cada tratamiento guarda un solo string, el más específico disponible en ese punto — resuelve el caso que señaló el cliente (subáreas dentro de un capítulo) sin que el operador tenga que hacer nada a mano.
+  - La **fecha de vigencia** (`"01/07/2026"` en el encabezado del PDF) se detecta una sola vez por documento y se graba en cada fila importada como `vigenteDesde` — los tratamientos cargados a mano nunca la tienen.
+  - Nombres/áreas no discriminan por mayúscula/tilde/coma gracias a `normalizeForSearch()` reusado (mismo helper que el buscador de pacientes) donde hace falta comparar texto — no hay lógica de comparación nueva.
+  - Antes de escribir nada, el modal muestra una lista revisable de lo reconocido (nombre, área, precio, con checkbox para excluir cualquier renglón) — es la salvaguarda contra un parseo imperfecto en vez de confiar ciegamente en el regex. Los renglones que no se pudieron interpretar (`skipped`: ninguna línea con precio en los siguientes `MAX_BUFFER_LINES` renglones, o un buffer descartado por traer más de un código, señal de que se fusionaron dos filas de la tabla) se listan aparte, con su texto crudo, en un warning ámbar (`bg-amber-50`), y no bloquean el resto del import. **Solo esos renglones son editables, uno por uno; los parseados bien no** (decisión de producto, por ahora): cada renglón del warning tiene lápiz y tacho. El lápiz activa únicamente esa fila con Código, Área, Nombre (precargado con el texto crudo) y Precio; al confirmar con el check, valida nombre y precio por toast y el renglón pasa a la lista de tratamientos ya seleccionado. El tacho lo descarta. Motivo: no se pueden prever los errores de parseo de los próximos PDF, así que el usuario necesita poder rescatar cada renglón sin salir del import.
+  - `importTreatments` genera las claves nuevas con `push(ref(...)).key` (SDK modular; `ref().push()` no existe) y escribe todo el lote con un solo `update()` multi-path.
+  - Al confirmar, `importTreatments` matchea por `codigo` contra el catálogo ya cargado: si existe, actualiza ese tratamiento (nombre/precio/área/vigencia); si no, crea uno nuevo. Reimportar la actualización del año que viene no duplica nada, siempre que el PDF traiga los mismos códigos.
+  - **Verificación por IA quedó pendiente a propósito, para una iteración aparte.** La idea (cuando se sume) es una pasada posterior que señale renglones dudosos para que el operador los revise — nunca que la IA pise en silencio lo que ya extrajo el parser determinístico.
+
+**Pendiente de este mismo pedido del cliente, no construido todavía: `/payments` (Pagos).** Registro de pagos por paciente (fecha, monto, método — Efectivo/Transferencia/Otro —, paciente obligatorio, tratamiento y turno opcionales solo para prellenar el monto) con vista global en el nav y un tab dentro de `/patients/[id]`. Nodo previsto: `clinics/{clinicId}/payments/{id}` con `patientId` (number, mismo criterio que `appointment.patientId`), `date`, `amount`, `method`, `treatmentId?`, `treatmentName?` (snapshot), `appointmentRef?`. Un solo fetch por clínica y filtro en memoria, mismo patrón que el resto del proyecto — nada de queries indexadas nuevas.
+
 ---
 
 ## Sistema visual (UI/UX) — regla obligatoria antes de crear o tocar UI
@@ -433,7 +460,8 @@ Si aparece alguno de estos en algo que se toca, se migra al token correspondient
 | Sidebar y topbar desktop (`desktopVersion.tsx`) | Refactorizado |
 | `/patients` (listado + `modalCreatePatient.tsx`) | Migrado |
 | `/agenda` (`AppointmentsTable`, `AddAppointmentForm`, `RemainingAppointments`, `MiniCalendar`) | Migrado |
-| **`/tariffs`** (`page.tsx` + `components/practices/ui/`: `PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel`) | **Desactualizado.** Concentra la mayoría de los `border-gray-600` y `bg-opacity-30` que quedan en el repo. Es la próxima. |
+| `/treatments` (`TreatmentsTable`, `AddTreatmentForm`) | Migrado — construido ya con el sistema visual actual, reemplaza a `/tariffs`. |
+| **`/tariffs`** (`page.tsx` + `components/practices/ui/`: `PracticeTable`, `AddPracticeForm`, `PriceAdjustmentPanel`) | **Código muerto**, no solo desactualizado — reemplazado por `/treatments`, sin link en el nav. No se migra ni se toca, ver "Tratamientos y Pagos". |
 | `shared/dialogAlerts/confirmAlert.tsx` | **Migrado.** `logOutAlert.tsx` se eliminó — era una copia de `confirmAlert.tsx` con textos fijos, `LogOutAlert(open, setOpen)`; ahora `navigation.tsx` usa `ConfirmAlert` directo (`onConfirm={() => logOut()}`). Cualquier confirmación nueva pasa por `ConfirmAlert`, nunca por un componente ad-hoc. |
 | `shared/alert.tsx` | Desactualizado: botones `bg-red-900`/`bg-red-400`, `border-4`. Es el componente viejo (turnos/pacientes/prácticas) previo a `confirmAlert.tsx` — no confundir los dos, no se tocó en esta migración. |
 | `navigation/mobileVersion.tsx`, `/notSign` | Desactualizado |
@@ -500,8 +528,10 @@ git commit -m "tipo: título en español" -m "- cambio específico 1" -m "- camb
 
 Para el estado actual de issues, usar GitLab — no se duplica acá para no quedar desactualizado.
 
-**Funcionales:** Agenda (`/agenda`), Pacientes (`/patients`), Aranceles (`/tariffs`), Config (`/config` — incluye gestión de profesionales y obras sociales).
+**Funcionales:** Agenda (`/agenda`), Pacientes (`/patients`), Tratamientos (`/treatments`), Config (`/config` — incluye gestión de profesionales y obras sociales).
 
 **WIP / placeholder:** Mensajería (`/messenger`), Estadísticas (`/estadisticas`, sin implementar).
 
-**Roadmap:** responsive completo, odontograma, historia clínica, dashboard de métricas, facturación, chatbot para pacientes, asistente IA para admin, recordatorio de turno automático (ver nota de infraestructura en "Agenda: menú Acciones").
+**Código muerto:** Aranceles (`/tariffs`), reemplazado por Tratamientos — ver "Tratamientos y Pagos".
+
+**Roadmap:** Pagos (`/payments`, ver "Tratamientos y Pagos" — siguiente paso de esta misma feature), import del listado de precios del colegio a Tratamientos, responsive completo, odontograma, historia clínica, dashboard de métricas, facturación, chatbot para pacientes, asistente IA para admin, recordatorio de turno automático (ver nota de infraestructura en "Agenda: menú Acciones").

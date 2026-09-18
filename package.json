@@ -37,6 +37,7 @@
     "jspdf-invoice-template-nodejs": "^1.4.30",
     "lucide-react": "^0.400.0",
     "next": "^16.1.6",
+    "pdfjs-dist": "^6.3.289",
     "react": "18.2.0",
     "react-calendar": "^4.6.0",
     "react-dom": "18.2.0",
