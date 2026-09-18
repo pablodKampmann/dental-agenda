@@ -792,7 +792,7 @@ export default function Page() {
                   className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border-2 text-xs font-semibold transition duration-150 ${
                     isToday(today)
                       ? "bg-teal-700 border-teal-700 text-white cursor-default"
-                      : "text-gray-500 border-gray-300 hover:text-teal-700 hover:border-teal-300"
+                      : "bg-white text-gray-500 border-gray-300 hover:text-teal-700 hover:border-teal-300"
                   }`}
                 >
                   <MdUpdate size={16} />
@@ -801,7 +801,7 @@ export default function Page() {
 
                 <button
                   onClick={dayBack}
-                  className="h-8 w-8 flex items-center justify-center text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
+                  className="h-8 w-8 flex items-center justify-center bg-white text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
                 >
                   <MdChevronLeft size={20} />
                 </button>
@@ -809,7 +809,7 @@ export default function Page() {
                 <div ref={calendarRef} className="relative">
                   <button
                     onClick={() => setOpenCalendar(!openCalendar)}
-                    className={`flex items-center justify-center gap-2 h-8 px-3 w-[320px] shrink-0 rounded-lg border-2 text-sm font-semibold transition duration-150 ${
+                    className={`flex items-center justify-center gap-2 h-8 px-3 w-[320px] shrink-0 rounded-lg border-2 text-sm font-semibold transition duration-150 bg-white ${
                       openCalendar
                         ? "border-teal-700 text-teal-700"
                         : "border-gray-300 text-black hover:border-teal-300 hover:text-teal-700"
@@ -836,7 +836,7 @@ export default function Page() {
 
                 <button
                   onClick={dayNext}
-                  className="h-8 w-8 flex items-center justify-center text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
+                  className="h-8 w-8 flex items-center justify-center bg-white text-gray-500 border-2 border-gray-300 rounded-lg hover:text-teal-700 hover:border-teal-300 transition duration-150"
                 >
                   <MdChevronRight size={20} />
                 </button>
@@ -849,7 +849,7 @@ export default function Page() {
                       onChange={handleSelectProfessional}
                       options={pros!.map((p: any) => ({ value: p.key, label: p.nameComplete }))}
                       placeholder="Profesional"
-                      triggerClassName="bg-gray-50"
+                      triggerClassName="bg-white"
                     />
                   </div>
                 )}

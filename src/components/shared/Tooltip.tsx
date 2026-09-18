@@ -7,7 +7,7 @@ import { usePopoverReveal } from "@/hooks/usePopoverReveal";
 import { computePopoverStyle } from "@/lib/popoverPosition";
 import { cn } from "@/lib/utils";
 
-type Side = "bottom" | "left" | "right";
+type Side = "bottom" | "top" | "left" | "right";
 
 interface TooltipProps {
   content: ReactNode;
@@ -15,8 +15,15 @@ interface TooltipProps {
   /** `bottom` (default) reusa el mismo clamp + flip que el resto de los popovers anclados
    *  (abre hacia arriba si no hay lugar abajo). `left`/`right` son para triggers angostos
    *  de una sola línea (ej. un ícono del sidebar) — centran verticalmente contra el
-   *  trigger, sin flip. */
+   *  trigger, sin flip. `top` es de dirección fija (sin flip, sin clamp) — para cuando se
+   *  sabe de antemano que siempre hay lugar arriba y no tiene sentido pagar el cálculo de
+   *  `computePopoverStyle`; centrado horizontal contra el trigger, una sola línea. */
   side?: Side;
+  /** Solo aplica a `side='top'`: `'center'` (default) centra horizontalmente contra el
+   *  trigger. `'end'` alinea el borde derecho del tooltip contra el borde derecho del
+   *  trigger — para un ícono pegado al borde de su contenedor, donde centrarlo lo saca
+   *  por la izquierda. */
+  align?: "center" | "end";
   /** Ancho del tooltip cuando `side='bottom'`. Default `'auto'`: se ajusta al ancho real
    *  del contenido, sin wrap — lo correcto para el caso típico, una frase corta de una
    *  línea. Pasar un número fuerza ese ancho fijo y permite que el texto wrappee — para
@@ -54,6 +61,7 @@ export default function Tooltip({
   content,
   children,
   side = "bottom",
+  align = "center",
   width = "auto",
   disabled,
   className,
@@ -87,18 +95,35 @@ export default function Tooltip({
   }
 
   // side='left'/'right': centrado vertical contra el trigger, sin flip — pensado para un
-  // ícono angosto (ej. sidebar), no para texto largo.
+  // ícono angosto (ej. sidebar), no para texto largo. side='top': mismo criterio pero
+  // centrado horizontal, arriba del trigger, sin flip — dirección fija a propósito.
   const sideStyle: CSSProperties | null =
     show && rect && side !== "bottom"
-      ? {
-          position: "fixed",
-          top: rect.top + rect.height / 2,
-          ...(side === "right"
-            ? { left: rect.right + GAP_SIDE }
-            : { right: window.innerWidth - rect.left + GAP_SIDE }),
-          transform: "translateY(-50%)",
-          visibility: hidden ? "hidden" : "visible",
-        }
+      ? side === "top"
+        ? align === "end"
+          ? {
+              position: "fixed",
+              left: rect.right,
+              bottom: window.innerHeight - rect.top + GAP_SIDE,
+              transform: "translateX(-100%)",
+              visibility: hidden ? "hidden" : "visible",
+            }
+          : {
+              position: "fixed",
+              left: rect.left + rect.width / 2,
+              bottom: window.innerHeight - rect.top + GAP_SIDE,
+              transform: "translateX(-50%)",
+              visibility: hidden ? "hidden" : "visible",
+            }
+        : {
+            position: "fixed",
+            top: rect.top + rect.height / 2,
+            ...(side === "right"
+              ? { left: rect.right + GAP_SIDE }
+              : { right: window.innerWidth - rect.left + GAP_SIDE }),
+            transform: "translateY(-50%)",
+            visibility: hidden ? "hidden" : "visible",
+          }
       : null;
 
   // side='bottom': ni el alto ni (con width='auto') el ancho se conocen antes de montar,

@@ -217,6 +217,5 @@ input[type=number] {
 }
 
 .slot-selected {
-  border-left: 4px solid rgb(13, 148, 136);
   animation: slot-selected-pulse 2s ease-in-out infinite;
 }

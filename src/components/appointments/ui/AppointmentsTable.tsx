@@ -1,6 +1,6 @@
 'use client'
 
-import { MdPhone, MdOutlineEmail, MdOutlinePermIdentity } from 'react-icons/md';
+import { MdPhone, MdOutlineEmail, MdOutlinePermIdentity, MdOutlineNotes } from 'react-icons/md';
 import { AvatarFallback } from '../../shared/AvatarFallback';
 import { timeCalc, TIME_SLOTS } from '../appointmentUtils';
 
@@ -15,7 +15,7 @@ interface Props {
   activeAppointmentKey?: string | null;
 }
 
-const TIME_CELL = "w-px whitespace-nowrap align-top select-none cursor-default bg-gray-50 border-r border-gray-200 px-4 pt-2 text-xs font-semibold text-gray-400";
+const TIME_CELL = "w-px whitespace-nowrap align-top select-none cursor-default bg-gray-100 border-r border-gray-200 px-4 pt-2 text-xs font-semibold text-gray-400";
 const TIME_CELL_ACTIVE = "w-px whitespace-nowrap align-top select-none cursor-default bg-teal-50 border-r border-teal-200 px-4 pt-2 text-xs font-bold text-teal-700";
 
 export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick, activeAppointmentKey }: Props) {
@@ -110,6 +110,9 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                       className={`absolute left-0 top-0 bottom-0 bg-teal-600 ${isActive ? 'w-1' : 'w-[3px]'}`}
                     />
                   )}
+                  {!appointment && isSelected && (
+                    <span aria-hidden className='absolute left-0 top-0 bottom-0 w-1 bg-teal-600' />
+                  )}
                   {appointment && (
                     <div
                       key={`${date}-${time}`}
@@ -124,9 +127,16 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                       <div className='flex-1 min-w-0'>
                         <div className='flex justify-between items-start gap-2'>
                           <div className='min-w-0'>
-                            <p className='text-sm font-semibold text-black leading-tight truncate'>
-                              {appointment.patientData.name} {appointment.patientData.lastName}
-                            </p>
+                            <div className='flex items-center gap-1.5'>
+                              <p className='text-sm font-semibold text-black leading-tight truncate'>
+                                {appointment.patientData.name} {appointment.patientData.lastName}
+                              </p>
+                              {appointment.patientData.insurance && appointment.patientData.insurance !== 'Particular' && (
+                                <span className='text-[11px] font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-1.5 py-0 leading-4 flex-shrink-0'>
+                                  {appointment.patientData.insurance}
+                                </span>
+                              )}
+                            </div>
                             {appointment.reason && (
                               <p className='text-xs font-semibold text-teal-700 mt-0.5 truncate'>
                                 {appointment.reason?.name ?? appointment.reason}
@@ -149,14 +159,15 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                             </span>
                           )}
                           {appointment.patientData.email && (
-                            <span className='flex items-center gap-1 text-xs text-gray-400'>
-                              <MdOutlineEmail size={13} />
-                              {appointment.patientData.email}
+                            <span className='flex items-center gap-1 text-xs text-gray-400 min-w-0'>
+                              <MdOutlineEmail size={13} className='flex-shrink-0' />
+                              <span className='truncate'>{appointment.patientData.email}</span>
                             </span>
                           )}
                           {appointment.observations && (
-                            <span className='text-xs text-gray-400 italic truncate'>
-                              "{appointment.observations}"
+                            <span className='flex items-center gap-1 text-xs text-gray-400 min-w-0'>
+                              <MdOutlineNotes size={13} className='flex-shrink-0' />
+                              <span className='truncate'>{appointment.observations}</span>
                             </span>
                           )}
                         </div>

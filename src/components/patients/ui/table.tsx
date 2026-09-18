@@ -23,6 +23,19 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
     const router = useRouter()
     const scrollRef = useRef<HTMLDivElement>(null);
     const [scrollbarWidth, setScrollbarWidth] = useState(0);
+    const [isNearBottom, setIsNearBottom] = useState(true);
+
+    // "Cargar más" solo aparece cerca del final del scroll — mismo criterio de threshold
+    // (80px) que el picker de paciente de agenda. Se recalcula también cuando cambia la
+    // lista (una tanda nueva puede dejar de estar cerca del fondo).
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const check = () => setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= 80);
+        check();
+        el.addEventListener('scroll', check);
+        return () => el.removeEventListener('scroll', check);
+    }, [listOfPatients]);
 
     // El header vive en su propia tabla, fuera del div con scroll, para que la scrollbar
     // nativa no lo pise (ver nota en el JSX). Pero si ese div SÍ tiene scrollbar, le come
@@ -84,7 +97,7 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
 
     return (
         <>
-            <div style={{ paddingRight: scrollbarWidth }}>
+            <div className="bg-gray-100" style={{ paddingRight: scrollbarWidth }}>
             <table className="w-full table-fixed select-none">
                 <ColGroup />
                 <thead>
@@ -217,11 +230,11 @@ export function Table({ isFiltering, listOfPatients, setLoadRow, loadRow, isList
                                 : `${listOfPatients.length} de la lista`}
                     </span>
 
-                    {!isFiltering && isListOfPatientsComplete !== true && (
+                    {!isFiltering && isListOfPatientsComplete !== true && isNearBottom && (
                         <button
                             type="button"
                             onClick={loadMorePatients}
-                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150"
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 border-2 border-teal-200 rounded-lg hover:bg-teal-50 transition duration-150 animate-fade-in"
                         >
                             <TbReload size={14} /> Cargar más
                         </button>
