@@ -181,7 +181,10 @@ input[type=number] {
 }
 
 .input-phone-number input {
-  background-color: rgb(209, 213, 219, 0.1) !important;
+  /* Transparente a propósito: el fondo (#F9FAFB) ya lo pone el contenedor (INPUT_CLS).
+     Un color semitransparente acá se compone sobre ese fondo y da un tono ligeramente
+     distinto en vez del gris plano del sistema. */
+  background-color: transparent !important;
 }
 
 .transition-width {
@@ -214,6 +217,5 @@ input[type=number] {
 }
 
 .slot-selected {
-  border-left: 4px solid rgb(13, 148, 136);
   animation: slot-selected-pulse 2s ease-in-out infinite;
 }

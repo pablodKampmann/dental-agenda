@@ -4,7 +4,7 @@ import type { dateData } from "@/components/appointments/appointmentUtils";
 import { getUser } from "./../auth/getUser";
 import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
-export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string) {
+export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string, professionalId?: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
@@ -33,6 +33,7 @@ export async function setAppointment(patientId: number, dateData: dateData, reas
             ...(dateData.time5 ? { time5: dateData.time5 } : {}),
             ...(dateData.time6 ? { time6: dateData.time6 } : {}),
             ...(reason ? { reason: reason } : {}),
+            ...(professionalId ? { professionalId } : {}),
             observations: observations
         });
         dbRef = ref(db, `/clinics/${clinicId}/patients/${patientId}/appointments/`);

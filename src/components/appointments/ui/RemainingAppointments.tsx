@@ -25,15 +25,24 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
   const todayAppointments = isCurrentViewToday && appointments ? appointments : [];
 
   return (
-    <div className='select-none justify-center mt-4 bg-gray-300 bg-opacity-30 text-black border-2 border-gray-600 rounded-lg h-full shadow-xl'>
-      <h1 className='text-center justify-center flex bg-teal-600 rounded-t-lg text-white font-semibold text-2xl border-b-2 border-gray-600'>Turnos Restantes</h1>
-      <div className='px-2 py-1 bg-white flex border-b border-gray-300'>
-        <h1 className='text-left text-medium font-medium'>Hoy ({alwaysToday})</h1>
-        <h1 className='ml-auto text-medium font-medium flex'><IoTimeOutline className="mt-0.5 mr-1" size={20} />{time}</h1>
+    <div className='flex-[40] [@media(min-height:850px)]:flex-[55] min-h-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden select-none text-black'>
+      {/* Card header */}
+      <div className='shrink-0 px-4 pt-3 pb-2.5 border-b border-gray-200 bg-gray-50'>
+        <div className='flex items-center justify-between gap-2'>
+          <h2 className='text-base font-bold text-black tracking-tight'>Turnos restantes</h2>
+          <span className='flex items-center gap-1 text-xs font-semibold text-gray-500'>
+            <IoTimeOutline size={15} />
+            {time}
+          </span>
+        </div>
+        <p className='text-xs text-gray-400 truncate'>Hoy · {alwaysToday}</p>
       </div>
-      <div className='overflow-y-auto'>
+
+      <div className='flex-1 min-h-0 overflow-y-auto'>
         {todayAppointments.length === 0 ? (
-          <p className='text-center text-sm text-gray-500 font-medium py-4 select-none'>No hay turnos agendados para hoy</p>
+          <p className='text-center text-sm text-gray-400 font-medium py-6'>
+            No hay turnos agendados para hoy
+          </p>
         ) : (
           todayAppointments.map((appt: any, index: number) => {
             if (!appt || !appt.time) return null;
@@ -60,22 +69,28 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
             return (
               <div
                 key={index}
-                className={`flex justify-between items-center px-3 py-2 border-b border-gray-300 ${isPast ? 'opacity-40' : ''}`}
+                className={`flex justify-between items-center gap-2 px-4 py-2 border-b border-gray-100 last:border-b-0 ${isPast ? 'opacity-40' : ''}`}
               >
-                <div className={`flex-col ${isPast ? 'line-through' : ''}`}>
-                  <p className='text-xs font-bold'>{appt.time} - {endTime}</p>
-                  <p className='text-sm font-semibold'>{appt.patientData?.name} {appt.patientData?.lastName}</p>
-                  {appt.reason && <p className='text-xs text-gray-500'>{appt.reason?.name ?? appt.reason}</p>}
+                <div className={`min-w-0 ${isPast ? 'line-through' : ''}`}>
+                  <p className='text-xs font-semibold text-gray-400'>{appt.time} – {endTime}</p>
+                  <p className='text-sm font-semibold text-black truncate'>
+                    {appt.patientData?.name} {appt.patientData?.lastName}
+                  </p>
+                  {appt.reason && (
+                    <p className='text-xs text-gray-500 truncate'>{appt.reason?.name ?? appt.reason}</p>
+                  )}
                 </div>
                 {isOngoing && (
-                  <span className='text-xs font-bold text-white bg-teal-600 px-2 py-0.5 rounded-full select-none'>En transcurso</span>
+                  <span className='shrink-0 text-[10px] font-semibold text-white bg-teal-700 px-2 py-0.5 rounded-full'>
+                    En transcurso
+                  </span>
                 )}
                 {isPast && (
-                  <span className='text-xs font-medium text-gray-400 select-none'>Finalizado</span>
+                  <span className='shrink-0 text-[10px] font-medium text-gray-400'>Finalizado</span>
                 )}
                 {isUpcoming && (
-                  <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold select-none
-                    ${isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'}`}>
+                  <span className={`shrink-0 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border
+                    ${isUrgent ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-teal-50 text-teal-700 border-teal-200'}`}>
                     <MdOutlineTimer size={10} />
                     {formatCountdown(diffMins)}
                   </span>

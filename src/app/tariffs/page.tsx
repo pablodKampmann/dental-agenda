@@ -247,7 +247,7 @@ export default function Page() {
       item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
     ) ?? [];
   return (
-    <div className="h-[calc(100vh-58px)] flex flex-col pb-4 pt-4 overflow-hidden">
+    <div className="h-[calc(100vh-56px)] flex flex-col pb-4 pt-4 overflow-hidden">
       {isLoad ? <Loading /> : (<>
       <ConfirmAlert
         open={openAlert === "delete"}
