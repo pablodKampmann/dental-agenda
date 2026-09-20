@@ -1,16 +1,18 @@
 'use client'
 
 import React from 'react'
-import type { Pieza } from '@/lib/odontograma/piezas'
+import type { Arcada, Pieza } from '@/lib/odontograma/piezas'
 import { PIEZAS_POR_CLAVE } from '@/lib/odontograma/piezas'
-import type { DientesPorClave, FacePosition } from '@/lib/odontograma/tipos'
-import { filasDelArco, type VisibilidadCapas, type VistaArcada } from '@/lib/odontograma/selectores'
+import type { DientesPorClave, FacePosition, Vinculo } from '@/lib/odontograma/tipos'
+import { filasDelArco, vinculosDeFila, type VisibilidadCapas, type VistaArcada } from '@/lib/odontograma/selectores'
 import { Tooth } from './Tooth'
+import { VinculoSpan } from './VinculoSpan'
 
 interface OdontogramaGridProps {
   dientes: DientesPorClave
   visibilidad: VisibilidadCapas
   vista: VistaArcada
+  vinculos: Record<string, Vinculo>
   piezasEnTramo: ReadonlySet<string>
   enModoTramo: boolean
   /** Clave de la pieza que tiene el picker abierto ahora mismo, si hay uno. */
@@ -23,6 +25,19 @@ interface OdontogramaGridProps {
 const COLUMNAS = 16
 
 /**
+ * Qué lado de la fila es el carril del vínculo, según la arcada de sus piezas —mismo eje
+ * que `caraSemantica()` resuelve para el vestibular: arriba en la superior y abajo en la
+ * inferior, porque el arco se dibuja con las dos arcadas enfrentadas. Acá se eligió el
+ * lado externo (vestibular); **no está confirmado contra la foto de la ficha en papel**
+ * cuál convención usa la clínica para dibujar una prótesis. Si hay que invertirlo, esta
+ * es la única línea que cambia.
+ */
+const CARRIL_ARRIBA_EN_ARCADA: Readonly<Record<Arcada, boolean>> = Object.freeze({
+  SUPERIOR: true,
+  INFERIOR: false,
+})
+
+/**
  * Grilla fluida de 16 columnas (`fr`, no píxeles): cada pieza se ubica en su
  * `pieza.columna` real, así que escala con el ancho disponible sin scroll horizontal
  * y las piezas temporarias quedan alineadas debajo de su sucesora permanente, igual
@@ -32,6 +47,7 @@ export function OdontogramaGrid({
   dientes,
   visibilidad,
   vista,
+  vinculos,
   piezasEnTramo,
   enModoTramo,
   piezaActiva,
@@ -65,14 +81,31 @@ export function OdontogramaGrid({
     </div>
   )
 
+  const renderCarril = (items: ReturnType<typeof vinculosDeFila>) =>
+    items.length > 0 && (
+      <div className="flex flex-col gap-1">
+        {items.map(({ id, vinculo, piezas }) => (
+          <VinculoSpan key={id} piezas={piezas} tipo={vinculo.tipo} capa={vinculo.capa} />
+        ))}
+      </div>
+    )
+
   return (
     <div key={vista} className="w-full flex flex-col gap-3 animate-in fade-in duration-300">
-      {filas.map((fila, i) => (
-        <React.Fragment key={i}>
-          {renderFila(fila)}
-          {i === divisorTrasFila && <div className="border-t border-dashed border-gray-300" />}
-        </React.Fragment>
-      ))}
+      {filas.map((fila, i) => {
+        const vinculosEnFila = vinculosDeFila(vinculos, fila)
+        const carrilArriba = vinculosEnFila.filter((v) => CARRIL_ARRIBA_EN_ARCADA[v.piezas[0].arcada])
+        const carrilAbajo = vinculosEnFila.filter((v) => !CARRIL_ARRIBA_EN_ARCADA[v.piezas[0].arcada])
+
+        return (
+          <React.Fragment key={i}>
+            {renderCarril(carrilArriba)}
+            {renderFila(fila)}
+            {renderCarril(carrilAbajo)}
+            {i === divisorTrasFila && <div className="border-t border-dashed border-gray-300" />}
+          </React.Fragment>
+        )
+      })}
     </div>
   )
 }

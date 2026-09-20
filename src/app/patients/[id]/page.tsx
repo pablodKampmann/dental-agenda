@@ -2,6 +2,7 @@
 
 import { getPatient } from './../../../services/patients/getPatient';
 import { useState, useEffect } from 'react';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { updatePatient } from './../../../services/patients/updatePatient';
 import { ConfirmAlert } from './../../../components/shared/dialogAlerts/confirmAlert';
 import { deletePatient } from './../../../services/patients/deletePatient';
@@ -49,6 +50,8 @@ export default function PatientId() {
     });
     return () => unsubscribe();
   }, [router]);
+
+  useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName}` : "Paciente");
 
   useEffect(() => {
     if (!clinicId) return;
@@ -135,7 +138,7 @@ export default function PatientId() {
 
   if (id !== null) {
     return (
-      <div className="h-[calc(100vh-58px)] overflow-y-auto">
+      <div className="h-[calc(100vh-56px)] overflow-y-auto">
         {isLoad ? (
           <div className="px-4 pb-4 pt-4">
             <PatientRecordSkeleton />
@@ -301,6 +304,7 @@ export default function PatientId() {
                           submitChanges={submitChanges}
                           changes={changes}
                           validate={emailValidator()}
+                          type="email"
                         />
                       </div>
                     </div>

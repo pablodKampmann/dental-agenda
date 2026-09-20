@@ -13,7 +13,7 @@ import { ConfirmAlert } from "@/components/shared/dialogAlerts/confirmAlert";
 interface InsuranceOption { id: string; name: string; }
 interface PlanOption { id: string; name: string; }
 
-const INPUT_CLS = "border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-gray-100 text-black w-full";
+const INPUT_CLS = "border-2 border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-teal-700 bg-[#F9FAFB] text-black w-full";
 
 export function InsurancesConfig({ setLoadingGet }: { setLoadingGet: (v: boolean) => void }) {
     const [insurances, setInsurances] = useState<InsuranceOption[] | null>(null);

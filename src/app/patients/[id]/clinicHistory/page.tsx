@@ -18,11 +18,12 @@ import { getOdontograma } from "@/services/odontograma/getOdontograma";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition } from "@/lib/odontograma/tipos";
+import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition, Vinculo } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
 import { validarTramo } from "@/services/odontograma/setVinculo";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 /** Dentición mixta aprox. entre los 6 y los 12 años, hasta que erupciona la permanente completa. */
 function vistaSugeridaPorEdad(birthDate: string | undefined): VistaArcada {
@@ -43,8 +44,10 @@ export default function ClinicHistory() {
     const id = pathname.split('/').slice(-2, -1)[0] || null;
     const [patient, setPatient] = useState<any>(null);
     const [clinicId, setClinicId] = useState<string | null>(null);
+    useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
 
     const [dientes, setDientes] = useState<DientesPorClave>({});
+    const [vinculos, setVinculos] = useState<Record<string, Vinculo>>({});
     const [visibilidad, setVisibilidad] = useState<VisibilidadCapas>(AMBAS_CAPAS);
     const [entradas, setEntradas] = useState<EntradaHistorial[]>([]);
     const [vistaOverride, setVistaOverride] = useState<VistaArcada | null>(null);
@@ -92,7 +95,10 @@ export default function ClinicHistory() {
     useEffect(() => {
         if (!patient?.id || !clinicId) return;
         getOdontograma(patient.id, clinicId).then((data) => {
-            if (data) setDientes(data.dientes);
+            if (data) {
+                setDientes(data.dientes);
+                setVinculos(data.vinculos);
+            }
         });
     }, [patient?.id, clinicId]);
 
@@ -226,7 +232,7 @@ export default function ClinicHistory() {
         const validacionTramo = clavesEnTramo.length >= 2 ? validarTramo(clavesEnTramo) : null;
 
         return (
-            <div className="h-[calc(100vh-58px)] overflow-y-auto">
+            <div className="h-[calc(100vh-56px)] overflow-y-auto">
                 <div className='px-4 pb-4 pt-4 relative'>
                 {isLoad ? (
                     <PatientRecordSkeleton />
@@ -267,6 +273,7 @@ export default function ClinicHistory() {
                                         dientes={dientes}
                                         visibilidad={visibilidad}
                                         vista={vista}
+                                        vinculos={vinculos}
                                         piezasEnTramo={new Set(piezasEnTramo.keys())}
                                         enModoTramo={enModoTramo}
                                         piezaActiva={pickerContexto && pickerContexto.alcance !== 'MULTI' ? pickerContexto.pieza.clave : undefined}

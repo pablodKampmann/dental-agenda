@@ -84,12 +84,13 @@ const config = {
         'move-from-right-form-2': 'move-from-right-form-2 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         'user-menu': 'user-menu 0.1s ease-out',
         'breathe': 'breathe 2s infinite ease-in-out',
-        'modal-appointment': 'modal-appointment 0.2s ease-in',
         'alredy-exists': 'alredy-exists 0.1s ease-out',
         'page-drop': 'page-drop 0.3s ease-out',
         'move-from-left': 'move-from-left 0.3s ease-in-out',
         'carousel-reveal': 'carousel-reveal 0.35s ease-out',
-        'fade-in': 'fade-in 0.2s ease-out',
+        'fade-in': 'fade-in 0.1s ease-out',
+        'popover-drop': 'popover-drop 0.1s ease-out',
+        'popover-rise': 'popover-rise 0.1s ease-out',
       },
       keyframes: {
         "accordion-down": {
@@ -180,20 +181,6 @@ const config = {
           '50%': { opacity: '0.3' },
           '100%': { opacity: '1' },
         },
-        'modal-appointment': {
-          '0%': { opacity: '0.1', transform: 'translateY(-50%)' },
-          '8.33%': { opacity: '0.2', transform: 'translateY(-40%)' },
-          '16.66%': { opacity: '0.3', transform: 'translateY(-30%)' },
-          '25%': { opacity: '0.4', transform: 'translateY(-20%)' },
-          '33.33%': { opacity: '0.5', transform: 'translateY(-10%)' },
-          '41.66%': { opacity: '0.5', transform: 'translateY(0%)' },
-          '50%': { opacity: '0.7', transform: 'translateY(10%)' },
-          '58.33%': { opacity: '0.8', transform: 'translateY(10%)' },
-          '66.66%': { opacity: '1', transform: 'translateY(7%)' },
-          '75%': { opacity: '1', transform: 'translateY(3%)' },
-          '87.5%': { opacity: '1', transform: 'translateY(0%)' },
-          '100%': { opacity: '1', transform: 'translateY(0%)' },
-        },
         'alredy-exists': {
           '0%': { opacity: '0.4', transform: 'translateY(60%)' },
           '8.33%': { opacity: '0.4', transform: 'translateY(50%)' },
@@ -239,6 +226,16 @@ const config = {
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        // Popover que abre hacia abajo: entra "cayendo" desde arriba del trigger.
+        'popover-drop': {
+          '0%': { opacity: '0', transform: 'translateY(-6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        // Popover que abre hacia arriba: entra "subiendo" desde abajo del trigger.
+        'popover-rise': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },
