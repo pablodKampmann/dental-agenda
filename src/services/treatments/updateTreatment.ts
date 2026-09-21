@@ -10,10 +10,11 @@ export async function updateTreatment(clinicId: string, id: string, fields: Trea
     const payload: Record<string, unknown> = {
       name: fields.name,
       price: fields.price,
-      area: fields.area,
+      areaId: fields.areaId,
+      area: null, // limpia el texto legacy previo a la relación con areas/
       codigo: fields.codigo ?? null,
+      vigenteDesde: fields.vigenteDesde ?? null,
     };
-    if (fields.vigenteDesde) payload.vigenteDesde = fields.vigenteDesde;
     await update(ref(db, `/clinics/${clinicId}/treatments/${id}/`), payload);
   } catch (error) {
     console.error(error);

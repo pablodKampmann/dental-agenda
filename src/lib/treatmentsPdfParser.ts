@@ -19,7 +19,8 @@ export interface ParsedTreatmentRow {
 
 const CHAPTER_RE = /^CAP[IÍ]TULO\s+[IVXLCDM]+\s+(.+?)\s+ARANCELES\s*$/i;
 const CODE_RE = /\d{2}(?:\.\d{2}){1,2}/;
-const PRICE_RE = /\d{1,3}(?:\.\d{3})*,\d{2}/;
+// `\.?` antes de la coma tolera el tipeo "973.703.,00" del PDF del colegio (04.03.01).
+const PRICE_RE = /\d{1,3}(?:\.\d{3})*\.?,\d{2}/;
 const DATE_RE = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
 // Renglones de membrete/pie de página y del resumen final ("VALOR HORA...") que no son
@@ -37,12 +38,17 @@ function isSubAreaHeader(line: string): boolean {
   return letters.length >= 3 && letters === line && line === line.toUpperCase();
 }
 
+// Conjunciones/artículos que quedan en minúscula en un título ("Ortodoncia y Ortopedia").
+const MINOR_WORDS = new Set(["y", "e", "o", "de", "del", "la", "el", "los", "las"]);
+
 function toTitleCase(text: string): string {
   return text
     .toLocaleLowerCase("es")
     .split(" ")
     .filter(Boolean)
-    .map((word) => word.charAt(0).toLocaleUpperCase("es") + word.slice(1))
+    .map((word, i) =>
+      i > 0 && MINOR_WORDS.has(word) ? word : word.charAt(0).toLocaleUpperCase("es") + word.slice(1),
+    )
     .join(" ");
 }
 
@@ -59,9 +65,14 @@ export function parseTreatmentsPdf(lines: string[]): {
   const rows: ParsedTreatmentRow[] = [];
   const skipped: string[] = [];
 
+  // Precio que llegó solo, ANTES de su descripción (08.09: la celda del precio tiene dos
+  // líneas y queda más arriba que el texto). Se pega a la próxima línea que entre al buffer.
+  let pendingPrice: string | null = null;
+
   function flushBuffer() {
     if (buffer.length > 0) skipped.push(buffer.join(" "));
     buffer = [];
+    pendingPrice = null;
   }
 
   for (const rawLine of lines) {
@@ -70,7 +81,10 @@ export function parseTreatmentsPdf(lines: string[]): {
 
     if (!vigenteDesde) {
       const dateMatch = line.match(DATE_RE);
-      if (dateMatch) vigenteDesde = line;
+      if (dateMatch) {
+        vigenteDesde = line;
+        continue;
+      }
     }
 
     const chapterMatch = line.match(CHAPTER_RE);
@@ -88,9 +102,16 @@ export function parseTreatmentsPdf(lines: string[]): {
 
     if (NOISE_RE.test(line)) continue;
 
-    buffer.push(line);
+    buffer.push(pendingPrice ? `${line} ${pendingPrice}` : line);
+    pendingPrice = null;
     const joined = buffer.join(" ");
     const priceMatch = [...joined.matchAll(new RegExp(PRICE_RE, "g"))].pop();
+
+    if (priceMatch && buffer.length === 1 && !/[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(joined.replace(priceMatch[0], ""))) {
+      pendingPrice = priceMatch[0];
+      buffer = [];
+      continue;
+    }
 
     if (priceMatch) {
       // Un precio como "45.941,00" matchea parcialmente el patrón de código ("45.94") —

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ClipLoader } from "react-spinners";
 import { MdOutlineFileUpload, MdClose, MdWarningAmber, MdEdit, MdDeleteOutline, MdCheck } from "react-icons/md";
@@ -10,12 +10,14 @@ import { importTreatments } from "@/services/treatments/importTreatments";
 import { useToast } from "@/context/ToastContext";
 import { formatPriceInput, isValidPriceInput, parsePriceInput, sanitizePriceInput } from "../priceInput";
 import type { Treatment } from "@/services/treatments/getTreatments";
+import type { Area } from "@/services/treatments/getAreas";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   clinicId: string | null;
   existingTreatments: Treatment[];
+  areas: Area[];
   onImported: () => void;
 }
 
@@ -36,7 +38,7 @@ const CELL_INPUT = "h-8 px-2 border border-amber-200 rounded-md bg-white text-xs
 const BTN_GHOST = "px-4 py-2 text-sm font-semibold text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:text-black transition duration-150";
 const BTN_PRIMARY = "px-4 py-2 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed";
 
-export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatments, onImported }: Props) {
+export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatments, areas, onImported }: Props) {
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [vigenteDesde, setVigenteDesde] = useState<string | null>(null);
@@ -46,6 +48,78 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft>({ codigo: "", area: "", name: "", priceRaw: "" });
   const { showToast } = useToast();
+  const [mounted, setMounted] = useState(false);
+  const [bodyHeight, setBodyHeight] = useState<number | null>(null);
+  const bodyContentRef = useRef<HTMLDivElement>(null);
+
+  // El estado de la revisión (lista, exclusiones, no reconocidos) se guarda en localStorage
+  // por clínica: cerrar el modal o recargar no tira el PDF ya leído. Se limpia al importar
+  // o con "Empezar de nuevo". `hydrated` evita que el guardado pise lo guardado antes de
+  // haberlo leído.
+  const [hydrated, setHydrated] = useState(false);
+  const storageKey = clinicId ? `import-treatments-${clinicId}` : null;
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const s = JSON.parse(saved);
+        setRows(s.rows);
+        setExcluded(new Set(s.excluded));
+        setSkipped(s.skipped);
+        setVigenteDesde(s.vigenteDesde);
+      }
+    } catch {}
+    setHydrated(true);
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!storageKey || !hydrated) return;
+    try {
+      if (rows) {
+        localStorage.setItem(storageKey, JSON.stringify({ rows, excluded: [...excluded], skipped, vigenteDesde }));
+      } else {
+        localStorage.removeItem(storageKey);
+      }
+    } catch {}
+  }, [storageKey, hydrated, rows, excluded, skipped, vigenteDesde]);
+
+  // Entrada: mismo patrón que modalCreatePatient (un frame en estado "apagado" y después
+  // se prende, así la transición de opacity/scale sí se dispara).
+  useEffect(() => {
+    if (!open) {
+      setMounted(false);
+      // Sin esto, al reabrir el primer render usa la altura de la vez anterior y transiciona
+      // hasta la real (se ve "achicándose"). Con null arranca en auto y el layout effect la
+      // mide antes de pintar.
+      setBodyHeight(null);
+      return;
+    }
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+
+  // Altura animada del cuerpo: se mide el contenido real y el wrapper transiciona `height`
+  // hacia ese valor (paso 1 → lista, abrir/cerrar la edición de un renglón, descartar uno).
+  useLayoutEffect(() => {
+    const el = bodyContentRef.current;
+    if (!open || !el) return;
+    setBodyHeight(el.offsetHeight);
+    const observer = new ResizeObserver(() => setBodyHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [open]);
+
+  // Escape cierra, como el resto de los modales del sistema.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   if (!open || typeof window === "undefined") return null;
 
@@ -59,8 +133,9 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
     setEditingId(null);
   }
 
+  // Cerrar no descarta la revisión (queda en el state y en localStorage); solo importar o
+  // "Empezar de nuevo" la limpian.
   function handleClose() {
-    reset();
     onClose();
   }
 
@@ -96,7 +171,7 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
     const included = rows.filter((_, i) => !excluded.has(i));
     if (included.length === 0) return;
     setImporting(true);
-    const result = await importTreatments(clinicId, existingTreatments, included);
+    const result = await importTreatments(clinicId, existingTreatments, areas, included);
     setImporting(false);
     if (!result) {
       showToast("error", "Error al importar el catálogo");
@@ -104,7 +179,8 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
     }
     showToast("success", `${result.created} creados, ${result.updated} actualizados`);
     onImported();
-    handleClose();
+    reset();
+    onClose();
   }
 
   function startEdit(item: SkippedItem) {
@@ -146,16 +222,21 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
   }
 
   const areaOptions = Array.from(
-    new Set([...existingTreatments.map((t) => t.area), ...(rows ?? []).map((r) => r.area)]),
+    new Set([...areas.map((a) => a.name), ...(rows ?? []).map((r) => r.area)]),
   ).sort((a, b) => a.localeCompare(b));
 
   const includedCount = rows ? rows.length - excluded.size : 0;
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[60] bg-black/50" />
-      <div className="fixed inset-0 z-[65] flex items-center justify-center p-4">
-        <div className="w-full max-w-[720px] max-h-full flex flex-col bg-white border border-gray-200 rounded-2xl shadow-xl">
+      <div className={`fixed inset-0 z-[60] bg-black/50 transition-opacity duration-200 ${mounted ? "opacity-100" : "opacity-0"}`} />
+      <div
+        className="fixed inset-0 z-[65] flex items-center justify-center p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !importing) handleClose();
+        }}
+      >
+        <div className={`w-full max-w-[720px] max-h-full flex flex-col bg-white border border-gray-200 rounded-2xl shadow-xl transition-all duration-200 ease-out ${mounted ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
           {/* Header */}
           <div className="shrink-0 flex items-center gap-3 px-6 pt-5 pb-4 border-b border-gray-200">
             <div className="shrink-0 flex items-center justify-center w-10 h-10 bg-teal-50 text-teal-700 border border-teal-200 rounded-xl">
@@ -173,7 +254,15 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
           </div>
 
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-6">
+          <div className="flex-1 min-h-0">
+            {/* Alto animado = min(contenido, espacio disponible): animar hasta el alto total de una
+                lista larga (miles de px) haría que lo visible salte casi de golpe. 190px = padding
+                del overlay + header + footer. */}
+            <div
+              className="overflow-y-auto transition-[height] duration-200 ease-in-out"
+              style={bodyHeight !== null ? { height: `min(${bodyHeight}px, calc(100dvh - 190px))` } : undefined}
+            >
+            <div ref={bodyContentRef} className="p-6">
             {!rows ? (
               <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-teal-300 hover:bg-teal-50/30 transition duration-150">
                 {parsing ? (
@@ -207,7 +296,12 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
                     {rows.length} tratamientos reconocidos
                     {vigenteDesde && <> · vigentes desde {vigenteDesde}</>}
                   </span>
-                  <span className="font-semibold text-teal-700">{includedCount} seleccionados</span>
+                  <span className="flex items-center gap-3">
+                    <button type="button" onClick={reset} className="font-semibold text-teal-700 hover:text-teal-600 transition duration-150">
+                      Empezar de nuevo
+                    </button>
+                    <span className="font-semibold text-teal-700">{includedCount} seleccionados</span>
+                  </span>
                 </div>
 
                 {skipped.length > 0 && (
@@ -291,8 +385,15 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
                         type="checkbox"
                         checked={!excluded.has(i)}
                         onChange={() => toggleRow(i)}
-                        className="shrink-0 accent-teal-700"
+                        className="sr-only"
                       />
+                      <span
+                        className={`flex items-center justify-center w-4 h-4 rounded border-2 shrink-0 transition-colors duration-100 ${
+                          excluded.has(i) ? "border-gray-300 bg-white" : "bg-teal-700 border-teal-700"
+                        }`}
+                      >
+                        {!excluded.has(i) && <MdCheck size={11} className="text-white" />}
+                      </span>
                       <span className="flex-1 min-w-0 truncate text-black">{row.name}</span>
                       <span className="shrink-0 text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">
                         {row.area}
@@ -303,11 +404,13 @@ export function ImportTreatmentsModal({ open, onClose, clinicId, existingTreatme
                 </div>
               </div>
             )}
+            </div>
+            </div>
           </div>
 
           {/* Footer */}
           <div className="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-            <button type="button" onClick={handleClose} className={BTN_GHOST}>Cancelar</button>
+            <button type="button" onClick={() => { reset(); onClose(); }} className={BTN_GHOST}>Cancelar</button>
             {rows && (
               <button
                 type="button"

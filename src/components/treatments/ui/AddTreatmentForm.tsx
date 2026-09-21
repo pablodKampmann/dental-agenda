@@ -1,19 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { useToast } from "@/context/ToastContext";
-import { normalizeForSearch } from "@/lib/utils";
+import { CustomSelect } from "@/components/shared/CustomSelect";
 import { formatPriceInput, isValidPriceInput, parsePriceInput, sanitizePriceInput } from "../priceInput";
 import type { Treatment } from "@/services/treatments/getTreatments";
+import type { Area } from "@/services/treatments/getAreas";
 import type { TreatmentFields } from "@/services/treatments/addTreatment";
+
+/** Lo que emite el form: el área es una existente (`areaId`) o una nueva por nombre
+ *  (`newAreaName`) — el padre la crea recién al guardar, así cancelar no deja áreas sueltas.
+ *  Sin ninguna de las dos, el padre usa "Varios". */
+export type TreatmentFormValues = Omit<TreatmentFields, "areaId"> & { areaId?: string; newAreaName?: string };
+
+const NEW_AREA = "__new__";
 
 interface Props {
   editingTreatment: Treatment | null;
-  /** Catálogo completo ya cargado — para sugerir áreas existentes y validar que el
-   *  código no se pise con otro tratamiento. */
-  existingTreatments: Treatment[];
-  onSave: (fields: TreatmentFields) => void;
+  areas: Area[];
+  onSave: (values: TreatmentFormValues) => void;
   onDelete: () => void;
 }
 
@@ -26,8 +32,9 @@ function sanitizeCodigo(value: string): string {
   return value.replace(/,/g, ".").replace(/[^\d.]/g, "");
 }
 
-export function AddTreatmentForm({ editingTreatment, existingTreatments, onSave, onDelete }: Props) {
-  const [area, setArea] = useState(editingTreatment?.area ?? "");
+export function AddTreatmentForm({ editingTreatment, areas, onSave, onDelete }: Props) {
+  const [areaSel, setAreaSel] = useState(editingTreatment?.areaId ?? "");
+  const [newAreaName, setNewAreaName] = useState("");
   const [name, setName] = useState(editingTreatment?.name ?? "");
   const [price, setPrice] = useState(editingTreatment ? String(editingTreatment.price).replace(".", ",") : "");
   const [codigo, setCodigo] = useState(editingTreatment?.codigo ?? "");
@@ -37,17 +44,11 @@ export function AddTreatmentForm({ editingTreatment, existingTreatments, onSave,
   // cuál se edita, así que el estado inicial arriba ya alcanza — no hace falta
   // sincronizar con un efecto, `editingTreatment` no cambia en la vida de esta instancia.
 
-  // Sugerencias de área para el datalist — dedupeadas sin importar tilde/mayúscula
-  // (mismo criterio que normalizeForSearch en el buscador), pero mostrando la primera
-  // grafía real con la que se cargó cada una.
-  const areaOptions = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const t of existingTreatments) {
-      const key = normalizeForSearch(t.area);
-      if (key && !seen.has(key)) seen.set(key, t.area);
-    }
-    return Array.from(seen.values()).sort((a, b) => a.localeCompare(b));
-  }, [existingTreatments]);
+  const creatingArea = areaSel === NEW_AREA;
+  const areaOptions = [
+    ...areas.map((a) => ({ value: a.id, label: a.name })),
+    { value: NEW_AREA, label: "+ Crear área nueva" },
+  ];
 
   // "." y "," se interceptan acá (en vez de dejarlos pasar al onChange) para poder
   // estandarizarlos sin ambigüedad: una vez que llegan al onChange ya no se puede
@@ -62,27 +63,21 @@ export function AddTreatmentForm({ editingTreatment, existingTreatments, onSave,
   }
 
   const codigoTrimmed = codigo.trim();
-  const codigoTaken = !!codigoTrimmed && existingTreatments.some(
-    (t) => t.id !== editingTreatment?.id && t.codigo === codigoTrimmed,
-  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const missing: string[] = [];
     if (!name.trim()) missing.push("el nombre");
     if (!isValidPriceInput(price)) missing.push("el precio");
+    if (creatingArea && !newAreaName.trim()) missing.push("el nombre del área nueva");
     if (missing.length > 0) {
       showToast("error", `Completá ${missing.join(" y ")}`, "treatment-form-validation");
-      return;
-    }
-    if (codigoTaken) {
-      showToast("error", `El código ${codigoTrimmed} ya lo usa otro tratamiento`, "treatment-form-validation");
       return;
     }
     onSave({
       name: name.trim(),
       price: parsePriceInput(price),
-      area: area.trim() || "Varios",
+      ...(creatingArea ? { newAreaName: newAreaName.trim() } : areaSel ? { areaId: areaSel } : {}),
       codigo: codigoTrimmed || undefined,
     });
   }
@@ -92,7 +87,7 @@ export function AddTreatmentForm({ editingTreatment, existingTreatments, onSave,
   // y tocar "Guardar" sin haber cambiado nada. En alta nueva no aplica, siempre queda
   // habilitado (la validación de campos vacíos corre en el submit).
   const priceChanged = !isValidPriceInput(price) || parsePriceInput(price) !== editingTreatment?.price;
-  const areaChanged = (area.trim() || "Varios") !== editingTreatment?.area;
+  const areaChanged = creatingArea || areaSel !== (editingTreatment?.areaId ?? "");
   const codigoChanged = codigoTrimmed !== (editingTreatment?.codigo ?? "");
   const hasChanges = !editingTreatment || name.trim() !== editingTreatment.name || priceChanged || areaChanged || codigoChanged;
   const isDisabled = !!editingTreatment && !hasChanges;
@@ -112,19 +107,22 @@ export function AddTreatmentForm({ editingTreatment, existingTreatments, onSave,
       <div className="flex-1 min-h-0 p-4 flex flex-col gap-3 overflow-y-auto">
         <div className="flex flex-col gap-1">
           <label className={LABEL_CLS}>Área</label>
-          <input
-            list="treatment-areas"
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            type="text"
+          <CustomSelect
+            value={areaSel}
+            onChange={setAreaSel}
+            options={areaOptions}
             placeholder="Varios"
-            className={INPUT_CLS}
+            triggerClassName="bg-white"
           />
-          <datalist id="treatment-areas">
-            {areaOptions.map((a) => (
-              <option key={a} value={a} />
-            ))}
-          </datalist>
+          {creatingArea && (
+            <input
+              value={newAreaName}
+              onChange={(e) => setNewAreaName(e.target.value)}
+              type="text"
+              placeholder="Nombre del área nueva"
+              className={`${INPUT_CLS} animate-fade-in`}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-1">

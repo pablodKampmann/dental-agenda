@@ -2,17 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { MdClose, MdMedicalServices, MdOutlineAddCircle, MdOutlineFileUpload } from "react-icons/md";
-import { TbUserSearch } from "react-icons/tb";
+import { TbSearch } from "react-icons/tb";
+import { FileSpreadsheet } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import dayjs from "dayjs";
 import { normalizeForSearch } from "@/lib/utils";
+import { exportTreatmentsToExcel } from "@/lib/exportTreatmentsToExcel";
+import { getClinicData } from "@/services/config/getClinicData";
+import { ExportPatientsModal } from "@/components/patients/ui/ExportPatientsModal";
 import { Loading } from "@/components/shared/loading";
 import { ConfirmAlert } from "@/components/shared/dialogAlerts/confirmAlert";
 import { CustomSelect } from "@/components/shared/CustomSelect";
 import { TreatmentsTable } from "@/components/treatments/ui/TreatmentsTable";
-import { AddTreatmentForm } from "@/components/treatments/ui/AddTreatmentForm";
+import { AddTreatmentForm, type TreatmentFormValues } from "@/components/treatments/ui/AddTreatmentForm";
 import { ImportTreatmentsModal } from "@/components/treatments/ui/ImportTreatmentsModal";
 import { getTreatments, type Treatment } from "@/services/treatments/getTreatments";
+import type { Area } from "@/services/treatments/getAreas";
+import { addArea } from "@/services/treatments/addArea";
 import { addTreatment } from "@/services/treatments/addTreatment";
 import { updateTreatment } from "@/services/treatments/updateTreatment";
 import { deleteTreatment } from "@/services/treatments/deleteTreatment";
@@ -26,11 +33,15 @@ export default function TreatmentsPage() {
   const [isLoad, setIsLoad] = useState(true);
   const [treatments, setTreatments] = useState<Treatment[] | null>(null);
   const [searchContent, setSearchContent] = useState("");
+  const [areas, setAreas] = useState<Area[]>([]);
   const [selectedArea, setSelectedArea] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Treatment | null>(null);
   const [openImportModal, setOpenImportModal] = useState(false);
+  const [openExportModal, setOpenExportModal] = useState(false);
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const [priceSort, setPriceSort] = useState<"asc" | "desc" | null>(null);
 
   useEffect(() => {
     if (clinicId) fetchTreatments();
@@ -39,7 +50,8 @@ export default function TreatmentsPage() {
   async function fetchTreatments() {
     if (!clinicId) return;
     const data = await getTreatments(clinicId);
-    setTreatments(data ?? []);
+    setTreatments(data?.treatments ?? []);
+    setAreas(data?.areas ?? []);
     setIsLoad(false);
   }
 
@@ -59,9 +71,33 @@ export default function TreatmentsPage() {
       result = result.filter((t) => t.area === selectedArea);
     }
     const term = normalizeForSearch(searchContent.trim());
-    if (term === "") return result;
-    return result.filter((t) => normalizeForSearch(t.name).includes(term));
-  }, [treatments, searchContent, selectedArea]);
+    if (term !== "") {
+      // Por nombre o por código ("04.01" encuentra 04.01.01, 04.01.02...).
+      result = result.filter((t) => normalizeForSearch(t.name).includes(term) || (t.codigo ?? "").includes(term));
+    }
+    if (priceSort) {
+      result = [...result].sort((a, b) => (priceSort === "asc" ? a.price - b.price : b.price - a.price));
+    }
+    return result;
+  }, [treatments, searchContent, selectedArea, priceSort]);
+
+  // Asc → desc → orden original.
+  function togglePriceSort() {
+    setPriceSort((prev) => (prev === null ? "asc" : prev === "asc" ? "desc" : null));
+  }
+
+  const exportFilterParts: string[] = [];
+  if (searchContent.trim() !== "") exportFilterParts.push(`que coinciden con "${searchContent.trim()}"`);
+  if (selectedArea !== "") exportFilterParts.push(`del área "${selectedArea}"`);
+  const exportFilterDescription =
+    exportFilterParts.length > 0
+      ? `Se exportan los tratamientos ${exportFilterParts.join(" y ")} — el total que cumple el filtro.`
+      : null;
+
+  async function handleExportConfirm() {
+    const clinicInfo = clinicId ? await getClinicData(clinicId, "info") : null;
+    exportTreatmentsToExcel(filteredTreatments ?? [], clinicInfo, exportFilterDescription);
+  }
 
   function clean() {
     setShowForm(false);
@@ -79,10 +115,28 @@ export default function TreatmentsPage() {
     setShowForm(true);
   }
 
-  async function handleSave(fields: TreatmentFields) {
+  async function handleSave({ areaId, newAreaName, ...rest }: TreatmentFormValues) {
     if (!clinicId) return;
     const editing = editingTreatment;
     clean();
+    // Área: la elegida, o la nueva por nombre (reusa una existente con el mismo nombre en vez
+    // de duplicarla), o "Varios" si no se eligió ninguna.
+    let resolvedAreaId = areaId;
+    if (!resolvedAreaId) {
+      const name = newAreaName ?? "Varios";
+      const found = areas.find((a) => normalizeForSearch(a.name) === normalizeForSearch(name));
+      resolvedAreaId = found?.id ?? (await addArea(clinicId, name))?.id;
+    }
+    if (!resolvedAreaId) {
+      showToast("error", "Error al crear el área");
+      return;
+    }
+    // Vigencia automática (el usuario no la ve ni la carga): "desde cuándo rige este precio".
+    // Alta → hoy; edición con el precio cambiado → hoy; edición sin cambio de precio → se
+    // conserva la que ya tenía (la del PDF, si vino de un import).
+    const priceChanged = !editing || rest.price !== editing.price;
+    const vigenteDesde = priceChanged ? dayjs().format("DD/MM/YYYY") : editing?.vigenteDesde;
+    const fields: TreatmentFields = { ...rest, areaId: resolvedAreaId, vigenteDesde };
     const result = editing
       ? await updateTreatment(clinicId, editing.id, fields)
       : await addTreatment(clinicId, fields);
@@ -90,6 +144,10 @@ export default function TreatmentsPage() {
     if (result === null) {
       showToast("error", editing ? "Error al editar el tratamiento" : "Error al crear el tratamiento");
     } else {
+      if (editing) {
+        setFlashId(editing.id);
+        setTimeout(() => setFlashId(null), 1300);
+      }
       showToast("success", editing ? "Tratamiento editado correctamente" : "Tratamiento creado correctamente");
     }
   }
@@ -126,11 +184,20 @@ export default function TreatmentsPage() {
               onConfirm={handleConfirmDelete}
               confirmText="Eliminar"
             />
+            <ExportPatientsModal
+              open={openExportModal}
+              onClose={() => setOpenExportModal(false)}
+              onConfirm={handleExportConfirm}
+              totalCount={filteredTreatments?.length ?? 0}
+              filterDescription={exportFilterDescription}
+              noun={{ singular: "tratamiento", plural: "tratamientos" }}
+            />
             <ImportTreatmentsModal
               open={openImportModal}
               onClose={() => setOpenImportModal(false)}
               clinicId={clinicId}
               existingTreatments={treatments ?? []}
+              areas={areas}
               onImported={fetchTreatments}
             />
           </div>
@@ -145,6 +212,15 @@ export default function TreatmentsPage() {
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setOpenExportModal(true)}
+                  disabled={totalCount === 0}
+                  className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-2 text-sm font-semibold rounded-lg transition duration-150 text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-black disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <FileSpreadsheet size={16} />
+                  Exportar
+                </button>
                 <button
                   type="button"
                   onClick={() => setOpenImportModal(true)}
@@ -190,21 +266,21 @@ export default function TreatmentsPage() {
               <div className="flex-1 min-w-0 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
                   <div className="relative flex-1 min-w-0 md:flex-none md:w-[26rem] flex items-stretch h-9 border-2 border-gray-300 rounded-lg bg-white transition-colors focus-within:border-teal-700">
-                    <TbUserSearch
+                    <TbSearch
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700 pointer-events-none"
                       size={17}
                     />
                     <input
                       autoComplete="off"
                       type="text"
-                      placeholder="Buscar tratamiento..."
+                      placeholder="Buscar por nombre o código (ej. 04.01)..."
                       value={searchContent}
                       onChange={(e) => setSearchContent(e.target.value)}
                       className="flex-1 min-w-0 pl-9 pr-3 bg-transparent text-sm text-black placeholder:text-gray-400 outline-none rounded-lg"
                     />
                   </div>
 
-                  <div className="shrink-0 w-48">
+                  <div className="shrink-0 w-64">
                     <CustomSelect
                       value={selectedArea}
                       onChange={setSelectedArea}
@@ -220,7 +296,10 @@ export default function TreatmentsPage() {
                   treatments={filteredTreatments}
                   isFiltering={isFiltering}
                   selectedId={editingTreatment?.id ?? null}
+                  flashId={flashId}
                   onSelect={handleSelectTreatment}
+                  priceSort={priceSort}
+                  onTogglePriceSort={togglePriceSort}
                 />
               </div>
 
@@ -235,7 +314,7 @@ export default function TreatmentsPage() {
                     // popover de Acciones y las filas de AppointmentsTable en /agenda.
                     key={editingTreatment?.id ?? "new"}
                     editingTreatment={editingTreatment}
-                    existingTreatments={treatments ?? []}
+                    areas={areas}
                     onSave={handleSave}
                     onDelete={() => editingTreatment && setDeleteTarget(editingTreatment)}
                   />
