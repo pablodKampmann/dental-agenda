@@ -18,7 +18,7 @@ import { getOdontograma } from "@/services/odontograma/getOdontograma";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition } from "@/lib/odontograma/tipos";
+import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition, Vinculo } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
 import { validarTramo } from "@/services/odontograma/setVinculo";
 import { FaLayerGroup } from "react-icons/fa6";
@@ -47,6 +47,7 @@ export default function ClinicHistory() {
     useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
 
     const [dientes, setDientes] = useState<DientesPorClave>({});
+    const [vinculos, setVinculos] = useState<Record<string, Vinculo>>({});
     const [visibilidad, setVisibilidad] = useState<VisibilidadCapas>(AMBAS_CAPAS);
     const [entradas, setEntradas] = useState<EntradaHistorial[]>([]);
     const [vistaOverride, setVistaOverride] = useState<VistaArcada | null>(null);
@@ -94,7 +95,10 @@ export default function ClinicHistory() {
     useEffect(() => {
         if (!patient?.id || !clinicId) return;
         getOdontograma(patient.id, clinicId).then((data) => {
-            if (data) setDientes(data.dientes);
+            if (data) {
+                setDientes(data.dientes);
+                setVinculos(data.vinculos);
+            }
         });
     }, [patient?.id, clinicId]);
 
@@ -269,6 +273,7 @@ export default function ClinicHistory() {
                                         dientes={dientes}
                                         visibilidad={visibilidad}
                                         vista={vista}
+                                        vinculos={vinculos}
                                         piezasEnTramo={new Set(piezasEnTramo.keys())}
                                         enModoTramo={enModoTramo}
                                         piezaActiva={pickerContexto && pickerContexto.alcance !== 'MULTI' ? pickerContexto.pieza.clave : undefined}

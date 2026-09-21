@@ -39,6 +39,7 @@ import type {
   DientesPorClave,
   EstadoDiente,
   FacePosition,
+  Vinculo,
 } from './tipos'
 
 /**
@@ -113,6 +114,51 @@ const FILAS_POR_VISTA: Readonly<Record<VistaArcada, readonly (readonly ClavePiez
  */
 export function filasDelArco(vista: VistaArcada): readonly (readonly ClavePieza[])[] {
   return FILAS_POR_VISTA[vista]
+}
+
+/** Un vínculo ya resuelto para dibujar: sus piezas reales, en orden de render. */
+export interface VinculoEnFila {
+  readonly id: string
+  readonly vinculo: Vinculo
+  /** Ordenadas por `ordenVisual` — nunca por el orden de `Object.keys()` del `PiezasSet` ni por el orden en que se seleccionaron. */
+  readonly piezas: readonly Pieza[]
+}
+
+/**
+ * Los vínculos multi-pieza (prótesis) que caen enteros dentro de una fila del arco, con
+ * sus piezas ya resueltas.
+ *
+ * `setVinculo` (`validarTramo`) ya garantiza que todo vínculo válido tiene todas sus
+ * piezas en una misma fila, así que un vínculo sin ninguna pieza en la fila pedida es el
+ * caso normal —pertenece a otra fila— y se descarta en silencio. Un vínculo con **algunas**
+ * piezas en la fila y otras no es el caso que esa garantía dice que no puede pasar: si
+ * pasa, es dato corrupto (una escritura vieja, una migración a mano) y se descarta con
+ * `console.error`, mismo criterio que usa `getOdontograma` ante una pieza o un hallazgo
+ * inválido — no se rompe el render completo por un vínculo puntual.
+ */
+export function vinculosDeFila(
+  vinculos: Record<string, Vinculo>,
+  fila: readonly ClavePieza[]
+): readonly VinculoEnFila[] {
+  const clavesDeLaFila = new Set(fila)
+  const resultado: VinculoEnFila[] = []
+
+  for (const [id, vinculo] of Object.entries(vinculos)) {
+    const claves = Object.keys(vinculo.piezas) as ClavePieza[]
+    const enLaFila = claves.filter((clave) => clavesDeLaFila.has(clave))
+
+    if (enLaFila.length === 0) continue
+
+    if (enLaFila.length !== claves.length) {
+      console.error(`vinculosDeFila: vínculo "${id}" tiene piezas repartidas entre filas distintas, se descarta`, vinculo)
+      continue
+    }
+
+    const piezas = claves.map(piezaDeClave).sort((a, b) => a.ordenVisual - b.ordenVisual)
+    resultado.push({ id, vinculo, piezas })
+  }
+
+  return resultado
 }
 
 /**

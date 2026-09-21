@@ -42,3 +42,6 @@ next-env.d.ts
 
 #memory
 .md
+
+# graphify (local knowledge-graph cache, regenerable)
+graphify-out/
