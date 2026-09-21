@@ -2,7 +2,7 @@
 
 import { IoTimeOutline } from 'react-icons/io5';
 import { MdOutlineTimer } from 'react-icons/md';
-import { timeCalc } from '../appointmentUtils';
+import { timeCalc, getAppointmentTreatments, treatmentsLabel } from '../appointmentUtils';
 
 function formatCountdown(diffMins: number): string {
   if (diffMins < 60) return `${diffMins}min`;
@@ -76,8 +76,8 @@ export function RemainingAppointments({ appointments, isCurrentViewToday, time, 
                   <p className='text-sm font-semibold text-black truncate'>
                     {appt.patientData?.name} {appt.patientData?.lastName}
                   </p>
-                  {appt.reason && (
-                    <p className='text-xs text-gray-500 truncate'>{appt.reason?.name ?? appt.reason}</p>
+                  {getAppointmentTreatments(appt).length > 0 && (
+                    <p className='text-xs text-gray-500 whitespace-normal break-words'>{treatmentsLabel(getAppointmentTreatments(appt))}</p>
                   )}
                 </div>
                 {isOngoing && (

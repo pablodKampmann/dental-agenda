@@ -1,8 +1,10 @@
 'use client'
 
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { MdPhone, MdOutlineEmail, MdOutlinePermIdentity, MdOutlineNotes } from 'react-icons/md';
 import { AvatarFallback } from '../../shared/AvatarFallback';
-import { timeCalc, TIME_SLOTS } from '../appointmentUtils';
+import { timeCalc, TIME_SLOTS, getAppointmentTreatments, treatmentsLabel } from '../appointmentUtils';
 
 interface Props {
   appointments: any[] | null;
@@ -18,9 +20,86 @@ interface Props {
 const TIME_CELL = "w-14 whitespace-nowrap align-top text-center select-none cursor-default bg-gray-100 border-r border-gray-200 px-1 pt-2 text-xs font-semibold text-gray-400";
 const TIME_CELL_ACTIVE = "w-14 whitespace-nowrap align-top text-center select-none cursor-default bg-teal-50 border-r border-teal-200 px-1 pt-2 text-xs font-bold text-teal-700";
 
+const HINT_BASE = "absolute left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-600 rounded-full shadow-lg whitespace-nowrap transition-all duration-200 ease-out";
+
 export function AppointmentsTable({ appointments, appointmentDate, date, onRowClick, activeAppointmentKey }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [hiddenCount, setHiddenCount] = useState({ above: 0, below: 0 });
+
+  // Cuántos turnos quedaron fuera de la parte visible del scroll, arriba y abajo — alimenta
+  // los avisos flotantes. Mide contra el rect real del contenedor (cada turno marca su celda
+  // con `data-appt`); un turno parcialmente visible cuenta como visible.
+  const measure = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const container = el.getBoundingClientRect();
+    let above = 0;
+    let below = 0;
+    el.querySelectorAll<HTMLElement>('[data-appt]').forEach((node) => {
+      const r = node.getBoundingClientRect();
+      if (r.bottom <= container.top + 1) above++;
+      else if (r.top >= container.bottom - 1) below++;
+    });
+    setHiddenCount((prev) => (prev.above === above && prev.below === below ? prev : { above, below }));
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    measure();
+    el.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', measure);
+      observer.disconnect();
+    };
+  }, [measure, appointments]);
+
+  // Click en un aviso: lleva al turno oculto más cercano en esa dirección.
+  function scrollToHidden(direction: 'up' | 'down') {
+    const el = scrollRef.current;
+    if (!el) return;
+    const container = el.getBoundingClientRect();
+    const nodes = Array.from(el.querySelectorAll<HTMLElement>('[data-appt]'));
+    const target = direction === 'down'
+      ? nodes.find((n) => n.getBoundingClientRect().top >= container.bottom - 1)
+      : [...nodes].reverse().find((n) => n.getBoundingClientRect().bottom <= container.top + 1);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // El texto de cada aviso conserva el último conteo > 0 mientras se desvanece: al cambiar de
+  // día (o cargar) el conteo baja a 0 y, sin esto, el chip se vería decir "0 turnos" durante
+  // el fade-out en vez de irse con el texto que tenía.
+  const lastCount = useRef({ above: 0, below: 0 });
+  if (hiddenCount.above > 0) lastCount.current.above = hiddenCount.above;
+  if (hiddenCount.below > 0) lastCount.current.below = hiddenCount.below;
+
+  const hintLabel = (n: number, where: string) => `${n} ${n === 1 ? 'turno' : 'turnos'} ${where}`;
+
   return (
-    <div className='flex-1 min-h-0 overflow-y-auto'>
+    <div className='relative flex-1 min-h-0'>
+      <button
+        type='button'
+        onClick={() => scrollToHidden('up')}
+        tabIndex={hiddenCount.above > 0 ? 0 : -1}
+        aria-hidden={hiddenCount.above === 0}
+        className={`${HINT_BASE} top-3 ${hiddenCount.above > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+      >
+        <ArrowUp size={13} />
+        {hintLabel(lastCount.current.above, 'arriba')}
+      </button>
+      <button
+        type='button'
+        onClick={() => scrollToHidden('down')}
+        tabIndex={hiddenCount.below > 0 ? 0 : -1}
+        aria-hidden={hiddenCount.below === 0}
+        className={`${HINT_BASE} bottom-3 ${hiddenCount.below > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+      >
+        <ArrowDown size={13} />
+        {hintLabel(lastCount.current.below, 'abajo')}
+      </button>
+    <div ref={scrollRef} className='h-full overflow-y-auto'>
       <table className='w-full table-fixed'>
         <tbody className='text-black'>
           {TIME_SLOTS.map((time, index, array) => {
@@ -90,6 +169,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                 </td>
                 <td
                   rowSpan={rowSpan}
+                  data-appt={appointment ? '' : undefined}
                   style={{ minHeight: `${rowSpan * 60}px` }}
                   className={`
                     relative
@@ -137,9 +217,9 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
                                 </span>
                               )}
                             </div>
-                            {appointment.reason && (
-                              <p className='text-xs font-semibold text-teal-700 mt-0.5 truncate'>
-                                {appointment.reason?.name ?? appointment.reason}
+                            {getAppointmentTreatments(appointment).length > 0 && (
+                              <p className='text-xs font-semibold text-teal-700 mt-0.5 whitespace-normal break-words'>
+                                {treatmentsLabel(getAppointmentTreatments(appointment))}
                               </p>
                             )}
                           </div>
@@ -180,6 +260,7 @@ export function AppointmentsTable({ appointments, appointmentDate, date, onRowCl
           })}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

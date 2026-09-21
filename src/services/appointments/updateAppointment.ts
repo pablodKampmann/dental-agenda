@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebase";
 import { ref, set, get, remove, push } from "firebase/database";
-import type { dateData } from "@/components/appointments/appointmentUtils";
+import type { dateData, AppointmentTreatment } from "@/components/appointments/appointmentUtils";
 import { getUser } from "./../auth/getUser";
 import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
@@ -9,7 +9,7 @@ export async function updateAppointment(
     originalDate: string,
     patientId: number,
     dateData: dateData,
-    reason?: any,
+    treatments?: AppointmentTreatment[],
     observations?: string,
     professionalId?: string,
 ) {
@@ -47,7 +47,7 @@ export async function updateAppointment(
             ...(dateData.time4 ? { time4: dateData.time4 } : {}),
             ...(dateData.time5 ? { time5: dateData.time5 } : {}),
             ...(dateData.time6 ? { time6: dateData.time6 } : {}),
-            ...(reason ? { reason: reason } : {}),
+            ...(treatments?.length ? { treatments } : {}),
             ...(professionalId ? { professionalId } : {}),
             observations: observations,
         });

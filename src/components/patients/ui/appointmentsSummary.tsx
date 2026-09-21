@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getPatientAppointments } from '@/services/appointments/getPatientAppointments';
 import { ClipLoader } from 'react-spinners';
 import { BsCalendarCheck, BsCalendarX } from 'react-icons/bs';
+import { getAppointmentTreatments, treatmentsLabel } from '@/components/appointments/appointmentUtils';
 
 function parseApptDate(dateStr: string): Date {
     const [d, m, y] = dateStr.split('/');
@@ -52,9 +53,7 @@ export function AppointmentsSummary({ patientId }: AppointmentsSummaryProps) {
                                 {lastAppointment.dayComplete} · {lastAppointment.time}
                             </p>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                {typeof lastAppointment.reason === 'string'
-                                    ? lastAppointment.reason
-                                    : lastAppointment.reason?.name || 'Sin motivo registrado'}
+                                {treatmentsLabel(getAppointmentTreatments(lastAppointment)) || 'Sin tratamiento registrado'}
                             </p>
                         </>
                     ) : (
@@ -74,9 +73,7 @@ export function AppointmentsSummary({ patientId }: AppointmentsSummaryProps) {
                                 {nextAppointment.dayComplete} · {nextAppointment.time}
                             </p>
                             <p className="text-xs text-gray-500 mt-0.5">
-                                {typeof nextAppointment.reason === 'string'
-                                    ? nextAppointment.reason
-                                    : nextAppointment.reason?.name || 'Sin motivo registrado'}
+                                {treatmentsLabel(getAppointmentTreatments(nextAppointment)) || 'Sin tratamiento registrado'}
                             </p>
                         </>
                     ) : (
