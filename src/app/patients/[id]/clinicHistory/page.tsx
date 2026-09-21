@@ -14,6 +14,7 @@ import { OdontogramaGrid } from "@/components/patients/ui/odontogram/Odontograma
 import { Legend } from "@/components/patients/ui/odontogram/Legend";
 import { HallazgoPicker, type PickerContexto } from "@/components/patients/ui/odontogram/HallazgoPicker";
 import { HistorialTimeline, type EntradaHistorial } from "@/components/patients/ui/odontogram/HistorialTimeline";
+import { HistorialEventos } from "@/components/patients/ui/odontogram/HistorialEventos";
 import { getOdontograma } from "@/services/odontograma/getOdontograma";
 import { setHallazgoCara, setHallazgoDiente } from "@/services/odontograma/setHallazgo";
 import { removeHallazgo } from "@/services/odontograma/removeHallazgo";
@@ -449,6 +450,8 @@ export default function ClinicHistory() {
                             onEditarTexto={(id, texto) => setEntradas((prev) => prev.map((e) => e.id === id ? { ...e, texto } : e))}
                             onEliminar={(id) => setEntradas((prev) => prev.filter((e) => e.id !== id))}
                         />
+
+                        {clinicId && <HistorialEventos pacienteId={patient.id} clinicId={clinicId} />}
 
                         <HallazgoPicker
                             contexto={pickerContexto}
