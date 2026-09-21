@@ -1,10 +1,10 @@
 import { db } from "@/lib/firebase";
 import { ref, set, get, push } from "firebase/database";
-import type { dateData } from "@/components/appointments/appointmentUtils";
+import type { dateData, AppointmentTreatment } from "@/components/appointments/appointmentUtils";
 import { getUser } from "./../auth/getUser";
 import { invalidateSidebarCarousel } from "../navigation/sidebarCarouselEvents";
 
-export async function setAppointment(patientId: number, dateData: dateData, reason?: any, observations?: string, professionalId?: string) {
+export async function setAppointment(patientId: number, dateData: dateData, treatments?: AppointmentTreatment[], observations?: string, professionalId?: string) {
     try {
         if (!navigator.onLine) {
             throw new Error();
@@ -32,7 +32,7 @@ export async function setAppointment(patientId: number, dateData: dateData, reas
             ...(dateData.time4 ? { time4: dateData.time4 } : {}),
             ...(dateData.time5 ? { time5: dateData.time5 } : {}),
             ...(dateData.time6 ? { time6: dateData.time6 } : {}),
-            ...(reason ? { reason: reason } : {}),
+            ...(treatments?.length ? { treatments } : {}),
             ...(professionalId ? { professionalId } : {}),
             observations: observations
         });

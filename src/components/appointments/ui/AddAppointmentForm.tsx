@@ -6,11 +6,12 @@ import { GiClick } from 'react-icons/gi';
 import { TbUserSearch } from 'react-icons/tb';
 import { FaRegTrashCan, FaCheck } from 'react-icons/fa6';
 import { BsArrowLeftCircle } from 'react-icons/bs';
-import { getChapter } from '@/services/practices/getChapter';
+import type { Treatment } from '@/services/treatments/getTreatments';
 import { CustomSelect } from '@/components/shared/CustomSelect';
+import { TreatmentsPickerModal } from './TreatmentsPickerModal';
 import Tooltip from '@/components/shared/Tooltip';
-import { timeCalc, getAge, formatPrice } from '../appointmentUtils';
-import type { dateData } from '../appointmentUtils';
+import { timeCalc, getAge } from '../appointmentUtils';
+import type { dateData, AppointmentTreatment } from '../appointmentUtils';
 
 interface Props {
   appointmentDate: dateData | null;
@@ -27,11 +28,13 @@ interface Props {
   setSearchContent: (v: string) => void;
   Field: string;
   setField: (v: string) => void;
-  reason: any;
-  setReason: (v: any) => void;
+  /** Tratamientos agendados en el turno (snapshot) y el catálogo del que se eligen. */
+  treatments: AppointmentTreatment[];
+  setTreatments: (v: AppointmentTreatment[]) => void;
+  catalog: Treatment[];
   observations: string;
   setObservations: (v: string) => void;
-  onSetAppoint: (patientId: number, dateData: dateData, reason: any, observations?: string) => void;
+  onSetAppoint: (patientId: number, dateData: dateData, treatments: AppointmentTreatment[], observations?: string) => void;
   onOpenCreatePatient: () => void;
   clinicId: string | null;
   /** Nombre del profesional dueño de esta agenda — solo se pasa (y solo se muestra) cuando
@@ -47,12 +50,6 @@ interface Props {
   onDelete?: () => void;
 }
 
-const CHAPTERS = [
-  'CONSULTAS', 'OPERATORIA DENTAL', 'ENDODONCIA', 'PRÓTESIS',
-  'ODONTOLOGÍA PREVENTIVA', 'ORTODONCIA Y ORTOPEDIA FUNCIONAL',
-  'ODONTOPEDIATRÍA', 'PERIODONCIA', 'RADIOLOGÍA', 'CIRUGÍA',
-];
-
 const PANEL = "bg-gray-50 border border-gray-200 rounded-xl";
 const PANEL_HEAD = "flex justify-between items-center gap-2 px-3 py-1.5 border-b border-gray-200";
 const PANEL_LABEL = "text-xs font-bold tracking-widest text-gray-400 uppercase select-none";
@@ -65,7 +62,7 @@ export function AddAppointmentForm({
   appointmentHours, setAppointmentHours, freeSpaces,
   patient, setPatient,
   listPatients, isPickerListComplete, onLoadMorePatients, searchContent, setSearchContent, Field, setField,
-  reason, setReason,
+  treatments, setTreatments, catalog,
   observations, setObservations,
   onSetAppoint, onOpenCreatePatient,
   clinicId,
@@ -74,9 +71,7 @@ export function AddAppointmentForm({
   onDelete,
 }: Props) {
   const [step, setStep] = useState(editing ? 3 : 1);
-  const [chapterName, setChapterName] = useState('');
-  const [chapterData, setChapterData] = useState<any>(null);
-  const [loadingChapter, setLoadingChapter] = useState(false);
+  const [treatmentsModalOpen, setTreatmentsModalOpen] = useState(false);
   const patientListScrollRef = useRef<HTMLDivElement>(null);
   const onLoadMorePatientsRef = useRef(onLoadMorePatients);
   onLoadMorePatientsRef.current = onLoadMorePatients;
@@ -112,21 +107,7 @@ export function AddAppointmentForm({
     // efecto no se re-ejecuta al entrar y corre una sola vez con `ref.current` en null.
   }, [isPickerListComplete, listPatients, step]);
 
-  useEffect(() => {
-    if (!chapterName) return;
-    async function fetchChapter() {
-      setLoadingChapter(true);
-      const { data } = await getChapter(chapterName, clinicId ?? '');
-      if (data) {
-        const filtered = data
-          .filter((item: any) => !Object.values(item).every(v => v === undefined))
-          .sort((a: any, b: any) => parseInt(a.id) - parseInt(b.id));
-        setChapterData(filtered);
-      }
-      setLoadingChapter(false);
-    }
-    fetchChapter();
-  }, [chapterName]);
+  const treatmentsTotal = treatments.reduce((sum, t) => sum + t.price, 0);
 
   // Stepper: step completado si tiene dato
   function isStepComplete(s: number) {
@@ -402,55 +383,35 @@ export function AddAppointmentForm({
               )}
             </div>
 
-            {/* Motivo (opcional) */}
+            {/* Tratamientos (opcional, varios) — resumen; el picker vive en un modal */}
             <div className={`${PANEL} shrink-0 overflow-hidden`}>
               <div className={PANEL_HEAD}>
                 <span className={PANEL_LABEL}>
-                  Motivo <span className='font-normal normal-case tracking-normal'>(opcional)</span>
+                  Tratamientos <span className='font-normal normal-case tracking-normal'>(opcional)</span>
                 </span>
-                {reason && (
-                  <button onClick={() => setReason(null)}>
-                    <FaRegTrashCan size={14} className='text-gray-400 hover:text-red-600 transition duration-150' />
-                  </button>
-                )}
+                <button onClick={() => setTreatmentsModalOpen(true)} className={LINK_BTN}>
+                  {treatments.length > 0 ? 'Editar' : 'Agregar'}
+                </button>
               </div>
-              {reason ? (
-                <div className='px-3 py-2'>
-                  <p className='text-sm font-semibold text-black'>{reason.name}</p>
-                  <p className='text-xs text-gray-500'>${formatPrice(reason.price)}</p>
-                </div>
-              ) : (
-                <div className='px-3 py-2 flex flex-col gap-2'>
-                  <CustomSelect
-                    value={chapterName}
-                    onChange={(v) => { setChapterName(v); setChapterData(null); }}
-                    placeholder="— Seleccionar categoría —"
-                    options={CHAPTERS.map((c) => ({ value: c, label: c }))}
-                    size="sm"
-                    triggerClassName="bg-white"
-                  />
-                  {chapterName && (
-                    <div className='border border-gray-200 rounded-lg overflow-hidden max-h-36 overflow-y-auto bg-white'>
-                      {loadingChapter ? (
-                        <div className='flex justify-center py-4'><ClipLoader color='#0f766e' size={20} /></div>
-                      ) : chapterData && chapterData.length > 0 ? (
-                        chapterData.map((practice: any, i: number) => (
-                          <div
-                            key={i}
-                            onClick={() => setReason(practice)}
-                            className='flex justify-between items-center gap-2 px-3 py-1.5 text-xs text-black border-b border-gray-100 last:border-none hover:bg-gray-50 cursor-pointer transition duration-100'
-                          >
-                            <span className='truncate'>{practice.name}</span>
-                            <span className='font-semibold text-gray-500 shrink-0'>${formatPrice(practice.price)}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className='text-xs text-gray-400 p-3 text-center'>Sin prácticas en esta categoría</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <button
+                type='button'
+                onClick={() => setTreatmentsModalOpen(true)}
+                className='w-full text-left px-3 py-2 hover:bg-gray-100 transition duration-150'
+              >
+                {treatments.length > 0 ? (
+                  <>
+                    {treatments.slice(0, 3).map((t) => (
+                      <p key={t.id} className='text-sm font-semibold text-black truncate'>{t.name}</p>
+                    ))}
+                    {treatments.length > 3 && (
+                      <p className='text-xs text-gray-500'>y {treatments.length - 3} más</p>
+                    )}
+                    <p className='text-xs text-gray-500 mt-0.5'>Total ${treatmentsTotal.toLocaleString('es-AR')}</p>
+                  </>
+                ) : (
+                  <p className='text-xs text-gray-400'>Sin tratamientos — tocá para agregar</p>
+                )}
+              </button>
             </div>
 
             {/* Observaciones */}
@@ -472,7 +433,7 @@ export function AddAppointmentForm({
             <button
               onClick={() => {
                 if (!patient || !appointmentDate) return;
-                onSetAppoint(patient.id, appointmentDate, reason, observations);
+                onSetAppoint(patient.id, appointmentDate, treatments, observations);
               }}
               disabled={!patient || !appointmentDate}
               className={`shrink-0 w-full py-2.5 text-sm font-semibold rounded-lg transition duration-150
@@ -496,6 +457,14 @@ export function AddAppointmentForm({
           </div>
         )}
       </div>
+
+      <TreatmentsPickerModal
+        open={treatmentsModalOpen}
+        onClose={() => setTreatmentsModalOpen(false)}
+        catalog={catalog}
+        value={treatments}
+        onConfirm={setTreatments}
+      />
     </div>
   );
 }

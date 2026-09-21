@@ -39,3 +39,30 @@ export function getAge(date: string): number {
 export function formatPrice(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+
+/** Tratamiento agendado en un turno: snapshot del catálogo al momento de agendar (el `id`
+ *  es el del tratamiento en `treatments/`, el resto se copia para que un cambio de precio o
+ *  un borrado posterior no altere lo que valía ese turno). `codigo` no es único. */
+export interface AppointmentTreatment {
+  id: string;
+  name: string;
+  price: number;
+  codigo?: string;
+}
+
+/** Tratamientos de un turno. Los turnos anteriores al catálogo nuevo guardaban un único
+ *  `reason` (objeto del catálogo de aranceles viejo, o un string) — se lee como un
+ *  tratamiento más para no perder el dato ya cargado; los turnos nuevos solo escriben
+ *  `treatments`. */
+export function getAppointmentTreatments(appointment: any): AppointmentTreatment[] {
+  if (Array.isArray(appointment?.treatments)) return appointment.treatments;
+  const reason = appointment?.reason;
+  if (!reason) return [];
+  if (typeof reason === 'string') return [{ id: '', name: reason, price: 0 }];
+  return reason.name ? [{ id: '', name: reason.name, price: reason.price ?? 0 }] : [];
+}
+
+/** Todos los nombres, separados por coma: "Consulta, Composite Simple". */
+export function treatmentsLabel(treatments: AppointmentTreatment[]): string {
+  return treatments.map((t) => t.name).join(', ');
+}

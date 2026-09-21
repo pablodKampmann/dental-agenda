@@ -11,6 +11,8 @@ import { updateAppointment } from "./../../services/appointments/updateAppointme
 import { getAppointments } from "./../../services/appointments/getAppointments";
 import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull";
 import { getClinicData } from "@/services/config/getClinicData";
+import { getTreatments, type Treatment } from "@/services/treatments/getTreatments";
+import { getAppointmentTreatments, type AppointmentTreatment } from "@/components/appointments/appointmentUtils";
 import { normalizeForSearch } from "@/lib/utils";
 import { ClipLoader } from "react-spinners";
 import { Loading } from "./../../components/shared/loading";
@@ -112,7 +114,8 @@ export default function Page() {
   const [appointmentSelect, setAppointmentSelect] = useState<any>(null);
   const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [patient, setPatient] = useState<any>(null);
-  const [reason, setReason] = useState<any>(null);
+  const [treatments, setTreatments] = useState<AppointmentTreatment[]>([]);
+  const [treatmentsCatalog, setTreatmentsCatalog] = useState<Treatment[]>([]);
   const [observations, setObservations] = useState<any>("");
   const [today, setToday] = useState(new Date());
   const [date, setDate] = useState<any>(null);
@@ -154,6 +157,9 @@ export default function Page() {
       setPros(Array.isArray(result) ? result : []);
     }
     fetchPros();
+    // Catálogo de tratamientos para el picker del turno: un solo fetch al montar, mismo
+    // criterio que `pros` (no es realtime).
+    getTreatments(clinicId).then((data) => setTreatmentsCatalog(data?.treatments ?? []));
   }, [clinicId]);
 
   // Selector oculto y sin filtrado con 0 o 1 profesional — cero cambio de comportamiento
@@ -420,7 +426,7 @@ export default function Page() {
     setShowForm(false);
     setAppointmentDate(null);
     setPatient(null);
-    setReason(null);
+    setTreatments([]);
     setObservations("");
     setFreeSpaces(null);
     setSearchContent("");
@@ -442,7 +448,7 @@ export default function Page() {
               : 1;
     skipResetHours.current = true;
     setPatient(appointmentSelect.patientData);
-    setReason(appointmentSelect.reason ?? null);
+    setTreatments(getAppointmentTreatments(appointmentSelect));
     setObservations(appointmentSelect.observations ?? "");
     setAppointmentHours(hours);
     setAppointmentDate({
@@ -571,7 +577,7 @@ export default function Page() {
   async function handleSetAppoint(
     patientId: number,
     dateData: any,
-    reason: any,
+    treatments: AppointmentTreatment[],
     observations?: string,
   ) {
     setIsLoadAppoints(true);
@@ -587,14 +593,14 @@ export default function Page() {
           editing.date,
           patientId,
           dateData,
-          reason,
+          treatments,
           observations,
           professionalId,
         )
       : await setAppointment(
           patientId,
           dateData,
-          reason,
+          treatments,
           observations,
           professionalId,
         );
@@ -741,11 +747,15 @@ export default function Page() {
               <h1 className="text-2xl font-bold text-black tracking-tight">
                 Agenda
               </h1>
-              <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 whitespace-nowrap">
-                {appointmentsCount === 0
-                  ? "Sin turnos"
-                  : `${appointmentsCount} ${appointmentsCount === 1 ? "turno" : "turnos"}`}
-              </span>
+              {/* Mientras se carga el día no se muestra: con `appointments` todavía vacío el
+                  contador diría "Sin turnos" aunque el día tenga. */}
+              {!isLoadAppoints && (
+                <span className="text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 whitespace-nowrap animate-fade-in">
+                  {appointmentsCount === 0
+                    ? "Sin turnos"
+                    : `${appointmentsCount} ${appointmentsCount === 1 ? "turno" : "turnos"}`}
+                </span>
+              )}
             </div>
             <button
               onClick={() => {
@@ -888,8 +898,9 @@ export default function Page() {
                   setSearchContent={setSearchContent}
                   Field={Field}
                   setField={setField}
-                  reason={reason}
-                  setReason={setReason}
+                  treatments={treatments}
+                  setTreatments={setTreatments}
+                  catalog={treatmentsCatalog}
                   observations={observations}
                   setObservations={setObservations}
                   onSetAppoint={handleSetAppoint}
