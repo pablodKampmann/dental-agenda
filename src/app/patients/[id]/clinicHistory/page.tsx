@@ -2,7 +2,7 @@
 
 import { getPatient } from "@/services/patients/getPatient";
 import { getUser } from "@/services/auth/getUser";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from 'next/navigation'
@@ -15,12 +15,16 @@ import { Legend } from "@/components/patients/ui/odontogram/Legend";
 import { HallazgoPicker, type PickerContexto } from "@/components/patients/ui/odontogram/HallazgoPicker";
 import { HistorialTimeline, type EntradaHistorial } from "@/components/patients/ui/odontogram/HistorialTimeline";
 import { getOdontograma } from "@/services/odontograma/getOdontograma";
+import { setHallazgoCara, setHallazgoDiente } from "@/services/odontograma/setHallazgo";
+import { removeHallazgo } from "@/services/odontograma/removeHallazgo";
+import { setVinculo, validarTramo } from "@/services/odontograma/setVinculo";
+import { removeVinculo } from "@/services/odontograma/removeVinculo";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, CodigoHallazgo, CodigoHallazgoMulti, DientesPorClave, FacePosition, PiezasSet, Vinculo } from "@/lib/odontograma/tipos";
+import type { Capa, Cara, CodigoHallazgo, CodigoHallazgoCara, CodigoHallazgoDiente, CodigoHallazgoMulti, DientesPorClave, FacePosition, PiezasSet, Vinculo } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
-import { validarTramo } from "@/services/odontograma/setVinculo";
+import { useToast } from "@/context/ToastContext";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -35,6 +39,15 @@ function vistaSugeridaPorEdad(birthDate: string | undefined): VistaArcada {
     const mDiff = hoy.getMonth() - nacimiento.getMonth();
     if (mDiff < 0 || (mDiff === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
     return edad >= 6 && edad < 13 ? 'MIXTA' : 'PERMANENTE';
+}
+
+/**
+ * `null` es fallo técnico (offline, error de Firebase) — nunca se reporta como "sin
+ * conexión" porque el service no distingue la causa (ver signIn.ts:37, el bug que no
+ * hay que repetir acá). `{ ok: false }` es un rechazo de negocio con mensaje mostrable.
+ */
+function mensajeFallo(resultado: { ok: false; error: string } | null, verbo: string): string {
+    return resultado === null ? `No se pudo ${verbo}, intentá de nuevo.` : resultado.error;
 }
 
 export default function ClinicHistory() {
@@ -58,6 +71,10 @@ export default function ClinicHistory() {
     const [pickerContexto, setPickerContexto] = useState<PickerContexto | null>(null);
     /** El contexto del que se vino al entrar por "Hallazgos de pieza completa", para poder volver. */
     const [pickerAnterior, setPickerAnterior] = useState<PickerContexto | null>(null);
+
+    const { showToast } = useToast();
+    /** tempIds `local-...` que el usuario borró mientras su alta seguía en vuelo — ver handleQuitarVinculo. */
+    const bajasVinculoPendientesRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -130,6 +147,32 @@ export default function ClinicHistory() {
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [enModoTramo]);
 
+    /**
+     * Escribe (o borra, con `valor: null`) una hoja `caras/{cara}/{capa}` en el estado
+     * local. Reusada tanto para aplicar el update optimista como para revertirlo —
+     * revertir es solo volver a llamar con el valor que había antes (`de`).
+     */
+    function aplicarCaraLocal(clave: ClavePieza, cara: Cara, capa: Capa, valor: CodigoHallazgoCara | null) {
+        setDientes((prev) => {
+            const estado = prev[clave] ?? {};
+            const carasPrevias = { ...estado.caras?.[cara] };
+            if (valor === null) delete carasPrevias[capa];
+            else carasPrevias[capa] = valor;
+            return { ...prev, [clave]: { ...estado, caras: { ...estado.caras, [cara]: carasPrevias } } };
+        });
+    }
+
+    /** Misma idea que `aplicarCaraLocal`, para la hoja `diente/{capa}`. */
+    function aplicarDienteLocal(clave: ClavePieza, capa: Capa, valor: CodigoHallazgoDiente | null) {
+        setDientes((prev) => {
+            const estado = prev[clave] ?? {};
+            const dientePrevio = { ...estado.diente };
+            if (valor === null) delete dientePrevio[capa];
+            else dientePrevio[capa] = valor;
+            return { ...prev, [clave]: { ...estado, diente: dientePrevio } };
+        });
+    }
+
     function hallazgoActualDe(contexto: PickerContexto): Partial<Record<Capa, CodigoHallazgo>> {
         if (contexto.alcance === 'MULTI') return {};
         const estado = dientes[contexto.pieza.clave];
@@ -152,84 +195,152 @@ export default function ClinicHistory() {
         ]);
     }
 
-    function handleGuardarHallazgo(codigo: CodigoHallazgo, capa: Capa, nota: string) {
-        if (!pickerContexto) return;
+    async function handleGuardarHallazgo(codigo: CodigoHallazgo, capa: Capa, nota: string) {
+        if (!pickerContexto || !clinicId || !patient?.id) return;
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+        const pacienteId = patient.id;
 
         if (pickerContexto.alcance === 'CARA') {
             const { pieza, posicion } = pickerContexto;
             const cara = caraSemantica(posicion, pieza.cuadrante);
-            setDientes((prev) => {
-                const estado = prev[pieza.clave] ?? {};
-                return {
-                    ...prev,
-                    [pieza.clave]: {
-                        ...estado,
-                        caras: { ...estado.caras, [cara]: { ...estado.caras?.[cara], [capa]: codigo } },
-                    },
-                };
-            });
+            const codigoCara = codigo as CodigoHallazgoCara;
+            const de = dientes[pieza.clave]?.caras?.[cara]?.[capa] ?? null;
+
+            aplicarCaraLocal(pieza.clave, cara, capa, codigoCara);
             registrarEntrada(etiquetaCara(cara, pieza.arcada, pieza.tipo), hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
+            setPickerContexto(null);
+            setPickerAnterior(null);
+
+            const resultado = await setHallazgoCara({ clinicId, pacienteId, pieza: pieza.clave, cara, capa, codigo: codigoCara, de, uid });
+            if (resultado === null || !resultado.ok) {
+                aplicarCaraLocal(pieza.clave, cara, capa, de);
+                showToast('error', mensajeFallo(resultado, 'guardar'));
+            }
         } else if (pickerContexto.alcance === 'DIENTE') {
             const { pieza } = pickerContexto;
-            setDientes((prev) => {
-                const estado = prev[pieza.clave] ?? {};
-                return {
-                    ...prev,
-                    [pieza.clave]: { ...estado, diente: { ...estado.diente, [capa]: codigo } },
-                };
-            });
+            const codigoDiente = codigo as CodigoHallazgoDiente;
+            const de = dientes[pieza.clave]?.diente?.[capa] ?? null;
+
+            aplicarDienteLocal(pieza.clave, capa, codigoDiente);
             registrarEntrada('pieza completa', hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
+            setPickerContexto(null);
+            setPickerAnterior(null);
+
+            const resultado = await setHallazgoDiente({ clinicId, pacienteId, pieza: pieza.clave, capa, codigo: codigoDiente, de, uid });
+            if (resultado === null || !resultado.ok) {
+                aplicarDienteLocal(pieza.clave, capa, de);
+                showToast('error', mensajeFallo(resultado, 'guardar'));
+            }
         } else {
             const piezas = pickerContexto.piezas;
             const codigos = piezas.map((p) => p.codigo).join('-');
             const piezasSet: PiezasSet = {};
             piezas.forEach((p) => { piezasSet[p.clave] = true; });
-            setVinculos((prev) => ({
-                ...prev,
-                [`local-${Date.now()}`]: { tipo: codigo as CodigoHallazgoMulti, capa, piezas: piezasSet },
-            }));
+            const tipo = codigo as CodigoHallazgoMulti;
+            const tempId = `local-${Date.now()}`;
+
+            setVinculos((prev) => ({ ...prev, [tempId]: { tipo, capa, piezas: piezasSet } }));
             registrarEntrada(`tramo ${codigos}`, hallazgoDe(codigo).nombre, piezas[0].codigo, capa, nota);
             setPiezasEnTramo(new Map());
             setEnModoTramo(false);
-        }
+            setPickerContexto(null);
+            setPickerAnterior(null);
 
-        setPickerContexto(null);
-        setPickerAnterior(null);
+            const resultado = await setVinculo({ clinicId, pacienteId, tipo, capa, piezas: piezas.map((p) => p.clave), uid });
+            if (resultado === null || !resultado.ok) {
+                setVinculos((prev) => {
+                    const { [tempId]: _quitado, ...resto } = prev;
+                    return resto;
+                });
+                showToast('error', mensajeFallo(resultado, 'guardar'));
+            } else {
+                const bajaPendiente = bajasVinculoPendientesRef.current.delete(tempId);
+                setVinculos((prev) => {
+                    // Si ya se borró en el intervalo (click rápido en el span antes del ack), no resucitarlo.
+                    if (!(tempId in prev)) return prev;
+                    const { [tempId]: vinculo, ...resto } = prev;
+                    return { ...resto, [resultado.vinculoId]: vinculo };
+                });
+                if (bajaPendiente) {
+                    // El borrado pedido mientras el alta seguía en vuelo no tuvo id real para limpiar en Firebase — ahora sí.
+                    const resultadoBaja = await removeVinculo({ clinicId, pacienteId, vinculoId: resultado.vinculoId, tipo, capa, piezas: piezasSet, uid });
+                    if (resultadoBaja === null || !resultadoBaja.ok) {
+                        showToast('error', mensajeFallo(resultadoBaja, 'borrar'));
+                    }
+                }
+            }
+        }
     }
 
-    function handleQuitarHallazgo(capa: Capa) {
-        if (!pickerContexto || pickerContexto.alcance === 'MULTI') return;
+    async function handleQuitarHallazgo(capa: Capa) {
+        if (!pickerContexto || pickerContexto.alcance === 'MULTI' || !clinicId || !patient?.id) return;
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+        const pacienteId = patient.id;
 
         if (pickerContexto.alcance === 'CARA') {
             const { pieza, posicion } = pickerContexto;
             const cara = caraSemantica(posicion, pieza.cuadrante);
-            setDientes((prev) => {
-                const estado = prev[pieza.clave];
-                if (!estado?.caras?.[cara]) return prev;
-                const { [capa]: _quitado, ...resto } = estado.caras[cara]!;
-                return {
-                    ...prev,
-                    [pieza.clave]: { ...estado, caras: { ...estado.caras, [cara]: resto } },
-                };
-            });
+            const de = dientes[pieza.clave]?.caras?.[cara]?.[capa];
+            if (!de) return;
+
+            aplicarCaraLocal(pieza.clave, cara, capa, null);
+            setPickerContexto(null);
+            setPickerAnterior(null);
+
+            const resultado = await removeHallazgo({ alcance: 'CARA', clinicId, pacienteId, pieza: pieza.clave, cara, capa, de, uid });
+            if (resultado === null || !resultado.ok) {
+                aplicarCaraLocal(pieza.clave, cara, capa, de);
+                showToast('error', mensajeFallo(resultado, 'borrar'));
+            }
         } else {
             const { pieza } = pickerContexto;
-            setDientes((prev) => {
-                const estado = prev[pieza.clave];
-                if (!estado?.diente) return prev;
-                const { [capa]: _quitado, ...resto } = estado.diente;
-                return { ...prev, [pieza.clave]: { ...estado, diente: resto } };
-            });
+            const de = dientes[pieza.clave]?.diente?.[capa];
+            if (!de) return;
+
+            aplicarDienteLocal(pieza.clave, capa, null);
+            setPickerContexto(null);
+            setPickerAnterior(null);
+
+            const resultado = await removeHallazgo({ alcance: 'DIENTE', clinicId, pacienteId, pieza: pieza.clave, capa, de, uid });
+            if (resultado === null || !resultado.ok) {
+                aplicarDienteLocal(pieza.clave, capa, de);
+                showToast('error', mensajeFallo(resultado, 'borrar'));
+            }
         }
-        setPickerContexto(null);
-        setPickerAnterior(null);
     }
 
-    /** Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". */
+    /**
+     * Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". Si el vínculo
+     * todavía tiene su id temporal (`local-...`, el alta original sigue en vuelo) no hay
+     * nada persistido para borrar todavía acá — se anota en `bajasVinculoPendientesRef` y
+     * el handler de éxito de `setVinculo` en `handleGuardarHallazgo` es quien, al resolver
+     * el id real, lo borra de Firebase (si no, quedaría huérfano en `actual/vinculos/`).
+     */
     function handleQuitarVinculo(vinculoId: string) {
+        const vinculo = vinculos[vinculoId];
+        if (!vinculo) return;
+
         setVinculos((prev) => {
             const { [vinculoId]: _quitado, ...resto } = prev;
             return resto;
+        });
+
+        if (vinculoId.startsWith('local-')) {
+            bajasVinculoPendientesRef.current.add(vinculoId);
+            return;
+        }
+        if (!clinicId || !patient?.id) return;
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+        const pacienteId = patient.id;
+
+        removeVinculo({ clinicId, pacienteId, vinculoId, tipo: vinculo.tipo, capa: vinculo.capa, piezas: vinculo.piezas, uid }).then((resultado) => {
+            if (resultado === null || !resultado.ok) {
+                setVinculos((prev) => ({ ...prev, [vinculoId]: vinculo }));
+                showToast('error', mensajeFallo(resultado, 'borrar'));
+            }
         });
     }
 
