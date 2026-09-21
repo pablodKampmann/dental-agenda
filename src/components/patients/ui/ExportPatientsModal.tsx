@@ -11,9 +11,11 @@ interface Props {
     onConfirm: () => void;
     totalCount: number;
     filterDescription: string | null;
+    /** Qué se exporta — por default pacientes; /treatments lo reusa con su propio nombre. */
+    noun?: { singular: string; plural: string };
 }
 
-export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filterDescription }: Props) {
+export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filterDescription, noun = { singular: "paciente", plural: "pacientes" } }: Props) {
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -55,7 +57,7 @@ export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filt
                             <FileSpreadsheet size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h2 className="text-base font-bold text-black tracking-tight">Exportar pacientes</h2>
+                            <h2 className="text-base font-bold text-black tracking-tight">Exportar {noun.plural}</h2>
                             <p className="text-xs text-gray-400">Formato Excel (.xlsx)</p>
                         </div>
                         <button
@@ -70,7 +72,7 @@ export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filt
                     <div className="px-4 py-4 text-sm text-gray-600 space-y-2">
                         <p>
                             Se van a exportar <span className="font-semibold text-black">{totalCount}</span>{" "}
-                            {totalCount === 1 ? "paciente" : "pacientes"}.
+                            {totalCount === 1 ? noun.singular : noun.plural}.
                         </p>
                         {filterDescription ? (
                             <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
@@ -78,7 +80,7 @@ export function ExportPatientsModal({ open, onClose, onConfirm, totalCount, filt
                             </p>
                         ) : (
                             <p className="text-xs text-gray-400">
-                                No hay filtros activos: se exporta el total de pacientes de la clínica.
+                                No hay filtros activos: se exporta el total de {noun.plural} de la clínica.
                             </p>
                         )}
                     </div>

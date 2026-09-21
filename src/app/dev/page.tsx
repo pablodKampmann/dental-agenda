@@ -4,6 +4,7 @@ import { runSeedPatients, SEED_PATIENTS, SEED_PATIENTS_EXTRA, SEED_PATIENT_PEDIA
 import { runMigrateAddTimestamps } from "../../dev/migrateAddTimestamps";
 import { runSeedOdontograma, runSeedOdontogramaPediatrico } from "../../dev/seedOdontograma";
 import { runClearAllPatients, type ClearPatientsResult } from "../../dev/clearPatients";
+import { runClearAllTreatments } from "../../dev/clearTreatments";
 
 export default function DevPage() {
     const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
@@ -25,6 +26,10 @@ export default function DevPage() {
     const [clearStatus, setClearStatus] = useState<"idle" | "running" | "done">("idle");
     const [clearResult, setClearResult] = useState<ClearPatientsResult | null>(null);
     const [clearError, setClearError] = useState<string | null>(null);
+    const [clearTreatConfirmText, setClearTreatConfirmText] = useState("");
+    const [clearTreatStatus, setClearTreatStatus] = useState<"idle" | "running" | "done">("idle");
+    const [clearTreatResult, setClearTreatResult] = useState<number | null>(null);
+    const [clearTreatError, setClearTreatError] = useState<string | null>(null);
 
     async function handleMigrate() {
         if (!window.confirm("¿Ejecutar la migración de timestamps sobre los pacientes de esta clínica?")) return;
@@ -109,6 +114,21 @@ export default function DevPage() {
             setClearError(e.message ?? "Error desconocido");
         }
         setClearStatus("done");
+    }
+
+    async function handleClearAllTreatments() {
+        if (!window.confirm("Esto borra TODOS los tratamientos del catálogo de esta clínica (las áreas no se tocan). Es irreversible. ¿Confirmás?")) return;
+        setClearTreatStatus("running");
+        setClearTreatResult(null);
+        setClearTreatError(null);
+        try {
+            const res = await runClearAllTreatments();
+            setClearTreatResult(res.treatments);
+            setClearTreatConfirmText("");
+        } catch (e: any) {
+            setClearTreatError(e.message ?? "Error desconocido");
+        }
+        setClearTreatStatus("done");
     }
 
     return (
@@ -396,6 +416,45 @@ export default function DevPage() {
                                     <p className="font-semibold text-red-700">
                                         ✓ {clearResult.patients} pacientes, {clearResult.appointments} turnos y {clearResult.odontogramas} odontogramas eliminados
                                     </p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* --- Peligroso: borrar TODOS los tratamientos --- */}
+                    <section className="border-2 border-red-300 rounded-xl overflow-hidden bg-white flex flex-col lg:col-span-2">
+                        <div className="px-4 py-3 border-b-2 border-red-600">
+                            <h2 className="text-lg font-bold text-red-700">⚠ Borrar todos los tratamientos</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                Elimina TODOS los tratamientos del catálogo de esta clínica (las áreas no se tocan).
+                                Irreversible — no hay papelera en Realtime Database. Escribí <b>BORRAR</b> para habilitar el botón.
+                            </p>
+                        </div>
+                        <div className="p-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                <input
+                                    type="text"
+                                    value={clearTreatConfirmText}
+                                    onChange={(e) => setClearTreatConfirmText(e.target.value)}
+                                    placeholder="Escribí BORRAR para confirmar"
+                                    className="h-11 flex-1 px-3 border-2 border-red-300 rounded-xl text-sm text-black focus:outline-red-600"
+                                />
+                                <button
+                                    onClick={handleClearAllTreatments}
+                                    disabled={clearTreatConfirmText !== "BORRAR" || clearTreatStatus === "running"}
+                                    className="shrink-0 px-6 py-3 bg-red-700 text-white font-semibold rounded-xl hover:bg-red-600 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {clearTreatStatus === "running" ? "Borrando..." : "Borrar todos los tratamientos"}
+                                </button>
+                            </div>
+                            {clearTreatError && (
+                                <div className="mt-4 border-2 border-red-300 bg-red-50 rounded-xl px-4 py-3 text-sm text-red-700">
+                                    {clearTreatError}
+                                </div>
+                            )}
+                            {clearTreatResult !== null && (
+                                <div className="mt-4 border-2 border-gray-200 rounded-xl px-4 py-3 text-sm">
+                                    <p className="font-semibold text-red-700">✓ {clearTreatResult} tratamientos eliminados</p>
                                 </div>
                             )}
                         </div>

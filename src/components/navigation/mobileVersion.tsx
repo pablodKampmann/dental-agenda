@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
-import { FaUsers, FaTooth, FaDollarSign } from "react-icons/fa";
+import { FaUsers, FaTooth } from "react-icons/fa";
 import { IoLogOutSharp, IoSettingsOutline } from "react-icons/io5";
 import {
   IoMdArrowDropdown,
   IoMdArrowDropup,
   IoLogoWhatsapp,
 } from "react-icons/io";
-import { MdNotificationsNone } from "react-icons/md";
+import { MdNotificationsNone, MdMedicalServices } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
 import { useOutsideClick } from "../../hooks/useOutsideClick"; // Ruta correcta a tu hook personalizado
@@ -147,13 +147,13 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
             </Link>
             <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
             <Link
-              href="/tariffs"
+              href="/treatments"
               prefetch={true}
               onClick={handleLink}
-              className={`${pathname === "/tariffs" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
+              className={`${pathname === "/treatments" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
             >
-              <FaDollarSign size={26} />
-              <p className="flex-1 ml-3 select-none">Aranceles</p>
+              <MdMedicalServices size={26} />
+              <p className="flex-1 ml-3 select-none">Tratamientos</p>
             </Link>
             <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
             <Link
