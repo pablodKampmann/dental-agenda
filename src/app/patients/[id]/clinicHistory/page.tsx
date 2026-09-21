@@ -18,7 +18,7 @@ import { getOdontograma } from "@/services/odontograma/getOdontograma";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, CodigoHallazgo, DientesPorClave, FacePosition, Vinculo } from "@/lib/odontograma/tipos";
+import type { Capa, CodigoHallazgo, CodigoHallazgoMulti, DientesPorClave, FacePosition, PiezasSet, Vinculo } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
 import { validarTramo } from "@/services/odontograma/setVinculo";
 import { FaLayerGroup } from "react-icons/fa6";
@@ -182,6 +182,12 @@ export default function ClinicHistory() {
         } else {
             const piezas = pickerContexto.piezas;
             const codigos = piezas.map((p) => p.codigo).join('-');
+            const piezasSet: PiezasSet = {};
+            piezas.forEach((p) => { piezasSet[p.clave] = true; });
+            setVinculos((prev) => ({
+                ...prev,
+                [`local-${Date.now()}`]: { tipo: codigo as CodigoHallazgoMulti, capa, piezas: piezasSet },
+            }));
             registrarEntrada(`tramo ${codigos}`, hallazgoDe(codigo).nombre, piezas[0].codigo, capa, nota);
             setPiezasEnTramo(new Map());
             setEnModoTramo(false);
@@ -217,6 +223,14 @@ export default function ClinicHistory() {
         }
         setPickerContexto(null);
         setPickerAnterior(null);
+    }
+
+    /** Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". */
+    function handleQuitarVinculo(vinculoId: string) {
+        setVinculos((prev) => {
+            const { [vinculoId]: _quitado, ...resto } = prev;
+            return resto;
+        });
     }
 
     if (id !== null) {
@@ -280,6 +294,7 @@ export default function ClinicHistory() {
                                         onSelectCara={(pieza, posicion, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'CARA', pieza, posicion, anchor }) }}
                                         onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
                                         onToggleEnTramo={toggleEnTramo}
+                                        onQuitarVinculo={handleQuitarVinculo}
                                     />
                                 </div>
                                 <div className="w-full md:w-[15%] shrink-0">

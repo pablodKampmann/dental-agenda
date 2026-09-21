@@ -20,6 +20,8 @@ interface OdontogramaGridProps {
   onSelectCara: (pieza: Pieza, posicion: FacePosition, anchor: DOMRect) => void
   onSelectDiente: (pieza: Pieza, anchor: DOMRect) => void
   onToggleEnTramo: (pieza: Pieza) => void
+  /** Sin diálogo de confirmación — clickear el propio grafismo del vínculo lo borra. */
+  onQuitarVinculo: (id: string) => void
 }
 
 const COLUMNAS = 16
@@ -54,6 +56,7 @@ export function OdontogramaGrid({
   onSelectCara,
   onSelectDiente,
   onToggleEnTramo,
+  onQuitarVinculo,
 }: OdontogramaGridProps) {
   const filas = filasDelArco(vista)
   const divisorTrasFila = Math.floor(filas.length / 2) - 1
@@ -85,7 +88,7 @@ export function OdontogramaGrid({
     items.length > 0 && (
       <div className="flex flex-col gap-1">
         {items.map(({ id, vinculo, piezas }) => (
-          <VinculoSpan key={id} piezas={piezas} tipo={vinculo.tipo} capa={vinculo.capa} />
+          <VinculoSpan key={id} piezas={piezas} tipo={vinculo.tipo} capa={vinculo.capa} onClick={() => onQuitarVinculo(id)} />
         ))}
       </div>
     )

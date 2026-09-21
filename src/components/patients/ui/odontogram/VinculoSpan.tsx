@@ -10,6 +10,8 @@ interface VinculoSpanProps {
   piezas: readonly Pieza[]
   tipo: CodigoHallazgoMulti
   capa: Capa
+  /** Clickear el propio grafismo borra el vínculo. Sin diálogo de confirmación. */
+  onClick: () => void
 }
 
 const COLUMNAS = 16
@@ -21,18 +23,23 @@ const COLUMNAS = 16
  * mismo `gap` producen los mismos bordes de columna, así que la barra queda alineada con
  * los dientes reales sin medir un solo píxel.
  */
-export function VinculoSpan({ piezas, tipo, capa }: VinculoSpanProps) {
+export function VinculoSpan({ piezas, tipo, capa, onClick }: VinculoSpanProps) {
   const primera = piezas[0]
   const ultima = piezas[piezas.length - 1]
   const color = colorDe(capa)
   const esFija = tipo === 'protesis_fija'
   const abrev = hallazgoDe(tipo).abrev
+  const nombre = hallazgoDe(tipo).nombre
 
   return (
     <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${COLUMNAS}, minmax(0, 1fr))` }}>
-      <div
+      <button
+        type="button"
+        onClick={onClick}
+        title={`Quitar ${nombre.toLowerCase()}`}
+        aria-label={`Quitar ${nombre.toLowerCase()} de las piezas ${primera.codigo} a ${ultima.codigo}`}
         style={{ gridColumnStart: primera.columna, gridColumnEnd: ultima.columna + 1 }}
-        className="flex flex-col items-center gap-0.5"
+        className="flex flex-col items-center gap-0.5 cursor-pointer hover:opacity-60 transition-opacity"
       >
         <span className={`text-[9px] font-bold leading-none ${color.texto}`}>{abrev}</span>
         <span
@@ -42,7 +49,7 @@ export function VinculoSpan({ piezas, tipo, capa }: VinculoSpanProps) {
               : `h-1.5 w-full rounded-full border-2 border-dashed bg-white ${color.borde}`
           }
         />
-      </div>
+      </button>
     </div>
   )
 }
