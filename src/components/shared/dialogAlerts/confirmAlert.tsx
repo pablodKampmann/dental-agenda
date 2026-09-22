@@ -37,14 +37,14 @@ export function ConfirmAlert({
 
   return (
     <>
-      {/* Overlay: cubre solo el contenido, no el sidebar ni el topnav */}
+      {/* Overlay: pantalla completa, por encima de topbar (z-50) y sidebar (z-40) */}
       <div
-        className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/50 animate-fade-in"
+        className="fixed inset-0 z-[60] backdrop-blur-sm bg-black/50 animate-fade-in"
         onClick={() => { if (!loading) setOpen(false); }}
       />
 
       {/* Dialog */}
-      <div className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
         <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-xl text-black animate-fade-in pointer-events-auto">
           <div className="px-4 py-3 border-b border-gray-200">
             <h2 className="text-base font-bold tracking-tight">{title}</h2>
