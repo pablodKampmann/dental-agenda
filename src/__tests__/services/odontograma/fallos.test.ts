@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest'
 import { caraSemantica } from '@/lib/odontograma/caras'
 
 vi.mock('@/lib/firebase', () => ({ db: {} }))
@@ -24,6 +24,7 @@ import {
 } from '@/services/odontograma/fallos'
 import { setHallazgoCara, setHallazgoDiente } from '@/services/odontograma/setHallazgo'
 import { getOdontograma } from '@/services/odontograma/getOdontograma'
+import { getEventos } from '@/services/odontograma/getEventos'
 import { update, get } from 'firebase/database'
 
 const mockUpdate = vi.mocked(update)
@@ -82,7 +83,7 @@ describe('mensajeDeFallo', () => {
    * `signIn.ts:37` y lo que docs/odontograma-pendientes.md §1.5 B pide no repetir.
    */
   it('el mensaje de permiso no habla de red ni de conexión', () => {
-    for (const accion of ['guardar', 'borrar', 'cargar'] as const) {
+    for (const accion of ['guardar', 'borrar', 'cargar', 'cargar_registro'] as const) {
       const mensaje = mensajeDeFallo('SIN_PERMISO', accion)
       expect(mensaje.toLowerCase()).not.toMatch(/conexi[oó]n|red|internet|offline/)
       expect(mensaje.toLowerCase()).toContain('permiso')
@@ -107,6 +108,15 @@ describe('mensajeDeFallo', () => {
     expect(mensajeDeFallo('SIN_CONEXION', 'guardar')).toContain('se deshizo')
     expect(mensajeDeFallo('SIN_CONEXION', 'borrar')).toContain('se deshizo')
     expect(mensajeDeFallo('SIN_CONEXION', 'cargar')).not.toContain('se deshizo')
+    expect(mensajeDeFallo('SIN_CONEXION', 'cargar_registro')).not.toContain('se deshizo')
+  })
+
+  it('cargar el odontograma y cargar el registro son dos lecturas distintas', () => {
+    // El panel de eventos (F4-2) no es el odontograma: decirle "no se pudo cargar el
+    // odontograma" a quien está mirando el registro manda a buscar el problema al lado
+    // equivocado de la pantalla.
+    expect(mensajeDeFallo('SIN_PERMISO', 'cargar')).toContain('odontograma')
+    expect(mensajeDeFallo('SIN_PERMISO', 'cargar_registro')).toContain('registro')
   })
 })
 
@@ -116,7 +126,7 @@ describe('mensajeDeFallo', () => {
  * no se podía hacer antes, porque el `catch` devolvía `null` y se comía el error.
  */
 describe('los services reportan el motivo sin cambiar su valor de retorno', () => {
-  let errorSpy: ReturnType<typeof vi.spyOn>
+  let errorSpy: MockInstance
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -215,6 +225,27 @@ describe('los services reportan el motivo sin cambiar su valor de retorno', () =
 
     expect(resultado).toEqual({ dientes: {}, vinculos: {}, meta: null })
     expect(reportes).toEqual([])
+  })
+
+  it('getEventos: permission-denied reporta SIN_PERMISO', async () => {
+    mockGet.mockRejectedValue({ code: 'PERMISSION_DENIED', message: 'Permission denied' })
+
+    const { resultado, motivo } = await conMotivo((onFallo) =>
+      getEventos('paciente-1', 'clinic-1', undefined, onFallo)
+    )
+
+    expect(resultado).toBeNull()
+    expect(motivo).toBe<MotivoFallo>('SIN_PERMISO')
+  })
+
+  it('getEventos: offline reporta SIN_CONEXION', async () => {
+    setOnLine(false)
+    const reportes: MotivoFallo[] = []
+
+    const resultado = await getEventos('paciente-1', 'clinic-1', undefined, (m) => reportes.push(m))
+
+    expect(resultado).toBeNull()
+    expect(reportes).toEqual<MotivoFallo[]>(['SIN_CONEXION'])
   })
 
   it('sin onFallo, los services se comportan igual que antes', async () => {

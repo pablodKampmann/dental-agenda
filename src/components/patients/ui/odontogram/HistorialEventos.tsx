@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import { HiOutlineClipboardDocumentList } from 'react-icons/hi2'
 import { getEventos, type EventoOdontogramaConId } from '@/services/odontograma/getEventos'
+import { conMotivo, mensajeDeFallo, type MotivoFallo } from '@/services/odontograma/fallos'
 import { colorDe } from '@/lib/odontograma/caras'
 import { describirEvento } from './formatoHistorialEventos'
 
@@ -17,17 +18,29 @@ interface HistorialEventosProps {
  * `HistorialTimeline.tsx`: ese es notas de texto libre que el usuario edita/borra a mano
  * y vive en `useState` local; este lee `getEventos()` de Firebase y no tiene forma de
  * mutar lo que lista — sin botón de editar, sin botón de borrar, sin input.
+ *
+ * Si la lectura falla, el panel dice **por qué**: `getEventos` reporta el motivo por
+ * `onFallo` y acá se traduce con `mensajeDeFallo()`. Un "intentá de nuevo" genérico
+ * manda a reintentar a alguien que en realidad no tiene permiso sobre la ficha.
  */
 export function HistorialEventos({ pacienteId, clinicId }: HistorialEventosProps) {
   const [eventos, setEventos] = useState<readonly EventoOdontogramaConId[] | 'cargando' | 'error'>('cargando')
+  const [motivo, setMotivo] = useState<MotivoFallo>('DESCONOCIDO')
 
   useEffect(() => {
     let cancelado = false
     setEventos('cargando')
-    getEventos(pacienteId, clinicId).then((resultado) => {
-      if (cancelado) return
-      setEventos(resultado === null ? 'error' : resultado)
-    })
+    conMotivo((onFallo) => getEventos(pacienteId, clinicId, undefined, onFallo)).then(
+      ({ resultado, motivo: motivoDelFallo }) => {
+        if (cancelado) return
+        if (resultado === null) {
+          setMotivo(motivoDelFallo)
+          setEventos('error')
+          return
+        }
+        setEventos(resultado)
+      }
+    )
     return () => {
       cancelado = true
     }
@@ -43,7 +56,7 @@ export function HistorialEventos({ pacienteId, clinicId }: HistorialEventosProps
 
       {eventos === 'cargando' && <p className="text-sm text-gray-400 italic text-center py-8">Cargando…</p>}
       {eventos === 'error' && (
-        <p className="text-sm text-red-500 text-center py-8">No se pudo cargar el registro, intentá de nuevo.</p>
+        <p className="text-sm text-red-500 text-center py-8">{mensajeDeFallo(motivo, 'cargar_registro')}</p>
       )}
       {eventos !== 'cargando' && eventos !== 'error' && eventos.length === 0 && (
         <p className="text-sm text-gray-400 italic text-center py-8">Sin eventos todavía</p>

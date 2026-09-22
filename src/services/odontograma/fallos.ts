@@ -81,13 +81,21 @@ export function clasificarFallo(error: unknown): MotivoFallo {
 }
 
 /** Qué se estaba intentando hacer. Decide el verbo y si el mensaje habla de deshacer algo. */
-export type AccionOdontograma = 'guardar' | 'borrar' | 'cargar'
+export type AccionOdontograma = 'guardar' | 'borrar' | 'cargar' | 'cargar_registro'
 
 const VERBOS: Readonly<Record<AccionOdontograma, string>> = {
   guardar: 'guardar el cambio',
   borrar: 'borrar el hallazgo',
   cargar: 'cargar el odontograma',
+  cargar_registro: 'cargar el registro',
 }
+
+/**
+ * Las acciones que solo leen. Importa para el sufijo del mensaje: una escritura que
+ * falla dejó un hallazgo dibujado que hay que deshacer y la odontóloga tiene que
+ * enterarse; una lectura que falla no deshizo nada, decirlo sería mentir.
+ */
+const LECTURAS: ReadonlySet<AccionOdontograma> = new Set(['cargar', 'cargar_registro'])
 
 const CAUSAS: Readonly<Record<MotivoFallo, string>> = {
   SIN_CONEXION: 'no hay conexión',
@@ -111,7 +119,7 @@ const SALIDAS: Readonly<Record<MotivoFallo, string>> = {
  * falló (actualización optimista) y desaparecer sin explicación se lee como un bug.
  */
 export function mensajeDeFallo(motivo: MotivoFallo, accion: AccionOdontograma): string {
-  const deshizo = accion === 'cargar' ? '' : ' El cambio se deshizo.'
+  const deshizo = LECTURAS.has(accion) ? '' : ' El cambio se deshizo.'
   return `No se pudo ${VERBOS[accion]}: ${CAUSAS[motivo]}.${deshizo} ${SALIDAS[motivo]}`
 }
 
