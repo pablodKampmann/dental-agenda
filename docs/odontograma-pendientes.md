@@ -108,6 +108,15 @@ lectura); un índice público mínimo `userName → email` y `/admins` detrás d
 (reduce la superficie, sigue exponiendo emails); una Cloud Function (lo cierra del todo).
 Es decisión de producto.
 
+**Estado del bug del `catch` (actualizado en F4-1).** El odontograma ya no lo repite: los
+services de `services/odontograma/` clasifican el motivo con `clasificarFallo()`
+(`fallos.ts`) y lo reportan por un `onFallo?` opcional, sin cambiar su valor de retorno, así
+que un permission-denied se muestra como falta de permiso y no como falta de conexión
+(`fallos.test.ts` lo fija). **`signIn.ts:37` sigue igual**: arreglarlo es tocar el flujo de
+login, no el odontograma, y no entraba en F4-1. Cuando se cierre esta regla hay que
+arreglarlo primero o el login va a romper mintiendo sobre el motivo — `fallos.ts` ya tiene
+el clasificador para reusar, no hace falta escribirlo de nuevo.
+
 #### C · El `.write` de `/clinics/$clinic_id` cascadea sobre `eventos` — esto sí es nuestro
 
 `.write` concedido en un ancestro no se puede revocar desde abajo, así que
@@ -198,6 +207,14 @@ pintar. Ninguno de los dos se ve en pantalla si está mal: el dibujo queda coher
 espejado, y el dato clínico queda falso en media boca.
 
 ### 3.7 `HallazgoPicker` no filtra por dentición (B4-1) — criterio para F4-1
+
+> **RESUELTO en F4-1.** `opcionesDelContexto()` en `HallazgoPicker.tsx` cruza
+> `hallazgosPorAlcance()` con `aplicaADenticion()` —importado, no reimplementado— así que
+> un implante no aparece nunca como opción sobre una temporaria, ni una prótesis fija sobre
+> un tramo de temporarias. En un tramo `MULTI` se exige que el hallazgo aplique a **todas**
+> las piezas, no solo a la primera. La validación del service quedó igual: el filtro es UX,
+> la autoridad sigue siendo el backend. Fijado por
+> `src/__tests__/components/patients/ui/odontogram/HallazgoPicker.test.tsx`.
 
 El catálogo declara `denticiones` por entrada y los services (`setHallazgoDiente`,
 `setVinculo`) lo hacen cumplir, pero el picker (`HallazgoPicker.tsx`) todavía arma su

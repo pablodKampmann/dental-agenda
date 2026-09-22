@@ -272,12 +272,24 @@ Depende: B2-2, B2-3, B2-4, F2-3, F3-3
 
 **Criterios de aceptación**
 
-- [ ] Lee con el servicio de B2-2 y escribe con los de B2-3 y B2-4.
-- [ ] Ningún componente arma un path de Firebase ni importa el SDK.
-- [ ] Actualización optimista con revertido si la escritura falla, y un mensaje que diga qué
+- [x] Lee con el servicio de B2-2 y escribe con los de B2-3 y B2-4. Todo pasa por
+      `useOdontograma` (`src/hooks/useOdontograma.ts`).
+- [x] Ningún componente arma un path de Firebase ni importa el SDK. El `clinicId` y el
+      `uid` salen del `AuthContext`; la única importación de `services/` que queda en la
+      pantalla es `validarTramo`, el validador puro que B2-4 exporta a propósito.
+- [x] Actualización optimista con revertido si la escritura falla, y un mensaje que diga qué
       pasó. Con 52 piezas y un click por hallazgo, esperar el round-trip se siente roto.
-- [ ] Un permission-denied no se reporta como error de red. (Ver pendientes 1.5 B: es el bug
-      que ya existe en `signIn.ts`.)
+      El revertido está **guardado**: solo corre si lo que hay en pantalla sigue siendo lo
+      que esa escritura puso, así el revert de una escritura vieja no pisa a una más nueva.
+- [x] Un permission-denied no se reporta como error de red. (Ver pendientes 1.5 B: es el bug
+      que ya existe en `signIn.ts`.) El motivo sale del `catch` por un `onFallo?` opcional
+      —el valor de retorno de los services no cambió— y lo clasifica `clasificarFallo()`
+      en `src/services/odontograma/fallos.ts`. `fallos.test.ts` fija que el mensaje de
+      permiso no nombre la conexión.
+- [x] Un fallo de **lectura** no se dibuja como una boca sana: el hook expone
+      `estado: 'cargando' | 'listo' | 'error'` y la pestaña muestra el motivo con un botón
+      de reintentar. No estaba escrito como criterio, pero un arco vacío y un arco que no
+      se pudo leer se ven idénticos en pantalla.
 
 ### F4-2 · Panel de historial
 
