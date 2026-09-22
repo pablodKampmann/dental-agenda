@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getOdontograma } from '@/services/odontograma/getOdontograma'
-import { setHallazgoCara, setHallazgoDiente, type ResultadoEscritura } from '@/services/odontograma/setHallazgo'
+import {
+  setHallazgoCara,
+  setHallazgoDiente,
+  ejecutarHallazgoCaraRequerida,
+  ejecutarHallazgoDienteRequerido,
+  type ResultadoEscritura,
+} from '@/services/odontograma/setHallazgo'
 import { removeHallazgo } from '@/services/odontograma/removeHallazgo'
 import { setVinculo } from '@/services/odontograma/setVinculo'
 import { removeVinculo } from '@/services/odontograma/removeVinculo'
@@ -12,14 +18,17 @@ import {
   type AccionOdontograma,
   type MotivoFallo,
 } from '@/services/odontograma/fallos'
+import { hallazgoDe } from '@/lib/odontograma/catalogo'
 import type { ClavePieza } from '@/lib/odontograma/piezas'
 import type {
   Capa,
   Cara,
+  CodigoHallazgo,
   CodigoHallazgoCara,
   CodigoHallazgoDiente,
   CodigoHallazgoMulti,
   DientesPorClave,
+  EventoOdontograma,
   PiezasSet,
   Vinculo,
 } from '@/lib/odontograma/tipos'
@@ -37,11 +46,21 @@ import { useToast } from '@/context/ToastContext'
  * Lo que el hook **no** hace: no decide colores, ni qué cara es la que se clickeó, ni
  * qué hallazgos existen. Eso es la capa de dominio (`lib/odontograma/`) y el hook la
  * consume igual que la pantalla: recibe una `Cara` ya traducida por `caraSemantica()` y
- * nunca construye una.
+ * nunca construye una. Tampoco arma la Historia Clínica: de cada escritura emite el
+ * `EventoOdontograma` que acaba de pintar (`onEventoOptimista`) y, si la escritura no
+ * quedó, avisa que hay que descartarlo (`onEventoDescartado`) — quien traduce eso a una
+ * entrada del timeline es `eventoAEntrada`, del lado de la pantalla.
  */
 
 /** Estado de la lectura inicial. Escribir solo tiene sentido con la lectura en `listo`. */
 export type EstadoLectura = 'cargando' | 'listo' | 'error'
+
+/**
+ * Qué hacer con un pedido de baja de vínculo. Un alta que sigue en vuelo se deshace en
+ * el acto —es cancelar la propia acción recién hecha, no borrar un registro— y un
+ * vínculo ya persistido pide confirmación, que es de la pantalla y no del hook.
+ */
+export type PedidoDeBaja = 'deshecho' | 'requiere_confirmacion' | 'inexistente'
 
 interface UseOdontogramaParams {
   /** `null` mientras la ficha del paciente todavía no resolvió. */
@@ -49,6 +68,10 @@ interface UseOdontogramaParams {
   readonly clinicId: string | null
   /** El uid del usuario logueado, que queda en el asiento de auditoría de cada evento. */
   readonly uid: string | null
+  /** El evento que la escritura acaba de pintar en pantalla, antes del ack de Firebase. */
+  readonly onEventoOptimista?: (tempId: string, evento: EventoOdontograma) => void
+  /** La escritura no quedó: ese evento nunca ocurrió y hay que sacarlo del timeline. */
+  readonly onEventoDescartado?: (tempId: string) => void
 }
 
 export interface OdontogramaConectado {
@@ -58,27 +81,66 @@ export interface OdontogramaConectado {
   /** Mensaje ya clasificado del fallo de lectura, o `null` si no falló. */
   readonly errorDeLectura: string | null
   readonly recargar: () => void
+  /** Hay una escritura del picker en vuelo — el panel no se cierra antes de saber el resultado. */
+  readonly guardando: boolean
+  /** Ids de vínculo cuya baja está en vuelo, para el spinner de `VinculoSpan`. */
+  readonly vinculosPendientes: ReadonlySet<string>
   readonly guardarHallazgoCara: (
     pieza: ClavePieza,
     cara: Cara,
     capa: Capa,
     codigo: CodigoHallazgoCara,
-    de: CodigoHallazgoCara | null
+    de: CodigoHallazgoCara | null,
+    nota?: string
   ) => Promise<void>
   readonly guardarHallazgoDiente: (
     pieza: ClavePieza,
     capa: Capa,
     codigo: CodigoHallazgoDiente,
-    de: CodigoHallazgoDiente | null
+    de: CodigoHallazgoDiente | null,
+    nota?: string
+  ) => Promise<void>
+  readonly ejecutarHallazgoCara: (
+    pieza: ClavePieza,
+    cara: Cara,
+    hallazgoRequerido: CodigoHallazgoCara,
+    hallazgoResultante: CodigoHallazgoCara,
+    existenteAnterior: CodigoHallazgoCara | null,
+    nota?: string
+  ) => Promise<void>
+  readonly ejecutarHallazgoDiente: (
+    pieza: ClavePieza,
+    hallazgoRequerido: CodigoHallazgoDiente,
+    hallazgoResultante: CodigoHallazgoDiente,
+    existenteAnterior: CodigoHallazgoDiente | null,
+    nota?: string
   ) => Promise<void>
   readonly quitarHallazgoCara: (pieza: ClavePieza, cara: Cara, capa: Capa, de: CodigoHallazgoCara) => Promise<void>
   readonly quitarHallazgoDiente: (pieza: ClavePieza, capa: Capa, de: CodigoHallazgoDiente) => Promise<void>
   readonly guardarVinculo: (
     tipo: CodigoHallazgoMulti,
     capa: Capa,
-    piezas: readonly ClavePieza[]
+    piezas: readonly ClavePieza[],
+    nota?: string
   ) => Promise<void>
+  /** Resuelve el caso `local-` en el acto; para un vínculo real solo dice que hay que confirmar. */
+  readonly pedirQuitarVinculo: (vinculoId: string) => PedidoDeBaja
+  /** La baja real, ya confirmada. No es optimista: ver el comentario de `quitarVinculo`. */
   readonly quitarVinculo: (vinculoId: string) => Promise<void>
+}
+
+/**
+ * Texto del toast de éxito, siempre con verbo — a propósito **no** reusa
+ * `entrada.hallazgo.nombreHallazgo` de `eventoAEntrada`: ese label está pensado para
+ * leerse dentro de la tarjeta del timeline, con el chip de pieza/capa arriba dando
+ * contexto (un hallazgo nuevo en "existente" es ahí solo el nombre, ej. "Caries"). Un
+ * toast es una frase sola, sin nada alrededor — necesita su propio verbo siempre.
+ */
+function mensajeExito(accion: 'guardar' | 'quitar' | 'ejecutar', codigo: CodigoHallazgo, capa: Capa): string {
+  const nombre = hallazgoDe(codigo).nombre
+  if (accion === 'ejecutar') return `Plan realizado: ${nombre}`
+  if (accion === 'guardar') return capa === 'requerida' ? `Planificación guardada: ${nombre}` : `Hallazgo guardado: ${nombre}`
+  return capa === 'requerida' ? `Planificación descartada: ${nombre}` : `Hallazgo retirado: ${nombre}`
 }
 
 /**
@@ -115,7 +177,7 @@ function escribirDiente(
 }
 
 /**
- * La rama de fallo común a las seis escrituras: deshacer el optimista y decir qué pasó.
+ * La rama de fallo común a las escrituras: deshacer el optimista y decir qué pasó.
  *
  * Es un type guard para que el caller pueda usar los campos extra del éxito —
  * `setVinculo` devuelve `vinculoId` — sin volver a chequear la forma del resultado.
@@ -145,15 +207,37 @@ function quedoFirme<E extends object>(
   return true
 }
 
-export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaParams): OdontogramaConectado {
+export function useOdontograma({
+  pacienteId,
+  clinicId,
+  uid,
+  onEventoOptimista,
+  onEventoDescartado,
+}: UseOdontogramaParams): OdontogramaConectado {
   const [dientes, setDientes] = useState<DientesPorClave>({})
   const [vinculos, setVinculos] = useState<Record<string, Vinculo>>({})
   const [estado, setEstado] = useState<EstadoLectura>('cargando')
   const [errorDeLectura, setErrorDeLectura] = useState<string | null>(null)
   const [reintento, setReintento] = useState(0)
+  const [guardando, setGuardando] = useState(false)
+  const [vinculosPendientes, setVinculosPendientes] = useState<ReadonlySet<string>>(new Set())
 
   const { showToast } = useToast()
   const avisar = useCallback((mensaje: string) => showToast('error', mensaje), [showToast])
+  const festejar = useCallback(
+    (accion: 'guardar' | 'quitar' | 'ejecutar', codigo: CodigoHallazgo, capa: Capa) =>
+      showToast('success', mensajeExito(accion, codigo, capa)),
+    [showToast]
+  )
+
+  /**
+   * Los dos callbacks del timeline viven en un ref y no en las dependencias de cada
+   * escritura: la pantalla los define inline, así que cambian de identidad en cada
+   * render, y meterlos como dependencia rearmaría las ocho funciones de escritura en
+   * cada render con ellas cualquier efecto que dependa de alguna.
+   */
+  const eventosRef = useRef({ onEventoOptimista, onEventoDescartado })
+  eventosRef.current = { onEventoOptimista, onEventoDescartado }
 
   /**
    * tempIds que el usuario borró mientras su alta seguía en vuelo. El borrado no pudo
@@ -164,6 +248,14 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
   const bajasPendientesRef = useRef<Set<string>>(new Set())
   /** Contador propio en vez de `Date.now()`: dos altas en el mismo milisegundo colisionaban. */
   const contadorLocalRef = useRef(0)
+  const nuevoTempId = useCallback(() => `local-${++contadorLocalRef.current}`, [])
+
+  const emitir = useCallback((tempId: string, evento: EventoOdontograma) => {
+    eventosRef.current.onEventoOptimista?.(tempId, evento)
+  }, [])
+  const descartar = useCallback((tempId: string) => {
+    eventosRef.current.onEventoDescartado?.(tempId)
+  }, [])
 
   useEffect(() => {
     if (!pacienteId || !clinicId) return
@@ -229,7 +321,7 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
    * cargado no se puede calcular el `de` de un evento ni revertir a nada sensato.
    *
    * Va en un `useMemo` para que la identidad no cambie en cada render — si cambiara,
-   * cambiarían las seis funciones de escritura y con ellas cualquier efecto que dependa
+   * cambiarían las funciones de escritura y con ellas cualquier efecto que dependa
    * de alguna.
    */
   const contexto = useMemo(
@@ -243,60 +335,257 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
       cara: Cara,
       capa: Capa,
       codigo: CodigoHallazgoCara,
-      de: CodigoHallazgoCara | null
+      de: CodigoHallazgoCara | null,
+      nota?: string
     ) => {
       if (!contexto) return
+      const tempId = nuevoTempId()
       setDientes((prev) => escribirCara(prev, pieza, cara, capa, codigo))
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'CARA',
+        capa,
+        diente: pieza,
+        cara,
+        piezas: null,
+        de,
+        a: codigo,
+        ...(nota ? { nota } : {}),
+      })
+      setGuardando(true)
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
-        setHallazgoCara({ ...contexto, pieza, cara, capa, codigo, de, onFallo })
+        setHallazgoCara({ ...contexto, pieza, cara, capa, codigo, de, nota, onFallo })
       )
-      quedoFirme(resultado, motivo, 'guardar', () => revertirCara(pieza, cara, capa, codigo, de), avisar)
+      const deshacer = () => {
+        revertirCara(pieza, cara, capa, codigo, de)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) festejar('guardar', codigo, capa)
+      setGuardando(false)
     },
-    [contexto, revertirCara, avisar]
+    [contexto, revertirCara, avisar, festejar, emitir, descartar, nuevoTempId]
   )
 
   const guardarHallazgoDiente = useCallback(
-    async (pieza: ClavePieza, capa: Capa, codigo: CodigoHallazgoDiente, de: CodigoHallazgoDiente | null) => {
+    async (
+      pieza: ClavePieza,
+      capa: Capa,
+      codigo: CodigoHallazgoDiente,
+      de: CodigoHallazgoDiente | null,
+      nota?: string
+    ) => {
       if (!contexto) return
+      const tempId = nuevoTempId()
       setDientes((prev) => escribirDiente(prev, pieza, capa, codigo))
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'DIENTE',
+        capa,
+        diente: pieza,
+        cara: null,
+        piezas: null,
+        de,
+        a: codigo,
+        ...(nota ? { nota } : {}),
+      })
+      setGuardando(true)
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
-        setHallazgoDiente({ ...contexto, pieza, capa, codigo, de, onFallo })
+        setHallazgoDiente({ ...contexto, pieza, capa, codigo, de, nota, onFallo })
       )
-      quedoFirme(resultado, motivo, 'guardar', () => revertirDiente(pieza, capa, codigo, de), avisar)
+      const deshacer = () => {
+        revertirDiente(pieza, capa, codigo, de)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) festejar('guardar', codigo, capa)
+      setGuardando(false)
     },
-    [contexto, revertirDiente, avisar]
+    [contexto, revertirDiente, avisar, festejar, emitir, descartar, nuevoTempId]
+  )
+
+  /**
+   * Cierra un plan cargado en `requerida`: lo borra ahí y escribe el resultado (que puede
+   * diferir de lo planeado) en `existente`. Del lado del service es un solo `update()`
+   * atómico; acá se reflejan las dos hojas en local antes de confirmar, mismo patrón
+   * optimista que el resto. Solo se emite **un** evento (la mitad `existente`) — la mitad
+   * `requerida` la descarta `eventoAEntrada` a propósito, ver su comentario.
+   */
+  const ejecutarHallazgoCara = useCallback(
+    async (
+      pieza: ClavePieza,
+      cara: Cara,
+      hallazgoRequerido: CodigoHallazgoCara,
+      hallazgoResultante: CodigoHallazgoCara,
+      existenteAnterior: CodigoHallazgoCara | null,
+      nota?: string
+    ) => {
+      if (!contexto) return
+      const tempId = nuevoTempId()
+      setDientes((prev) => {
+        const sinRequerida = escribirCara(prev, pieza, cara, 'requerida', null)
+        return escribirCara(sinRequerida, pieza, cara, 'existente', hallazgoResultante)
+      })
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'CARA',
+        capa: 'existente',
+        diente: pieza,
+        cara,
+        piezas: null,
+        de: existenteAnterior,
+        a: hallazgoResultante,
+        origen: 'plan_realizado',
+        ...(nota ? { nota } : {}),
+      })
+      setGuardando(true)
+
+      const { resultado, motivo } = await conMotivo((onFallo) =>
+        ejecutarHallazgoCaraRequerida({
+          ...contexto,
+          pieza,
+          cara,
+          hallazgoRequerido,
+          hallazgoResultante,
+          existenteAnterior,
+          nota,
+          onFallo,
+        })
+      )
+      const deshacer = () => {
+        revertirCara(pieza, cara, 'requerida', null, hallazgoRequerido)
+        revertirCara(pieza, cara, 'existente', hallazgoResultante, existenteAnterior)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) {
+        festejar('ejecutar', hallazgoResultante, 'existente')
+      }
+      setGuardando(false)
+    },
+    [contexto, revertirCara, avisar, festejar, emitir, descartar, nuevoTempId]
+  )
+
+  /** La misma ejecución de plan, a nivel pieza completa. */
+  const ejecutarHallazgoDiente = useCallback(
+    async (
+      pieza: ClavePieza,
+      hallazgoRequerido: CodigoHallazgoDiente,
+      hallazgoResultante: CodigoHallazgoDiente,
+      existenteAnterior: CodigoHallazgoDiente | null,
+      nota?: string
+    ) => {
+      if (!contexto) return
+      const tempId = nuevoTempId()
+      setDientes((prev) => {
+        const sinRequerida = escribirDiente(prev, pieza, 'requerida', null)
+        return escribirDiente(sinRequerida, pieza, 'existente', hallazgoResultante)
+      })
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'DIENTE',
+        capa: 'existente',
+        diente: pieza,
+        cara: null,
+        piezas: null,
+        de: existenteAnterior,
+        a: hallazgoResultante,
+        origen: 'plan_realizado',
+        ...(nota ? { nota } : {}),
+      })
+      setGuardando(true)
+
+      const { resultado, motivo } = await conMotivo((onFallo) =>
+        ejecutarHallazgoDienteRequerido({
+          ...contexto,
+          pieza,
+          hallazgoRequerido,
+          hallazgoResultante,
+          existenteAnterior,
+          nota,
+          onFallo,
+        })
+      )
+      const deshacer = () => {
+        revertirDiente(pieza, 'requerida', null, hallazgoRequerido)
+        revertirDiente(pieza, 'existente', hallazgoResultante, existenteAnterior)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) {
+        festejar('ejecutar', hallazgoResultante, 'existente')
+      }
+      setGuardando(false)
+    },
+    [contexto, revertirDiente, avisar, festejar, emitir, descartar, nuevoTempId]
   )
 
   const quitarHallazgoCara = useCallback(
     async (pieza: ClavePieza, cara: Cara, capa: Capa, de: CodigoHallazgoCara) => {
       if (!contexto) return
+      const tempId = nuevoTempId()
       setDientes((prev) => escribirCara(prev, pieza, cara, capa, null))
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'CARA',
+        capa,
+        diente: pieza,
+        cara,
+        piezas: null,
+        de,
+        a: null,
+      })
+      setGuardando(true)
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
         removeHallazgo({ alcance: 'CARA', ...contexto, pieza, cara, capa, de, onFallo })
       )
-      quedoFirme(resultado, motivo, 'borrar', () => revertirCara(pieza, cara, capa, null, de), avisar)
+      const deshacer = () => {
+        revertirCara(pieza, cara, capa, null, de)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'borrar', deshacer, avisar)) festejar('quitar', de, capa)
+      setGuardando(false)
     },
-    [contexto, revertirCara, avisar]
+    [contexto, revertirCara, avisar, festejar, emitir, descartar, nuevoTempId]
   )
 
   const quitarHallazgoDiente = useCallback(
     async (pieza: ClavePieza, capa: Capa, de: CodigoHallazgoDiente) => {
       if (!contexto) return
+      const tempId = nuevoTempId()
       setDientes((prev) => escribirDiente(prev, pieza, capa, null))
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'DIENTE',
+        capa,
+        diente: pieza,
+        cara: null,
+        piezas: null,
+        de,
+        a: null,
+      })
+      setGuardando(true)
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
         removeHallazgo({ alcance: 'DIENTE', ...contexto, pieza, capa, de, onFallo })
       )
-      quedoFirme(resultado, motivo, 'borrar', () => revertirDiente(pieza, capa, null, de), avisar)
+      const deshacer = () => {
+        revertirDiente(pieza, capa, null, de)
+        descartar(tempId)
+      }
+      if (quedoFirme(resultado, motivo, 'borrar', deshacer, avisar)) festejar('quitar', de, capa)
+      setGuardando(false)
     },
-    [contexto, revertirDiente, avisar]
+    [contexto, revertirDiente, avisar, festejar, emitir, descartar, nuevoTempId]
   )
 
   const guardarVinculo = useCallback(
-    async (tipo: CodigoHallazgoMulti, capa: Capa, piezas: readonly ClavePieza[]) => {
+    async (tipo: CodigoHallazgoMulti, capa: Capa, piezas: readonly ClavePieza[], nota?: string) => {
       if (!contexto) return
 
       const piezasSet: PiezasSet = {}
@@ -305,19 +594,39 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
       })
       // El id real lo genera `push()` del lado del service; hasta el ack hace falta uno
       // para poder dibujar el tramo y para poder borrarlo si el usuario se arrepiente.
-      const tempId = `local-${++contadorLocalRef.current}`
+      const tempId = nuevoTempId()
 
       setVinculos((prev) => ({ ...prev, [tempId]: { tipo, capa, piezas: piezasSet } }))
-      const deshacer = () =>
+      emitir(tempId, {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'MULTI',
+        capa,
+        diente: null,
+        cara: null,
+        piezas: piezasSet,
+        de: null,
+        a: tipo,
+        ...(nota ? { nota } : {}),
+      })
+      setGuardando(true)
+
+      const deshacer = () => {
         setVinculos((prev) => {
           const { [tempId]: _quitado, ...resto } = prev
           return resto
         })
+        descartar(tempId)
+      }
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
-        setVinculo({ ...contexto, tipo, capa, piezas, onFallo })
+        setVinculo({ ...contexto, tipo, capa, piezas, nota, onFallo })
       )
-      if (!quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) return
+      if (!quedoFirme(resultado, motivo, 'guardar', deshacer, avisar)) {
+        setGuardando(false)
+        return
+      }
+      festejar('guardar', tipo, capa)
 
       const bajaPendiente = bajasPendientesRef.current.delete(tempId)
       setVinculos((prev) => {
@@ -335,30 +644,44 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
         // baja falla queda huérfano en Firebase, y eso sí hay que decirlo.
         quedoFirme(baja.resultado, baja.motivo, 'borrar', () => {}, avisar)
       }
+      setGuardando(false)
     },
-    [contexto, avisar]
+    [contexto, avisar, festejar, emitir, descartar, nuevoTempId]
   )
 
   /**
-   * Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". Si el vínculo
-   * todavía tiene su id temporal, el alta sigue en vuelo y no hay nada persistido que
-   * borrar: se anota como baja pendiente y `guardarVinculo` la ejecuta al conocer el id.
+   * El alta todavía en vuelo (`local-...`) sigue sin confirmación: es deshacer la propia
+   * acción recién hecha, no borrar un registro ya persistido, y no hay nada en Firebase
+   * que limpiar todavía — se anota en `bajasPendientesRef` y `guardarVinculo` la ejecuta
+   * al conocer el id real. Un vínculo real sí pide confirmación, que la arma la pantalla.
    */
-  const quitarVinculo = useCallback(
-    async (vinculoId: string) => {
-      const vinculo = vinculos[vinculoId]
-      if (!vinculo) return
+  const pedirQuitarVinculo = useCallback(
+    (vinculoId: string): PedidoDeBaja => {
+      if (!vinculos[vinculoId]) return 'inexistente'
+      if (!vinculoId.startsWith('local-')) return 'requiere_confirmacion'
 
       setVinculos((prev) => {
         const { [vinculoId]: _quitado, ...resto } = prev
         return resto
       })
+      bajasPendientesRef.current.add(vinculoId)
+      return 'deshecho'
+    },
+    [vinculos]
+  )
 
-      if (vinculoId.startsWith('local-')) {
-        bajasPendientesRef.current.add(vinculoId)
-        return
-      }
-      if (!contexto) return
+  /**
+   * A diferencia del resto de las escrituras del módulo, la baja de un vínculo **no** es
+   * optimista: el tramo se queda dibujado con su spinner (`vinculosPendientes`) hasta que
+   * Firebase confirma, en vez de desaparecer y reaparecer si falla. Es el mismo grafismo
+   * el que da el feedback, así que no hace falta revertir nada.
+   */
+  const quitarVinculo = useCallback(
+    async (vinculoId: string) => {
+      const vinculo = vinculos[vinculoId]
+      if (!vinculo || !contexto) return
+
+      setVinculosPendientes((prev) => new Set(prev).add(vinculoId))
 
       const { resultado, motivo } = await conMotivo((onFallo) =>
         removeVinculo({
@@ -370,15 +693,33 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
           onFallo,
         })
       )
-      quedoFirme(
-        resultado,
-        motivo,
-        'borrar',
-        () => setVinculos((prev) => ({ ...prev, [vinculoId]: vinculo })),
-        avisar
-      )
+
+      setVinculosPendientes((prev) => {
+        const next = new Set(prev)
+        next.delete(vinculoId)
+        return next
+      })
+
+      if (!quedoFirme(resultado, motivo, 'borrar', () => {}, avisar)) return
+
+      setVinculos((prev) => {
+        const { [vinculoId]: _quitado, ...resto } = prev
+        return resto
+      })
+      emitir(nuevoTempId(), {
+        ts: Date.now(),
+        uid: contexto.uid,
+        alcance: 'MULTI',
+        capa: vinculo.capa,
+        diente: null,
+        cara: null,
+        piezas: vinculo.piezas,
+        de: vinculo.tipo,
+        a: null,
+      })
+      festejar('quitar', vinculo.tipo, vinculo.capa)
     },
-    [vinculos, contexto, avisar]
+    [vinculos, contexto, avisar, festejar, emitir, nuevoTempId]
   )
 
   return {
@@ -387,11 +728,16 @@ export function useOdontograma({ pacienteId, clinicId, uid }: UseOdontogramaPara
     estado,
     errorDeLectura,
     recargar,
+    guardando,
+    vinculosPendientes,
     guardarHallazgoCara,
     guardarHallazgoDiente,
+    ejecutarHallazgoCara,
+    ejecutarHallazgoDiente,
     quitarHallazgoCara,
     quitarHallazgoDiente,
     guardarVinculo,
+    pedirQuitarVinculo,
     quitarVinculo,
   }
 }

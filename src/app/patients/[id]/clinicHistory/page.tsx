@@ -1,7 +1,7 @@
 'use client'
 
 import { getPatient } from "@/services/patients/getPatient";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation'
 import dayjs from 'dayjs';
 import { PatientRecord } from "@/components/patients/ui/patientRecord";
@@ -9,19 +9,37 @@ import { PatientRecordSkeleton } from "@/components/patients/ui/patientRecordSke
 import { OdontogramaGrid } from "@/components/patients/ui/odontogram/OdontogramaGrid";
 import { Legend } from "@/components/patients/ui/odontogram/Legend";
 import { HallazgoPicker, type PickerContexto } from "@/components/patients/ui/odontogram/HallazgoPicker";
-import { HistorialTimeline, type EntradaHistorial } from "@/components/patients/ui/odontogram/HistorialTimeline";
-import { HistorialEventos } from "@/components/patients/ui/odontogram/HistorialEventos";
+import { HistorialTimeline } from "@/components/patients/ui/odontogram/HistorialTimeline";
 // `validarTramo` es la excepción documentada (docs/odontograma-backend.md, B2-4): la
 // pantalla importa el validador del tramo en vez de reimplementar el criterio. Es una
 // función pura — no arma un path ni toca el SDK; la autoridad sigue siendo el service.
 import { validarTramo } from "@/services/odontograma/setVinculo";
-import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
+import { getEventos } from "@/services/odontograma/getEventos";
+import { conMotivo, mensajeDeFallo } from "@/services/odontograma/fallos";
+import {
+    addNotaHistorial,
+    getNotasHistorial,
+    updateNotaHistorial,
+    deleteNotaHistorial,
+    type NotaHistorial,
+} from "@/services/patients/clinicHistoryNotes";
+import { eventoAEntrada, type EntradaHistorial } from "@/lib/odontograma/historial";
+import { caraSemantica } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, CodigoHallazgo, CodigoHallazgoCara, CodigoHallazgoDiente, CodigoHallazgoMulti } from "@/lib/odontograma/tipos";
+import type {
+    Capa,
+    CodigoHallazgo,
+    CodigoHallazgoCara,
+    CodigoHallazgoDiente,
+    CodigoHallazgoMulti,
+    EventoOdontograma,
+} from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { useOdontograma } from "@/hooks/useOdontograma";
+import { ConfirmAlert } from "@/components/shared/dialogAlerts/confirmAlert";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -38,19 +56,23 @@ function vistaSugeridaPorEdad(birthDate: string | undefined): VistaArcada {
     return edad >= 6 && edad < 13 ? 'MIXTA' : 'PERMANENTE';
 }
 
+/** Una nota libre de la HC, en la misma forma que el timeline espera. */
+function notaAEntrada(n: NotaHistorial): EntradaHistorial {
+    return { id: n.id, fecha: dayjs(n.ts).format('DD/MM/YYYY'), hora: dayjs(n.ts).format('HH:mm'), texto: n.texto };
+}
+
 export default function ClinicHistory() {
-    const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()
     const id = pathname.split('/').slice(-2, -1)[0] || null;
+    const [isLoad, setIsLoad] = useState(true);
     const [patient, setPatient] = useState<any>(null);
-    /**
-     * El clinicId y el uid salen del AuthContext, que ya los resolvió una vez para toda
-     * la app: la pantalla no vuelve a preguntarle a Firebase (era un round-trip repetido)
-     * y, sobre todo, no importa el SDK para leer el usuario logueado — criterio de F4-1.
-     */
+    useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
+
+    /** El `clinicId` y el `uid` salen del contexto, que ya los resolvió para toda la app (F4-1). */
     const { user } = useAuth();
     const clinicId = user?.clinicId ?? null;
-    useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
+    const uid = user?.userUid ?? null;
+    const { showToast } = useToast();
 
     const [visibilidad, setVisibilidad] = useState<VisibilidadCapas>(AMBAS_CAPAS);
     const [entradas, setEntradas] = useState<EntradaHistorial[]>([]);
@@ -62,6 +84,48 @@ export default function ClinicHistory() {
     const [pickerContexto, setPickerContexto] = useState<PickerContexto | null>(null);
     /** El contexto del que se vino al entrar por "Hallazgos de pieza completa", para poder volver. */
     const [pickerAnterior, setPickerAnterior] = useState<PickerContexto | null>(null);
+    /** Vínculo (id real, ya persistido) esperando confirmación de baja — un solo diálogo para todos. */
+    const [vinculoAConfirmar, setVinculoAConfirmar] = useState<string | null>(null);
+
+    /**
+     * El hook emite el evento que acaba de pintar y, si la escritura no quedó, avisa que
+     * hay que descartarlo. Traducirlo a una entrada del timeline es de acá: `eventoAEntrada`
+     * es el único lugar que decide el texto clínico, y devuelve `null` para los eventos que
+     * no tienen que verse (la mitad `requerida` de un plan cerrado).
+     */
+    const agregarEntradaOptimista = useCallback((tempId: string, evento: EventoOdontograma) => {
+        const entrada = eventoAEntrada(tempId, evento);
+        if (entrada) setEntradas((prev) => [entrada, ...prev]);
+    }, []);
+
+    const quitarEntradaOptimista = useCallback((tempId: string) => {
+        setEntradas((prev) => prev.filter((e) => e.id !== tempId));
+    }, []);
+
+    const {
+        dientes,
+        vinculos,
+        estado: estadoOdontograma,
+        errorDeLectura,
+        recargar,
+        guardando,
+        vinculosPendientes,
+        guardarHallazgoCara,
+        guardarHallazgoDiente,
+        ejecutarHallazgoCara,
+        ejecutarHallazgoDiente,
+        quitarHallazgoCara,
+        quitarHallazgoDiente,
+        guardarVinculo,
+        pedirQuitarVinculo,
+        quitarVinculo,
+    } = useOdontograma({
+        pacienteId: patient?.id ?? null,
+        clinicId,
+        uid,
+        onEventoOptimista: agregarEntradaOptimista,
+        onEventoDescartado: quitarEntradaOptimista,
+    });
 
     useEffect(() => {
         if (!clinicId) return;
@@ -79,26 +143,38 @@ export default function ClinicHistory() {
     }, [id, clinicId]);
 
     /**
-     * Toda la conversación con Firebase del odontograma pasa por acá: lectura, escrituras,
-     * actualización optimista y revertido. La pantalla no llama services ni arma paths.
+     * La Historia Clínica sale de dos fuentes reales: `eventos/` (el log del
+     * odontograma, append-only) y `clinicHistory/notas/` (texto libre, editable). Se
+     * traen en paralelo y se mergean por `ts` — cada una ya llega ordenada por su cuenta
+     * (`getEventos` más reciente primero, `getNotasHistorial` por key ascendente), así
+     * que ordenar de nuevo acá es más simple que intentar arrastrar el orden de origen.
      */
-    const {
-        dientes,
-        vinculos,
-        estado: estadoOdontograma,
-        errorDeLectura,
-        recargar,
-        guardarHallazgoCara,
-        guardarHallazgoDiente,
-        quitarHallazgoCara,
-        quitarHallazgoDiente,
-        guardarVinculo,
-        quitarVinculo,
-    } = useOdontograma({
-        pacienteId: patient?.id ?? null,
-        clinicId,
-        uid: user?.userUid ?? null,
-    });
+    useEffect(() => {
+        if (!patient?.id || !clinicId) return;
+        const pacienteId = patient.id;
+        Promise.all([
+            conMotivo((onFallo) => getEventos(pacienteId, clinicId, 200, onFallo)),
+            conMotivo((onFallo) => getNotasHistorial(clinicId, pacienteId, onFallo)),
+        ]).then(([porEventos, porNotas]) => {
+            if (porEventos.resultado === null || porNotas.resultado === null) {
+                // El motivo del primero que falló: decir "revisá la conexión" a quien no
+                // tiene permiso sobre la ficha lo manda a buscar el problema donde no está.
+                const motivo = porEventos.resultado === null ? porEventos.motivo : porNotas.motivo;
+                showToast('error', mensajeDeFallo(motivo, 'cargar_registro'));
+                return;
+            }
+            const conTs = [
+                ...porEventos.resultado.flatMap((e) => {
+                    const entrada = eventoAEntrada(e.id, e);
+                    return entrada ? [{ ts: e.ts, entrada }] : [];
+                }),
+                ...porNotas.resultado.map((n) => ({ ts: n.ts, entrada: notaAEntrada(n) })),
+            ];
+            conTs.sort((a, b) => b.ts - a.ts);
+            setEntradas(conTs.map((c) => c.entrada));
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [patient?.id, clinicId]);
 
     function toggleVisibilidad(capa: Capa) {
         setVisibilidad((prev) => ({ ...prev, [capa]: !prev[capa] }));
@@ -137,58 +213,75 @@ export default function ClinicHistory() {
         return estado.caras?.[cara] ?? {};
     }
 
-    function registrarEntrada(detalle: string, nombreHallazgo: string, piezaCodigo: number, capa: Capa, nota: string) {
-        setEntradas((prev) => [
-            {
-                id: `${Date.now()}`,
-                fecha: dayjs().format('DD/MM/YYYY'),
-                hora: dayjs().format('HH:mm'),
-                texto: nota,
-                hallazgo: { piezaCodigo, detalle, nombreHallazgo, capa },
-            },
-            ...prev,
-        ]);
-    }
-
     function cerrarPicker() {
         setPickerContexto(null);
         setPickerAnterior(null);
     }
 
     /**
-     * El picker se cierra antes de esperar la escritura, no después: el hook ya dibujó el
-     * hallazgo (actualización optimista) y quedarse con el popover abierto esperando el
-     * round-trip es justo lo que se sentía roto con 52 piezas y un click por hallazgo. Si
-     * la escritura falla, el hook lo deshace y avisa por qué.
+     * El panel no se cierra antes de saber el resultado: el hook prende `guardando`
+     * mientras la escritura vuela y acá se espera el ack para cerrar. Todo el diálogo con
+     * Firebase —el optimista, el revertido guardado y el toast— vive en el hook.
      */
     async function handleGuardarHallazgo(codigo: CodigoHallazgo, capa: Capa, nota: string) {
         if (!pickerContexto) return;
+        const notaLimpia = nota.trim() || undefined;
 
         if (pickerContexto.alcance === 'CARA') {
             const { pieza, posicion } = pickerContexto;
             const cara = caraSemantica(posicion, pieza.cuadrante);
             const de = dientes[pieza.clave]?.caras?.[cara]?.[capa] ?? null;
-
-            cerrarPicker();
-            registrarEntrada(etiquetaCara(cara, pieza.arcada, pieza.tipo), hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
-            await guardarHallazgoCara(pieza.clave, cara, capa, codigo as CodigoHallazgoCara, de);
+            await guardarHallazgoCara(pieza.clave, cara, capa, codigo as CodigoHallazgoCara, de, notaLimpia);
         } else if (pickerContexto.alcance === 'DIENTE') {
             const { pieza } = pickerContexto;
             const de = dientes[pieza.clave]?.diente?.[capa] ?? null;
-
-            cerrarPicker();
-            registrarEntrada('pieza completa', hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
-            await guardarHallazgoDiente(pieza.clave, capa, codigo as CodigoHallazgoDiente, de);
+            await guardarHallazgoDiente(pieza.clave, capa, codigo as CodigoHallazgoDiente, de, notaLimpia);
         } else {
-            const piezas = pickerContexto.piezas;
-            const codigos = piezas.map((p) => p.codigo).join('-');
-
-            cerrarPicker();
+            const piezas = pickerContexto.piezas.map((p) => p.clave);
             setPiezasEnTramo(new Map());
             setEnModoTramo(false);
-            registrarEntrada(`tramo ${codigos}`, hallazgoDe(codigo).nombre, piezas[0].codigo, capa, nota);
-            await guardarVinculo(codigo as CodigoHallazgoMulti, capa, piezas.map((p) => p.clave));
+            await guardarVinculo(codigo as CodigoHallazgoMulti, capa, piezas, notaLimpia);
         }
+        cerrarPicker();
+    }
+
+    /**
+     * Cierra un plan cargado en `requerida`: lo borra ahí y escribe el resultado (que
+     * puede diferir de lo planeado) en `existente`. Si no hay nada en `requerida` no hay
+     * plan que cerrar y el picker no debería haber ofrecido la acción.
+     */
+    async function handleEjecutarHallazgo(codigo: CodigoHallazgo, nota: string) {
+        if (!pickerContexto || pickerContexto.alcance === 'MULTI') return;
+        const notaLimpia = nota.trim() || undefined;
+
+        if (pickerContexto.alcance === 'CARA') {
+            const { pieza, posicion } = pickerContexto;
+            const cara = caraSemantica(posicion, pieza.cuadrante);
+            const hallazgoRequerido = dientes[pieza.clave]?.caras?.[cara]?.requerida;
+            if (!hallazgoRequerido) return;
+            const existenteAnterior = dientes[pieza.clave]?.caras?.[cara]?.existente ?? null;
+            await ejecutarHallazgoCara(
+                pieza.clave,
+                cara,
+                hallazgoRequerido,
+                codigo as CodigoHallazgoCara,
+                existenteAnterior,
+                notaLimpia
+            );
+        } else {
+            const { pieza } = pickerContexto;
+            const hallazgoRequerido = dientes[pieza.clave]?.diente?.requerida;
+            if (!hallazgoRequerido) return;
+            const existenteAnterior = dientes[pieza.clave]?.diente?.existente ?? null;
+            await ejecutarHallazgoDiente(
+                pieza.clave,
+                hallazgoRequerido,
+                codigo as CodigoHallazgoDiente,
+                existenteAnterior,
+                notaLimpia
+            );
+        }
+        cerrarPicker();
     }
 
     async function handleQuitarHallazgo(capa: Capa) {
@@ -199,16 +292,76 @@ export default function ClinicHistory() {
             const cara = caraSemantica(posicion, pieza.cuadrante);
             const de = dientes[pieza.clave]?.caras?.[cara]?.[capa];
             if (!de) return;
-
-            cerrarPicker();
             await quitarHallazgoCara(pieza.clave, cara, capa, de);
         } else {
             const { pieza } = pickerContexto;
             const de = dientes[pieza.clave]?.diente?.[capa];
             if (!de) return;
-
-            cerrarPicker();
             await quitarHallazgoDiente(pieza.clave, capa, de);
+        }
+        cerrarPicker();
+    }
+
+    /**
+     * Un alta todavía en vuelo se deshace sin preguntar —es cancelar la acción recién
+     * hecha, no borrar un registro persistido— y el hook lo resuelve solo. Un vínculo ya
+     * en Firebase pide confirmación: el diálogo es de la pantalla, la baja del hook.
+     */
+    function handleQuitarVinculo(vinculoId: string) {
+        if (pedirQuitarVinculo(vinculoId) === 'requiere_confirmacion') setVinculoAConfirmar(vinculoId);
+    }
+
+    async function handleAgregarNota(texto: string) {
+        if (!clinicId || !patient?.id || !uid) return;
+
+        const { resultado, motivo } = await conMotivo((onFallo) =>
+            addNotaHistorial({ clinicId, pacienteId: patient.id, texto, uid, onFallo })
+        );
+        if (resultado === null) {
+            showToast('error', mensajeDeFallo(motivo, 'guardar'));
+            return;
+        }
+        if (!resultado.ok) {
+            showToast('error', resultado.error);
+            return;
+        }
+        setEntradas((prev) => [
+            { id: resultado.notaId, fecha: dayjs().format('DD/MM/YYYY'), hora: dayjs().format('HH:mm'), texto },
+            ...prev,
+        ]);
+        showToast('success', 'Nota agregada a la Historia Clínica.');
+    }
+
+    async function handleEditarNota(id: string, texto: string) {
+        if (!clinicId || !patient?.id) return;
+        const anterior = entradas.find((e) => e.id === id)?.texto;
+
+        setEntradas((prev) => prev.map((e) => (e.id === id ? { ...e, texto } : e)));
+        const { resultado, motivo } = await conMotivo((onFallo) =>
+            updateNotaHistorial({ clinicId, pacienteId: patient.id, notaId: id, texto, onFallo })
+        );
+        if (resultado === null || !resultado.ok) {
+            setEntradas((prev) => prev.map((e) => (e.id === id ? { ...e, texto: anterior ?? e.texto } : e)));
+            showToast('error', resultado === null ? mensajeDeFallo(motivo, 'guardar') : resultado.error);
+        } else {
+            showToast('success', 'Nota actualizada.');
+        }
+    }
+
+    async function handleEliminarNota(id: string) {
+        if (!clinicId || !patient?.id) return;
+        const anterior = entradas.find((e) => e.id === id) ?? null;
+        const indice = entradas.findIndex((e) => e.id === id);
+
+        setEntradas((prev) => prev.filter((e) => e.id !== id));
+        const { resultado, motivo } = await conMotivo((onFallo) =>
+            deleteNotaHistorial({ clinicId, pacienteId: patient.id, notaId: id, onFallo })
+        );
+        if (resultado === null || !resultado.ok) {
+            if (anterior) setEntradas((prev) => [...prev.slice(0, indice), anterior, ...prev.slice(indice)]);
+            showToast('error', resultado === null ? mensajeDeFallo(motivo, 'borrar') : resultado.error);
+        } else {
+            showToast('success', 'Nota eliminada.');
         }
     }
 
@@ -230,7 +383,7 @@ export default function ClinicHistory() {
                 {isLoad ? (
                     <PatientRecordSkeleton />
                 ) : (
-                    <div className="animate-page-drop">
+                    <div className="animate-fade-in">
                         <PatientRecord patient={patient} />
 
                         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden select-none">
@@ -261,29 +414,31 @@ export default function ClinicHistory() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col md:flex-row gap-4 p-3">
-                                <div className="flex-1 min-w-0 min-h-[420px] flex flex-col items-center justify-center p-8">
-                                    {estadoOdontograma === 'cargando' && (
-                                        <p className="text-sm text-gray-400 italic">Cargando el odontograma…</p>
-                                    )}
-                                    {/*
-                                      * Un fallo de lectura no se dibuja como un arco vacío: una boca sin
-                                      * hallazgos y una boca que no se pudo leer se ven exactamente igual, y
-                                      * confundirlas es leer mal la ficha de un paciente. Se muestra el motivo
-                                      * —que distingue "sin permiso" de "sin conexión"— y se puede reintentar.
-                                      */}
-                                    {estadoOdontograma === 'error' && (
-                                        <div className="flex flex-col items-center gap-3 text-center">
-                                            <p className="text-sm text-red-500 max-w-sm">{errorDeLectura}</p>
-                                            <button
-                                                onClick={recargar}
-                                                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-gray-300 text-gray-700 shadow-sm hover:border-teal-600 hover:text-teal-700 transition"
-                                            >
-                                                Reintentar
-                                            </button>
-                                        </div>
-                                    )}
-                                    {estadoOdontograma === 'listo' && <OdontogramaGrid
+                            <Legend visibilidad={visibilidad} onToggle={toggleVisibilidad} />
+
+                            <div className="min-h-[420px] flex items-center justify-center p-8">
+                                {estadoOdontograma === 'cargando' && (
+                                    <p className="text-sm text-gray-400 italic">Cargando el odontograma…</p>
+                                )}
+                                {/*
+                                  * Un fallo de lectura no se dibuja como un arco vacío: una boca sin
+                                  * hallazgos y una boca que no se pudo leer se ven exactamente igual, y
+                                  * confundirlas es leer mal la ficha de un paciente. Se muestra el motivo
+                                  * —que distingue "sin permiso" de "sin conexión"— y se puede reintentar.
+                                  */}
+                                {estadoOdontograma === 'error' && (
+                                    <div className="flex flex-col items-center gap-3 text-center">
+                                        <p className="text-sm text-red-500 max-w-sm">{errorDeLectura}</p>
+                                        <button
+                                            onClick={recargar}
+                                            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-gray-300 text-gray-700 shadow-sm hover:border-teal-600 hover:text-teal-700 transition"
+                                        >
+                                            Reintentar
+                                        </button>
+                                    </div>
+                                )}
+                                {estadoOdontograma === 'listo' && (
+                                    <OdontogramaGrid
                                         dientes={dientes}
                                         visibilidad={visibilidad}
                                         vista={vista}
@@ -294,12 +449,10 @@ export default function ClinicHistory() {
                                         onSelectCara={(pieza, posicion, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'CARA', pieza, posicion, anchor }) }}
                                         onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
                                         onToggleEnTramo={toggleEnTramo}
-                                        onQuitarVinculo={quitarVinculo}
-                                    />}
-                                </div>
-                                <div className="w-full md:w-[15%] shrink-0">
-                                    <Legend visibilidad={visibilidad} onToggle={toggleVisibilidad} />
-                                </div>
+                                        onQuitarVinculo={handleQuitarVinculo}
+                                        vinculosPendientes={vinculosPendientes}
+                                    />
+                                )}
                             </div>
 
                             {enModoTramo && (
@@ -331,27 +484,37 @@ export default function ClinicHistory() {
 
                         <HistorialTimeline
                             entradas={entradas}
-                            onAgregarNota={(texto) => setEntradas((prev) => [
-                                { id: `${Date.now()}`, fecha: dayjs().format('DD/MM/YYYY'), hora: dayjs().format('HH:mm'), texto },
-                                ...prev,
-                            ])}
-                            onEditarTexto={(id, texto) => setEntradas((prev) => prev.map((e) => e.id === id ? { ...e, texto } : e))}
-                            onEliminar={(id) => setEntradas((prev) => prev.filter((e) => e.id !== id))}
+                            onAgregarNota={handleAgregarNota}
+                            onEditarTexto={handleEditarNota}
+                            onEliminar={handleEliminarNota}
                         />
-
-                        {clinicId && <HistorialEventos pacienteId={patient.id} clinicId={clinicId} />}
 
                         <HallazgoPicker
                             contexto={pickerContexto}
                             hallazgoActual={pickerContexto ? hallazgoActualDe(pickerContexto) : {}}
                             onGuardar={handleGuardarHallazgo}
                             onQuitar={handleQuitarHallazgo}
-                            onClose={() => { setPickerContexto(null); setPickerAnterior(null) }}
+                            onEjecutar={handleEjecutarHallazgo}
+                            guardando={guardando}
+                            onClose={() => { if (guardando) return; cerrarPicker() }}
                             onVerPiezaCompleta={(pieza, anchor) => {
                                 setPickerAnterior(pickerContexto)
                                 setPickerContexto({ alcance: 'DIENTE', pieza, anchor })
                             }}
                             onVolver={pickerAnterior ? () => { setPickerContexto(pickerAnterior); setPickerAnterior(null) } : undefined}
+                        />
+
+                        {/* `ConfirmAlert` trae su propio loading — alcanza con pasarle la promesa. */}
+                        <ConfirmAlert
+                            open={!!vinculoAConfirmar}
+                            setOpen={(open) => !open && setVinculoAConfirmar(null)}
+                            title="¿Quitar este vínculo?"
+                            description={
+                                vinculoAConfirmar && vinculos[vinculoAConfirmar]
+                                    ? `Se va a quitar "${hallazgoDe(vinculos[vinculoAConfirmar].tipo).nombre}". Esta acción no se puede deshacer.`
+                                    : 'Esta acción no se puede deshacer.'
+                            }
+                            onConfirm={() => (vinculoAConfirmar ? quitarVinculo(vinculoAConfirmar) : undefined)}
                         />
                     </div>
                 )}

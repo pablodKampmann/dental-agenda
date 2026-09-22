@@ -1,5 +1,6 @@
 'use client'
 
+import { ClipLoader } from 'react-spinners'
 import type { Pieza } from '@/lib/odontograma/piezas'
 import type { Capa, CodigoHallazgoMulti } from '@/lib/odontograma/tipos'
 import { colorDe } from '@/lib/odontograma/caras'
@@ -12,6 +13,8 @@ interface VinculoSpanProps {
   capa: Capa
   /** Clickear el propio grafismo borra el vínculo. Sin diálogo de confirmación. */
   onClick: () => void
+  /** La baja de este vínculo está en vuelo — mismo `ClipLoader` que el resto del sistema, en vez de un botón mudo. */
+  pendiente?: boolean
 }
 
 const COLUMNAS = 16
@@ -23,7 +26,7 @@ const COLUMNAS = 16
  * mismo `gap` producen los mismos bordes de columna, así que la barra queda alineada con
  * los dientes reales sin medir un solo píxel.
  */
-export function VinculoSpan({ piezas, tipo, capa, onClick }: VinculoSpanProps) {
+export function VinculoSpan({ piezas, tipo, capa, onClick, pendiente = false }: VinculoSpanProps) {
   const primera = piezas[0]
   const ultima = piezas[piezas.length - 1]
   const color = colorDe(capa)
@@ -36,19 +39,29 @@ export function VinculoSpan({ piezas, tipo, capa, onClick }: VinculoSpanProps) {
       <button
         type="button"
         onClick={onClick}
-        title={`Quitar ${nombre.toLowerCase()}`}
+        disabled={pendiente}
+        title={pendiente ? 'Quitando…' : `Quitar ${nombre.toLowerCase()}`}
         aria-label={`Quitar ${nombre.toLowerCase()} ${capa} de las piezas ${primera.codigo} a ${ultima.codigo}`}
         style={{ gridColumnStart: primera.columna, gridColumnEnd: ultima.columna + 1 }}
-        className="flex flex-col items-center gap-0.5 cursor-pointer hover:opacity-60 transition-opacity"
+        className="flex flex-col items-center gap-0.5 cursor-pointer hover:opacity-60 transition-opacity disabled:cursor-default disabled:opacity-80"
       >
-        <span className={`text-[9px] font-bold leading-none ${color.texto}`}>{abrev}</span>
-        <span
-          className={
-            esFija
-              ? `h-1.5 w-full rounded-full ${color.fondo} opacity-80`
-              : `h-1.5 w-full rounded-full border-2 border-dashed bg-white ${color.borde}`
-          }
-        />
+        {pendiente ? (
+          // Spinner genérico "en progreso" — no un color de hallazgo, así que no sale de
+          // `colorDe()` (que nunca expone hex, solo clases Tailwind). Mismo teal que ya
+          // usa `AddAppointmentForm` para sus `ClipLoader`.
+          <ClipLoader color="#0f766e" size={11} />
+        ) : (
+          <>
+            <span className={`text-[9px] font-bold leading-none ${color.texto}`}>{abrev}</span>
+            <span
+              className={
+                esFija
+                  ? `h-1.5 w-full rounded-full ${color.fondo} opacity-80`
+                  : `h-1.5 w-full rounded-full border-2 border-dashed bg-white ${color.borde}`
+              }
+            />
+          </>
+        )}
       </button>
     </div>
   )

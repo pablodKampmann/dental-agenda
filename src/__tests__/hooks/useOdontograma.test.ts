@@ -10,6 +10,8 @@ vi.mock('@/services/odontograma/getOdontograma', () => ({ getOdontograma: vi.fn(
 vi.mock('@/services/odontograma/setHallazgo', () => ({
   setHallazgoCara: vi.fn(),
   setHallazgoDiente: vi.fn(),
+  ejecutarHallazgoCaraRequerida: vi.fn(),
+  ejecutarHallazgoDienteRequerido: vi.fn(),
 }))
 vi.mock('@/services/odontograma/removeHallazgo', () => ({ removeHallazgo: vi.fn() }))
 vi.mock('@/services/odontograma/setVinculo', () => ({ setVinculo: vi.fn() }))
@@ -17,7 +19,11 @@ vi.mock('@/services/odontograma/removeVinculo', () => ({ removeVinculo: vi.fn() 
 
 import { useOdontograma } from '@/hooks/useOdontograma'
 import { getOdontograma } from '@/services/odontograma/getOdontograma'
-import { setHallazgoCara, setHallazgoDiente } from '@/services/odontograma/setHallazgo'
+import {
+  setHallazgoCara,
+  setHallazgoDiente,
+  ejecutarHallazgoCaraRequerida,
+} from '@/services/odontograma/setHallazgo'
 import { removeHallazgo } from '@/services/odontograma/removeHallazgo'
 import { setVinculo } from '@/services/odontograma/setVinculo'
 import { removeVinculo } from '@/services/odontograma/removeVinculo'
@@ -141,7 +147,9 @@ describe('useOdontograma — escritura optimista', () => {
     })
 
     expect(caraDe(result.current.dientes)).toBe('obturacion')
-    expect(showToast).not.toHaveBeenCalled()
+    // El éxito sí avisa (toast verde); lo que no puede haber es un error.
+    expect(showToast).not.toHaveBeenCalledWith('error', expect.anything())
+    expect(showToast).toHaveBeenCalledWith('success', expect.stringContaining('Obturación'))
   })
 
   it('un fallo técnico revierte al valor anterior y dice el motivo', async () => {
@@ -358,7 +366,12 @@ describe('useOdontograma — vínculos multi-pieza', () => {
     )
   })
 
-  it('borrar un vínculo persistido es optimista y reversible', async () => {
+  /**
+   * La baja de un vínculo es la única escritura del módulo que **no** es optimista: el
+   * tramo se queda dibujado con su spinner hasta que Firebase confirma. Por eso el
+   * vínculo sigue en pantalla cuando falla — no porque se haya revertido.
+   */
+  it('borrar un vínculo persistido no es optimista: el tramo no desaparece si falla', async () => {
     const vinculo = { tipo: 'protesis_fija', capa: 'existente', piezas: { t14: true, t15: true } } as const
     vi.mocked(getOdontograma).mockResolvedValue({ dientes: {}, vinculos: { 'push-1': vinculo }, meta: null })
     vi.mocked(removeVinculo).mockResolvedValue(null)
@@ -392,9 +405,12 @@ describe('useOdontograma — vínculos multi-pieza', () => {
     })
     const temporal = Object.keys(result.current.vinculos)[0]
 
-    await act(async () => {
-      await result.current.quitarVinculo(temporal)
+    let pedido!: string
+    act(() => {
+      pedido = result.current.pedirQuitarVinculo(temporal)
     })
+    // No pide confirmación: es cancelar la propia alta recién hecha, no borrar un registro.
+    expect(pedido).toBe('deshecho')
     expect(result.current.vinculos).toEqual({})
     expect(removeVinculo).not.toHaveBeenCalled()
 
@@ -407,5 +423,161 @@ describe('useOdontograma — vínculos multi-pieza', () => {
     expect(removeVinculo).toHaveBeenCalledWith(
       expect.objectContaining({ vinculoId: 'push-1', tipo: 'protesis_fija', capa: 'existente' })
     )
+  })
+})
+
+describe('useOdontograma — lo que la pantalla necesita del hook', () => {
+  const VINCULO = { tipo: 'protesis_fija', capa: 'existente', piezas: { t14: true, t15: true } } as const
+
+  it('un vínculo ya persistido pide confirmación y no toca Firebase hasta tenerla', async () => {
+    vi.mocked(getOdontograma).mockResolvedValue({ dientes: {}, vinculos: { 'push-1': VINCULO }, meta: null })
+    const { result } = await montar()
+
+    let pedido!: string
+    act(() => {
+      pedido = result.current.pedirQuitarVinculo('push-1')
+    })
+
+    expect(pedido).toBe('requiere_confirmacion')
+    expect(result.current.vinculos['push-1']).toEqual(VINCULO)
+    expect(removeVinculo).not.toHaveBeenCalled()
+  })
+
+  it('mientras la baja vuela el tramo queda marcado como pendiente, para el spinner del span', async () => {
+    vi.mocked(getOdontograma).mockResolvedValue({ dientes: {}, vinculos: { 'push-1': VINCULO }, meta: null })
+    const { promesa, resolver } = diferido<ResultadoEscritura>()
+    vi.mocked(removeVinculo).mockReturnValue(promesa)
+
+    const { result } = await montar()
+
+    let enVuelo!: Promise<void>
+    act(() => {
+      enVuelo = result.current.quitarVinculo('push-1')
+    })
+
+    expect(result.current.vinculosPendientes.has('push-1')).toBe(true)
+    expect(result.current.vinculos['push-1']).toEqual(VINCULO)
+
+    await act(async () => {
+      resolver({ ok: true })
+      await enVuelo
+    })
+
+    expect(result.current.vinculosPendientes.has('push-1')).toBe(false)
+    expect(result.current.vinculos).toEqual({})
+  })
+
+  /**
+   * Cerrar un plan toca dos hojas de la misma cara en un solo `update()` del service. El
+   * optimista tiene que mover las dos, y el revertido devolver las dos — si solo volviera
+   * una, la pantalla quedaría mostrando un plan a medio ejecutar que Firebase no tiene.
+   */
+  it('ejecutar un plan mueve requerida y existente juntas, y las devuelve juntas si falla', async () => {
+    vi.mocked(getOdontograma).mockResolvedValue({
+      dientes: { t16: { caras: { [CARA]: { requerida: 'obturacion', existente: 'caries' } } } },
+      vinculos: {},
+      meta: null,
+    })
+    const { promesa, resolver } = diferido<ResultadoEscritura>()
+    vi.mocked(ejecutarHallazgoCaraRequerida).mockReturnValue(promesa)
+
+    const { result } = await montar()
+
+    let enVuelo!: Promise<void>
+    act(() => {
+      enVuelo = result.current.ejecutarHallazgoCara('t16', CARA, 'obturacion', 'obturacion', 'caries')
+    })
+
+    expect(result.current.dientes.t16?.caras?.[CARA]?.requerida).toBeUndefined()
+    expect(result.current.dientes.t16?.caras?.[CARA]?.existente).toBe('obturacion')
+
+    await act(async () => {
+      resolver(null)
+      await enVuelo
+    })
+
+    expect(result.current.dientes.t16?.caras?.[CARA]?.requerida).toBe('obturacion')
+    expect(result.current.dientes.t16?.caras?.[CARA]?.existente).toBe('caries')
+  })
+
+  /**
+   * El timeline de la HC se dibuja con el mismo criterio optimista que el arco: la entrada
+   * aparece al toque y se saca si la escritura no quedó. El hook no arma el texto — emite
+   * el evento y la pantalla lo traduce con `eventoAEntrada`.
+   */
+  it('emite el evento al pintar y avisa que hay que descartarlo si la escritura falla', async () => {
+    const emitidos: Array<{ tempId: string; evento: unknown }> = []
+    const descartados: string[] = []
+    vi.mocked(setHallazgoCara).mockResolvedValue(null)
+
+    const hook = renderHook(() =>
+      useOdontograma({
+        pacienteId: 'p1',
+        clinicId: 'c1',
+        uid: 'uid-1',
+        onEventoOptimista: (tempId, evento) => emitidos.push({ tempId, evento }),
+        onEventoDescartado: (tempId) => descartados.push(tempId),
+      })
+    )
+    await waitFor(() => expect(hook.result.current.estado).toBe('listo'))
+
+    await act(async () => {
+      await hook.result.current.guardarHallazgoCara('t16', CARA, 'existente', 'obturacion', null, 'se rompió comiendo')
+    })
+
+    expect(emitidos).toHaveLength(1)
+    expect(emitidos[0].evento).toMatchObject({
+      alcance: 'CARA',
+      capa: 'existente',
+      diente: 't16',
+      cara: CARA,
+      de: null,
+      a: 'obturacion',
+      uid: 'uid-1',
+      nota: 'se rompió comiendo',
+    })
+    // La escritura falló, así que ese evento nunca ocurrió.
+    expect(descartados).toEqual([emitidos[0].tempId])
+  })
+
+  it('un éxito no descarta nada del timeline', async () => {
+    const descartados: string[] = []
+    vi.mocked(setHallazgoCara).mockResolvedValue({ ok: true })
+
+    const hook = renderHook(() =>
+      useOdontograma({
+        pacienteId: 'p1',
+        clinicId: 'c1',
+        uid: 'uid-1',
+        onEventoDescartado: (tempId) => descartados.push(tempId),
+      })
+    )
+    await waitFor(() => expect(hook.result.current.estado).toBe('listo'))
+
+    await act(async () => {
+      await hook.result.current.guardarHallazgoCara('t16', CARA, 'existente', 'obturacion', null)
+    })
+
+    expect(descartados).toEqual([])
+  })
+
+  it('el picker sabe cuándo esperar: `guardando` se prende y se apaga con la escritura', async () => {
+    const { promesa, resolver } = diferido<ResultadoEscritura>()
+    vi.mocked(setHallazgoCara).mockReturnValue(promesa)
+
+    const { result } = await montar()
+    expect(result.current.guardando).toBe(false)
+
+    let enVuelo!: Promise<void>
+    act(() => {
+      enVuelo = result.current.guardarHallazgoCara('t16', CARA, 'existente', 'obturacion', null)
+    })
+    expect(result.current.guardando).toBe(true)
+
+    await act(async () => {
+      resolver({ ok: true })
+      await enVuelo
+    })
+    expect(result.current.guardando).toBe(false)
   })
 })

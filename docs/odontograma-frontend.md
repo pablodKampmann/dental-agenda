@@ -327,6 +327,14 @@ Depende: B2-5, F4-1
       `HistorialEventos` no tiene botón de editar, de borrar ni input, y hay un test que
       lo verifica ("lista un evento real sin ningún control de edición").
 
+> **El panel separado quedó absorbido por el timeline al mergear `odontograma-dev`.**
+> El PR #141 hizo que `HistorialTimeline` muestre las dos fuentes de la HC juntas
+> —`eventos/` del odontograma y `clinicHistory/notas/`, mergeadas por `ts`— así que la
+> pantalla ya no monta `HistorialEventos`: serían los mismos asientos dos veces. Los
+> criterios de arriba siguen cumpliéndose, ahora dentro del timeline; lo que cambió es
+> dónde se ven. El componente y sus tests siguen en el árbol sin que nadie los renderice
+> — hay que borrarlos o volver a darles un lugar, no dejarlos indefinidamente así.
+
 ### F4-3 · Accesibilidad y teclado
 
 ```

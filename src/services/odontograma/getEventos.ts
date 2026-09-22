@@ -143,8 +143,25 @@ function validarEvento(raw: unknown, id: string): EventoOdontogramaConId | null 
     console.error(`getEventos: ${contexto} con alcance inválido "${String(nodo.alcance)}", se descarta`)
     return null
   }
+  // `nota`/`origen` son opcionales y aditivos (docs/odontograma-pendientes.md §5): un
+  // evento viejo sin ninguno de los dos sigue siendo válido, no se descarta por eso.
+  if (nodo.nota !== undefined && typeof nodo.nota !== 'string') {
+    console.error(`getEventos: ${contexto} con "nota" inválida, se descarta`)
+    return null
+  }
+  if (nodo.origen !== undefined && nodo.origen !== 'plan_realizado') {
+    console.error(`getEventos: ${contexto} con "origen" inválido "${String(nodo.origen)}", se descarta`)
+    return null
+  }
 
-  const base = { id, ts: nodo.ts, uid: nodo.uid, capa: nodo.capa }
+  const base = {
+    id,
+    ts: nodo.ts,
+    uid: nodo.uid,
+    capa: nodo.capa,
+    ...(typeof nodo.nota === 'string' ? { nota: nodo.nota } : {}),
+    ...(nodo.origen === 'plan_realizado' ? { origen: 'plan_realizado' as const } : {}),
+  }
 
   if (nodo.alcance === 'CARA') {
     if (!esClavePieza(nodo.diente)) {

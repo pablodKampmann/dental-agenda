@@ -3,7 +3,7 @@ export function PatientRecordSkeleton() {
         <div className="mb-4 animate-pulse">
             <div className="h-4 w-24 bg-gray-200 rounded mb-3" />
 
-            <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="flex items-center gap-4 px-4 py-3 bg-gray-50">
                     <div className="w-[60px] h-[60px] rounded-full bg-gray-200 flex-shrink-0" />
                     <div className="flex-1 min-w-0 space-y-2">
@@ -35,7 +35,7 @@ export function PatientRecordSkeleton() {
                 </div>
             </div>
 
-            <div className="border-2 border-gray-200 rounded-xl overflow-hidden mt-4 mb-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-4 mb-4">
                 <div className="flex divide-x divide-gray-200">
                     <div className="flex-1 px-4 py-3 bg-gray-50 space-y-2">
                         <div className="h-3 w-24 bg-gray-200 rounded" />

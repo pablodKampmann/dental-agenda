@@ -22,6 +22,8 @@ interface OdontogramaGridProps {
   onToggleEnTramo: (pieza: Pieza) => void
   /** Sin diálogo de confirmación — clickear el propio grafismo del vínculo lo borra. */
   onQuitarVinculo: (id: string) => void
+  /** Ids de vínculo cuya baja está en vuelo — `VinculoSpan` muestra su spinner en vez del grafismo. */
+  vinculosPendientes?: ReadonlySet<string>
 }
 
 const COLUMNAS = 16
@@ -57,6 +59,7 @@ export function OdontogramaGrid({
   onSelectDiente,
   onToggleEnTramo,
   onQuitarVinculo,
+  vinculosPendientes,
 }: OdontogramaGridProps) {
   const filas = filasDelArco(vista)
   const divisorTrasFila = Math.floor(filas.length / 2) - 1
@@ -88,7 +91,14 @@ export function OdontogramaGrid({
     items.length > 0 && (
       <div className="flex flex-col gap-1">
         {items.map(({ id, vinculo, piezas }) => (
-          <VinculoSpan key={id} piezas={piezas} tipo={vinculo.tipo} capa={vinculo.capa} onClick={() => onQuitarVinculo(id)} />
+          <VinculoSpan
+            key={id}
+            piezas={piezas}
+            tipo={vinculo.tipo}
+            capa={vinculo.capa}
+            onClick={() => onQuitarVinculo(id)}
+            pendiente={vinculosPendientes?.has(id)}
+          />
         ))}
       </div>
     )

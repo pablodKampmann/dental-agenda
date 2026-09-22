@@ -23,6 +23,8 @@ function montar(contexto: PickerContexto) {
       hallazgoActual={{}}
       onGuardar={vi.fn()}
       onQuitar={vi.fn()}
+      onEjecutar={vi.fn()}
+      guardando={false}
       onClose={vi.fn()}
       onVerPiezaCompleta={vi.fn()}
     />
