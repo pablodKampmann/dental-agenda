@@ -1,11 +1,7 @@
 'use client'
 
 import { getPatient } from "@/services/patients/getPatient";
-import { getUser } from "@/services/auth/getUser";
-import React, { useState, useEffect, useRef } from 'react';
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation'
 import dayjs from 'dayjs';
 import { PatientRecord } from "@/components/patients/ui/patientRecord";
@@ -15,17 +11,17 @@ import { Legend } from "@/components/patients/ui/odontogram/Legend";
 import { HallazgoPicker, type PickerContexto } from "@/components/patients/ui/odontogram/HallazgoPicker";
 import { HistorialTimeline, type EntradaHistorial } from "@/components/patients/ui/odontogram/HistorialTimeline";
 import { HistorialEventos } from "@/components/patients/ui/odontogram/HistorialEventos";
-import { getOdontograma } from "@/services/odontograma/getOdontograma";
-import { setHallazgoCara, setHallazgoDiente } from "@/services/odontograma/setHallazgo";
-import { removeHallazgo } from "@/services/odontograma/removeHallazgo";
-import { setVinculo, validarTramo } from "@/services/odontograma/setVinculo";
-import { removeVinculo } from "@/services/odontograma/removeVinculo";
+// `validarTramo` es la excepción documentada (docs/odontograma-backend.md, B2-4): la
+// pantalla importa el validador del tramo en vez de reimplementar el criterio. Es una
+// función pura — no arma un path ni toca el SDK; la autoridad sigue siendo el service.
+import { validarTramo } from "@/services/odontograma/setVinculo";
 import { caraSemantica, etiquetaCara } from "@/lib/odontograma/caras";
 import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
-import type { Capa, Cara, CodigoHallazgo, CodigoHallazgoCara, CodigoHallazgoDiente, CodigoHallazgoMulti, DientesPorClave, FacePosition, PiezasSet, Vinculo } from "@/lib/odontograma/tipos";
+import type { Capa, CodigoHallazgo, CodigoHallazgoCara, CodigoHallazgoDiente, CodigoHallazgoMulti } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
-import { useToast } from "@/context/ToastContext";
+import { useAuth } from "@/context/AuthContext";
+import { useOdontograma } from "@/hooks/useOdontograma";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -42,26 +38,20 @@ function vistaSugeridaPorEdad(birthDate: string | undefined): VistaArcada {
     return edad >= 6 && edad < 13 ? 'MIXTA' : 'PERMANENTE';
 }
 
-/**
- * `null` es fallo técnico (offline, error de Firebase) — nunca se reporta como "sin
- * conexión" porque el service no distingue la causa (ver signIn.ts:37, el bug que no
- * hay que repetir acá). `{ ok: false }` es un rechazo de negocio con mensaje mostrable.
- */
-function mensajeFallo(resultado: { ok: false; error: string } | null, verbo: string): string {
-    return resultado === null ? `No se pudo ${verbo}, intentá de nuevo.` : resultado.error;
-}
-
 export default function ClinicHistory() {
-    const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
     const pathname = usePathname()
     const id = pathname.split('/').slice(-2, -1)[0] || null;
     const [patient, setPatient] = useState<any>(null);
-    const [clinicId, setClinicId] = useState<string | null>(null);
+    /**
+     * El clinicId y el uid salen del AuthContext, que ya los resolvió una vez para toda
+     * la app: la pantalla no vuelve a preguntarle a Firebase (era un round-trip repetido)
+     * y, sobre todo, no importa el SDK para leer el usuario logueado — criterio de F4-1.
+     */
+    const { user } = useAuth();
+    const clinicId = user?.clinicId ?? null;
     useDocumentTitle(patient?.name ? `${patient.name} ${patient.lastName} — Historia Clínica` : "Historia Clínica");
 
-    const [dientes, setDientes] = useState<DientesPorClave>({});
-    const [vinculos, setVinculos] = useState<Record<string, Vinculo>>({});
     const [visibilidad, setVisibilidad] = useState<VisibilidadCapas>(AMBAS_CAPAS);
     const [entradas, setEntradas] = useState<EntradaHistorial[]>([]);
     const [vistaOverride, setVistaOverride] = useState<VistaArcada | null>(null);
@@ -72,28 +62,6 @@ export default function ClinicHistory() {
     const [pickerContexto, setPickerContexto] = useState<PickerContexto | null>(null);
     /** El contexto del que se vino al entrar por "Hallazgos de pieza completa", para poder volver. */
     const [pickerAnterior, setPickerAnterior] = useState<PickerContexto | null>(null);
-
-    const { showToast } = useToast();
-    /** tempIds `local-...` que el usuario borró mientras su alta seguía en vuelo — ver handleQuitarVinculo. */
-    const bajasVinculoPendientesRef = useRef<Set<string>>(new Set());
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                router.push("/notSign");
-            }
-        });
-
-        return () => unsubscribe();
-    }, [router]);
-
-    useEffect(() => {
-        async function fetchClinicId() {
-            const cid = await getUser(true);
-            setClinicId(cid as string);
-        }
-        fetchClinicId();
-    }, []);
 
     useEffect(() => {
         if (!clinicId) return;
@@ -110,15 +78,27 @@ export default function ClinicHistory() {
         get();
     }, [id, clinicId]);
 
-    useEffect(() => {
-        if (!patient?.id || !clinicId) return;
-        getOdontograma(patient.id, clinicId).then((data) => {
-            if (data) {
-                setDientes(data.dientes);
-                setVinculos(data.vinculos);
-            }
-        });
-    }, [patient?.id, clinicId]);
+    /**
+     * Toda la conversación con Firebase del odontograma pasa por acá: lectura, escrituras,
+     * actualización optimista y revertido. La pantalla no llama services ni arma paths.
+     */
+    const {
+        dientes,
+        vinculos,
+        estado: estadoOdontograma,
+        errorDeLectura,
+        recargar,
+        guardarHallazgoCara,
+        guardarHallazgoDiente,
+        quitarHallazgoCara,
+        quitarHallazgoDiente,
+        guardarVinculo,
+        quitarVinculo,
+    } = useOdontograma({
+        pacienteId: patient?.id ?? null,
+        clinicId,
+        uid: user?.userUid ?? null,
+    });
 
     function toggleVisibilidad(capa: Capa) {
         setVisibilidad((prev) => ({ ...prev, [capa]: !prev[capa] }));
@@ -148,32 +128,6 @@ export default function ClinicHistory() {
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [enModoTramo]);
 
-    /**
-     * Escribe (o borra, con `valor: null`) una hoja `caras/{cara}/{capa}` en el estado
-     * local. Reusada tanto para aplicar el update optimista como para revertirlo —
-     * revertir es solo volver a llamar con el valor que había antes (`de`).
-     */
-    function aplicarCaraLocal(clave: ClavePieza, cara: Cara, capa: Capa, valor: CodigoHallazgoCara | null) {
-        setDientes((prev) => {
-            const estado = prev[clave] ?? {};
-            const carasPrevias = { ...estado.caras?.[cara] };
-            if (valor === null) delete carasPrevias[capa];
-            else carasPrevias[capa] = valor;
-            return { ...prev, [clave]: { ...estado, caras: { ...estado.caras, [cara]: carasPrevias } } };
-        });
-    }
-
-    /** Misma idea que `aplicarCaraLocal`, para la hoja `diente/{capa}`. */
-    function aplicarDienteLocal(clave: ClavePieza, capa: Capa, valor: CodigoHallazgoDiente | null) {
-        setDientes((prev) => {
-            const estado = prev[clave] ?? {};
-            const dientePrevio = { ...estado.diente };
-            if (valor === null) delete dientePrevio[capa];
-            else dientePrevio[capa] = valor;
-            return { ...prev, [clave]: { ...estado, diente: dientePrevio } };
-        });
-    }
-
     function hallazgoActualDe(contexto: PickerContexto): Partial<Record<Capa, CodigoHallazgo>> {
         if (contexto.alcance === 'MULTI') return {};
         const estado = dientes[contexto.pieza.clave];
@@ -196,89 +150,49 @@ export default function ClinicHistory() {
         ]);
     }
 
+    function cerrarPicker() {
+        setPickerContexto(null);
+        setPickerAnterior(null);
+    }
+
+    /**
+     * El picker se cierra antes de esperar la escritura, no después: el hook ya dibujó el
+     * hallazgo (actualización optimista) y quedarse con el popover abierto esperando el
+     * round-trip es justo lo que se sentía roto con 52 piezas y un click por hallazgo. Si
+     * la escritura falla, el hook lo deshace y avisa por qué.
+     */
     async function handleGuardarHallazgo(codigo: CodigoHallazgo, capa: Capa, nota: string) {
-        if (!pickerContexto || !clinicId || !patient?.id) return;
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-        const pacienteId = patient.id;
+        if (!pickerContexto) return;
 
         if (pickerContexto.alcance === 'CARA') {
             const { pieza, posicion } = pickerContexto;
             const cara = caraSemantica(posicion, pieza.cuadrante);
-            const codigoCara = codigo as CodigoHallazgoCara;
             const de = dientes[pieza.clave]?.caras?.[cara]?.[capa] ?? null;
 
-            aplicarCaraLocal(pieza.clave, cara, capa, codigoCara);
+            cerrarPicker();
             registrarEntrada(etiquetaCara(cara, pieza.arcada, pieza.tipo), hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
-            setPickerContexto(null);
-            setPickerAnterior(null);
-
-            const resultado = await setHallazgoCara({ clinicId, pacienteId, pieza: pieza.clave, cara, capa, codigo: codigoCara, de, uid });
-            if (resultado === null || !resultado.ok) {
-                aplicarCaraLocal(pieza.clave, cara, capa, de);
-                showToast('error', mensajeFallo(resultado, 'guardar'));
-            }
+            await guardarHallazgoCara(pieza.clave, cara, capa, codigo as CodigoHallazgoCara, de);
         } else if (pickerContexto.alcance === 'DIENTE') {
             const { pieza } = pickerContexto;
-            const codigoDiente = codigo as CodigoHallazgoDiente;
             const de = dientes[pieza.clave]?.diente?.[capa] ?? null;
 
-            aplicarDienteLocal(pieza.clave, capa, codigoDiente);
+            cerrarPicker();
             registrarEntrada('pieza completa', hallazgoDe(codigo).nombre, pieza.codigo, capa, nota);
-            setPickerContexto(null);
-            setPickerAnterior(null);
-
-            const resultado = await setHallazgoDiente({ clinicId, pacienteId, pieza: pieza.clave, capa, codigo: codigoDiente, de, uid });
-            if (resultado === null || !resultado.ok) {
-                aplicarDienteLocal(pieza.clave, capa, de);
-                showToast('error', mensajeFallo(resultado, 'guardar'));
-            }
+            await guardarHallazgoDiente(pieza.clave, capa, codigo as CodigoHallazgoDiente, de);
         } else {
             const piezas = pickerContexto.piezas;
             const codigos = piezas.map((p) => p.codigo).join('-');
-            const piezasSet: PiezasSet = {};
-            piezas.forEach((p) => { piezasSet[p.clave] = true; });
-            const tipo = codigo as CodigoHallazgoMulti;
-            const tempId = `local-${Date.now()}`;
 
-            setVinculos((prev) => ({ ...prev, [tempId]: { tipo, capa, piezas: piezasSet } }));
-            registrarEntrada(`tramo ${codigos}`, hallazgoDe(codigo).nombre, piezas[0].codigo, capa, nota);
+            cerrarPicker();
             setPiezasEnTramo(new Map());
             setEnModoTramo(false);
-            setPickerContexto(null);
-            setPickerAnterior(null);
-
-            const resultado = await setVinculo({ clinicId, pacienteId, tipo, capa, piezas: piezas.map((p) => p.clave), uid });
-            if (resultado === null || !resultado.ok) {
-                setVinculos((prev) => {
-                    const { [tempId]: _quitado, ...resto } = prev;
-                    return resto;
-                });
-                showToast('error', mensajeFallo(resultado, 'guardar'));
-            } else {
-                const bajaPendiente = bajasVinculoPendientesRef.current.delete(tempId);
-                setVinculos((prev) => {
-                    // Si ya se borró en el intervalo (click rápido en el span antes del ack), no resucitarlo.
-                    if (!(tempId in prev)) return prev;
-                    const { [tempId]: vinculo, ...resto } = prev;
-                    return { ...resto, [resultado.vinculoId]: vinculo };
-                });
-                if (bajaPendiente) {
-                    // El borrado pedido mientras el alta seguía en vuelo no tuvo id real para limpiar en Firebase — ahora sí.
-                    const resultadoBaja = await removeVinculo({ clinicId, pacienteId, vinculoId: resultado.vinculoId, tipo, capa, piezas: piezasSet, uid });
-                    if (resultadoBaja === null || !resultadoBaja.ok) {
-                        showToast('error', mensajeFallo(resultadoBaja, 'borrar'));
-                    }
-                }
-            }
+            registrarEntrada(`tramo ${codigos}`, hallazgoDe(codigo).nombre, piezas[0].codigo, capa, nota);
+            await guardarVinculo(codigo as CodigoHallazgoMulti, capa, piezas.map((p) => p.clave));
         }
     }
 
     async function handleQuitarHallazgo(capa: Capa) {
-        if (!pickerContexto || pickerContexto.alcance === 'MULTI' || !clinicId || !patient?.id) return;
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-        const pacienteId = patient.id;
+        if (!pickerContexto || pickerContexto.alcance === 'MULTI') return;
 
         if (pickerContexto.alcance === 'CARA') {
             const { pieza, posicion } = pickerContexto;
@@ -286,63 +200,16 @@ export default function ClinicHistory() {
             const de = dientes[pieza.clave]?.caras?.[cara]?.[capa];
             if (!de) return;
 
-            aplicarCaraLocal(pieza.clave, cara, capa, null);
-            setPickerContexto(null);
-            setPickerAnterior(null);
-
-            const resultado = await removeHallazgo({ alcance: 'CARA', clinicId, pacienteId, pieza: pieza.clave, cara, capa, de, uid });
-            if (resultado === null || !resultado.ok) {
-                aplicarCaraLocal(pieza.clave, cara, capa, de);
-                showToast('error', mensajeFallo(resultado, 'borrar'));
-            }
+            cerrarPicker();
+            await quitarHallazgoCara(pieza.clave, cara, capa, de);
         } else {
             const { pieza } = pickerContexto;
             const de = dientes[pieza.clave]?.diente?.[capa];
             if (!de) return;
 
-            aplicarDienteLocal(pieza.clave, capa, null);
-            setPickerContexto(null);
-            setPickerAnterior(null);
-
-            const resultado = await removeHallazgo({ alcance: 'DIENTE', clinicId, pacienteId, pieza: pieza.clave, capa, de, uid });
-            if (resultado === null || !resultado.ok) {
-                aplicarDienteLocal(pieza.clave, capa, de);
-                showToast('error', mensajeFallo(resultado, 'borrar'));
-            }
+            cerrarPicker();
+            await quitarHallazgoDiente(pieza.clave, capa, de);
         }
-    }
-
-    /**
-     * Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". Si el vínculo
-     * todavía tiene su id temporal (`local-...`, el alta original sigue en vuelo) no hay
-     * nada persistido para borrar todavía acá — se anota en `bajasVinculoPendientesRef` y
-     * el handler de éxito de `setVinculo` en `handleGuardarHallazgo` es quien, al resolver
-     * el id real, lo borra de Firebase (si no, quedaría huérfano en `actual/vinculos/`).
-     */
-    function handleQuitarVinculo(vinculoId: string) {
-        const vinculo = vinculos[vinculoId];
-        if (!vinculo) return;
-
-        setVinculos((prev) => {
-            const { [vinculoId]: _quitado, ...resto } = prev;
-            return resto;
-        });
-
-        if (vinculoId.startsWith('local-')) {
-            bajasVinculoPendientesRef.current.add(vinculoId);
-            return;
-        }
-        if (!clinicId || !patient?.id) return;
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-        const pacienteId = patient.id;
-
-        removeVinculo({ clinicId, pacienteId, vinculoId, tipo: vinculo.tipo, capa: vinculo.capa, piezas: vinculo.piezas, uid }).then((resultado) => {
-            if (resultado === null || !resultado.ok) {
-                setVinculos((prev) => ({ ...prev, [vinculoId]: vinculo }));
-                showToast('error', mensajeFallo(resultado, 'borrar'));
-            }
-        });
     }
 
     if (id !== null) {
@@ -381,12 +248,13 @@ export default function ClinicHistory() {
                                         {vista === 'MIXTA' ? 'Dentición mixta' : 'Dentición permanente'}
                                     </button>
                                     <button
+                                        disabled={estadoOdontograma !== 'listo'}
                                         onClick={() => { if (enModoTramo) cancelarModoTramo(); else setEnModoTramo(true); }}
                                         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium border shadow-sm transition ${
                                             enModoTramo
                                                 ? 'bg-teal-700 border-teal-700 text-white'
                                                 : 'bg-white border-gray-200 text-gray-700 hover:border-teal-600 hover:text-teal-700'
-                                        }`}
+                                        } disabled:opacity-40 disabled:cursor-not-allowed`}
                                     >
                                         <FaLayerGroup size={12} /> Prótesis (varias piezas)
                                     </button>
@@ -394,8 +262,28 @@ export default function ClinicHistory() {
                             </div>
 
                             <div className="flex flex-col md:flex-row gap-4 p-3">
-                                <div className="flex-1 min-w-0 min-h-[420px] flex items-center justify-center p-8">
-                                    <OdontogramaGrid
+                                <div className="flex-1 min-w-0 min-h-[420px] flex flex-col items-center justify-center p-8">
+                                    {estadoOdontograma === 'cargando' && (
+                                        <p className="text-sm text-gray-400 italic">Cargando el odontograma…</p>
+                                    )}
+                                    {/*
+                                      * Un fallo de lectura no se dibuja como un arco vacío: una boca sin
+                                      * hallazgos y una boca que no se pudo leer se ven exactamente igual, y
+                                      * confundirlas es leer mal la ficha de un paciente. Se muestra el motivo
+                                      * —que distingue "sin permiso" de "sin conexión"— y se puede reintentar.
+                                      */}
+                                    {estadoOdontograma === 'error' && (
+                                        <div className="flex flex-col items-center gap-3 text-center">
+                                            <p className="text-sm text-red-500 max-w-sm">{errorDeLectura}</p>
+                                            <button
+                                                onClick={recargar}
+                                                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-gray-300 text-gray-700 shadow-sm hover:border-teal-600 hover:text-teal-700 transition"
+                                            >
+                                                Reintentar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {estadoOdontograma === 'listo' && <OdontogramaGrid
                                         dientes={dientes}
                                         visibilidad={visibilidad}
                                         vista={vista}
@@ -406,8 +294,8 @@ export default function ClinicHistory() {
                                         onSelectCara={(pieza, posicion, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'CARA', pieza, posicion, anchor }) }}
                                         onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
                                         onToggleEnTramo={toggleEnTramo}
-                                        onQuitarVinculo={handleQuitarVinculo}
-                                    />
+                                        onQuitarVinculo={quitarVinculo}
+                                    />}
                                 </div>
                                 <div className="w-full md:w-[15%] shrink-0">
                                     <Legend visibilidad={visibilidad} onToggle={toggleVisibilidad} />
