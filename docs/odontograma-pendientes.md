@@ -159,83 +159,12 @@ corrupto, decidir ahí qué se hace (descartar la pieza, loguear, romper) y escr
 
 ## 3. Para cuando se planifique el front
 
-El front lo hace el equipo después del back — la pestaña «Odontograma» de la ficha del
-paciente ya existe y es donde va a montarse. Lo que todavía no existe es el plan escrito:
-`docs/odontograma-backend.md` es backend-only y B3 es soporte y cierre (seed, tests,
-AGENTS.md).
-
-**Estas entradas son el input de esa planificación.** Cuando se escriban las issues del
-front, se leen de acá y se migran allá.
-
-### 3.1 `colorDe().fondo` es un color sólido, no sirve para un chip
-
-`caras.ts` devuelve `fondo: 'bg-red-600'` junto con `texto: 'text-red-600'`. El comentario
-dice que `fondo` es para chips de la leyenda y badges del picker, pero rojo 600 sobre rojo
-600 no se lee.
-
-Un chip real quiere `bg-red-50` con `text-red-600`. Cuando exista el primer componente que
-consuma esto, o se agrega una variante `fondoSuave`, o se cambia `fondo` a la versión
-clara y se renombra la actual. No se tocó antes porque no hay consumidor y la forma
-correcta se ve recién con el componente en la mano.
-
-### 3.4 `tieneHallazgos` y `capasVisibles` preguntan lo mismo
-
-`tieneHallazgos(e, p)` es equivalente a `capasVisibles(e, p).length > 0`. Comparten el
-recorrido así que no cuesta performance, pero son dos formas de preguntar una cosa.
-
-Cuando el componente esté escrito, si usa una sola, borrar la otra.
-
-### 3.5 `capasVisibles` es el único selector sin consumidor probado
-
-La semántica es la intersección entre lo prendido en el conmutador y lo que la pieza tiene
-cargado, en orden `existente, requerida` (para que lo requerido quede dibujado encima de lo
-existente). Está razonada pero se inventó sin un componente que la use.
-
-Es la primera candidata a cambiar de forma cuando el conmutador exista de verdad. Que
-cambie no es una regresión.
-
-### 3.6 Al portar `Tooth.tsx` hay **dos** espejados que corregir
-
-Está en `docs/odontograma-backend.md`, sección "Tres cosas para tener a mano al portar",
-pero se repite acá porque es el error más caro de la feature:
-
-- **Horizontal:** `FACE_LABELS` del prototipo mapea `left: 'Mesial'` para las 32 piezas.
-  En los cuadrantes 1, 4, 5 y 8 la cara izquierda es **distal**.
-- **Vertical:** el prototipo dibuja el vestibular arriba en las dos arcadas. En la arcada
-  inferior el vestibular va **abajo**.
-
-Los dos se resuelven usando `caraSemantica()` de `caras.ts`, tanto para guardar como para
-pintar. Ninguno de los dos se ve en pantalla si está mal: el dibujo queda coherente y
-espejado, y el dato clínico queda falso en media boca.
-
-### 3.7 `HallazgoPicker` no filtra por dentición (B4-1) — criterio para F4-1
-
-> **RESUELTO en F4-1.** `opcionesDelContexto()` en `HallazgoPicker.tsx` cruza
-> `hallazgosPorAlcance()` con `aplicaADenticion()` —importado, no reimplementado— así que
-> un implante no aparece nunca como opción sobre una temporaria, ni una prótesis fija sobre
-> un tramo de temporarias. En un tramo `MULTI` se exige que el hallazgo aplique a **todas**
-> las piezas, no solo a la primera. La validación del service quedó igual: el filtro es UX,
-> la autoridad sigue siendo el backend. Fijado por
-> `src/__tests__/components/patients/ui/odontogram/HallazgoPicker.test.tsx`.
-
-El catálogo declara `denticiones` por entrada y los services (`setHallazgoDiente`,
-`setVinculo`) lo hacen cumplir, pero el picker (`HallazgoPicker.tsx`) todavía arma su
-lista solo con `hallazgosPorAlcance()`, sin cruzarla contra la dentición de la pieza
-clickeada. Hoy no importa: la UI ni siquiera escribe contra Firebase todavía. Pero
-apenas F4-1 la conecte, sigue ofreciendo "Implante" o "Prótesis fija" sobre un diente de
-leche.
-
-**El flujo si no se arregla:** la odontóloga elige "Implante" sobre una pieza temporaria →
-la UI lo dibuja optimista → el service lo rechaza (`{ ok: false, error }`) → hay que
-revertir el dibujo optimista y mostrarle el error. Funciona (el service no permite que se
-guarde mal), pero es una mala experiencia evitable: se ofreció algo que nunca iba a
-guardarse.
-
-**Criterio de aceptación para F4-1:** `HallazgoPicker` filtra su lista con el mismo
-`aplicaADenticion(codigo, pieza.denticion)` que ya usan los services —importado, no
-reimplementado— así que un implante no aparece nunca como opción sobre una temporaria. La
-validación del service se queda igual: el filtro del picker es UX, la autoridad sigue
-siendo el backend.
+**Vacía (F4-4).** Las cinco entradas que vivían acá —3.1, 3.4, 3.5, 3.6 y 3.7— se
+resolvieron o se descartaron contra el código ya escrito, y se borraron en vez de quedar
+anotadas. Lo que de cada una sobrevive como regla está en `AGENTS.md`, que es donde se
+lee; el motivo de cada baja está en el commit de F4-4. No volver a llenar esta sección:
+el front ya está escrito, así que lo que aparezca de acá en adelante es una issue, no un
+input de planificación.
 
 ---
 
