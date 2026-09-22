@@ -73,7 +73,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
   const entradaEditando = entradas.find((e) => e.id === idEditando) ?? null
 
   return (
-    <div className="border-2 border-gray-300 rounded-xl overflow-hidden mt-4">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-4">
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 select-none">
         <h2 className="text-base font-bold tracking-wide text-black flex items-center gap-2">
           <HiOutlineClipboardDocumentList className="text-teal-600" size={18} /> Historia Clínica
@@ -106,10 +106,13 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
           <p className="text-sm text-gray-400 italic text-center py-8">Sin entradas todavía</p>
         ) : (
           entradas.map((entrada) => (
-            <div key={entrada.id} className="group px-4 py-3 flex gap-3">
+            <div
+              key={entrada.id}
+              className={`group pl-3 pr-4 py-3 flex gap-3 border-l-2 ${entrada.hallazgo ? colorDe(entrada.hallazgo.capa).borde : 'border-transparent'}`}
+            >
               <div className="flex flex-col items-center pt-0.5">
                 {entrada.hallazgo ? (
-                  <FaTooth className="text-teal-600" size={15} />
+                  <FaTooth className={colorDe(entrada.hallazgo.capa).texto} size={15} />
                 ) : (
                   <BiSolidNote className="text-gray-400" size={16} />
                 )}
@@ -119,16 +122,16 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
                   <span className="text-xs text-gray-400">{entrada.fecha} · {entrada.hora}</span>
                   {entrada.hallazgo && (
                     <span
-                      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${colorDe(entrada.hallazgo.capa).fondo} text-white`}
+                      className={`text-[10px] font-medium px-1.5 py-0.5 rounded border bg-white ${colorDe(entrada.hallazgo.capa).borde} ${colorDe(entrada.hallazgo.capa).texto}`}
                     >
                       Pieza {entrada.hallazgo.piezaCodigo} · {entrada.hallazgo.detalle}
                     </span>
                   )}
                 </div>
                 {entrada.hallazgo && (
-                  <p className="text-sm font-semibold text-gray-800 mt-0.5">{entrada.hallazgo.nombreHallazgo}</p>
+                  <p className="text-sm font-semibold text-gray-800 mt-1">{entrada.hallazgo.nombreHallazgo}</p>
                 )}
-                {entrada.texto && <p className="text-sm text-gray-600 mt-0.5">{entrada.texto}</p>}
+                {entrada.texto && <p className="text-sm text-gray-600 mt-1">{entrada.texto}</p>}
               </div>
               {/* Editar/eliminar solo aplica a notas libres: un hallazgo sale del log
                   append-only del odontograma, no se corrige acá — se corrige cargando
@@ -163,7 +166,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
             className="fixed inset-0 z-[60] backdrop-blur-sm bg-black/50 animate-fade-in"
             onClick={() => { if (!guardandoEdicion) setIdEditando(null) }}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg text-black animate-fade-in">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] sm:w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-xl text-black animate-fade-in">
             <div className="px-6 pt-5 pb-3 border-b border-gray-200">
               <h2 className="text-lg font-semibold">Editar nota</h2>
               <p className="text-xs text-gray-400 mt-0.5">{entradaEditando.fecha} · {entradaEditando.hora}</p>

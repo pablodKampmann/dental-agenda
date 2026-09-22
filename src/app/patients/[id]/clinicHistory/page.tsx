@@ -596,7 +596,7 @@ export default function ClinicHistory() {
                 {isLoad ? (
                     <PatientRecordSkeleton />
                 ) : (
-                    <div className="animate-page-drop">
+                    <div className="animate-fade-in">
                         <PatientRecord patient={patient} />
 
                         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden select-none">
