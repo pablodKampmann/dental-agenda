@@ -4,7 +4,7 @@ import React from "react";
 import { FaUsers, FaTooth } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IoLogoWhatsapp } from "react-icons/io";
-import { MdNotificationsNone, MdBarChart, MdMedicalServices } from "react-icons/md";
+import { MdNotificationsNone, MdBarChart, MdMedicalServices, MdOutlinePayments } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
 import { BsCalendar2WeekFill } from "react-icons/bs";
 import { LogOut } from "lucide-react";
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/agenda", label: "Agenda", icon: BsCalendar2WeekFill, match: (p: string) => p === "/agenda" },
   { href: "/patients", label: "Pacientes", icon: FaUsers, match: (p: string) => p.includes("/patients") },
   { href: "/treatments", label: "Tratamientos", icon: MdMedicalServices, match: (p: string) => p === "/treatments" },
+  { href: "/payments", label: "Pagos", icon: MdOutlinePayments, match: (p: string) => p === "/payments" },
   { href: "/messenger", label: "Mensajería", icon: IoLogoWhatsapp, match: (p: string) => p === "/messenger" },
   { href: "/estadisticas", label: "Estadísticas", icon: MdBarChart, match: (p: string) => p === "/estadisticas" },
 ] as const;

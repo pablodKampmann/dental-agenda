@@ -13,6 +13,9 @@ import { getAllPatientsFull } from "./../../services/patients/getAllPatientsFull
 import { getClinicData } from "@/services/config/getClinicData";
 import { getTreatments, type Treatment } from "@/services/treatments/getTreatments";
 import { getAppointmentTreatments, type AppointmentTreatment } from "@/components/appointments/appointmentUtils";
+import { getPayments, type Payment } from "@/services/payments/getPayments";
+import { addPayment, type PaymentFields } from "@/services/payments/addPayment";
+import { PaymentFormModal, type PaymentFormValues, type PaymentFixedAppointment } from "@/components/payments/ui/PaymentFormModal";
 import { normalizeForSearch } from "@/lib/utils";
 import { ClipLoader } from "react-spinners";
 import { Loading } from "./../../components/shared/loading";
@@ -29,6 +32,7 @@ import {
   MdClose,
   MdCalendarToday,
   MdEdit,
+  MdOutlinePayments,
 } from "react-icons/md";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/es";
@@ -89,10 +93,10 @@ function PatientParamReader({
   return null;
 }
 
-// Alto/ancho fijos del popover de Acciones (header + 3 ítems) — igual que FloatingAnchor en
+// Alto/ancho fijos del popover de Acciones (header + 4 ítems) — igual que FloatingAnchor en
 // el odontograma, el alto se define por adelantado y nunca se mide después de pintar.
 const ACCIONES_PANEL_WIDTH = 224; // w-56
-const ACCIONES_PANEL_HEIGHT = 148;
+const ACCIONES_PANEL_HEIGHT = 184;
 const PICKER_PAGE_SIZE = 50;
 
 export default function Page() {
@@ -132,6 +136,11 @@ export default function Page() {
   const [clinicId, setClinicId] = useState<string | null>(null);
   const [pros, setPros] = useState<any[] | null>(null);
   const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(null);
+  const [paymentModalContext, setPaymentModalContext] = useState<{
+    patient: { id: number; name: string; lastName: string };
+    appointment: PaymentFixedAppointment;
+    payments: Payment[];
+  } | null>(null);
 
   const calendarRef = useRef<any>(null);
   const skipResetHours = useRef(false);
@@ -478,6 +487,37 @@ export default function Page() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   }
 
+  // Pagos ya cargados se piden recién acá (no en el load inicial de /agenda, que no los
+  // necesita para nada más) — solo hace falta un fetch puntual para calcular el saldo del
+  // turno sobre el que se abre el modal.
+  async function handleOpenPaymentModal() {
+    if (!appointmentSelect || !clinicId) return;
+    setOpenModalAppointment(false);
+    const allPayments = await getPayments(clinicId);
+    setPaymentModalContext({
+      patient: {
+        id: appointmentSelect.patientId,
+        name: appointmentSelect.patientData?.name ?? "",
+        lastName: appointmentSelect.patientData?.lastName ?? "",
+      },
+      appointment: {
+        id: appointmentSelect.id,
+        date: appointmentSelect.date,
+        time: appointmentSelect.time,
+        treatments: getAppointmentTreatments(appointmentSelect),
+      },
+      payments: allPayments ?? [],
+    });
+  }
+
+  async function handleSavePaymentFromAgenda(values: PaymentFormValues) {
+    if (!clinicId) return;
+    setPaymentModalContext(null);
+    const result = await addPayment(clinicId, values as PaymentFields);
+    if (result === null) showToast("error", "Error al registrar el pago");
+    else showToast("success", "Pago registrado correctamente");
+  }
+
   function dayBack() {
     setOpenCalendar(false);
     const newDate = new Date(today);
@@ -694,6 +734,18 @@ export default function Page() {
               }}
               confirmText="Eliminar"
             />
+            <PaymentFormModal
+              open={!!paymentModalContext}
+              onClose={() => setPaymentModalContext(null)}
+              catalog={treatmentsCatalog}
+              payments={paymentModalContext?.payments ?? []}
+              patients={null}
+              editingPayment={null}
+              fixedPatient={paymentModalContext?.patient ?? null}
+              fixedAppointment={paymentModalContext?.appointment ?? null}
+              onSave={handleSavePaymentFromAgenda}
+              onRequestDelete={() => {}}
+            />
             {openModalAppointment && appointmentAnchorRect && accionesStyle && createPortal(
               <div
                 key={`${appointmentSelect?.date}-${appointmentSelect?.time}`}
@@ -724,6 +776,13 @@ export default function Page() {
                 >
                   <BiSolidBellRing size={16} className="shrink-0" />
                   Recordar por WhatsApp
+                </button>
+                <button
+                  onClick={handleOpenPaymentModal}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-black transition duration-150"
+                >
+                  <MdOutlinePayments size={16} className="shrink-0" />
+                  Registrar pago
                 </button>
                 <button
                   onClick={() => {

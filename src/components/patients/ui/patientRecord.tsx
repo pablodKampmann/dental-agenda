@@ -33,7 +33,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
 
     useEffect(() => {
         if (pathname.includes('clinicHistory')) setSelectedField('clinicHistory');
-        else if (pathname.includes('billing')) setSelectedField('billing');
+        else if (pathname.includes('payments')) setSelectedField('payments');
         else setSelectedField('modify');
     }, [pathname]);
 
@@ -148,6 +148,14 @@ export function PatientRecord({ patient }: ModalSettProps) {
                             className={`${selectedField === 'clinicHistory' ? 'bg-white text-teal-700 font-semibold' : 'text-gray-500 hover:text-gray-800'} px-5 py-2 text-sm transition duration-150`}
                         >
                             Historia Clínica
+                        </button>
+                    </Link>
+                    <Link prefetch={true} href={`/patients/${patient.id}/payments`}>
+                        <button
+                            onClick={() => setSelectedField('payments')}
+                            className={`${selectedField === 'payments' ? 'bg-white text-teal-700 font-semibold' : 'text-gray-500 hover:text-gray-800'} px-5 py-2 text-sm transition duration-150`}
+                        >
+                            Pagos
                         </button>
                     </Link>
                 </div>

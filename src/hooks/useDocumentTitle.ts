@@ -5,6 +5,7 @@ const STATIC_TITLES: Record<string, string> = {
   "/agenda": "Agenda",
   "/patients": "Pacientes",
   "/treatments": "Tratamientos",
+  "/payments": "Pagos",
   "/config": "Configuración",
   "/estadisticas": "Estadísticas",
   "/messenger": "Mensajería",
