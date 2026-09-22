@@ -290,6 +290,19 @@ Depende: B2-2, B2-3, B2-4, F2-3, F3-3
       `estado: 'cargando' | 'listo' | 'error'` y la pestaña muestra el motivo con un botón
       de reintentar. No estaba escrito como criterio, pero un arco vacío y un arco que no
       se pudo leer se ven idénticos en pantalla.
+- [x] El canal de fallos no quedó a medio usar: los **dos** services de lectura lo reportan
+      y los dos callers lo muestran. `HistorialEventos` (el panel de F4-2) pasa `onFallo` a
+      `getEventos` y traduce el motivo con `mensajeDeFallo(motivo, 'cargar_registro')`, en
+      vez del "intentá de nuevo" fijo que tenía — que era el mismo bug que este canal vino
+      a cerrar, mandando a revisar la conexión a quien no tiene permiso sobre la ficha.
+
+**Alcance cerrado: 5 de los 7 services de escritura quedan cableados.** Los cinco son los
+caminos que la UI ya dispara (CARA/DIENTE set+remove, alta/baja de vínculo).
+`ejecutarHallazgoCaraRequerida` y `ejecutarHallazgoDienteRequerido` quedan afuera **a
+propósito**: son el paso «requerida → ejecutada» y no hay todavía ningún control en la
+pantalla que los invoque, así que cablearlos sería agregar una operación al hook que nadie
+llama. Cuando exista ese botón, el patrón para sumarlos es el de `AGENTS.md` («Patrón de
+optimistic-update-revert»); no hace falta rediseñar nada del hook.
 
 ### F4-2 · Panel de historial
 
@@ -300,11 +313,19 @@ Depende: B2-5, F4-1
 
 **Criterios de aceptación**
 
-- [ ] Lista los eventos del paciente, del más nuevo al más viejo.
-- [ ] Cada asiento dice qué pieza, qué cara, qué capa y la transición `de` → `a`, en
-      lenguaje clínico y no en códigos.
-- [ ] Un borrado se muestra como un asiento, no como una ausencia.
-- [ ] Es de solo lectura. El log es append-only y la pantalla no puede sugerir otra cosa.
+- [x] Lista los eventos del paciente, del más nuevo al más viejo. `getEventos` pide
+      `orderByKey()` + `limitToLast(n)` (las push IDs ya ordenan cronológicamente) y
+      revierte el tramo antes de devolverlo.
+- [x] Cada asiento dice qué pieza, qué cara, qué capa y la transición `de` → `a`, en
+      lenguaje clínico y no en códigos. `describirEvento()` devuelve `{ piezas, ubicacion,
+      capa, transicion }`; la cara sale de `etiquetaCara()` y el hallazgo de
+      `hallazgoDe(codigo).nombre`, nunca el código crudo.
+- [x] Un borrado se muestra como un asiento, no como una ausencia: `transicionTexto()`
+      redacta las tres formas por separado —"Se registró X", "Se quitó X", "X pasó a Y"—
+      y nunca un "cambió" genérico. Fijado por `formatoHistorialEventos.test.ts`.
+- [x] Es de solo lectura. El log es append-only y la pantalla no puede sugerir otra cosa:
+      `HistorialEventos` no tiene botón de editar, de borrar ni input, y hay un test que
+      lo verifica ("lista un evento real sin ningún control de edición").
 
 ### F4-3 · Accesibilidad y teclado
 
@@ -315,12 +336,25 @@ Depende: F4-1
 
 **Criterios de aceptación**
 
-- [ ] Las zonas son focusables y accionables con teclado.
-- [ ] Cada zona tiene nombre accesible con la pieza y la cara: "Pieza 16, palatino".
-- [ ] El color **no** es el único portador de la distinción existente/requerido — hay texto
+- [x] Las zonas son focusables y accionables con teclado. Los 5 `<path>` de cara, el
+      `<rect>` de pieza completa y el `<rect>` de selección de tramo llevan `tabIndex={0}`,
+      `role="button"` y `onKeyDown` vía `activarConTeclado()`, que dispara **la misma**
+      acción que el `onClick` en Enter y Espacio (con `preventDefault` en Espacio para que
+      no scrollee). El rect de tramo suma `aria-pressed`, porque es un toggle.
+- [x] Cada zona tiene nombre accesible con la pieza y la cara: "Pieza 16, palatino". Sale de
+      `caraSemantica()` + `etiquetaCara()`, los mismos dos llamados que arma el header del
+      picker — nunca de un string de cara escrito a mano.
+- [x] El color **no** es el único portador de la distinción existente/requerido — hay texto
       accesible en cada elemento. Es requisito de accesibilidad y además cubre a una
       odontóloga con daltonismo, que con una ficha rojo/azul no es un caso hipotético.
-- [ ] Contraste suficiente sobre el fondo del cuadrado.
+      El nombre accesible nombra el hallazgo **y su capa** ("Pieza 16, palatino: caries
+      requerida"), y si existente y requerida están cargadas a la vez menciona las dos.
+      `VinculoSpan` suma la capa a su `aria-label`.
+- [x] Contraste suficiente sobre el fondo del cuadrado. El número FDI de una pieza con
+      hallazgo pasó de teal-600 (~3.74:1) a teal-700 (~5.47:1), que sí llega al AA de
+      4.5:1 para texto chico. El relleno de cara se midió y pasa el 3:1 de WCAG 1.4.11 tal
+      como estaba, así que no se tocó. Las cuentas quedaron como test de regresión en
+      `src/__tests__/lib/odontograma/contraste.test.ts`.
 
 ### F4-4 · Cierre
 

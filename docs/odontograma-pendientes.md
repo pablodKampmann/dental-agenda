@@ -112,7 +112,9 @@ Es decisión de producto.
 services de `services/odontograma/` clasifican el motivo con `clasificarFallo()`
 (`fallos.ts`) y lo reportan por un `onFallo?` opcional, sin cambiar su valor de retorno, así
 que un permission-denied se muestra como falta de permiso y no como falta de conexión
-(`fallos.test.ts` lo fija). **`signIn.ts:37` sigue igual**: arreglarlo es tocar el flujo de
+(`fallos.test.ts` lo fija). Los **dos** callers de lectura lo consumen: la pestaña del
+odontograma vía `useOdontograma`, y el panel de eventos (F4-2) vía `HistorialEventos`, que
+antes mostraba un "intentá de nuevo" fijo para cualquier causa. **`signIn.ts:37` sigue igual**: arreglarlo es tocar el flujo de
 login, no el odontograma, y no entraba en F4-1. Cuando se cierre esta regla hay que
 arreglarlo primero o el login va a romper mintiendo sobre el motivo — `fallos.ts` ya tiene
 el clasificador para reusar, no hace falta escribirlo de nuevo.
