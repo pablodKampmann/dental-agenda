@@ -2,6 +2,7 @@
 
 import { useState, type KeyboardEvent } from 'react'
 import type { FocusEvent } from 'react'
+import { ClipLoader } from 'react-spinners'
 import { colorDe } from '@/lib/odontograma/caras'
 import { type EntradaHistorial } from '@/lib/odontograma/historial'
 import { FaTooth } from 'react-icons/fa'
@@ -14,22 +15,35 @@ export type { EntradaHistorial }
 
 interface HistorialTimelineProps {
   entradas: EntradaHistorial[]
-  onAgregarNota: (texto: string) => void
-  onEditarTexto: (id: string, texto: string) => void
-  onEliminar: (id: string) => void
+  onAgregarNota: (texto: string) => Promise<void>
+  onEditarTexto: (id: string, texto: string) => Promise<void>
+  onEliminar: (id: string) => Promise<void>
 }
 
+/**
+ * Mismo patrón que `ModalCreatePatient`/`AddAppointmentForm`: `ClipLoader` +
+ * `disabled` mientras la promesa está en vuelo, nunca un botón mudo entre el click y
+ * el toast. `ConfirmAlert` ya trae este mismo patrón resuelto adentro — ver el
+ * `onConfirm` de más abajo, que le devuelve la promesa en vez de cerrar a mano.
+ */
 export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEliminar }: HistorialTimelineProps) {
   const [nota, setNota] = useState('')
+  const [guardandoNota, setGuardandoNota] = useState(false)
   const [idEditando, setIdEditando] = useState<string | null>(null)
   const [textoEditando, setTextoEditando] = useState('')
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false)
   const [idAEliminar, setIdAEliminar] = useState<string | null>(null)
 
-  function handleAgregar() {
+  async function handleAgregar() {
     const texto = nota.trim()
-    if (!texto) return
-    onAgregarNota(texto)
-    setNota('')
+    if (!texto || guardandoNota) return
+    setGuardandoNota(true)
+    try {
+      await onAgregarNota(texto)
+      setNota('')
+    } finally {
+      setGuardandoNota(false)
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
@@ -44,10 +58,15 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
     setTextoEditando(entrada.texto)
   }
 
-  function guardarEdicion() {
+  async function guardarEdicion() {
     if (!idEditando) return
-    onEditarTexto(idEditando, textoEditando.trim())
-    setIdEditando(null)
+    setGuardandoEdicion(true)
+    try {
+      await onEditarTexto(idEditando, textoEditando.trim())
+      setIdEditando(null)
+    } finally {
+      setGuardandoEdicion(false)
+    }
   }
 
   const entradaAEliminar = entradas.find((e) => e.id === idAEliminar) ?? null
@@ -65,17 +84,18 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
           value={nota}
           onChange={(e) => setNota(e.target.value)}
           onKeyDown={handleKeyDown}
+          disabled={guardandoNota}
           placeholder="Agregar una nota a la historia clínica, sin necesidad de tocar el odontograma…"
           rows={2}
-          className="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 resize-none bg-white focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600"
+          className="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 resize-none bg-white focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 disabled:opacity-60"
         />
         <div className="flex justify-end mt-2">
           <button
             onClick={handleAgregar}
-            disabled={!nota.trim()}
-            className="bg-teal-700 text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-teal-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={!nota.trim() || guardandoNota}
+            className="bg-teal-700 text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-teal-600 transition disabled:opacity-40 disabled:cursor-not-allowed min-w-[112px] flex items-center justify-center"
           >
-            Agregar nota
+            {guardandoNota ? <ClipLoader color="white" size={16} /> : 'Agregar nota'}
           </button>
         </div>
       </div>
@@ -140,7 +160,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
         <>
           <div
             className="fixed top-[68px] sm:top-[56px] left-0 sm:left-40 right-0 bottom-0 z-40 backdrop-blur-sm bg-black/20"
-            onClick={() => setIdEditando(null)}
+            onClick={() => { if (!guardandoEdicion) setIdEditando(null) }}
           />
           <div className="fixed left-1/2 sm:left-[calc(50%+5rem)] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">
             <h2 className="text-lg font-semibold mb-3">Editar nota</h2>
@@ -152,36 +172,39 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
                 const len = e.target.value.length
                 e.target.setSelectionRange(len, len)
               }}
+              disabled={guardandoEdicion}
               rows={4}
-              className="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600"
+              className="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 disabled:opacity-60"
             />
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={() => setIdEditando(null)}
-                className="px-4 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium hover:bg-gray-50 transition duration-150"
+                disabled={guardandoEdicion}
+                className="px-4 py-2 rounded-xl border-2 border-gray-200 text-sm font-medium hover:bg-gray-50 transition duration-150 disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={guardarEdicion}
-                className="px-4 py-2 rounded-xl bg-teal-700 text-white text-sm font-medium hover:bg-teal-600 transition duration-150"
+                disabled={guardandoEdicion}
+                className="px-4 py-2 rounded-xl bg-teal-700 text-white text-sm font-medium hover:bg-teal-600 transition duration-150 min-w-[92px] flex items-center justify-center disabled:opacity-60"
               >
-                Guardar
+                {guardandoEdicion ? <ClipLoader color="white" size={16} /> : 'Guardar'}
               </button>
             </div>
           </div>
         </>
       )}
 
+      {/* `ConfirmAlert` ya trae su propio loading (`ClipLoader` en el botón rojo) — alcanza
+          con devolverle la promesa en `onConfirm` en vez de cerrar el diálogo a mano; el
+          propio componente cierra recién cuando `onEliminar` resuelve. */}
       <ConfirmAlert
         open={!!entradaAEliminar}
         setOpen={(open) => !open && setIdAEliminar(null)}
         title="¿Eliminar esta nota?"
         description="Esta acción no se puede deshacer."
-        onConfirm={() => {
-          if (idAEliminar) onEliminar(idAEliminar)
-          setIdAEliminar(null)
-        }}
+        onConfirm={() => (idAEliminar ? onEliminar(idAEliminar) : undefined)}
       />
     </div>
   )

@@ -23,10 +23,12 @@ import { getEventos } from "@/services/odontograma/getEventos";
 import { eventoAEntrada, type EntradaHistorial } from "@/lib/odontograma/historial";
 import { addNotaHistorial, getNotasHistorial, updateNotaHistorial, deleteNotaHistorial, type NotaHistorial } from "@/services/patients/clinicHistoryNotes";
 import { caraSemantica } from "@/lib/odontograma/caras";
+import { hallazgoDe } from "@/lib/odontograma/catalogo";
 import type { ClavePieza, Pieza } from "@/lib/odontograma/piezas";
 import type { Capa, Cara, CodigoHallazgo, CodigoHallazgoCara, CodigoHallazgoDiente, CodigoHallazgoMulti, DientesPorClave, FacePosition, PiezasSet, Vinculo } from "@/lib/odontograma/tipos";
 import { AMBAS_CAPAS, type VisibilidadCapas, type VistaArcada } from "@/lib/odontograma/selectores";
 import { useToast } from "@/context/ToastContext";
+import { ConfirmAlert } from "@/components/shared/dialogAlerts/confirmAlert";
 import { FaLayerGroup } from "react-icons/fa6";
 import { TbBabyCarriage, TbDental } from "react-icons/tb";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -57,6 +59,20 @@ function notaAEntrada(n: NotaHistorial): EntradaHistorial {
     return { id: n.id, fecha: dayjs(n.ts).format('DD/MM/YYYY'), hora: dayjs(n.ts).format('HH:mm'), texto: n.texto };
 }
 
+/**
+ * Texto del toast de éxito, siempre con verbo — a propósito **no** reusa
+ * `entrada.hallazgo.nombreHallazgo` de `eventoAEntrada`: ese label está pensado para
+ * leerse dentro de la tarjeta del timeline, con el chip de pieza/capa arriba dando
+ * contexto (un hallazgo nuevo en "existente" es ahí solo el nombre, ej. "Caries"). Un
+ * toast es una frase sola, sin nada alrededor — necesita su propio verbo siempre.
+ */
+function mensajeExito(accion: 'guardar' | 'quitar' | 'ejecutar', codigo: CodigoHallazgo, capa: Capa): string {
+    const nombre = hallazgoDe(codigo).nombre;
+    if (accion === 'ejecutar') return `Plan realizado: ${nombre}`;
+    if (accion === 'guardar') return capa === 'requerida' ? `Planificación guardada: ${nombre}` : `Hallazgo guardado: ${nombre}`;
+    return capa === 'requerida' ? `Planificación descartada: ${nombre}` : `Hallazgo retirado: ${nombre}`;
+}
+
 export default function ClinicHistory() {
     const router = useRouter()
     const [isLoad, setIsLoad] = useState(true);
@@ -78,6 +94,12 @@ export default function ClinicHistory() {
     const [pickerContexto, setPickerContexto] = useState<PickerContexto | null>(null);
     /** El contexto del que se vino al entrar por "Hallazgos de pieza completa", para poder volver. */
     const [pickerAnterior, setPickerAnterior] = useState<PickerContexto | null>(null);
+    /** Prende el spinner del picker mientras la escritura vuela — el panel ya no se cierra antes de saber el resultado. */
+    const [guardando, setGuardando] = useState(false);
+    /** Ids de vínculo cuya baja está en vuelo — alimenta el spinner de `VinculoSpan`. */
+    const [vinculosPendientes, setVinculosPendientes] = useState<Set<string>>(new Set());
+    /** Vínculo (id real, ya persistido) esperando confirmación de baja — un solo diálogo para todos. */
+    const [vinculoAConfirmar, setVinculoAConfirmar] = useState<string | null>(null);
 
     const { showToast } = useToast();
     /** tempIds `local-...` que el usuario borró mientras su alta seguía en vuelo — ver handleQuitarVinculo. */
@@ -245,8 +267,7 @@ export default function ClinicHistory() {
             aplicarCaraLocal(pieza.clave, cara, capa, codigoCara);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'CARA', capa, diente: pieza.clave, cara, piezas: null, de, a: codigoCara, ...(notaLimpia ? { nota: notaLimpia } : {}) });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await setHallazgoCara({ clinicId, pacienteId, pieza: pieza.clave, cara, capa, codigo: codigoCara, de, uid, nota: notaLimpia });
             if (resultado === null || !resultado.ok) {
@@ -254,8 +275,11 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'guardar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Hallazgo guardado.');
+                showToast('success', mensajeExito('guardar', codigoCara, capa));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         } else if (pickerContexto.alcance === 'DIENTE') {
             const { pieza } = pickerContexto;
             const codigoDiente = codigo as CodigoHallazgoDiente;
@@ -265,8 +289,7 @@ export default function ClinicHistory() {
             aplicarDienteLocal(pieza.clave, capa, codigoDiente);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'DIENTE', capa, diente: pieza.clave, cara: null, piezas: null, de, a: codigoDiente, ...(notaLimpia ? { nota: notaLimpia } : {}) });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await setHallazgoDiente({ clinicId, pacienteId, pieza: pieza.clave, capa, codigo: codigoDiente, de, uid, nota: notaLimpia });
             if (resultado === null || !resultado.ok) {
@@ -274,8 +297,11 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'guardar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Hallazgo guardado.');
+                showToast('success', mensajeExito('guardar', codigoDiente, capa));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         } else {
             const piezas = pickerContexto.piezas;
             const piezasSet: PiezasSet = {};
@@ -288,8 +314,7 @@ export default function ClinicHistory() {
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
             setPiezasEnTramo(new Map());
             setEnModoTramo(false);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await setVinculo({ clinicId, pacienteId, tipo, capa, piezas: piezas.map((p) => p.clave), uid, nota: notaLimpia });
             if (resultado === null || !resultado.ok) {
@@ -300,7 +325,7 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'guardar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Vínculo guardado.');
+                showToast('success', mensajeExito('guardar', tipo, capa));
                 const bajaPendiente = bajasVinculoPendientesRef.current.delete(tempId);
                 setVinculos((prev) => {
                     // Si ya se borró en el intervalo (click rápido en el span antes del ack), no resucitarlo.
@@ -316,6 +341,9 @@ export default function ClinicHistory() {
                     }
                 }
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         }
     }
 
@@ -347,8 +375,7 @@ export default function ClinicHistory() {
             aplicarCaraLocal(pieza.clave, cara, 'existente', codigoResultante);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'CARA', capa: 'existente', diente: pieza.clave, cara, piezas: null, de: existenteAnterior, a: codigoResultante, origen: 'plan_realizado', ...(notaLimpia ? { nota: notaLimpia } : {}) });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await ejecutarHallazgoCaraRequerida({ clinicId, pacienteId, pieza: pieza.clave, cara, hallazgoRequerido, hallazgoResultante: codigoResultante, existenteAnterior, uid, nota: notaLimpia });
             if (resultado === null || !resultado.ok) {
@@ -357,8 +384,11 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'guardar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Plan realizado.');
+                showToast('success', mensajeExito('ejecutar', codigoResultante, 'existente'));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         } else {
             const { pieza } = pickerContexto;
             const hallazgoRequerido = dientes[pieza.clave]?.diente?.requerida;
@@ -371,8 +401,7 @@ export default function ClinicHistory() {
             aplicarDienteLocal(pieza.clave, 'existente', codigoResultante);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'DIENTE', capa: 'existente', diente: pieza.clave, cara: null, piezas: null, de: existenteAnterior, a: codigoResultante, origen: 'plan_realizado', ...(notaLimpia ? { nota: notaLimpia } : {}) });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await ejecutarHallazgoDienteRequerido({ clinicId, pacienteId, pieza: pieza.clave, hallazgoRequerido, hallazgoResultante: codigoResultante, existenteAnterior, uid, nota: notaLimpia });
             if (resultado === null || !resultado.ok) {
@@ -381,8 +410,11 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'guardar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Plan realizado.');
+                showToast('success', mensajeExito('ejecutar', codigoResultante, 'existente'));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         }
     }
 
@@ -402,8 +434,7 @@ export default function ClinicHistory() {
             aplicarCaraLocal(pieza.clave, cara, capa, null);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'CARA', capa, diente: pieza.clave, cara, piezas: null, de, a: null });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await removeHallazgo({ alcance: 'CARA', clinicId, pacienteId, pieza: pieza.clave, cara, capa, de, uid });
             if (resultado === null || !resultado.ok) {
@@ -411,8 +442,11 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'borrar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Hallazgo quitado.');
+                showToast('success', mensajeExito('quitar', de, capa));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         } else {
             const { pieza } = pickerContexto;
             const de = dientes[pieza.clave]?.diente?.[capa];
@@ -422,8 +456,7 @@ export default function ClinicHistory() {
             aplicarDienteLocal(pieza.clave, capa, null);
             const entrada = eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'DIENTE', capa, diente: pieza.clave, cara: null, piezas: null, de, a: null });
             if (entrada) setEntradas((prev) => [entrada, ...prev]);
-            setPickerContexto(null);
-            setPickerAnterior(null);
+            setGuardando(true);
 
             const resultado = await removeHallazgo({ alcance: 'DIENTE', clinicId, pacienteId, pieza: pieza.clave, capa, de, uid });
             if (resultado === null || !resultado.ok) {
@@ -431,49 +464,75 @@ export default function ClinicHistory() {
                 quitarEntradaOptimista(tempId);
                 showToast('error', mensajeFallo(resultado, 'borrar'));
             } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Hallazgo quitado.');
+                showToast('success', mensajeExito('quitar', de, capa));
             }
+            setGuardando(false);
+            setPickerContexto(null);
+            setPickerAnterior(null);
         }
     }
 
     /**
-     * Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". Si el vínculo
-     * todavía tiene su id temporal (`local-...`, el alta original sigue en vuelo) no hay
-     * nada persistido para borrar todavía acá — se anota en `bajasVinculoPendientesRef` y
-     * el handler de éxito de `setVinculo` en `handleGuardarHallazgo` es quien, al resolver
-     * el id real, lo borra de Firebase (si no, quedaría huérfano en `actual/vinculos/`).
+     * Sin diálogo de confirmación — mismo criterio que "Quitar hallazgo". Acá, a
+     * diferencia del resto de las escrituras del módulo, **no** es optimista: el
+     * vínculo se queda dibujado (con `VinculoSpan` mostrando su spinner) hasta que
+     * Firebase confirma, en vez de desaparecer y reaparecer si falla — es el mismo
+     * grafismo el que da el feedback, no hace falta una reversión.
+     *
+     * Si el vínculo todavía tiene su id temporal (`local-...`, el alta original sigue
+     * en vuelo) no hay nada persistido para borrar todavía acá — se anota en
+     * `bajasVinculoPendientesRef` y el handler de éxito de `setVinculo` en
+     * `handleGuardarHallazgo` es quien, al resolver el id real, lo borra de Firebase
+     * (si no, quedaría huérfano en `actual/vinculos/`). Ese caso sí sigue siendo
+     * instantáneo: no hay ningún request en vuelo todavía sobre el que mostrar un spinner.
+     */
+    /**
+     * El alta todavía en vuelo (`local-...`) sigue sin confirmación — es deshacer la
+     * propia acción recién hecha, no borrar un registro ya persistido. Un vínculo real
+     * (ya en Firebase) sí la pide: abre `ConfirmAlert`, la baja real vive en
+     * `ejecutarQuitarVinculo`, que es su `onConfirm`.
      */
     function handleQuitarVinculo(vinculoId: string) {
         const vinculo = vinculos[vinculoId];
         if (!vinculo) return;
-        const uid = auth.currentUser?.uid;
 
+        if (vinculoId.startsWith('local-')) {
+            setVinculos((prev) => {
+                const { [vinculoId]: _quitado, ...resto } = prev;
+                return resto;
+            });
+            bajasVinculoPendientesRef.current.add(vinculoId);
+            return;
+        }
+        setVinculoAConfirmar(vinculoId);
+    }
+
+    async function ejecutarQuitarVinculo(vinculoId: string) {
+        const vinculo = vinculos[vinculoId];
+        if (!vinculo || !clinicId || !patient?.id) return;
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+        const pacienteId = patient.id;
+
+        setVinculosPendientes((prev) => new Set(prev).add(vinculoId));
+
+        const resultado = await removeVinculo({ clinicId, pacienteId, vinculoId, tipo: vinculo.tipo, capa: vinculo.capa, piezas: vinculo.piezas, uid });
+        setVinculosPendientes((prev) => {
+            const next = new Set(prev);
+            next.delete(vinculoId);
+            return next;
+        });
+        if (resultado === null || !resultado.ok) {
+            showToast('error', mensajeFallo(resultado, 'borrar'));
+            return;
+        }
         setVinculos((prev) => {
             const { [vinculoId]: _quitado, ...resto } = prev;
             return resto;
         });
-        const tempId = `local-${Date.now()}`;
-        const entrada = uid
-            ? eventoAEntrada(tempId, { ts: Date.now(), uid, alcance: 'MULTI', capa: vinculo.capa, diente: null, cara: null, piezas: vinculo.piezas, de: vinculo.tipo, a: null })
-            : null;
+        const entrada = eventoAEntrada(`local-${Date.now()}`, { ts: Date.now(), uid, alcance: 'MULTI', capa: vinculo.capa, diente: null, cara: null, piezas: vinculo.piezas, de: vinculo.tipo, a: null });
         if (entrada) setEntradas((prev) => [entrada, ...prev]);
-
-        if (vinculoId.startsWith('local-')) {
-            bajasVinculoPendientesRef.current.add(vinculoId);
-            return;
-        }
-        if (!clinicId || !patient?.id || !uid) return;
-        const pacienteId = patient.id;
-
-        removeVinculo({ clinicId, pacienteId, vinculoId, tipo: vinculo.tipo, capa: vinculo.capa, piezas: vinculo.piezas, uid }).then((resultado) => {
-            if (resultado === null || !resultado.ok) {
-                setVinculos((prev) => ({ ...prev, [vinculoId]: vinculo }));
-                quitarEntradaOptimista(tempId);
-                showToast('error', mensajeFallo(resultado, 'borrar'));
-            } else {
-                showToast('success', entrada?.hallazgo?.nombreHallazgo ?? 'Vínculo quitado.');
-            }
-        });
+        showToast('success', mensajeExito('quitar', vinculo.tipo, vinculo.capa));
     }
 
     async function handleAgregarNota(texto: string) {
@@ -581,6 +640,7 @@ export default function ClinicHistory() {
                                         onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
                                         onToggleEnTramo={toggleEnTramo}
                                         onQuitarVinculo={handleQuitarVinculo}
+                                        vinculosPendientes={vinculosPendientes}
                                     />
                                 </div>
                                 <div className="w-full md:w-[15%] shrink-0">
@@ -628,12 +688,26 @@ export default function ClinicHistory() {
                             onGuardar={handleGuardarHallazgo}
                             onQuitar={handleQuitarHallazgo}
                             onEjecutar={handleEjecutarHallazgo}
-                            onClose={() => { setPickerContexto(null); setPickerAnterior(null) }}
+                            guardando={guardando}
+                            onClose={() => { if (guardando) return; setPickerContexto(null); setPickerAnterior(null) }}
                             onVerPiezaCompleta={(pieza, anchor) => {
                                 setPickerAnterior(pickerContexto)
                                 setPickerContexto({ alcance: 'DIENTE', pieza, anchor })
                             }}
                             onVolver={pickerAnterior ? () => { setPickerContexto(pickerAnterior); setPickerAnterior(null) } : undefined}
+                        />
+
+                        {/* `ConfirmAlert` trae su propio loading — alcanza con pasarle la promesa. */}
+                        <ConfirmAlert
+                            open={!!vinculoAConfirmar}
+                            setOpen={(open) => !open && setVinculoAConfirmar(null)}
+                            title="¿Quitar este vínculo?"
+                            description={
+                                vinculoAConfirmar && vinculos[vinculoAConfirmar]
+                                    ? `Se va a quitar "${hallazgoDe(vinculos[vinculoAConfirmar].tipo).nombre}". Esta acción no se puede deshacer.`
+                                    : 'Esta acción no se puede deshacer.'
+                            }
+                            onConfirm={() => (vinculoAConfirmar ? ejecutarQuitarVinculo(vinculoAConfirmar) : undefined)}
                         />
                     </div>
                 )}

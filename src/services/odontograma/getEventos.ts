@@ -159,7 +159,7 @@ function validarEvento(raw: unknown, id: string): EventoOdontogramaConId | null 
     uid: nodo.uid,
     capa: nodo.capa,
     ...(typeof nodo.nota === 'string' ? { nota: nodo.nota } : {}),
-    ...(nodo.origen === 'plan_realizado' ? { origen: nodo.origen as const } : {}),
+    ...(nodo.origen === 'plan_realizado' ? { origen: 'plan_realizado' as const } : {}),
   }
 
   if (nodo.alcance === 'CARA') {

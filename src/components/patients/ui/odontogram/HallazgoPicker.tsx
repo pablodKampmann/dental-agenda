@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ClipLoader } from 'react-spinners'
 import type { Pieza } from '@/lib/odontograma/piezas'
-import { hallazgosPorAlcance, type EntradaDelCatalogo } from '@/lib/odontograma/catalogo'
+import { hallazgosPorAlcance, hallazgoDe, type EntradaDelCatalogo } from '@/lib/odontograma/catalogo'
 import { caraSemantica, colorDe, etiquetaCara } from '@/lib/odontograma/caras'
 import type { Alcance, Capa, CodigoHallazgo, FacePosition } from '@/lib/odontograma/tipos'
 import { Trash2, ChevronRight, ChevronLeft, Check } from 'lucide-react'
 import { FindingGlyph } from './FindingGlyph'
 import { FloatingAnchor } from './FloatingAnchor'
+import { ConfirmAlert } from '@/components/shared/dialogAlerts/confirmAlert'
 
 export type PickerContexto =
   | { alcance: 'CARA'; pieza: Pieza; posicion: FacePosition; anchor: DOMRect }
@@ -18,7 +20,8 @@ interface HallazgoPickerProps {
   contexto: PickerContexto | null
   hallazgoActual: Partial<Record<Capa, CodigoHallazgo>>
   onGuardar: (codigo: CodigoHallazgo, capa: Capa, nota: string) => void
-  onQuitar: (capa: Capa) => void
+  /** Destructivo — se dispara solo tras confirmar en el `ConfirmAlert` de este componente. */
+  onQuitar: (capa: Capa) => Promise<void>
   /**
    * Cierra un plan: borra `requerida` y escribe `codigo` en `existente`, atómico.
    * Solo se ofrece cuando la capa activa es `requerida` y ya hay algo cargado ahí —
@@ -31,6 +34,14 @@ interface HallazgoPickerProps {
   onVerPiezaCompleta: (pieza: Pieza, anchor: DOMRect) => void
   /** Presente solo si se llegó acá vía "Hallazgos de pieza completa": vuelve a la cara de origen. */
   onVolver?: () => void
+  /**
+   * El padre la prende antes de llamar a Firebase y la apaga (junto con el cierre del
+   * panel) recién cuando la escritura resuelve — antes el panel se cerraba solo, sin
+   * ningún estado intermedio visible. `Guardar`/`Quitar hallazgo` muestran `ClipLoader`
+   * (mismo componente que ya usa `ModalCreatePatient`/`AddAppointmentForm`) y el resto
+   * del cuerpo se bloquea para no permitir un segundo click mientras el primero vuela.
+   */
+  guardando: boolean
 }
 
 /** El flujo es lineal: se elige la acción, se confirma, y recién ahí se ofrece la nota. */
@@ -50,12 +61,13 @@ function tituloDeContexto(contexto: PickerContexto): string {
   return `Pieza ${contexto.pieza.codigo} · ${etiqueta}`
 }
 
-export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, onEjecutar, onClose, onVerPiezaCompleta, onVolver }: HallazgoPickerProps) {
+export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, onEjecutar, onClose, onVerPiezaCompleta, onVolver, guardando }: HallazgoPickerProps) {
   const [capa, setCapa] = useState<Capa>('existente')
   const [paso, setPaso] = useState<Paso>('elegir')
   const [seleccion, setSeleccion] = useState<EntradaDelCatalogo | null>(null)
   const [nota, setNota] = useState('')
   const [marcarComoRealizado, setMarcarComoRealizado] = useState(false)
+  const [confirmandoQuitar, setConfirmandoQuitar] = useState(false)
 
   useEffect(() => {
     if (!contexto) return
@@ -65,6 +77,7 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
     setSeleccion(null)
     setNota('')
     setMarcarComoRealizado(false)
+    setConfirmandoQuitar(false)
   }, [contexto, hallazgoActual])
 
   if (!contexto) return null
@@ -85,6 +98,7 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
   }
 
   return (
+    <>
     <FloatingAnchor anchor={contexto.anchor} onClose={onClose} width={300} height={ALTO_TOTAL}>
       <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden h-full flex flex-col">
         {/* Header: pieza/cara + capa. Misma estructura en los tres pasos, para que el alto nunca cambie. */}
@@ -111,8 +125,10 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
           </div>
         </div>
 
-        {/* Cuerpo de altura fija: el paso cambia el contenido, nunca el tamaño del panel. */}
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+        {/* Cuerpo de altura fija: el paso cambia el contenido, nunca el tamaño del panel.
+            Bloqueado mientras `guardando` — evita un segundo click mientras el primero
+            todavía está en vuelo (el panel ahora sigue abierto hasta que resuelve). */}
+        <div className={`flex-1 min-h-0 overflow-y-auto flex flex-col ${guardando ? 'opacity-60 pointer-events-none' : ''}`}>
           {/* Paso 1: elegir la acción */}
           {paso === 'elegir' && (
             <div className="flex flex-col flex-1 animate-in fade-in duration-150">
@@ -144,7 +160,8 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
               <div className="mt-auto">
                 {codigoActual && (
                   <button
-                    onClick={() => onQuitar(capa)}
+                    onClick={() => setConfirmandoQuitar(true)}
+                    disabled={guardando}
                     className="w-full flex items-center justify-center gap-1.5 px-2 py-2 border-t border-gray-100 text-xs font-medium text-red-500 hover:bg-red-50 transition"
                   >
                     <Trash2 size={12} /> Quitar hallazgo
@@ -238,14 +255,26 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
               />
               <button
                 onClick={handleGuardarFinal}
-                className="w-full mt-2.5 bg-teal-700 text-white text-sm font-semibold py-2 rounded-lg hover:bg-teal-600 transition shrink-0"
+                disabled={guardando}
+                className="w-full mt-2.5 bg-teal-700 text-white text-sm font-semibold py-2 rounded-lg hover:bg-teal-600 transition shrink-0 flex items-center justify-center min-h-[36px]"
               >
-                Guardar
+                {guardando ? <ClipLoader color="white" size={16} /> : 'Guardar'}
               </button>
             </div>
           )}
         </div>
       </div>
     </FloatingAnchor>
+
+    {/* `ConfirmAlert` trae su propio loading (`ClipLoader`) — le alcanza con recibir la
+        promesa de `onQuitar` para mostrar el spinner y cerrarse sola al resolver. */}
+    <ConfirmAlert
+      open={confirmandoQuitar}
+      setOpen={setConfirmandoQuitar}
+      title="¿Quitar este hallazgo?"
+      description={codigoActual ? `Se va a borrar "${hallazgoDe(codigoActual).nombre}" de ${tituloDeContexto(contexto)}. Esta acción no se puede deshacer.` : 'Esta acción no se puede deshacer.'}
+      onConfirm={() => onQuitar(capa)}
+    />
+    </>
   )
 }
