@@ -70,6 +70,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
   }
 
   const entradaAEliminar = entradas.find((e) => e.id === idAEliminar) ?? null
+  const entradaEditando = entradas.find((e) => e.id === idEditando) ?? null
 
   return (
     <div className="border-2 border-gray-300 rounded-xl overflow-hidden mt-4">
@@ -156,14 +157,18 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
       </div>
 
       {/* Editar nota: mismo lenguaje visual que ConfirmAlert */}
-      {idEditando && (
+      {idEditando && entradaEditando && (
         <>
           <div
-            className="fixed inset-0 z-[60] backdrop-blur-sm bg-black/50"
+            className="fixed inset-0 z-[60] backdrop-blur-sm bg-black/50 animate-fade-in"
             onClick={() => { if (!guardandoEdicion) setIdEditando(null) }}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg p-6 text-black">
-            <h2 className="text-lg font-semibold mb-3">Editar nota</h2>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] sm:w-full max-w-md bg-white rounded-xl border-2 border-gray-300 shadow-lg text-black animate-fade-in">
+            <div className="px-6 pt-5 pb-3 border-b border-gray-200">
+              <h2 className="text-lg font-semibold">Editar nota</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{entradaEditando.fecha} · {entradaEditando.hora}</p>
+            </div>
+            <div className="p-6">
             <textarea
               autoFocus
               value={textoEditando}
@@ -192,6 +197,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
                 {guardandoEdicion ? <ClipLoader color="white" size={16} /> : 'Guardar'}
               </button>
             </div>
+            </div>
           </div>
         </>
       )}
@@ -203,7 +209,7 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
         open={!!entradaAEliminar}
         setOpen={(open) => !open && setIdAEliminar(null)}
         title="¿Eliminar esta nota?"
-        description="Esta acción no se puede deshacer."
+        description={entradaAEliminar ? `Nota del ${entradaAEliminar.fecha} · ${entradaAEliminar.hora}. Esta acción no se puede deshacer.` : 'Esta acción no se puede deshacer.'}
         onConfirm={() => (idAEliminar ? onEliminar(idAEliminar) : undefined)}
       />
     </div>

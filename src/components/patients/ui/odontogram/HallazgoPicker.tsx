@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ClipLoader } from 'react-spinners'
 import type { Pieza } from '@/lib/odontograma/piezas'
 import { hallazgosPorAlcance, hallazgoDe, type EntradaDelCatalogo } from '@/lib/odontograma/catalogo'
@@ -47,11 +47,46 @@ interface HallazgoPickerProps {
 /** El flujo es lineal: se elige la acción, se confirma, y recién ahí se ofrece la nota. */
 type Paso = 'elegir' | 'confirmar' | 'nota'
 
-/** Altura fija del cuerpo del pill: ningún paso cambia el tamaño del panel, solo su contenido. */
-const ALTO_CUERPO = 320
-/** Header: padding + una línea de texto. */
-const ALTO_HEADER = 45
-const ALTO_TOTAL = ALTO_HEADER + ALTO_CUERPO
+/** Header: padding + hasta dos líneas de texto (el título puede saltar de línea, ej. "Vestibular"). */
+const ALTO_HEADER = 58
+/** Alto de una fila de opción o de un botón de footer — mismos paddings en los dos. */
+const ALTO_FILA = 34
+/** Piso y techo del cuerpo: nunca tan chico que se vea aplastado, nunca más que el viejo fijo. */
+const ALTO_CUERPO_MIN = 140
+const ALTO_CUERPO_MAX = 320
+/** Los pasos "confirmar" y "nota" no varían por pieza — su contenido es siempre el mismo layout. */
+const ALTO_CONFIRMAR_BASE = 150
+const ALTO_CONFIRMAR_CON_CHECKBOX = 194
+const ALTO_NOTA = 210
+
+/**
+ * Alto del cuerpo por paso, calculado de antemano a partir de datos ya conocidos
+ * antes de pintar (cantidad de opciones, si hay botones de footer) — nunca midiendo
+ * el DOM después del render. Es la misma razón por la que `FloatingAnchor` nunca mide:
+ * medir después de pintar causa un "teletransporte" visible de un frame.
+ */
+function altoCuerpo(paso: Paso, opciones: number, footers: number, puedeEjecutar: boolean): number {
+  if (paso === 'confirmar') return puedeEjecutar ? ALTO_CONFIRMAR_CON_CHECKBOX : ALTO_CONFIRMAR_BASE
+  if (paso === 'nota') return ALTO_NOTA
+  return Math.min(Math.max(altoNaturalElegir(opciones, footers), ALTO_CUERPO_MIN), ALTO_CUERPO_MAX)
+}
+
+/** Alto que el contenido de "elegir" ocupa de verdad, sin clampear — para saber si el techo lo recorta. */
+function altoNaturalElegir(opciones: number, footers: number): number {
+  return 8 + opciones * ALTO_FILA + footers * ALTO_FILA
+}
+
+/**
+ * Solo "elegir" con muchas opciones puede llegar a necesitar scroll (cuando el contenido
+ * natural supera `ALTO_CUERPO_MAX`); "confirmar" y "nota" están diseñados para entrar
+ * siempre en su alto fijo. Calcularlo así (en vez de dejar `overflow-y-auto` siempre
+ * puesto) evita que el navegador dibuje el scrollbar a mitad de la transición de alto,
+ * cuando el contenido ya renderizado momentáneamente no entra en el alto todavía en
+ * camino hacia su valor final — la barra aparecía y desaparecía sola con cada paso.
+ */
+function necesitaScroll(paso: Paso, opciones: number, footers: number): boolean {
+  return paso === 'elegir' && altoNaturalElegir(opciones, footers) > ALTO_CUERPO_MAX
+}
 
 function tituloDeContexto(contexto: PickerContexto): string {
   if (contexto.alcance === 'DIENTE') return `Pieza ${contexto.pieza.codigo} · completa`
@@ -68,17 +103,37 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
   const [nota, setNota] = useState('')
   const [marcarComoRealizado, setMarcarComoRealizado] = useState(false)
   const [confirmandoQuitar, setConfirmandoQuitar] = useState(false)
+  /** Identifica la pieza del contexto anterior — navegar cara↔pieza completa de la misma
+      pieza no debe resetear la capa elegida, solo abrir un picker distinto de verdad. */
+  const piezaAnteriorRef = useRef<string | null>(null)
+  /**
+   * `hallazgoActual` cambia por el update optimista apenas se guarda (antes de que
+   * Firebase confirme), con el mismo `contexto` todavía abierto — si el efecto de abajo
+   * dependiera de `hallazgoActual` directamente, ese cambio lo dispararía de nuevo y el
+   * panel volvería a "elegir" un instante antes de cerrarse. Guardado en un ref para
+   * leerlo sin que dispare el efecto — el efecto solo debe correr cuando `contexto`
+   * cambia de verdad (una pieza/cara distinta), nunca por los propios datos que el picker
+   * termina de escribir.
+   */
+  const hallazgoActualRef = useRef(hallazgoActual)
+  hallazgoActualRef.current = hallazgoActual
 
   useEffect(() => {
     if (!contexto) return
-    const capaConDatos = (['existente', 'requerida'] as Capa[]).find((c) => hallazgoActual[c])
-    setCapa(capaConDatos ?? 'existente')
+    const piezaClave = contexto.alcance === 'MULTI' ? null : contexto.pieza.clave
+    const esMismaPieza = piezaClave !== null && piezaClave === piezaAnteriorRef.current
+    piezaAnteriorRef.current = piezaClave
+    if (!esMismaPieza) {
+      const capaConDatos = (['existente', 'requerida'] as Capa[]).find((c) => hallazgoActualRef.current[c])
+      setCapa(capaConDatos ?? 'existente')
+    }
     setPaso('elegir')
     setSeleccion(null)
     setNota('')
     setMarcarComoRealizado(false)
     setConfirmandoQuitar(false)
-  }, [contexto, hallazgoActual])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contexto])
 
   if (!contexto) return null
 
@@ -86,6 +141,19 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
   const codigoActual = hallazgoActual[capa]
   /** Solo tiene sentido "ejecutar" un plan que ya existe — nunca al elegir la capa Existente. */
   const puedeEjecutar = capa === 'requerida' && !!codigoActual
+  const footers = (codigoActual ? 1 : 0) + (contexto.alcance === 'CARA' ? 1 : 0) + (onVolver ? 1 : 0)
+  const altoTotal = ALTO_HEADER + altoCuerpo(paso, opciones.length, footers, puedeEjecutar)
+  const conScroll = necesitaScroll(paso, opciones.length, footers)
+  /**
+   * Arriba/abajo se decide una sola vez con el alto más grande que el picker puede llegar
+   * a pedir en esta apertura (no el del paso actual) — si no, un paso más chico "cabe
+   * abajo" cuando el más grande no cabía y el panel salta de lugar entre pasos.
+   */
+  const altoMaximoPosible = Math.max(
+    ALTO_HEADER + altoCuerpo('elegir', opciones.length, footers, puedeEjecutar),
+    ALTO_HEADER + ALTO_CONFIRMAR_CON_CHECKBOX,
+    ALTO_HEADER + ALTO_NOTA,
+  )
 
   function handleConfirmar() {
     setPaso('nota')
@@ -99,7 +167,7 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
 
   return (
     <>
-    <FloatingAnchor anchor={contexto.anchor} onClose={onClose} width={300} height={ALTO_TOTAL}>
+    <FloatingAnchor anchor={contexto.anchor} onClose={onClose} width={300} height={altoTotal} alturaReferencia={altoMaximoPosible} pausado={confirmandoQuitar}>
       <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden h-full flex flex-col">
         {/* Header: pieza/cara + capa. Misma estructura en los tres pasos, para que el alto nunca cambie. */}
         <div
@@ -107,16 +175,15 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
             capa === 'existente' ? 'border-t-red-600' : 'border-t-blue-600'
           }`}
         >
-          <span className="text-xs font-semibold text-gray-700 truncate">{tituloDeContexto(contexto)}</span>
+          <span className="text-xs font-semibold text-gray-700 leading-tight">{tituloDeContexto(contexto)}</span>
           <div className="flex items-center gap-0.5 bg-gray-50 rounded-md p-0.5 shrink-0">
             {(['existente', 'requerida'] as Capa[]).map((c) => (
               <button
                 key={c}
-                disabled={paso !== 'elegir'}
                 onClick={() => setCapa(c)}
                 className={`px-2 py-1 rounded text-[10px] font-semibold flex items-center gap-1 transition ${
                   capa === c ? `bg-white shadow-sm ${colorDe(c).texto}` : 'text-gray-400'
-                } ${paso !== 'elegir' ? 'cursor-default' : ''}`}
+                }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${colorDe(c).fondo}`} />
                 {c === 'existente' ? 'Existente' : 'Requerida'}
@@ -125,10 +192,12 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
           </div>
         </div>
 
-        {/* Cuerpo de altura fija: el paso cambia el contenido, nunca el tamaño del panel.
+        {/* El alto del cuerpo lo decide `altoCuerpo()` de antemano por paso — el panel
+            se ajusta a su contenido en vez de quedar con el viejo alto fijo de 320px
+            siempre. `FloatingAnchor` anima la transición de alto/posición.
             Bloqueado mientras `guardando` — evita un segundo click mientras el primero
             todavía está en vuelo (el panel ahora sigue abierto hasta que resuelve). */}
-        <div className={`flex-1 min-h-0 overflow-y-auto flex flex-col ${guardando ? 'opacity-60 pointer-events-none' : ''}`}>
+        <div className={`flex-1 min-h-0 flex flex-col ${conScroll ? 'overflow-y-auto' : 'overflow-hidden'} ${guardando ? 'opacity-60 pointer-events-none' : ''}`}>
           {/* Paso 1: elegir la acción */}
           {paso === 'elegir' && (
             <div className="flex flex-col flex-1 animate-in fade-in duration-150">
@@ -139,7 +208,8 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
                     <button
                       key={h.codigo}
                       onClick={() => { setSeleccion(h); setPaso('confirmar') }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition ${
+                      title={activo ? `${h.nombre} (actual)` : h.nombre}
+                      className={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition ${
                         activo ? 'bg-teal-50' : 'hover:bg-gray-50'
                       }`}
                     >
@@ -148,10 +218,9 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
                         abrev={h.abrev}
                         colorRelleno={colorDe(capa).relleno}
                         colorTrazo={colorDe(capa).trazo}
-                        size={22}
+                        size={18}
                       />
-                      <span className="text-sm text-gray-700 flex-1">{h.nombre}</span>
-                      {activo && <span className={`text-[10px] font-semibold ${colorDe(capa).texto}`}>actual</span>}
+                      <span className="text-sm text-gray-700 flex-1 truncate">{h.nombre}</span>
                     </button>
                   )
                 })}

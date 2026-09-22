@@ -626,26 +626,23 @@ export default function ClinicHistory() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col md:flex-row gap-4 p-3">
-                                <div className="flex-1 min-w-0 min-h-[420px] flex items-center justify-center p-8">
-                                    <OdontogramaGrid
-                                        dientes={dientes}
-                                        visibilidad={visibilidad}
-                                        vista={vista}
-                                        vinculos={vinculos}
-                                        piezasEnTramo={new Set(piezasEnTramo.keys())}
-                                        enModoTramo={enModoTramo}
-                                        piezaActiva={pickerContexto && pickerContexto.alcance !== 'MULTI' ? pickerContexto.pieza.clave : undefined}
-                                        onSelectCara={(pieza, posicion, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'CARA', pieza, posicion, anchor }) }}
-                                        onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
-                                        onToggleEnTramo={toggleEnTramo}
-                                        onQuitarVinculo={handleQuitarVinculo}
-                                        vinculosPendientes={vinculosPendientes}
-                                    />
-                                </div>
-                                <div className="w-full md:w-[15%] shrink-0">
-                                    <Legend visibilidad={visibilidad} onToggle={toggleVisibilidad} />
-                                </div>
+                            <Legend visibilidad={visibilidad} onToggle={toggleVisibilidad} />
+
+                            <div className="min-h-[420px] flex items-center justify-center p-8">
+                                <OdontogramaGrid
+                                    dientes={dientes}
+                                    visibilidad={visibilidad}
+                                    vista={vista}
+                                    vinculos={vinculos}
+                                    piezasEnTramo={new Set(piezasEnTramo.keys())}
+                                    enModoTramo={enModoTramo}
+                                    piezaActiva={pickerContexto && pickerContexto.alcance !== 'MULTI' ? pickerContexto.pieza.clave : undefined}
+                                    onSelectCara={(pieza, posicion, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'CARA', pieza, posicion, anchor }) }}
+                                    onSelectDiente={(pieza, anchor) => { setPickerAnterior(null); setPickerContexto({ alcance: 'DIENTE', pieza, anchor }) }}
+                                    onToggleEnTramo={toggleEnTramo}
+                                    onQuitarVinculo={handleQuitarVinculo}
+                                    vinculosPendientes={vinculosPendientes}
+                                />
                             </div>
 
                             {enModoTramo && (
