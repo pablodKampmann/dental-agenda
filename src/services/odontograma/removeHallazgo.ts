@@ -11,6 +11,7 @@ import type {
 } from '@/lib/odontograma/tipos'
 import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
 import { SCHEMA_VERSION } from '@/lib/odontograma/tipos'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Borra un hallazgo: escribe `null` en la hoja (`caras/{cara}/{capa}` o
@@ -31,6 +32,8 @@ type RemoveHallazgoParams =
       /** Lo que había en esa hoja antes de borrar. */
       readonly de: CodigoHallazgoCara
       readonly uid: string
+      /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+      readonly onFallo?: ReportarFallo
     }
   | {
       readonly alcance: 'DIENTE'
@@ -40,6 +43,8 @@ type RemoveHallazgoParams =
       readonly capa: Capa
       readonly de: CodigoHallazgoDiente
       readonly uid: string
+      /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+      readonly onFallo?: ReportarFallo
     }
 
 /**
@@ -49,7 +54,7 @@ type RemoveHallazgoParams =
  */
 export async function removeHallazgo(params: RemoveHallazgoParams): Promise<ResultadoEscritura> {
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const { clinicId, pacienteId, capa, uid } = params
     const base = basePath(clinicId, pacienteId)
@@ -96,6 +101,7 @@ export async function removeHallazgo(params: RemoveHallazgoParams): Promise<Resu
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }

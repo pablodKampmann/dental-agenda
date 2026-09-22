@@ -12,6 +12,7 @@ import {
 } from '@/lib/odontograma/tipos'
 import { aplicaADenticion, hallazgoDe } from '@/lib/odontograma/catalogo'
 import { piezaDeClave } from '@/lib/odontograma/piezas'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Escritura de hallazgos del odontograma: `setHallazgoCara`, `setHallazgoDiente` y
@@ -103,7 +104,8 @@ interface SetHallazgoCaraParams {
   readonly codigo: CodigoHallazgoCara
   /** Lo que había en esa hoja antes de este cambio, o `null` si estaba vacía. */
   readonly de: CodigoHallazgoCara | null
-  readonly uid: string
+  readonly uid: string  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /**
@@ -129,7 +131,7 @@ export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<Re
   }
 
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const eventoKey = nuevaEventoKey(clinicId, pacienteId)
@@ -154,6 +156,7 @@ export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<Re
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -165,7 +168,8 @@ interface SetHallazgoDienteParams {
   readonly capa: Capa
   readonly codigo: CodigoHallazgoDiente
   readonly de: CodigoHallazgoDiente | null
-  readonly uid: string
+  readonly uid: string  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /** Escribe un hallazgo de alcance DIENTE en una hoja `diente/{capa}`. Valida contra la dentición (B4-1). */
@@ -181,7 +185,7 @@ export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promis
   }
 
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const eventoKey = nuevaEventoKey(clinicId, pacienteId)
@@ -206,6 +210,7 @@ export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promis
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -221,7 +226,8 @@ interface EjecutarHallazgoCaraRequeridaParams {
   readonly hallazgoResultante: CodigoHallazgoCara
   /** Lo que había en `existente` antes de esta ejecución, o `null` si estaba vacío. */
   readonly existenteAnterior: CodigoHallazgoCara | null
-  readonly uid: string
+  readonly uid: string  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /**
@@ -250,7 +256,7 @@ export async function ejecutarHallazgoCaraRequerida(
   }
 
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const eventoRequeridaKey = nuevaEventoKey(clinicId, pacienteId)
@@ -290,6 +296,7 @@ export async function ejecutarHallazgoCaraRequerida(
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -301,7 +308,8 @@ interface EjecutarHallazgoDienteRequeridoParams {
   readonly hallazgoRequerido: CodigoHallazgoDiente
   readonly hallazgoResultante: CodigoHallazgoDiente
   readonly existenteAnterior: CodigoHallazgoDiente | null
-  readonly uid: string
+  readonly uid: string  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /**
@@ -325,7 +333,7 @@ export async function ejecutarHallazgoDienteRequerido(
   }
 
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const eventoRequeridaKey = nuevaEventoKey(clinicId, pacienteId)
@@ -365,6 +373,7 @@ export async function ejecutarHallazgoDienteRequerido(
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
