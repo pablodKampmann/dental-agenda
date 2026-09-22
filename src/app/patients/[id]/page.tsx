@@ -144,7 +144,7 @@ export default function PatientId() {
             <PatientRecordSkeleton />
           </div>
         ) : (
-          <div className="px-4 pb-4 pt-4 animate-page-drop">
+          <div className="px-4 pb-4 pt-4 animate-fade-in">
             <ConfirmAlert
               open={openAlert}
               setOpen={setOpenAlert}
@@ -163,6 +163,7 @@ export default function PatientId() {
               <div>
                 <PatientRecord patient={patient} />
 
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden p-4">
                 {/* Section header with save indicator */}
                 <div className="flex items-center justify-between mb-3 select-none">
                   <h2 className="text-base font-bold tracking-wide text-black">Datos del paciente</h2>
@@ -425,6 +426,7 @@ export default function PatientId() {
                   >
                     Eliminar Paciente Permanentemente
                   </button>
+                </div>
                 </div>
               </div>
             )}

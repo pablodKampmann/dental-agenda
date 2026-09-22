@@ -44,7 +44,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                     <BiArrowBack size={16} /> Pacientes
                 </button>
             </Link>
-            <div className="border-2 border-gray-300 rounded-xl overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 {/* Patient info */}
                 <div className="flex items-center gap-4 px-4 py-3 bg-gray-50">
                     <AvatarFallback
@@ -113,7 +113,7 @@ export function PatientRecord({ patient }: ModalSettProps) {
                                     plan: patient.plan,
                                     affiliateNum: patient.affiliateNum
                                 }));
-                                router.push(`/?patient=${patientParam}`);
+                                router.push(`/agenda?patient=${patientParam}`);
                             }}
                             className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-teal-700 text-white rounded-lg hover:bg-teal-600 transition duration-150 select-none"
                         >

@@ -80,6 +80,8 @@ interface SetVinculoParams {
   readonly capa: Capa
   readonly piezas: readonly ClavePieza[]
   readonly uid: string
+  /** Nota clínica libre, cargada en el mismo paso del picker que el vínculo. */
+  readonly nota?: string
 }
 
 /**
@@ -89,7 +91,7 @@ interface SetVinculoParams {
  * UI puede mostrar tal cual, sin reventar.
  */
 export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEscritura<{ vinculoId: string }>> {
-  const { clinicId, pacienteId, tipo, capa, piezas, uid } = params
+  const { clinicId, pacienteId, tipo, capa, piezas, uid, nota } = params
 
   const validacion = validarTramo(piezas)
   if (!validacion.ok) {
@@ -127,6 +129,7 @@ export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEsc
       piezas: piezasSet,
       de: null,
       a: tipo,
+      ...(nota ? { nota } : {}),
     }
 
     await update(ref(db), {

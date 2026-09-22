@@ -103,7 +103,7 @@ export function EditableRow({ label, value, rowKey, category, rowModify, setRowM
                         <div className="flex flex-col gap-1 flex-1 animate-fade-in">
                             <div className={`flex gap-2 ${multiline ? 'flex-col' : 'items-center'}`}>
                                 {!multiline && <span className="text-sm text-gray-500 flex-shrink-0">{label}:</span>}
-                                <div className={`flex-1 ${isAnimating ? 'opacity-0' : 'animate-fade-in'}`}>
+                                <div className={`flex-1 ${height !== 'auto' ? 'opacity-0' : 'animate-fade-in'}`}>
                                     {renderInput ?? (
                                         multiline ? (
                                             <textarea

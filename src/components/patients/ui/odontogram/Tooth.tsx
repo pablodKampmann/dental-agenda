@@ -19,7 +19,7 @@ interface ToothProps {
   visibilidad: VisibilidadCapas
   seleccionado: boolean
   enModoTramo: boolean
-  /** El diente que tiene el picker abierto: escapa del backdrop oscuro para quedar claro cuál se edita. */
+  /** El diente que tiene el picker abierto: escapa del backdrop (oscuro + blur) para quedar claro cuál se edita; el halo `#F0FDFA` refuerza el énfasis contra el resto ya desenfocado. */
   activo: boolean
   onSelectCara: (pieza: Pieza, posicion: FacePosition, anchor: DOMRect) => void
   onSelectDiente: (pieza: Pieza, anchor: DOMRect) => void
@@ -84,6 +84,7 @@ function ToothImpl({
     <div
       ref={wrapperRef}
       className={`flex flex-col items-center w-full ${activo ? 'relative z-[45]' : ''}`}
+      style={activo ? { backgroundColor: '#F0FDFA', borderRadius: 3 } : undefined}
     >
       <div className="relative w-full aspect-square">
         <svg viewBox={`0 0 ${VB} ${VB}`} className="w-full h-full overflow-visible cursor-pointer">
