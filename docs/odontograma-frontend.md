@@ -4,8 +4,9 @@
 > los servicios; este define la pantalla. Las issues de acá **no arrancan hasta que B3 esté
 > cerrado**: F4 consume los servicios de B2 y no tiene sentido escribirlas contra mocks.
 >
-> Pendientes detectados que son input de esta planificación: `docs/odontograma-pendientes.md`,
-> sección 3. Leerla antes de empezar F1.
+> Los pendientes que eran input de esta planificación vivían en
+> `docs/odontograma-pendientes.md` §3; F4-4 la vació resolviendo o descartando cada uno.
+> Lo que sobrevive como regla está en `AGENTS.md`.
 
 ## Dónde se monta
 
@@ -185,7 +186,8 @@ Depende: F1-3
 - [ ] El arco reacciona vía `capasVisibles(estado, pieza, visibilidad)`.
 - [ ] Arranca con las dos prendidas (`AMBAS_CAPAS`), como la ficha en papel.
 - [ ] **Al conectar esto se sabrá si `capasVisibles` tiene la forma correcta.** Si no la
-      tiene, cambiarla es parte de esta issue y no una regresión — ver pendientes 3.6.
+      tiene, cambiarla es parte de esta issue y no una regresión. (Se conectó y la forma
+      aguantó: `Tooth.tsx` la consume tal cual. Ver `AGENTS.md`.)
 
 ### F2-3 · Encaje en la pestaña
 
@@ -373,9 +375,25 @@ Depende: F4-3
 
 **Criterios de aceptación**
 
-- [ ] Actualizar `AGENTS.md` con los componentes y sus reglas.
-- [ ] Vaciar de `docs/odontograma-pendientes.md` la sección 3, resolviendo o descartando cada
-      entrada con el motivo escrito.
+- [x] Actualizar `AGENTS.md` con los componentes y sus reglas. La tabla de componentes
+      cubre los nueve archivos de `ui/odontogram/`; se corrigió la fila de
+      `HistorialEventos` (dejó de montarse al mergear `odontograma-dev`) y se sumaron las
+      dos reglas que sobrevivieron de la sección 3 de pendientes: cómo se usa
+      `colorDe(capa).fondo` y por qué `tieneHallazgos()` y `capasVisibles()` no preguntan
+      lo mismo.
+- [x] Vaciar de `docs/odontograma-pendientes.md` la sección 3, resolviendo o descartando cada
+      entrada con el motivo escrito. Las cinco entradas se borraron; el motivo de cada una
+      está en el commit de F4-4 y lo que sobrevive como regla, en `AGENTS.md`:
+      - **3.1 `colorDe().fondo`** — descartada. Con los cuatro consumidores escritos, ninguno
+        pone texto del mismo color encima; la variante clara que se temía necesaria no hace falta.
+      - **3.4 `tieneHallazgos` vs `capasVisibles`** — descartada: la premisa dejó de valer. No
+        preguntan lo mismo desde que existe el conmutador, porque solo una cruza la visibilidad.
+      - **3.5 `capasVisibles` sin consumidor probado** — resuelta: `Tooth.tsx` la consume y la
+        forma aguantó el contacto con el componente, sin cambiarla.
+      - **3.6 Los dos espejados de `Tooth.tsx`** — resuelta: el componente traduce con
+        `caraSemantica()` y el guard de `caras.test.ts` escanea todo `src` y falla si alguien
+        vuelve a escribir una cara a mano.
+      - **3.7 El picker no filtraba por dentición** — resuelta en F4-1 por `opcionesDelContexto()`.
 - [ ] Revisión visual contra la foto de la ficha en papel, con la odontóloga si se puede.
 
 ---
