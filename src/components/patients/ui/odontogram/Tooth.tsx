@@ -2,8 +2,15 @@
 
 import { memo, useRef } from 'react'
 import type { Pieza } from '@/lib/odontograma/piezas'
-import type { CodigoHallazgoDiente, DientesPorClave, FacePosition } from '@/lib/odontograma/tipos'
-import { colorDe } from '@/lib/odontograma/caras'
+import {
+  CAPAS,
+  type Capa,
+  type CodigoHallazgoCara,
+  type CodigoHallazgoDiente,
+  type DientesPorClave,
+  type FacePosition,
+} from '@/lib/odontograma/tipos'
+import { caraSemantica, colorDe, etiquetaCara } from '@/lib/odontograma/caras'
 import { hallazgoDe } from '@/lib/odontograma/catalogo'
 import {
   capasVisibles,
@@ -12,6 +19,48 @@ import {
   type VisibilidadCapas,
 } from '@/lib/odontograma/selectores'
 import { FindingGlyph } from './FindingGlyph'
+
+/** Confirma con Enter o Espacio, igual que un click — Espacio se frena para que no scrollee la página. */
+function activarConTeclado(e: React.KeyboardEvent, accion: () => void) {
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  e.preventDefault()
+  e.stopPropagation()
+  accion()
+}
+
+/** "caries existente", "endodoncia requerida y corona existente" — nunca el código crudo. */
+function textoDeHallazgos(porCapa: Partial<Record<Capa, CodigoHallazgoCara | CodigoHallazgoDiente>>): string {
+  return CAPAS.filter((capa) => porCapa[capa])
+    .map((capa) => `${hallazgoDe(porCapa[capa]!).nombre.toLowerCase()} ${capa}`)
+    .join(' y ')
+}
+
+/** Nombre accesible de una cara: pieza + cara clínica + qué hay cargado ahí, si hay algo. */
+function etiquetaDeCara(pieza: Pieza, posicion: FacePosition, estado: DientesPorClave): string {
+  const cara = caraSemantica(posicion, pieza.cuadrante)
+  const etiqueta = etiquetaCara(cara, pieza.arcada, pieza.tipo)
+  const porCapa: Partial<Record<Capa, CodigoHallazgoCara>> = {}
+  for (const capa of CAPAS) {
+    const codigo = hallazgoDeCara(estado, pieza.clave, posicion, capa)
+    if (codigo) porCapa[capa] = codigo
+  }
+  const detalle = textoDeHallazgos(porCapa)
+  return detalle ? `Pieza ${pieza.codigo}, ${etiqueta}: ${detalle}` : `Pieza ${pieza.codigo}, ${etiqueta}`
+}
+
+/** Nombre accesible de la pieza completa: igual criterio que `etiquetaDeCara`, a nivel diente. */
+function etiquetaDePieza(pieza: Pieza, estado: DientesPorClave): string {
+  const porCapa: Partial<Record<Capa, CodigoHallazgoDiente>> = {}
+  for (const capa of CAPAS) {
+    const codigo = hallazgoDeDiente(estado, pieza.clave, capa)
+    if (codigo) porCapa[capa] = codigo
+  }
+  const detalle = textoDeHallazgos(porCapa)
+  return detalle ? `Pieza ${pieza.codigo}, pieza completa: ${detalle}` : `Pieza ${pieza.codigo}, pieza completa`
+}
+
+const FOCUS_VISIBLE =
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 focus-visible:outline-offset-1'
 
 interface ToothProps {
   pieza: Pieza
@@ -117,9 +166,13 @@ function ToothImpl({
                 key={`hit-${posicion}`}
                 d={PATHS[posicion]}
                 fill="transparent"
-                className="hover:fill-teal-600/10 transition-colors"
+                className={`hover:fill-teal-600/10 transition-colors ${FOCUS_VISIBLE}`}
                 style={{ cursor: 'pointer' }}
+                tabIndex={0}
+                role="button"
+                aria-label={etiquetaDeCara(pieza, posicion, estado)}
                 onClick={(e) => handleClick(e, posicion)}
+                onKeyDown={(e) => activarConTeclado(e, () => onSelectCara(pieza, posicion, anchorDelDiente()))}
               />
             ))}
 
@@ -143,11 +196,15 @@ function ToothImpl({
               width={VB}
               height={VB}
               fill="transparent"
-              className="cursor-pointer hover:fill-teal-600/10 transition-colors"
+              className={`cursor-pointer hover:fill-teal-600/10 transition-colors ${FOCUS_VISIBLE}`}
+              tabIndex={0}
+              role="button"
+              aria-label={etiquetaDePieza(pieza, estado)}
               onClick={(e) => {
                 e.stopPropagation()
                 onSelectDiente(pieza, anchorDelDiente())
               }}
+              onKeyDown={(e) => activarConTeclado(e, () => onSelectDiente(pieza, anchorDelDiente()))}
             />
           )}
 
@@ -158,11 +215,16 @@ function ToothImpl({
               width={VB}
               height={VB}
               fill="transparent"
-              className="cursor-pointer"
+              className={`cursor-pointer ${FOCUS_VISIBLE}`}
+              tabIndex={0}
+              role="button"
+              aria-pressed={seleccionado}
+              aria-label={`Pieza ${pieza.codigo}, tramo`}
               onClick={(e) => {
                 e.stopPropagation()
                 onToggleEnTramo(pieza)
               }}
+              onKeyDown={(e) => activarConTeclado(e, () => onToggleEnTramo(pieza))}
             />
           )}
 
@@ -173,7 +235,7 @@ function ToothImpl({
       </div>
       <span
         className="text-[10px] font-medium select-none mt-0.5"
-        style={{ color: codigoDiente ? '#0d9488' : '#6b7280' }}
+        style={{ color: codigoDiente ? '#0f766e' : '#6b7280' }}
       >
         {pieza.codigo}
       </span>
