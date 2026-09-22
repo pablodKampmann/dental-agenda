@@ -3,25 +3,14 @@
 import { useState, type KeyboardEvent } from 'react'
 import type { FocusEvent } from 'react'
 import { colorDe } from '@/lib/odontograma/caras'
-import type { Capa } from '@/lib/odontograma/tipos'
+import { type EntradaHistorial } from '@/lib/odontograma/historial'
 import { FaTooth } from 'react-icons/fa'
 import { BiSolidNote } from 'react-icons/bi'
 import { HiOutlineClipboardDocumentList } from 'react-icons/hi2'
 import { Pencil, Trash2 } from 'lucide-react'
 import { ConfirmAlert } from '@/components/shared/dialogAlerts/confirmAlert'
 
-export interface EntradaHistorial {
-  id: string
-  fecha: string
-  hora: string
-  texto: string
-  hallazgo?: {
-    piezaCodigo: number
-    detalle: string
-    nombreHallazgo: string
-    capa: Capa
-  }
-}
+export type { EntradaHistorial }
 
 interface HistorialTimelineProps {
   entradas: EntradaHistorial[]
@@ -120,22 +109,27 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
                 )}
                 {entrada.texto && <p className="text-sm text-gray-600 mt-0.5">{entrada.texto}</p>}
               </div>
-              <div className="flex items-start gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <button
-                  onClick={() => abrirEdicion(entrada)}
-                  title="Editar nota"
-                  className="p-1.5 rounded-md text-gray-400 hover:text-teal-700 hover:bg-gray-100 transition"
-                >
-                  <Pencil size={13} />
-                </button>
-                <button
-                  onClick={() => setIdAEliminar(entrada.id)}
-                  title="Eliminar entrada"
-                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
+              {/* Editar/eliminar solo aplica a notas libres: un hallazgo sale del log
+                  append-only del odontograma, no se corrige acá — se corrige cargando
+                  un nuevo hallazgo, que deja su propio asiento. */}
+              {!entrada.hallazgo && (
+                <div className="flex items-start gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button
+                    onClick={() => abrirEdicion(entrada)}
+                    title="Editar nota"
+                    className="p-1.5 rounded-md text-gray-400 hover:text-teal-700 hover:bg-gray-100 transition"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    onClick={() => setIdAEliminar(entrada.id)}
+                    title="Eliminar entrada"
+                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -182,12 +176,8 @@ export function HistorialTimeline({ entradas, onAgregarNota, onEditarTexto, onEl
       <ConfirmAlert
         open={!!entradaAEliminar}
         setOpen={(open) => !open && setIdAEliminar(null)}
-        title="¿Eliminar esta entrada?"
-        description={
-          entradaAEliminar?.hallazgo
-            ? `Se va a borrar el registro de "${entradaAEliminar.hallazgo.nombreHallazgo}" en la pieza ${entradaAEliminar.hallazgo.piezaCodigo} de la Historia Clínica. Esta acción no se puede deshacer.`
-            : 'Esta acción no se puede deshacer.'
-        }
+        title="¿Eliminar esta nota?"
+        description="Esta acción no se puede deshacer."
         onConfirm={() => {
           if (idAEliminar) onEliminar(idAEliminar)
           setIdAEliminar(null)

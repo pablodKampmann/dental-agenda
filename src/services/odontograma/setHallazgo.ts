@@ -104,6 +104,8 @@ interface SetHallazgoCaraParams {
   /** Lo que había en esa hoja antes de este cambio, o `null` si estaba vacía. */
   readonly de: CodigoHallazgoCara | null
   readonly uid: string
+  /** Nota clínica libre, cargada en el mismo paso del picker que el hallazgo. */
+  readonly nota?: string
 }
 
 /**
@@ -118,7 +120,7 @@ interface SetHallazgoCaraParams {
  * nadie tenga que acordarse de tocarlo.
  */
 export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<ResultadoEscritura> {
-  const { clinicId, pacienteId, pieza, cara, capa, codigo, de, uid } = params
+  const { clinicId, pacienteId, pieza, cara, capa, codigo, de, uid, nota } = params
 
   const denticion = piezaDeClave(pieza).denticion
   if (!aplicaADenticion(codigo, denticion)) {
@@ -143,6 +145,7 @@ export async function setHallazgoCara(params: SetHallazgoCaraParams): Promise<Re
       piezas: null,
       de,
       a: codigo,
+      ...(nota ? { nota } : {}),
     }
 
     await update(ref(db), {
@@ -166,11 +169,13 @@ interface SetHallazgoDienteParams {
   readonly codigo: CodigoHallazgoDiente
   readonly de: CodigoHallazgoDiente | null
   readonly uid: string
+  /** Nota clínica libre, cargada en el mismo paso del picker que el hallazgo. */
+  readonly nota?: string
 }
 
 /** Escribe un hallazgo de alcance DIENTE en una hoja `diente/{capa}`. Valida contra la dentición (B4-1). */
 export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promise<ResultadoEscritura> {
-  const { clinicId, pacienteId, pieza, capa, codigo, de, uid } = params
+  const { clinicId, pacienteId, pieza, capa, codigo, de, uid, nota } = params
 
   const denticion = piezaDeClave(pieza).denticion
   if (!aplicaADenticion(codigo, denticion)) {
@@ -195,6 +200,7 @@ export async function setHallazgoDiente(params: SetHallazgoDienteParams): Promis
       piezas: null,
       de,
       a: codigo,
+      ...(nota ? { nota } : {}),
     }
 
     await update(ref(db), {
@@ -222,6 +228,8 @@ interface EjecutarHallazgoCaraRequeridaParams {
   /** Lo que había en `existente` antes de esta ejecución, o `null` si estaba vacío. */
   readonly existenteAnterior: CodigoHallazgoCara | null
   readonly uid: string
+  /** Nota clínica libre, cargada en el mismo paso del picker. Va en el evento `existente` del par. */
+  readonly nota?: string
 }
 
 /**
@@ -238,7 +246,7 @@ interface EjecutarHallazgoCaraRequeridaParams {
 export async function ejecutarHallazgoCaraRequerida(
   params: EjecutarHallazgoCaraRequeridaParams
 ): Promise<ResultadoEscritura> {
-  const { clinicId, pacienteId, pieza, cara, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid } =
+  const { clinicId, pacienteId, pieza, cara, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid, nota } =
     params
 
   const denticion = piezaDeClave(pieza).denticion
@@ -266,6 +274,7 @@ export async function ejecutarHallazgoCaraRequerida(
       piezas: null,
       de: hallazgoRequerido,
       a: null,
+      origen: 'plan_realizado',
     }
     const eventoExistente: ParaEscribir<EventoCara> = {
       ts: serverTimestamp(),
@@ -277,6 +286,8 @@ export async function ejecutarHallazgoCaraRequerida(
       piezas: null,
       de: existenteAnterior,
       a: hallazgoResultante,
+      origen: 'plan_realizado',
+      ...(nota ? { nota } : {}),
     }
 
     await update(ref(db), {
@@ -302,6 +313,8 @@ interface EjecutarHallazgoDienteRequeridoParams {
   readonly hallazgoResultante: CodigoHallazgoDiente
   readonly existenteAnterior: CodigoHallazgoDiente | null
   readonly uid: string
+  /** Nota clínica libre, cargada en el mismo paso del picker. Va en el evento `existente` del par. */
+  readonly nota?: string
 }
 
 /**
@@ -314,7 +327,7 @@ interface EjecutarHallazgoDienteRequeridoParams {
 export async function ejecutarHallazgoDienteRequerido(
   params: EjecutarHallazgoDienteRequeridoParams
 ): Promise<ResultadoEscritura> {
-  const { clinicId, pacienteId, pieza, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid } = params
+  const { clinicId, pacienteId, pieza, hallazgoRequerido, hallazgoResultante, existenteAnterior, uid, nota } = params
 
   const denticion = piezaDeClave(pieza).denticion
   if (!aplicaADenticion(hallazgoResultante, denticion)) {
@@ -341,6 +354,7 @@ export async function ejecutarHallazgoDienteRequerido(
       piezas: null,
       de: hallazgoRequerido,
       a: null,
+      origen: 'plan_realizado',
     }
     const eventoExistente: ParaEscribir<EventoDiente> = {
       ts: serverTimestamp(),
@@ -352,6 +366,8 @@ export async function ejecutarHallazgoDienteRequerido(
       piezas: null,
       de: existenteAnterior,
       a: hallazgoResultante,
+      origen: 'plan_realizado',
+      ...(nota ? { nota } : {}),
     }
 
     await update(ref(db), {

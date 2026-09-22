@@ -19,6 +19,13 @@ interface HallazgoPickerProps {
   hallazgoActual: Partial<Record<Capa, CodigoHallazgo>>
   onGuardar: (codigo: CodigoHallazgo, capa: Capa, nota: string) => void
   onQuitar: (capa: Capa) => void
+  /**
+   * Cierra un plan: borra `requerida` y escribe `codigo` en `existente`, atómico.
+   * Solo se ofrece cuando la capa activa es `requerida` y ya hay algo cargado ahí —
+   * `codigo` puede ser distinto de lo planeado (una extracción requerida puede resolver
+   * en `ausente`), por eso sigue pasando por el mismo paso "elegir" del picker.
+   */
+  onEjecutar: (codigo: CodigoHallazgo, nota: string) => void
   onClose: () => void
   /** Solo tiene sentido cuando `contexto.alcance === 'CARA'`: salta al picker de la pieza entera. */
   onVerPiezaCompleta: (pieza: Pieza, anchor: DOMRect) => void
@@ -43,11 +50,12 @@ function tituloDeContexto(contexto: PickerContexto): string {
   return `Pieza ${contexto.pieza.codigo} · ${etiqueta}`
 }
 
-export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, onClose, onVerPiezaCompleta, onVolver }: HallazgoPickerProps) {
+export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, onEjecutar, onClose, onVerPiezaCompleta, onVolver }: HallazgoPickerProps) {
   const [capa, setCapa] = useState<Capa>('existente')
   const [paso, setPaso] = useState<Paso>('elegir')
   const [seleccion, setSeleccion] = useState<EntradaDelCatalogo | null>(null)
   const [nota, setNota] = useState('')
+  const [marcarComoRealizado, setMarcarComoRealizado] = useState(false)
 
   useEffect(() => {
     if (!contexto) return
@@ -56,12 +64,15 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
     setPaso('elegir')
     setSeleccion(null)
     setNota('')
+    setMarcarComoRealizado(false)
   }, [contexto, hallazgoActual])
 
   if (!contexto) return null
 
   const opciones = hallazgosPorAlcance(contexto.alcance as Alcance)
   const codigoActual = hallazgoActual[capa]
+  /** Solo tiene sentido "ejecutar" un plan que ya existe — nunca al elegir la capa Existente. */
+  const puedeEjecutar = capa === 'requerida' && !!codigoActual
 
   function handleConfirmar() {
     setPaso('nota')
@@ -69,7 +80,8 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
 
   function handleGuardarFinal() {
     if (!seleccion) return
-    onGuardar(seleccion.codigo, capa, nota.trim())
+    if (marcarComoRealizado) onEjecutar(seleccion.codigo, nota.trim())
+    else onGuardar(seleccion.codigo, capa, nota.trim())
   }
 
   return (
@@ -174,6 +186,19 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
                 />
                 <span className="text-sm font-semibold text-gray-800 flex-1">{seleccion.nombre}</span>
               </div>
+              {puedeEjecutar && (
+                <label className="flex items-start gap-2 mb-3 px-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={marcarComoRealizado}
+                    onChange={(e) => setMarcarComoRealizado(e.target.checked)}
+                    className="mt-0.5 accent-teal-700"
+                  />
+                  <span className="text-xs text-gray-600">
+                    Marcar la planificación como realizada — pasa de <b>Requerida</b> a <b>Existente</b>
+                  </span>
+                </label>
+              )}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPaso('elegir')}

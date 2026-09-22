@@ -191,6 +191,17 @@ interface EventoBase<C extends CodigoHallazgo> {
   readonly de: C | null
   /** El hallazgo que quedó, o `null` si fue un borrado. */
   readonly a: C | null
+  /** Nota clínica libre, cargada en el mismo paso que el hallazgo. Ausente si no se escribió ninguna. */
+  readonly nota?: string
+  /**
+   * Marca el par de eventos que escribe `ejecutarHallazgoCaraRequerida`/
+   * `ejecutarHallazgoDienteRequerido` al cerrar un plan: la mitad `requerida` (que
+   * queda en `a: null`) se lee como el cierre del plan, no como un descarte — y la
+   * lectura del historial la oculta a propósito, porque la mitad `existente` del
+   * mismo par ya documenta la misma acción con más sentido clínico ("Plan
+   * realizado"). Ausente en cualquier otro evento.
+   */
+  readonly origen?: 'plan_realizado'
 }
 
 /** Asiento sobre una cara: la única variante que lleva `cara`. */
