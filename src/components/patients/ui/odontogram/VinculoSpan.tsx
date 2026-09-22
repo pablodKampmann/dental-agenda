@@ -41,7 +41,7 @@ export function VinculoSpan({ piezas, tipo, capa, onClick, pendiente = false }: 
         onClick={onClick}
         disabled={pendiente}
         title={pendiente ? 'Quitando…' : `Quitar ${nombre.toLowerCase()}`}
-        aria-label={`Quitar ${nombre.toLowerCase()} de las piezas ${primera.codigo} a ${ultima.codigo}`}
+        aria-label={`Quitar ${nombre.toLowerCase()} ${capa} de las piezas ${primera.codigo} a ${ultima.codigo}`}
         style={{ gridColumnStart: primera.columna, gridColumnEnd: ultima.columna + 1 }}
         className="flex flex-col items-center gap-0.5 cursor-pointer hover:opacity-60 transition-opacity disabled:cursor-default disabled:opacity-80"
       >

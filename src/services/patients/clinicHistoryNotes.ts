@@ -1,6 +1,7 @@
 import { db } from '@/lib/firebase'
 import { get, ref, push, child, update, remove, serverTimestamp, query, orderByKey } from 'firebase/database'
 import type { ResultadoEscritura } from '@/services/odontograma/setHallazgo'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from '@/services/odontograma/fallos'
 
 /**
  * Notas libres de la Historia Clínica: la única excepción a "todo lo de la HC sale del
@@ -14,7 +15,11 @@ import type { ResultadoEscritura } from '@/services/odontograma/setHallazgo'
  * de `services/odontograma/setHallazgo.ts` como contrato de retorno — mismo criterio
  * `null` = fallo técnico / `{ok:false}` = rechazo de negocio / `{ok:true}` = éxito, para
  * que el caller (`clinicHistory/page.tsx`) no tenga que manejar dos protocolos distintos
- * en la misma pantalla. Ninguna de estas funciones usa la rama `ok: false` hoy — no hay
+ * en la misma pantalla. Igual que los del odontograma, aceptan un `onFallo?` opcional que
+ * reporta el motivo ya clasificado sin tocar el valor de retorno (ver `fallos.ts`): un
+ * permiso denegado no se puede mostrar como falta de conexión.
+ *
+ * Ninguna de estas funciones usa la rama `ok: false` hoy — no hay
  * ninguna regla de negocio que pueda rechazar un texto libre — pero la forma es la misma.
  */
 
@@ -34,12 +39,13 @@ interface AddNotaParams {
   readonly pacienteId: string
   readonly texto: string
   readonly uid: string
+  readonly onFallo?: ReportarFallo
 }
 
 export async function addNotaHistorial(params: AddNotaParams): Promise<ResultadoEscritura<{ notaId: string }>> {
   const { clinicId, pacienteId, texto, uid } = params
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const notaId = push(child(ref(db), base)).key
@@ -52,6 +58,7 @@ export async function addNotaHistorial(params: AddNotaParams): Promise<Resultado
     return { ok: true, notaId }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -61,16 +68,18 @@ interface EditarNotaParams {
   readonly pacienteId: string
   readonly notaId: string
   readonly texto: string
+  readonly onFallo?: ReportarFallo
 }
 
 export async function updateNotaHistorial(params: EditarNotaParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, notaId, texto } = params
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
     await update(ref(db), { [`${basePath(clinicId, pacienteId)}/${notaId}/texto`]: texto })
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -79,16 +88,18 @@ interface EliminarNotaParams {
   readonly clinicId: string
   readonly pacienteId: string
   readonly notaId: string
+  readonly onFallo?: ReportarFallo
 }
 
 export async function deleteNotaHistorial(params: EliminarNotaParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, notaId } = params
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
     await remove(ref(db, `${basePath(clinicId, pacienteId)}/${notaId}`))
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
@@ -97,9 +108,13 @@ export async function deleteNotaHistorial(params: EliminarNotaParams): Promise<R
  * Mismo criterio de validación que `getOdontograma`/`getEventos`: una nota con forma
  * inválida se descarta sola, sin romper la lectura del resto.
  */
-export async function getNotasHistorial(clinicId: string, pacienteId: string): Promise<NotaHistorial[] | null> {
+export async function getNotasHistorial(
+  clinicId: string,
+  pacienteId: string,
+  onFallo?: ReportarFallo
+): Promise<NotaHistorial[] | null> {
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const dbRef = query(ref(db, basePath(clinicId, pacienteId)), orderByKey())
     const snapshot = await get(dbRef)
@@ -118,6 +133,7 @@ export async function getNotasHistorial(clinicId: string, pacienteId: string): P
     return notas
   } catch (error) {
     console.error(error)
+    onFallo?.(clasificarFallo(error), error)
     return null
   }
 }

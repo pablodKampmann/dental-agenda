@@ -12,6 +12,7 @@ import {
   type EventoOdontograma,
   type PiezasSet,
 } from '@/lib/odontograma/tipos'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Lectura del historial de eventos de un paciente.
@@ -231,11 +232,12 @@ function validarEvento(raw: unknown, id: string): EventoOdontogramaConId | null 
 export async function getEventos(
   pacienteId: string,
   clinicId: string,
-  limite: number = LIMITE_EVENTOS_POR_DEFECTO
+  limite: number = LIMITE_EVENTOS_POR_DEFECTO,
+  onFallo?: ReportarFallo
 ): Promise<EventoOdontogramaConId[] | null> {
   try {
     if (!navigator.onLine) {
-      throw new Error()
+      throw new ErrorSinConexion()
     }
 
     const dbRef = ref(db, `/clinics/${clinicId}/odontogramas/${pacienteId}/eventos`)
@@ -259,6 +261,7 @@ export async function getEventos(
     return eventos.reverse()
   } catch (error) {
     console.error(error)
+    onFallo?.(clasificarFallo(error), error)
     return null
   }
 }

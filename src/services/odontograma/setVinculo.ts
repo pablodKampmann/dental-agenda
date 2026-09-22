@@ -11,6 +11,7 @@ import {
   type Vinculo,
 } from '@/lib/odontograma/tipos'
 import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Alta de un vínculo multi-pieza (prótesis fija o removible).
@@ -82,6 +83,8 @@ interface SetVinculoParams {
   readonly uid: string
   /** Nota clínica libre, cargada en el mismo paso del picker que el vínculo. */
   readonly nota?: string
+  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /**
@@ -110,7 +113,7 @@ export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEsc
   }
 
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const vinculoId = nuevoVinculoId(clinicId, pacienteId)
@@ -143,6 +146,7 @@ export async function setVinculo(params: SetVinculoParams): Promise<ResultadoEsc
     return { ok: true, vinculoId }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }

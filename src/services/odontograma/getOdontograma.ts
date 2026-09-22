@@ -20,6 +20,7 @@ import {
   type PiezasSet,
   type Vinculo,
 } from '@/lib/odontograma/tipos'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Lectura del odontograma de un paciente.
@@ -256,11 +257,12 @@ function validarMeta(raw: unknown): MetaOdontograma | null {
 
 export async function getOdontograma(
   pacienteId: string,
-  clinicId: string
+  clinicId: string,
+  onFallo?: ReportarFallo
 ): Promise<OdontogramaActual | null> {
   try {
     if (!navigator.onLine) {
-      throw new Error()
+      throw new ErrorSinConexion()
     }
 
     const dbRef = ref(db, `/clinics/${clinicId}/odontogramas/${pacienteId}/actual`)
@@ -279,6 +281,7 @@ export async function getOdontograma(
     }
   } catch (error) {
     console.error(error)
+    onFallo?.(clasificarFallo(error), error)
     return null
   }
 }

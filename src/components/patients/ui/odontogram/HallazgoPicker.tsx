@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { ClipLoader } from 'react-spinners'
 import type { Pieza } from '@/lib/odontograma/piezas'
-import { hallazgosPorAlcance, hallazgoDe, type EntradaDelCatalogo } from '@/lib/odontograma/catalogo'
+import { aplicaADenticion, hallazgosPorAlcance, hallazgoDe, type EntradaDelCatalogo } from '@/lib/odontograma/catalogo'
 import { caraSemantica, colorDe, etiquetaCara } from '@/lib/odontograma/caras'
-import type { Alcance, Capa, CodigoHallazgo, FacePosition } from '@/lib/odontograma/tipos'
+import type { Capa, CodigoHallazgo, FacePosition } from '@/lib/odontograma/tipos'
 import { Trash2, ChevronRight, ChevronLeft, Check } from 'lucide-react'
 import { FindingGlyph } from './FindingGlyph'
 import { FloatingAnchor } from './FloatingAnchor'
@@ -96,6 +96,30 @@ function tituloDeContexto(contexto: PickerContexto): string {
   return `Pieza ${contexto.pieza.codigo} · ${etiqueta}`
 }
 
+/**
+ * Qué hallazgos se ofrecen. El alcance decide la lista (una cara no ofrece coronas) y la
+ * dentición la recorta: un implante o una prótesis fija no van sobre un diente de leche.
+ *
+ * El criterio sale de `aplicaADenticion()`, el mismo que hacen cumplir los services —
+ * importado, no reimplementado (pendientes §3.7). Esto es UX: evita ofrecer algo que el
+ * backend va a rechazar, con el hallazgo ya dibujado y un toast de error encima. La
+ * autoridad sigue siendo el service.
+ *
+ * En un tramo MULTI el hallazgo tiene que aplicar a **todas** las piezas, no a la primera:
+ * hoy `validarTramo` ya prohíbe mezclar denticiones en un tramo, así que es lo mismo, pero
+ * preguntarlo por la primera sería confiar en esa regla desde acá en vez de mirar el dato.
+ */
+function opcionesDelContexto(contexto: PickerContexto): readonly EntradaDelCatalogo[] {
+  const denticiones =
+    contexto.alcance === 'MULTI'
+      ? contexto.piezas.map((pieza) => pieza.denticion)
+      : [contexto.pieza.denticion]
+
+  return hallazgosPorAlcance(contexto.alcance).filter((hallazgo) =>
+    denticiones.every((denticion) => aplicaADenticion(hallazgo.codigo, denticion))
+  )
+}
+
 export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, onEjecutar, onClose, onVerPiezaCompleta, onVolver, guardando }: HallazgoPickerProps) {
   const [capa, setCapa] = useState<Capa>('existente')
   const [paso, setPaso] = useState<Paso>('elegir')
@@ -137,7 +161,7 @@ export function HallazgoPicker({ contexto, hallazgoActual, onGuardar, onQuitar, 
 
   if (!contexto) return null
 
-  const opciones = hallazgosPorAlcance(contexto.alcance as Alcance)
+  const opciones = opcionesDelContexto(contexto)
   const codigoActual = hallazgoActual[capa]
   /** Solo tiene sentido "ejecutar" un plan que ya existe — nunca al elegir la capa Existente. */
   const puedeEjecutar = capa === 'requerida' && !!codigoActual

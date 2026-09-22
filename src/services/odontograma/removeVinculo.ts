@@ -2,6 +2,7 @@ import { db } from '@/lib/firebase'
 import { ref, update, serverTimestamp } from 'firebase/database'
 import { SCHEMA_VERSION, type Capa, type CodigoHallazgoMulti, type EventoMulti, type PiezasSet } from '@/lib/odontograma/tipos'
 import { basePath, nuevaEventoKey, type ParaEscribir, type ResultadoEscritura } from './setHallazgo'
+import { clasificarFallo, ErrorSinConexion, type ReportarFallo } from './fallos'
 
 /**
  * Baja de un vínculo multi-pieza: escribe `null` en `vinculos/{vinculoId}` y agrega
@@ -21,6 +22,8 @@ interface RemoveVinculoParams {
   readonly capa: Capa
   readonly piezas: PiezasSet
   readonly uid: string
+  /** Ver `fallos.ts`: el motivo del fallo técnico, que el `null` de retorno no puede traer. */
+  readonly onFallo?: ReportarFallo
 }
 
 /**
@@ -31,7 +34,7 @@ interface RemoveVinculoParams {
 export async function removeVinculo(params: RemoveVinculoParams): Promise<ResultadoEscritura> {
   const { clinicId, pacienteId, vinculoId, tipo, capa, piezas, uid } = params
   try {
-    if (!navigator.onLine) throw new Error()
+    if (!navigator.onLine) throw new ErrorSinConexion()
 
     const base = basePath(clinicId, pacienteId)
     const eventoKey = nuevaEventoKey(clinicId, pacienteId)
@@ -59,6 +62,7 @@ export async function removeVinculo(params: RemoveVinculoParams): Promise<Result
     return { ok: true }
   } catch (error) {
     console.error(error)
+    params.onFallo?.(clasificarFallo(error), error)
     return null
   }
 }
