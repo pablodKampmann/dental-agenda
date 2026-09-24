@@ -136,10 +136,10 @@ export function TreatmentsPickerModal({ open, onClose, catalog, value, onConfirm
                     <div
                       key={t.id}
                       onClick={() => add(t)}
-                      className="flex justify-between items-center gap-2 px-3 py-1.5 text-xs text-black border-b border-gray-100 last:border-none hover:bg-gray-50 cursor-pointer transition duration-100"
+                      className="flex justify-between items-start gap-2 px-3 py-1.5 text-xs text-black border-b border-gray-100 last:border-none hover:bg-gray-50 cursor-pointer transition duration-100"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate">{t.name}</span>
+                        <span className="block whitespace-normal break-words">{t.name}</span>
                         {t.codigo && <span className="block text-[11px] text-gray-400">{t.codigo}</span>}
                       </span>
                       <span className="font-semibold text-gray-500 shrink-0">${t.price.toLocaleString("es-AR")}</span>
@@ -164,9 +164,9 @@ export function TreatmentsPickerModal({ open, onClose, catalog, value, onConfirm
               <div className="flex-1 min-h-[16rem] border border-gray-200 rounded-lg overflow-y-auto bg-gray-50">
                 {draft.length > 0 ? (
                   draft.map((t) => (
-                    <div key={t.id} className="flex items-center gap-2 px-3 py-2 bg-white border-b border-gray-100 last:border-none">
+                    <div key={t.id} className="flex items-start gap-2 px-3 py-2 bg-white border-b border-gray-100 last:border-none">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-black truncate">{t.name}</p>
+                        <p className="text-sm font-semibold text-black whitespace-normal break-words">{t.name}</p>
                         {t.codigo && <p className="text-xs text-gray-400">{t.codigo}</p>}
                       </div>
                       <span className="shrink-0 text-xs font-semibold text-gray-500">${t.price.toLocaleString("es-AR")}</span>

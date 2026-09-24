@@ -8,7 +8,7 @@ import {
   IoMdArrowDropup,
   IoLogoWhatsapp,
 } from "react-icons/io";
-import { MdNotificationsNone, MdMedicalServices } from "react-icons/md";
+import { MdNotificationsNone, MdMedicalServices, MdOutlinePayments } from "react-icons/md";
 import { RiUserSettingsFill } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
 import { useOutsideClick } from "../../hooks/useOutsideClick"; // Ruta correcta a tu hook personalizado
@@ -154,6 +154,16 @@ export function MobileVersion({ openLogOutAlert, setOpenLogOutAlert }: props) {
             >
               <MdMedicalServices size={26} />
               <p className="flex-1 ml-3 select-none">Tratamientos</p>
+            </Link>
+            <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
+            <Link
+              href="/payments"
+              prefetch={true}
+              onClick={handleLink}
+              className={`${pathname === "/payments" ? "bg-teal-950  " : "bg-white bg-opacity-5 hover:bg-opacity-10 "} flex border-2 border-transparent hover:border-white hover:border-opacity-70 text-left items-center p-2 rounded-xl  w-full transition duration-150`}
+            >
+              <MdOutlinePayments size={26} />
+              <p className="flex-1 ml-3 select-none">Pagos</p>
             </Link>
             <hr className="border-teal-700 border rounded-full ml-2 mr-2" />
             <Link

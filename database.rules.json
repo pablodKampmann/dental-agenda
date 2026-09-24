@@ -24,6 +24,10 @@
         "treatments": {
           ".write": "auth != null && root.child('admins').child(auth.uid).child('clinicId').val() === $clinic_id"
         },
+
+        "payments": {
+          ".write": "auth != null && root.child('admins').child(auth.uid).child('clinicId').val() === $clinic_id"
+        },
         "areas": {
           ".write": "auth != null && root.child('admins').child(auth.uid).child('clinicId').val() === $clinic_id"
         },
