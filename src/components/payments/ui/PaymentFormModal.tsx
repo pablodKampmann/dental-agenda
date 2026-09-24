@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { MdClose, MdOutlinePayments } from "react-icons/md";
@@ -119,6 +119,15 @@ export function PaymentFormModal({
     } else {
       setAmount("");
     }
+    // Reset del alto animado del body — sin esto, un cierre a mitad de una transición deja
+    // `bodyHeight` en un número viejo, y al reabrir con contenido chico/vacío el mismatch
+    // contra `prevBodySignalRef` (todavía con la señal de la sesión anterior) dispara una
+    // animación de "encogimiento" no deseada apenas el efecto de reset de arriba corre.
+    // Actualizar `prevBodySignalRef` acá, antes de ese re-render, evita el mismatch.
+    setBodyHeight("auto");
+    setBodyAnimating(false);
+    prevBodyHeightRef.current = null;
+    prevBodySignalRef.current = { hasPatient: !!fixedPatient, resultsCount: 0 };
     const frame = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -200,6 +209,54 @@ export function PaymentFormModal({
     if (t) setAmount(String(t.price).replace(".", ","));
   }
 
+  // Alto animado del cuerpo — mismo patrón FLIP que EditableRow/AppointmentsSummary: se
+  // snapshotea el alto viejo al detectar el cambio de forma (patient elegido/dropdown de
+  // búsqueda), y se anima al nuevo en el siguiente frame.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const prevBodyHeightRef = useRef<number | null>(null);
+  const [bodyHeight, setBodyHeight] = useState<number | "auto">("auto");
+  const [bodyAnimating, setBodyAnimating] = useState(false);
+
+  const bodySignal = { hasPatient: !!effectivePatient, resultsCount: matchingPatients.length };
+  const prevBodySignalRef = useRef(bodySignal);
+  if (
+    prevBodySignalRef.current.hasPatient !== bodySignal.hasPatient ||
+    prevBodySignalRef.current.resultsCount !== bodySignal.resultsCount
+  ) {
+    prevBodyHeightRef.current = bodyRef.current?.scrollHeight ?? null;
+    prevBodySignalRef.current = bodySignal;
+  }
+
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const newHeight = el.scrollHeight;
+
+    if (prevBodyHeightRef.current == null || prevBodyHeightRef.current === newHeight) {
+      setBodyHeight("auto");
+      setBodyAnimating(false);
+      prevBodyHeightRef.current = null;
+      return;
+    }
+
+    setBodyAnimating(false);
+    setBodyHeight(prevBodyHeightRef.current);
+    prevBodyHeightRef.current = null;
+
+    const frame = requestAnimationFrame(() => {
+      setBodyAnimating(true);
+      setBodyHeight(newHeight);
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bodySignal.hasPatient, bodySignal.resultsCount]);
+
+  function handleBodyTransitionEnd(event: React.TransitionEvent) {
+    if (event.propertyName !== "height" || event.target !== event.currentTarget) return;
+    setBodyHeight("auto");
+    setBodyAnimating(false);
+  }
+
   const amountValid = isValidPriceInput(amount);
   const hasChanges =
     !editingPayment ||
@@ -265,7 +322,13 @@ export function PaymentFormModal({
           </div>
 
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-6 flex flex-col gap-3">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <div
+              className={`duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] ${bodyAnimating ? "transition-[height] overflow-hidden" : "overflow-visible"}`}
+              style={{ height: bodyHeight }}
+              onTransitionEnd={handleBodyTransitionEnd}
+            >
+              <div ref={bodyRef} className="p-6 flex flex-col gap-3">
             {/* Paciente */}
             <div className="flex flex-col gap-1">
               <label className={LABEL_CLS}>
@@ -426,6 +489,8 @@ export function PaymentFormModal({
                 </div>
               </>
             )}
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
